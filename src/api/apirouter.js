@@ -20,56 +20,54 @@ export  function api(api_name,json) {
     // else if(api_name =="deviceBindCheck"){return DeviceManger.deviceBindCheck()}
     else if(api_name =="transactionBTC"){
         DeviceManger.deviceBindCheck();
-        let response = walletApi.BitcoinTransaction_BTC(json.utxos,json.userData)
+        let response = walletApi.BitcoinTransaction_BTC(json)
         let result = {
-            txHash: response.getTxhash(),
-            signature:response.getSignature(),
-            wtxId:response.getWtxId()
+            txHash: response.getTxHash(),
+            txData:response.getTxData(),
         };
        return result;
     }
     else if(api_name =="transactionBTCSEGWIT"){
         DeviceManger.deviceBindCheck();
-        let response = walletApi.BitcoinTransaction_BTC_SEGWIT(json.utxos,json.userData)
+        let response = walletApi.BitcoinTransaction_BTC_SEGWIT(json)
         let result = {
-            txHash: response.getTxhash(),
-            signature:response.getSignature(),
-            wtxId:response.getWtxId()
+            txHash: response.getTxHash(),
+            witnessTxData:response.getWitnessTxData(),
+            wtxHash:response.getWtxHash()
         };
         return result;
     }
     else if(api_name =="transactionBTCUSDT"){
         DeviceManger.deviceBindCheck();
-        let response = walletApi.BitcoinTransaction_BTC_USDT(json.utxos,json.userData)
+        let response = walletApi.BitcoinTransaction_BTC_USDT(json)
         let result = {
-            txHash: response.getTxhash(),
-            signature:response.getSignature(),
-            wtxId:response.getWtxId()
+            txHash: response.getTxHash(),
+            txData:response.getTxData(),
         };
         return result;
     }
     else if(api_name =="transactionBTCUSDTSEGWIT"){
         DeviceManger.deviceBindCheck();
-        let response = walletApi.BitcoinTransaction_BTC_USDT_SEGWIT(json.utxos,json.userData)
+        let response = walletApi.BitcoinTransaction_BTC_USDT_SEGWIT(json)
         let result = {
-            txHash: response.getTxhash(),
-            signature:response.getSignature(),
-            wtxId:response.getWtxId()
+            txHash: response.getTxHash(),
+            witnessTxData:response.getWitnessTxData(),
+            wtxHash:response.getWtxHash()
         };
         return result;
     }
     else if(api_name =="transactionETHSIGNTX"){
         DeviceManger.deviceBindCheck();
-        let response = walletApi.ETHTransaction_sign_TX(json.transaction,json.preview)
+        let response = walletApi.ETHTransaction_sign_TX(json)
         let result = {
-            txHash: response.getTxhash(),
-            signature:response.getSignature(),
+            txHash: response.getTxHash(),
+            txData:response.getTxData(),
         };
         return result;
     }
     else if(api_name =="transactionETHSIGNMSG"){
         DeviceManger.deviceBindCheck();
-        let response = walletApi.ETHTransaction_sign_MSG(json.data,json.sender)
+        let response = walletApi.ETHTransaction_sign_MSG(json)
         let result = {
             signature:response.getSignature(),
         };
@@ -77,7 +75,7 @@ export  function api(api_name,json) {
     }
     else if(api_name =="transactionEOSSIGNTX"){
         DeviceManger.deviceBindCheck();
-        let response = walletApi.EOSTransaction_sign_TX(json.publicKeys,json.chainId,json.txHex,json.preview)
+        let response = walletApi.EOSTransaction_sign_TX(json)
         let result = {
             txHash: response.getHash(),
             signature:response.getSignsList(),
@@ -86,7 +84,7 @@ export  function api(api_name,json) {
     }
     else if(api_name =="transactionEOSSIGNMSG"){
         DeviceManger.deviceBindCheck();
-        let response = walletApi.EOSTransaction_sign_MSG(json.data,json.publicKey)
+        let response = walletApi.EOSTransaction_sign_MSG(json)
         let result = {
             signature:response.getSignature(),
         };

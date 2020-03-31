@@ -394,7 +394,7 @@ function startHttpserver() {
         }
     }).listen(8080,'127.0.0.1');
 // 终端打印如下信息
-    console.log('Server running at http://127.0.0.1:8888/imkey');
+    console.log('Server running at http://127.0.0.1:8080/imkey');
 
 }
 /**

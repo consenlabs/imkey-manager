@@ -21,76 +21,73 @@ let device_pb = require('../proto/device_pb');
 let GoToRust = require('./gotorust');
 let Constants = require('../common/Constants');
 
-function getDevice_manage_fuc(action_) {
-    // console.log(" process.versions.node:"+process.versions.node);
-    //deviceParam
-    let deviceParam =new  api_pb.DeviceParam();
+function getDevice_manage_fuc(method_) {
 
-    deviceParam.setAction(action_);
-    deviceParam.setParam(null);
-    let deviceParamBytes = deviceParam.serializeBinary();
-    //any
-    let any =new  proto.google.protobuf.Any();
-    any.setValue(deviceParamBytes);
-    // let anyBytes = any.serializeBinary();
-    //TcxAction
-    let TcxAction =new  api_pb.TcxAction();
-    TcxAction.setMethod("device_manage");
-    TcxAction.setParam(any);
-    let TcxActionBytes = TcxAction.serializeBinary();
+    //ImkeyAction
+    let ImkeyAction =new  api_pb.ImkeyAction();
+    ImkeyAction.setMethod(method_);
+    let ImkeyActionBytes = ImkeyAction.serializeBinary();
 
     //调用rust库
-    let ResBuffer= GoToRust.call_tcx_api(Bytes2HexStr(TcxActionBytes));
+    let ResBuffer= GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
     let Error = GoToRust.get_last_err_message();
     if(Error ==""  || Error ==null) {
-        if (action_ === "get_sn") {
-            let Response = new device_pb.GetSnResponse.deserializeBinary(HexStr2Bytes(ResBuffer));
+        if (method_ === "get_seid") {
+            let Response = new device_pb.GetSeidRes.deserializeBinary(HexStr2Bytes(ResBuffer));
+            //获取解析后的值
+            let Result = Response.getSeid();
+            return Result;
+        } else if (method_ === "get_sn") {
+            let Response = new device_pb.GetSnRes.deserializeBinary(HexStr2Bytes(ResBuffer));
             //获取解析后的值
             let Result = Response.getSn();
             return Result;
-        } else if (action_ === "get_sdk_info") {
-            let Response = new device_pb.SdkInfoResponse.deserializeBinary(HexStr2Bytes(ResBuffer));
+        } else if (method_ === "get_ram_size") {
+            let Response = new device_pb.GetRamSizeRes.deserializeBinary(HexStr2Bytes(ResBuffer));
+            //获取解析后的值
+            let Result = Response.getRamSize();
+            return Result;
+        } else if (method_ === "get_firmware_version") {
+            let Response = new device_pb.GetFirmwareVersionRes.deserializeBinary(HexStr2Bytes(ResBuffer));
+            //获取解析后的值
+            let Result = Response.getFirmwareVersion();
+            return Result;
+        } else if (method_ === "get_battery_power") {
+            let Response = new device_pb.GetBatteryPowerRes.deserializeBinary(HexStr2Bytes(ResBuffer));
+            //获取解析后的值
+            let Result = Response.getBatteryPower();
+            return Result;
+        } else if (method_ === "get_life_time") {
+            let Response = new device_pb.GetLifeTimeRes.deserializeBinary(HexStr2Bytes(ResBuffer));
+            //获取解析后的值
+            let Result = Response.getLifeTime();
+            return Result;
+        } else if (method_ === "get_ble_name") {
+            let Response = new device_pb.GetBleNameRes.deserializeBinary(HexStr2Bytes(ResBuffer));
+            //获取解析后的值
+            let Result = Response.getBleName();
+            return Result;
+        } else if (method_ === "set_ble_name") {
+            let Response = new device_pb.SetBleNameReq.deserializeBinary(HexStr2Bytes(ResBuffer));
+            //获取解析后的值
+            let Result = Response.getBleName();
+            return Result;
+        } else if (method_ === "get_ble_version") {
+            let Response = new device_pb.GetBleVersionRes.deserializeBinary(HexStr2Bytes(ResBuffer));
+            //获取解析后的值
+            let Result = Response.getBleVersion();
+            return Result;
+        }else if (method_ === "get_sdk_info") {
+            let Response = new device_pb.GetSdkInfoRes.deserializeBinary(HexStr2Bytes(ResBuffer));
             //获取解析后的值
             let Result = Response.getSdkVersion();
             return Result;
-        } else {
-            //rust库返回的数据解析
-            let Response = new device_pb.ApduResponse.deserializeBinary(HexStr2Bytes(ResBuffer));
-            // //获取解析后的值
-            let Result = Response.getResult();
-            // console.log("Result:"+Result)
+        }else if (method_ === "check_update") {
+            let Response = new device_pb.CheckUpdateRes.deserializeBinary(HexStr2Bytes(ResBuffer));
+            //获取解析后的值
+            let Result = Response.toObject();
             return Result;
-        }
-    }else {
-        let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
-        console.log(" ErrorResponse.getError():" + ErrorResponse.getError())
-        return ErrorResponse.getError();
-    }
-}
-function  getDevice_manage_device(action_) {
-
-    //deviceParam
-    let deviceParam =new  api_pb.DeviceParam();
-    deviceParam.setAction(action_);
-    let deviceParambytes = deviceParam.serializeBinary();
-    //any
-    let any1 =new  proto.google.protobuf.Any();
-    any1.setValue(deviceParambytes);
-    // let anyBytes = any.serializeBinary();
-    //TcxAction
-    let TcxAction =new  api_pb.TcxAction();
-    TcxAction.setMethod("device_manage");
-    TcxAction.setParam(any1);
-    let TcxActionBytes = TcxAction.serializeBinary();
-    //调用rust库
-    let ResBuffer= GoToRust.call_tcx_api(Bytes2HexStr(TcxActionBytes));
-    let Error = GoToRust.get_last_err_message();
-    if(Error ==""  || Error ==null) {
-        if (action_ == "check_update") {
-            //rust库返回的数据解析
-            let CheckUpdateResponse = new device_pb.CheckUpdateResponse.deserializeBinary(HexStr2Bytes(ResBuffer));
-            return CheckUpdateResponse.toObject();
-        } else {
+        }else {//method_ === "device_activate"||"device_secure_check"||"bind_display_code"
             //rust库返回的数据解析
             let Response = new api_pb.Response.deserializeBinary(HexStr2Bytes(ResBuffer));
             let Result = Response.getError();
@@ -102,41 +99,39 @@ function  getDevice_manage_device(action_) {
             }
             return Result;
         }
-    }else{
+    }else {
         let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
-        console.log(" ErrorResponse.getError():" + ErrorResponse.getError())
         return ErrorResponse.getError();
     }
 }
-function getDevice_manage_Applet(action,AppName) {
-
-    //AppAction
-    let AppAction =new  device_pb.AppAction();
-    AppAction.setAppName(AppName);
-    let AppActionBytes = AppAction.serializeBinary();
-    //any
-    let any =new  proto.google.protobuf.Any();
-    any.setValue(AppActionBytes);
-    //deviceParam
-    let deviceParam =new  api_pb.DeviceParam();
-    deviceParam.setAction(action);
-    deviceParam.setParam(any);
-    let deviceParambytes = deviceParam.serializeBinary();
+function  AppletManage(method_,appName) {
+    let Req;
+    if(method_=="app_download") {
+        Req = new device_pb.AppDownloadReq();
+        Req.setAppName(appName);
+    }
+    if(method_=="app_update") {
+        Req = new device_pb.AppUpdateReq();
+        Req.setAppName(appName);
+    }
+    if(method_=="app_delete") {
+        Req = new device_pb.AppDeleteReq();
+        Req.setAppName(appName);
+    }
+    let ReqBytes = Req.serializeBinary();
     //any
     let any1 =new  proto.google.protobuf.Any();
-    any1.setValue(deviceParambytes);
-    // let anyBytes = any.serializeBinary();
-    //TcxAction
-    let TcxAction =new  api_pb.TcxAction();
-    TcxAction.setMethod("device_manage");
-    TcxAction.setParam(any1);
-    let TcxActionBytes = TcxAction.serializeBinary();
+    any1.setValue(ReqBytes);
+    //ImkeyAction
+    let ImkeyAction =new  api_pb.ImkeyAction();
+    ImkeyAction.setMethod(method_);
+    ImkeyAction.setParam(any1);
+    let ImkeyActionBytes = ImkeyAction.serializeBinary();
     //调用rust库
-    let ResBuffer= GoToRust.call_tcx_api(Bytes2HexStr(TcxActionBytes));
-    //rust库返回的数据解析
-    //rust库返回的数据解析
+    let ResBuffer= GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
     let Error = GoToRust.get_last_err_message();
     if(Error ==""  || Error ==null) {
+
         //rust库返回的数据解析
         let Response = new api_pb.Response.deserializeBinary(HexStr2Bytes(ResBuffer));
         let Result = Response.getError();
@@ -147,128 +142,70 @@ function getDevice_manage_Applet(action,AppName) {
             Result= 'false';
         }
         return Result;
+
     }else{
         let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
-        console.log(" ErrorResponse.getError():" + ErrorResponse.getError())
         return ErrorResponse.getError();
     }
+
 }
-function getDevice_manage_bind_check(FilePath) {
-    //BindCheck
-    let BindCheck =new  device_pb.BindCheck();
-    BindCheck.setFilePath(FilePath);
-    let BindCheckBytes = BindCheck.serializeBinary();
+
+function bindCheck(FilePath) {
+    //BindCheckReq
+    let BindCheckReq =new  device_pb.BindCheckReq();
+    BindCheckReq.setFilePath(FilePath);
+    let BindCheckReqBytes = BindCheckReq.serializeBinary();
     //any
     let any =new  proto.google.protobuf.Any();
-    any.setValue(BindCheckBytes);
-    //deviceParam
-    let deviceParam =new  api_pb.DeviceParam();
-    deviceParam.setAction("bind_check");
-    deviceParam.setParam(any);
-    let deviceParambytes = deviceParam.serializeBinary();
-    //any
-    let any1 =new  proto.google.protobuf.Any();
-    any1.setValue(deviceParambytes);
-    // let anyBytes = any.serializeBinary();
-    //TcxAction
-    let TcxAction =new  api_pb.TcxAction();
-    TcxAction.setMethod("device_manage");
-    TcxAction.setParam(any1);
-    let TcxActionBytes = TcxAction.serializeBinary();
+    any.setValue(BindCheckReqBytes);
+
+    //ImkeyAction
+    let ImkeyAction =new  api_pb.ImkeyAction();
+    ImkeyAction.setMethod("bind_check");
+    ImkeyAction.setParam(any);
+    let ImkeyActionBytes = ImkeyAction.serializeBinary();
     //调用rust库
-    let ResBuffer= GoToRust.call_tcx_api(Bytes2HexStr(TcxActionBytes));
+    let ResBuffer= GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
     //rust库返回的数据解析
     let Error = GoToRust.get_last_err_message();
     if(Error ==""  || Error ==null) {
-        let Response = new device_pb.BindCheckResponse.deserializeBinary(HexStr2Bytes(ResBuffer));
-        console.log(" Response.getBindStatus():" + Response.getBindStatus())
+        let Response = new device_pb.BindCheckRes.deserializeBinary(HexStr2Bytes(ResBuffer));
+        // console.log(" Response.getBindStatus():" + Response.getBindStatus())
         return Response.getBindStatus();
     }else{
         let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
-        console.log(" ErrorResponse.getError():" + ErrorResponse.getError())
         return ErrorResponse.getError();
     }
 }
-function getDevice_manage_bind_acquire(bindCode) {
-    console.log("bindCode:"+bindCode)
-    //BindAcquire
-    let BindAcquire =new  device_pb.BindAcquire();
-    BindAcquire.setBindCode(bindCode.toString().toLocaleUpperCase());
-    let BindAcquireBytes = BindAcquire.serializeBinary();
+function bindAcquire(bindCode) {
+    //BindAcquireReq
+    let BindAcquireReq =new  device_pb.BindAcquireReq();
+    BindAcquireReq.setBindCode(bindCode);
+    let BindCheckReqBytes = BindAcquireReq.serializeBinary();
     //any
     let any =new  proto.google.protobuf.Any();
-    any.setValue(BindAcquireBytes);
-    //deviceParam
-    let deviceParam =new  api_pb.DeviceParam();
-    deviceParam.setAction("bind_acquire");
-    deviceParam.setParam(any);
-    let deviceParambytes = deviceParam.serializeBinary();
-    //any
-    let any1 =new  proto.google.protobuf.Any();
-    any1.setValue(deviceParambytes);
-    // let anyBytes = any.serializeBinary();
-    //TcxAction
-    let TcxAction =new  api_pb.TcxAction();
-    TcxAction.setMethod("device_manage");
-    TcxAction.setParam(any1);
-    let TcxActionBytes = TcxAction.serializeBinary();
+    any.setValue(BindCheckReqBytes);
+
+    //ImkeyAction
+    let ImkeyAction =new  api_pb.ImkeyAction();
+    ImkeyAction.setMethod("bind_acquire");
+    ImkeyAction.setParam(any);
+    let ImkeyActionBytes = ImkeyAction.serializeBinary();
     //调用rust库
-    let ResBuffer= GoToRust.call_tcx_api(Bytes2HexStr(TcxActionBytes));
+    let ResBuffer= GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
     //rust库返回的数据解析
     let Error = GoToRust.get_last_err_message();
     if(Error ==""  || Error ==null) {
-        let Response = new device_pb.BindAcquireResponse.deserializeBinary(HexStr2Bytes(ResBuffer));
-        console.log(" Response.getBindResult():" + Response.getBindResult())
-        if(Response.getBindResult().substring(0,2)=="5A"){
-            return 'true';
-        }else if(Response.getBindResult().substring(0,2)=="A5"){
-            return 'false';
+        let Response = new device_pb.BindAcquireRes.deserializeBinary(HexStr2Bytes(ResBuffer));
+        // console.log(" Response.getBindResult():" + Response.getBindResult())
+        if(Response.getBindResult()=="success"){
+            return "true"
         }else{
-            return 'false';
+            return  Response.getBindResult();
         }
 
     }else{
         let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
-        console.log("ErrorResponse.getError()："+ErrorResponse.getError())
-        return ErrorResponse.getError();
-    }
-}
-function getDevice_manage_bind_display() {
-    //
-    let BindDisplay =new  device_pb.BindDisplay();
-    let BindDisplayBytes = BindDisplay.serializeBinary();
-    //any
-    let any =new  proto.google.protobuf.Any();
-    any.setValue(BindDisplayBytes);
-    //deviceParam
-    let deviceParam =new  api_pb.DeviceParam();
-    deviceParam.setAction("bind_display");
-    deviceParam.setParam(any);
-    let deviceParambytes = deviceParam.serializeBinary();
-    //any
-    let any1 =new  proto.google.protobuf.Any();
-    any1.setValue(deviceParambytes);
-    // let anyBytes = any.serializeBinary();
-    //TcxAction
-    let TcxAction =new  api_pb.TcxAction();
-    TcxAction.setMethod("device_manage");
-    TcxAction.setParam(any1);
-    let TcxActionBytes = TcxAction.serializeBinary();
-    //调用rust库
-    let ResBuffer= GoToRust.call_tcx_api(Bytes2HexStr(TcxActionBytes));
-    //rust库返回的数据解析
-    let Error = GoToRust.get_last_err_message();
-    if(Error ==""  || Error ==null) {
-        let Response = new device_pb.BindDisplayResponse.deserializeBinary(HexStr2Bytes(ResBuffer));
-        console.log(" Response.getBindDisplayResult():" + Response.getBindDisplayResult())
-        if(Response.getBindDisplayResult()==null || Response.getBindDisplayResult()==""){
-            return 'true'
-        }else{
-            return 'false'
-        }
-    }else{
-        let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
-        console.log(" ErrorResponse.getError():" + ErrorResponse.getError())
         return ErrorResponse.getError();
     }
 }
@@ -276,7 +213,7 @@ export function getAppList() {
     return new Promise((resolve, reject) => {
         try {
             // console.log("checkUpdate():"+getDevice_manage_device("check_update"))
-            let collections = getDevice_manage_device("check_update").availableAppListList;
+            let collections = getDevice_manage_fuc("check_update").availableAppListList;
             let list = [];
             // console.log("collections:"+JSON.stringify(collections))
             for(let i=0;i<collections.length;i++){
@@ -440,7 +377,7 @@ export function getBleName() {
 
             resolve({
                 code: 200,
-                data: Bytes2Str(HexStr2Bytes(getDevice_manage_fuc("get_ble_name").substring(4)))
+                data: getDevice_manage_fuc("get_ble_name")
             })
         } catch (err) {
             return reject({
@@ -504,7 +441,7 @@ export function activeDevice() {
         try {
             resolve({
                 code: 200,
-                data: getDevice_manage_device("se_activate")
+                data: getDevice_manage_fuc("device_activate")
             })
         } catch (err) {
             return reject({
@@ -514,12 +451,12 @@ export function activeDevice() {
         }
     })
 }
-export function cosUpgrade() {
+export function cosUpdate() {
     return new Promise((resolve, reject) => {
         try {
             resolve({
                 code: 200,
-                data: getDevice_manage_device("cos_upgrade")
+                data: getDevice_manage_fuc("cos_update")
             })
         } catch (err) {
             return reject({
@@ -534,7 +471,7 @@ export function checkDevice() {
         try {
             resolve({
                 code: 200,
-                data: getDevice_manage_device("se_secure_check")
+                data: getDevice_manage_fuc("device_secure_check")
             })
         } catch (err) {
             return reject({
@@ -549,7 +486,7 @@ export function checkUpdate() {
         try {
             resolve({
                 code: 200,
-                data: getDevice_manage_device("check_update")
+                data: getDevice_manage_fuc("check_update")
             })
         } catch (err) {
             return reject({
@@ -564,7 +501,7 @@ export function downloadApplet(AppName) {
         try {
             resolve({
                 code: 200,
-                data: getDevice_manage_Applet("app_download",AppName)
+                data: AppletManage("app_download",AppName)
             })
         } catch (err) {
             return reject({
@@ -579,7 +516,7 @@ export function updateApplet(AppName) {
         try {
             resolve({
                 code: 200,
-                data: getDevice_manage_Applet("app_update",AppName)
+                data: AppletManage("app_update",AppName)
             })
         } catch (err) {
             return reject({
@@ -594,7 +531,7 @@ export function deleteApplet(AppName) {
         try {
             resolve({
                 code: 200,
-                data: getDevice_manage_Applet("app_delete",AppName)
+                data: AppletManage("app_delete",AppName)
             })
         } catch (err) {
             return reject({
@@ -610,7 +547,7 @@ export function deviceBindCheck(FilePath) {
         try {
             resolve({
                 code: 200,
-                data: getDevice_manage_bind_check("bind_check",FilePath)
+                data: bindCheck(FilePath)
             })
         } catch (err) {
             return reject({
@@ -625,7 +562,7 @@ export function deviceBindAcquire(bindCode) {
         try {
             resolve({
                 code: 200,
-                data: getDevice_manage_bind_acquire(bindCode)
+                data: bindAcquire(bindCode)
             })
         } catch (err) {
             return reject({
@@ -640,7 +577,7 @@ export function deviceBindDisplay() {
         try {
             resolve({
                 code: 200,
-                data: getDevice_manage_bind_display()
+                data: getDevice_manage_fuc("bind_display_code")
             })
         } catch (err) {
             return reject({

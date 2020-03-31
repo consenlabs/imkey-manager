@@ -88,7 +88,7 @@ import {remote} from "electron";import {app} from "electron";
         getBleVersion,
         getSdkInfo,
         activeDevice,
-        cosUpgrade,
+        cosUpdate,
         checkDevice,
         deviceBindCheck,
         getUserPath,
@@ -280,7 +280,7 @@ import {remote} from "electron";import {app} from "electron";
                 if (this.cosupdateloading === false) {
                     this.cosupdateloading=true;
                     setTimeout(() => {
-                        cosUpgrade().then(result => {
+                        cosUpdate().then(result => {
                             if (result.code === 200) {
 
                                 if (result.data == "true") {
