@@ -7,6 +7,7 @@ node_modules/
 npm-debug.log
 npm-debug.log.*
 thumbs.db
+imkey-desktop.iml
 !.gitkeep
 .idea/
 yarn-error.log
