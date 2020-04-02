@@ -284,7 +284,96 @@ function  IEOSTransaction_sign_TX(json) {
         return ErrorResponse.getError();
     }
 }
+function  ICOSMOSTransaction_sign_TX(json) {
 
+    let amountList=json.fee.amount;
+    let StdFee= new  cosmos_pb.StdFee()
+    let SignData= new  cosmos_pb.SignData()
+
+    for (let i = 0; i < amountList.length; i++) {
+        console.log("amountList[i]1:"+amountList[i].amount)
+        console.log("amountList[i]1:"+amountList[i].denom)
+        let Coin =new  cosmos_pb.Coin()
+        Coin.setAmount(amountList[i].amount)
+        Coin.setDenom(amountList[i].denom)
+        StdFee.addAmount(Coin)
+    }
+    StdFee.setGas(json.fee.gas)
+
+    let msgList=json.msg
+    for (let i = 0; i < msgList.length; i++) {
+        console.log("msgList[i]:"+msgList[i])
+        let Msg =new  cosmos_pb.Msg()
+        Msg.setType(msgList[i].type)
+        let MsgValue =new  cosmos_pb.MsgValue()
+        // let MsgDelegateValue =new  cosmos_pb.MsgDelegateValue()
+        // let MsgSendValue =new  cosmos_pb.MsgSendValue()
+        let amountList=msgList[i].value.amount;
+        for (let i = 0; i < amountList.length; i++) {
+            console.log("amountList[i]2:"+amountList[i].amount)
+            console.log("amountList[i]2:"+amountList[i].denom)
+            let Coin =new  cosmos_pb.Coin()
+            Coin.setAmount(amountList[i].amount)
+            Coin.setDenom(amountList[i].denom)
+            MsgValue.addAmount(Coin)
+        }
+        if(msgList[i].value.hasOwnProperty("to_address")){
+            let adderssMap= new Map()
+            adderssMap.set("to_address",msgList[i].value.to_address)
+            adderssMap.set("from_address",msgList[i].value.from_address)
+            MsgValue.addressesMap=adderssMap
+            console.log("to_address",msgList[i].value.to_address)
+            console.log("from_address",msgList[i].value.from_address)
+        }else if(msgList[i].value.hasOwnProperty("delegator_address")) {
+
+            let adderssMap= new Map()
+            adderssMap.set("delegator_address",msgList[i].value.delegator_address)
+            adderssMap.set("validator_address",msgList[i].value.validator_address)
+            console.log("delegator_address",msgList[i].value.delegator_address)
+            console.log("validator_address",msgList[i].value.validator_address)
+
+            MsgValue.addressesMap=adderssMap
+        }
+        Msg.setValue(MsgValue)
+        SignData.addMsgs(Msg)
+    }
+    SignData.setFee(StdFee)
+    SignData.setAccountNumber(json.accountNumber)
+    SignData.setChainId(json.chainId)
+    SignData.setMemo(json.memo)
+    SignData.setSequence(json.sequence)
+    let CosmosTxReq =new  cosmos_pb.CosmosTxReq();
+    CosmosTxReq.setPath(Path.COSMOS_LEDGER)
+    CosmosTxReq.setSigndata(SignData)
+    CosmosTxReq.setPaymentDis(json.preview.payment)
+    CosmosTxReq.setToDis(json.preview.receiver)
+    CosmosTxReq.setFromDis(json.preview.sender)
+    CosmosTxReq.setFeeDis(json.preview.fee)
+    let CosmosTxReqbytes = CosmosTxReq.serializeBinary();
+    //any1
+    let any =new  proto.google.protobuf.Any();
+    any.setValue(CosmosTxReqbytes);
+
+    //ImkeyAction
+    let ImkeyAction =new  api_pb.ImkeyAction();
+    ImkeyAction.setMethod("cosmos_tx_sign");
+    ImkeyAction.setParam(any);
+
+    let ImkeyActionBytes = ImkeyAction.serializeBinary();
+    //调用rust库
+    let ResBuffer= GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
+    let Error = GoToRust.get_last_err_message();
+    if(Error ==""  || Error ==null) {
+        //rust库返回的数据解析
+        let Response =new cosmos_pb.CosmosTxRes.deserializeBinary(HexStr2Bytes(ResBuffer));
+
+        return Response;
+    }else{
+        let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
+        console.log("ErrorResponse.getError():"+ErrorResponse.getError())
+        return ErrorResponse.getError();
+    }
+}
 function  BtcXpub(path,netWork) {
     let BtcXpubReq =new  btc_pb.BtcXpubReq();
     BtcXpubReq.setPath(path)
@@ -517,7 +606,9 @@ function EOSTransaction_sign_TX(json) {
 function EOSTransaction_sign_MSG(json) {
     return IEOSTransaction_sign_MSG(json);
 }
-
+function COSMOSTransaction_sign_TX(json) {
+    return ICOSMOSTransaction_sign_TX(json);
+}
 module.exports = {
     BitcoinTransaction_BTC,
     BitcoinTransaction_BTC_SEGWIT,
@@ -527,6 +618,7 @@ module.exports = {
     ETHTransaction_sign_MSG,
     EOSTransaction_sign_MSG,
     EOSTransaction_sign_TX,
+    COSMOSTransaction_sign_TX,
     getBTC_Xpub,
     getBTC_Address,
     getBTC_displayAddress,

@@ -90,6 +90,15 @@ export  function api(api_name,json) {
         };
         return result;
     }
+    else if(api_name =="transactionCOSMOSSIGNTX"){
+        DeviceManger.deviceBindCheck();
+        let response = walletApi.COSMOSTransaction_sign_TX(json)
+        let result = {
+            txHash: response.getTxHash(),
+            signature:response.getTxData(),
+        };
+        return result;
+    }
     else{return "not found api function！ "}
 }
 // module.exports = {
