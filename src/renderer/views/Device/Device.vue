@@ -361,12 +361,19 @@ import {remote} from "electron";import {app} from "electron";
                                         this.AlertShow_Error = false;
                                     }, 2000)
                                 }else{
-                                    if (result.data == "bound_other") {
+                                    if (result.data == "unbound" ) {
                                         //显示绑定码
+                                        this.DeviceBindDisplay();
+
+                                    }  else if(result.data == "bound_other"){
                                         //弹出输入框
                                         this.dialogEdit=true;
-                                    } else {
-                                        this.DeviceBindDisplay();
+                                    }else if(result.data == "bound_this"){
+                                        this.alertmsg='BIND';
+                                        this.AlertShow_Success = true
+                                        setTimeout(() => {
+                                            this.AlertShow_Success = false;
+                                        }, 2000)
                                     }
                                 }
                             }

@@ -51,6 +51,9 @@ function  IBitcoinTransaction_BTC(json,method_) {
     if(json.extraData !=null || json.extraData!=null) {
         BtcTxReq.setExtraData(new Buffer(json.extraData, 'hex'))
     }
+    if(json.propertyId !=null || json.propertyId!=null) {
+        BtcTxReq.setPropertyId(json.propertyId)
+    }
     BtcTxReq.setNetwork(Constants.TESTNET)
     BtcTxReq.setPathPrefix(Path.BITCOIN_TESTNET_PATH)
     let BtcTxReqbytes = BtcTxReq.serializeBinary();
@@ -103,6 +106,9 @@ function  IBitcoinTransaction_BTC_SEGWIT(json,method_) {
     BtcSegwitTxReq.setChangeAddressIndex(json.changeIdx)
     if(json.extraData !=null || json.extraData!=null) {
         BtcSegwitTxReq.setExtraData(new Buffer(json.extraData, 'hex'))
+    }
+    if(json.propertyId !=null || json.propertyId!=null) {
+        BtcSegwitTxReq.setPropertyId(json.propertyId)
     }
     BtcSegwitTxReq.setNetwork(Constants.TESTNET)
     BtcSegwitTxReq.setPathPrefix(Path.BITCOIN_SEGWIT_TESTNET_PATH)
@@ -277,7 +283,12 @@ function  IEOSTransaction_sign_TX(json) {
         //rust库返回的数据解析
         let Response = new eos_pb.EosTxRes.deserializeBinary(HexStr2Bytes(ResBuffer));
 
-        return Response;
+        let list = Response.getTransMultiSignsList();
+        let resultList=[];
+        for (let i = 0; i < list.length; i++) {
+            resultList.push(list[i]);
+        }
+        return resultList;
     }else{
         let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
         console.log("ErrorResponse.getError():"+ErrorResponse.getError())
@@ -285,14 +296,10 @@ function  IEOSTransaction_sign_TX(json) {
     }
 }
 function  ICOSMOSTransaction_sign_TX(json) {
-
-    let amountList=json.fee.amount;
     let StdFee= new  cosmos_pb.StdFee()
     let SignData= new  cosmos_pb.SignData()
-
+    let amountList=json.fee.amount;
     for (let i = 0; i < amountList.length; i++) {
-        console.log("amountList[i]1:"+amountList[i].amount)
-        console.log("amountList[i]1:"+amountList[i].denom)
         let Coin =new  cosmos_pb.Coin()
         Coin.setAmount(amountList[i].amount)
         Coin.setDenom(amountList[i].denom)
@@ -302,36 +309,24 @@ function  ICOSMOSTransaction_sign_TX(json) {
 
     let msgList=json.msg
     for (let i = 0; i < msgList.length; i++) {
-        console.log("msgList[i]:"+msgList[i])
         let Msg =new  cosmos_pb.Msg()
         Msg.setType(msgList[i].type)
         let MsgValue =new  cosmos_pb.MsgValue()
-        // let MsgDelegateValue =new  cosmos_pb.MsgDelegateValue()
-        // let MsgSendValue =new  cosmos_pb.MsgSendValue()
-        let amountList=msgList[i].value.amount;
-        for (let i = 0; i < amountList.length; i++) {
-            console.log("amountList[i]2:"+amountList[i].amount)
-            console.log("amountList[i]2:"+amountList[i].denom)
+        let amountArray=msgList[i].value.amount;
+        for (let i = 0; i < amountArray.length; i++) {
             let Coin =new  cosmos_pb.Coin()
-            Coin.setAmount(amountList[i].amount)
-            Coin.setDenom(amountList[i].denom)
+            Coin.setAmount(amountArray[i].amount)
+            Coin.setDenom(amountArray[i].denom)
             MsgValue.addAmount(Coin)
         }
         if(msgList[i].value.hasOwnProperty("to_address")){
-            let adderssMap= new Map()
-            adderssMap.set("to_address",msgList[i].value.to_address)
-            adderssMap.set("from_address",msgList[i].value.from_address)
-            MsgValue.addressesMap=adderssMap
-            console.log("to_address",msgList[i].value.to_address)
-            console.log("from_address",msgList[i].value.from_address)
+            MsgValue.getAddressesMap().set("to_address",msgList[i].value.to_address)
+            MsgValue.getAddressesMap().set("from_address",msgList[i].value.from_address)
+
         }else if(msgList[i].value.hasOwnProperty("delegator_address")) {
 
-            let adderssMap= new Map()
-            adderssMap.set("delegator_address",msgList[i].value.delegator_address)
-            adderssMap.set("validator_address",msgList[i].value.validator_address)
-            console.log("delegator_address",msgList[i].value.delegator_address)
-            console.log("validator_address",msgList[i].value.validator_address)
-
+            MsgValue.getAddressesMap.set("delegator_address",msgList[i].value.delegator_address)
+            MsgValue.getAddressesMap.setset("validator_address",msgList[i].value.validator_address)
             MsgValue.addressesMap=adderssMap
         }
         Msg.setValue(MsgValue)
@@ -374,35 +369,7 @@ function  ICOSMOSTransaction_sign_TX(json) {
         return ErrorResponse.getError();
     }
 }
-function  BtcXpub(path,netWork) {
-    let BtcXpubReq =new  btc_pb.BtcXpubReq();
-    BtcXpubReq.setPath(path)
-    BtcXpubReq.setNetwork(netWork)
-    let BtcXpubReqBytes = BtcXpubReq.serializeBinary();
-    //any
-    let any =new  proto.google.protobuf.Any();
-    any.setValue(BtcXpubReqBytes);
 
-    //ImkeyAction
-    let ImkeyAction =new  api_pb.ImkeyAction();
-    ImkeyAction.setMethod("btc_get_xpub");
-    ImkeyAction.setParam(any);
-
-    let ImkeyActionBytes = ImkeyAction.serializeBinary();
-    //调用rust库
-    let ResBuffer= GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
-    let Error = GoToRust.get_last_err_message();
-    if(Error ==""  || Error ==null) {
-        //rust库返回的数据解析
-        let Response = new btc_pb.BtcXpubRes.deserializeBinary(HexStr2Bytes(ResBuffer));
-        let  xpub = Response.getXpub()
-        return xpub;
-    }else{
-        let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
-        console.log("ErrorResponse.getError():"+ErrorResponse.getError())
-        return ErrorResponse.getError();
-    }
-}
 function  BtcXpub(path,netWork) {
     let BtcXpubReq =new  btc_pb.BtcXpubReq();
     BtcXpubReq.setPath(path)
@@ -545,92 +512,92 @@ function  cosmosAddress(path,method_) {
         return ErrorResponse.getError();
     }
 }
-function getBTC_Xpub() {
-    return BtcXpub("m/44'/0'/0'/0/0",Constants.MAINNET,"BTC_XPUB");
+export function getBTC_Xpub() {
+    return BtcXpub("m/44'/0'/0'/0/0",Constants.MAINNET);
 }
-function getBTC_Address() {
+export function getBTC_Address() {
     return BtcAddress("m/44'/0'/0'/0/0",Constants.MAINNET,"btc_get_address");
 }
-function getBTC_displayAddress() {
+export function getBTC_displayAddress() {
     return BtcAddress("m/44'/0'/0'/0/0",Constants.MAINNET,"btc_register_address");
 }
-function getBTC_SegWitAddress() {
+export function getBTC_SegWitAddress() {
     return BtcAddress("m/49'/0'/0'/0/22",Constants.MAINNET,"btc_get_setwit_address");
 }
-function getBTC_displaySegWitAddress() {
+export function getBTC_displaySegWitAddress() {
     return BtcAddress("m/49'/0'/0'/0/0",Constants.MAINNET,"btc_register_segwit_address");
 }
 
-function getCOSMOS_Address(path) {
+export function getCOSMOS_Address(path) {
     return cosmosAddress(Path.COSMOS_LEDGER,"cosmos_get_address");
 }
-function getCOSMOS_displayAddress(path) {
+export function getCOSMOS_displayAddress(path) {
     return cosmosAddress(Path.COSMOS_LEDGER,"cosmos_register_address");
 }
 
-function getEOS_Address() {
+export function getEOS_Address() {
     return eosPubkey(Path.EOS_LEDGER,"eos_get_pubkey");
 }
-function getEOS_displayAddress() {
+export function getEOS_displayAddress() {
     return eosPubkey(Path.EOS_LEDGER,"eos_register_pubkey");
 }
 
-function getETH_Address() {
+export function getETH_Address() {
     return ethAddress(Path.ETH_LEDGER);
 }
-function getETH_displayAddress() {
+export function getETH_displayAddress() {
     return ethAddress(Path.ETH_LEDGER);
 }
 
-function BitcoinTransaction_BTC(json) {
+export function BitcoinTransaction_BTC(json) {
     return IBitcoinTransaction_BTC(json,"btc_tx_sign");
 }
-function BitcoinTransaction_BTC_SEGWIT(json) {
+export function BitcoinTransaction_BTC_SEGWIT(json) {
     return IBitcoinTransaction_BTC_SEGWIT(json,"btc_segwit_tx_sign");
 }
-function BitcoinTransaction_BTC_USDT(json) {
+export function BitcoinTransaction_BTC_USDT(json) {
     return IBitcoinTransaction_BTC(json,"btc_usdt_tx_sign");
 }
-function BitcoinTransaction_BTC_USDT_SEGWIT(json) {
+export function BitcoinTransaction_BTC_USDT_SEGWIT(json) {
     return IBitcoinTransaction_BTC_SEGWIT(json,"btc_usdt_segwit_tx_sign");
 }
-function ETHTransaction_sign_TX(json) {
+export function ETHTransaction_sign_TX(json) {
     return IETHTransaction_sign_TX(json);
 }
-function ETHTransaction_sign_MSG(json) {
+export function ETHTransaction_sign_MSG(json) {
     return IETHTransaction_sign_MSG(json);
 }
-function EOSTransaction_sign_TX(json) {
+export function EOSTransaction_sign_TX(json) {
     return IEOSTransaction_sign_TX(json);
 }
-function EOSTransaction_sign_MSG(json) {
+export function EOSTransaction_sign_MSG(json) {
     return IEOSTransaction_sign_MSG(json);
 }
-function COSMOSTransaction_sign_TX(json) {
+export function COSMOSTransaction_sign_TX(json) {
     return ICOSMOSTransaction_sign_TX(json);
 }
-module.exports = {
-    BitcoinTransaction_BTC,
-    BitcoinTransaction_BTC_SEGWIT,
-    BitcoinTransaction_BTC_USDT,
-    BitcoinTransaction_BTC_USDT_SEGWIT,
-    ETHTransaction_sign_TX,
-    ETHTransaction_sign_MSG,
-    EOSTransaction_sign_MSG,
-    EOSTransaction_sign_TX,
-    COSMOSTransaction_sign_TX,
-    getBTC_Xpub,
-    getBTC_Address,
-    getBTC_displayAddress,
-    getBTC_SegWitAddress,
-    getBTC_displaySegWitAddress,
-    getCOSMOS_Address,
-    getCOSMOS_displayAddress,
-    getEOS_Address,
-    getEOS_displayAddress,
-    getETH_Address,
-    getETH_displayAddress
-}
+// module.exports = {
+//     BitcoinTransaction_BTC,
+//     BitcoinTransaction_BTC_SEGWIT,
+//     BitcoinTransaction_BTC_USDT,
+//     BitcoinTransaction_BTC_USDT_SEGWIT,
+//     ETHTransaction_sign_TX,
+//     ETHTransaction_sign_MSG,
+//     EOSTransaction_sign_MSG,
+//     EOSTransaction_sign_TX,
+//     COSMOSTransaction_sign_TX,
+//     getBTC_Xpub,
+//     getBTC_Address,
+//     getBTC_displayAddress,
+//     getBTC_SegWitAddress,
+//     getBTC_displaySegWitAddress,
+//     getCOSMOS_Address,
+//     getCOSMOS_displayAddress,
+//     getEOS_Address,
+//     getEOS_displayAddress,
+//     getETH_Address,
+//     getETH_displayAddress
+// }
 /**
  * @desc 二进制数组转字符串
  */

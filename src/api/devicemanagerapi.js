@@ -151,6 +151,7 @@ function  AppletManage(method_,appName) {
 }
 
 function bindCheck(FilePath) {
+    console.log("=================FilePath=============:"+FilePath)
     //BindCheckReq
     let BindCheckReq =new  device_pb.BindCheckReq();
     BindCheckReq.setFilePath(FilePath);
