@@ -33,9 +33,9 @@ const winURL = process.env.NODE_ENV === 'development'
     ? `http://localhost:9080`
     : `file://${__dirname}/index.html`
 
-const loginURL = process.env.NODE_ENV === 'development'
-    ? `http://localhost:9080/#login`
-    : `file://${__dirname}/index.html#login`
+// const loginURL = process.env.NODE_ENV === 'development'
+//     ? `http://localhost:9080/#login`
+//     : `file://${__dirname}/index.html#login`
 
 const path = require('path')
 const ApplicationName = pkg.name
@@ -139,20 +139,20 @@ function createMainWindow() {
      * Initial window options
      */
     mainWindow = new BrowserWindow({
-        show: false,
+        show: true,
         height: 1000,
         width: 1600,
         minWidth: 900,
         minHeight: 600,
         useContentSize: true,
-        frame: false, // 无边框
+        frame: true, // 无边框
         transparent: true, // 透明
         // fullscreen: true, // 全屏
         webPreferences: {
             nodeIntegration: true
         },
     })
-
+    Menu.setApplicationMenu(null)
     mainWindow.loadURL(winURL)
 
     /**
@@ -325,6 +325,10 @@ function ipcStartOnBoot() {
  * 启动 http server
  */
 function startHttpserver() {
+    // process.dlopen = () => {
+    //     throw new Error('Load native module is not safe')
+    // }
+    // let worker = new Worker('server.js')
 //创建子进程，直接打开当前目录下的server.js
 //     openExec = exec('node '+server_name, function (error, stdout, stderr) {
 //         if (error) {
@@ -479,15 +483,15 @@ function autoUpdate() {
 function crashReport() {
     // 报告常规错误
     Sentry.init({
-        dsn: 'https://8e0258fcf49d43d09d9fe7c6a0c8ea80@sentry.io/1455801',
+        dsn: 'https://36dc1ad5111d44e1ae447e324a4d0141@o359184.ingest.sentry.io/5199393',
     })
 
     // 报告系统错误
     crashReporter.start({
-        companyName: 'lanmiao',
-        productName: 'LanMiaoDesktop',
+        companyName: 'imKey',
+        productName: 'imKeyDesktop',
         ignoreSystemCrashHandler: true,
-        submitURL: 'https://sentry.io/api/1455801/minidump/?sentry_key=8e0258fcf49d43d09d9fe7c6a0c8ea80'
+        submitURL: 'https://o359184.ingest.sentry.io/api/5199393/security/?sentry_key=36dc1ad5111d44e1ae447e324a4d0141'
     })
 
     // 渲染进程崩溃事件
@@ -607,7 +611,7 @@ if (!gotTheLock) {
 
     // 创建 mainWindow, 加载应用的其余部分, etc...
     app.on('ready', () => {
-        createLoginWindow()
+        // createLoginWindow()
         createMainWindow()
         createTray()
         ipcStartOnBoot()
@@ -651,7 +655,7 @@ app.on('activate', () => {
         createMainWindow()
     }
 
-    if (loginWindow === null) {
-        createLoginWindow()
-    }
+    // if (loginWindow === null) {
+    //     createLoginWindow()
+    // }
 })

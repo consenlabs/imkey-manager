@@ -24,7 +24,7 @@
     "directories": {
       "output": "build"
     },
-    "extraResources":  [
+    "extraResources": [
       {
         "from": "./connector.dll",
         "to": "../"
@@ -67,7 +67,7 @@
       "allowToChangeInstallationDirectory": true
     },
     "linux": {
-      "icon": "build/icons"
+      "icon": "build/icons/icon.icns"
     }
   },
   "dependencies": {
@@ -136,5 +136,13 @@
     "webpack-dev-server": "^3.3.1",
     "webpack-hot-middleware": "^2.24.3",
     "webpack-merge": "^4.2.1"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/consenlabs/imkey-desktop.git"
+  },
+  "bugs": {
+    "url": "https://github.com/consenlabs/imkey-desktop/issues"
+  },
+  "homepage": "https://github.com/consenlabs/imkey-desktop#readme"
 }

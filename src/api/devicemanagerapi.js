@@ -21,6 +21,41 @@ let device_pb = require('../proto/device_pb');
 let GoToRust = require('./gotorust');
 let Constants = require('../common/Constants');
 let path = require('path');
+
+function connect(deviceModelName) {
+
+    let Req = new device_pb.DeviceConnectReq();
+    Req.setDeviceModelName(deviceModelName);
+
+    let ReqBytes = Req.serializeBinary();
+    //any
+    let any1 =new  proto.google.protobuf.Any();
+    any1.setValue(ReqBytes);
+    //ImkeyAction
+    let ImkeyAction =new  api_pb.ImkeyAction();
+    ImkeyAction.setMethod("device_connect");
+    ImkeyAction.setParam(any1);
+    let ImkeyActionBytes = ImkeyAction.serializeBinary();
+
+    //调用rust库
+    let ResBuffer= GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
+    let Error = GoToRust.get_last_err_message();
+    if(Error ==""  || Error ==null) {
+
+        //rust库返回的数据解析
+        let Response = new api_pb.Response.deserializeBinary(HexStr2Bytes(ResBuffer));
+        let Result = Response.getError();
+        //获取解析后的值
+        if(Result==null || Result==''||Result==""){
+            Result= 'true';
+        }
+        return Result;
+
+    }else {
+        let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
+        return ErrorResponse.getError();
+    }
+}
 function getDevice_manage_fuc(method_) {
 
     //ImkeyAction
@@ -101,6 +136,7 @@ function getDevice_manage_fuc(method_) {
         }
     }else {
         let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
+        console.log("ErrorResponse.getError():"+ErrorResponse.getError())
         return ErrorResponse.getError();
     }
 }
@@ -330,6 +366,7 @@ function deviceBindDisplay() {
 // console.log( "deleteApplet:"+deleteApplet());
 
 module.exports = {
+    connect,
     getSeid,
     getSn,
     getRamSize,

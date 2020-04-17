@@ -2,6 +2,7 @@ let walletApi = require('./walletapi');
 let DeviceManger = require('./devicemanagerapi');
 let FilePath =require("path").resolve('./')
 export  function api(api_name,json) {
+    DeviceManger.connect("imKey Pro");
     if(api_name==null){return "input api fuction is null"}
     // else if(api_name =="getSeid"){return DeviceManger.getSeid()}
     // else if(api_name =="getSn"){ return DeviceManger.getSn()}

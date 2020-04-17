@@ -21,7 +21,43 @@ let device_pb = require('../proto/device_pb');
 let GoToRust = require('./gotorust');
 let Constants = require('../common/Constants');
 
+function connect(deviceModelName) {
+
+    let Req = new device_pb.DeviceConnectReq();
+    Req.setDeviceModelName(deviceModelName);
+
+    let ReqBytes = Req.serializeBinary();
+    //any
+    let any1 =new  proto.google.protobuf.Any();
+    any1.setValue(ReqBytes);
+    //ImkeyAction
+    let ImkeyAction =new  api_pb.ImkeyAction();
+    ImkeyAction.setMethod("device_connect");
+    ImkeyAction.setParam(any1);
+    let ImkeyActionBytes = ImkeyAction.serializeBinary();
+
+    //调用rust库
+    let ResBuffer= GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
+    let Error = GoToRust.get_last_err_message();
+    if(Error ==""  || Error ==null) {
+
+        //rust库返回的数据解析
+        let Response = new api_pb.Response.deserializeBinary(HexStr2Bytes(ResBuffer));
+        let Result = Response.getError();
+        //获取解析后的值
+        if(Result==null || Result==''||Result==""){
+            Result= 'true';
+        }
+        return Result;
+
+    }else {
+        let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
+        return ErrorResponse.getError();
+    }
+}
 function getDevice_manage_fuc(method_) {
+
+    //connect
 
     //ImkeyAction
     let ImkeyAction =new  api_pb.ImkeyAction();
@@ -84,6 +120,7 @@ function getDevice_manage_fuc(method_) {
             return Result;
         }else if (method_ === "check_update") {
             let Response = new device_pb.CheckUpdateRes.deserializeBinary(HexStr2Bytes(ResBuffer));
+            console.log(Response)
             //获取解析后的值
             let Result = Response.toObject();
             return Result;
@@ -210,7 +247,7 @@ function bindAcquire(bindCode) {
         return ErrorResponse.getError();
     }
 }
-export function getAppList() {
+export  function getAppList() {
     return new Promise((resolve, reject) => {
         try {
             // console.log("checkUpdate():"+getDevice_manage_device("check_update"))
@@ -218,11 +255,15 @@ export function getAppList() {
             let list = [];
             // console.log("collections:"+JSON.stringify(collections))
             for(let i=0;i<collections.length;i++){
-                let collection = {
-                    name: collections[i].appName,
-                    version: collections[i].installedVersion
-                };
-                list.push(collection);
+                //过滤imkey Applet 不显示IMK applet
+               if( collections[i].appName!="IMK"){
+                   let collection = {
+                       name: collections[i].appName,
+                       version: collections[i].installedVersion
+                   };
+                   list.push(collection);
+               }
+
             }
             let total = list.length;
             console.log("result.data.list:"+list)
@@ -246,8 +287,25 @@ export function getAppList() {
         }
     })
 }
+export function connect_device() {
+    return new Promise((resolve, reject) => {
+        try {
 
-export function getSeid() {
+            resolve({
+                code: 200,
+                data: connect("imKey Pro")
+            })
+        } catch (err) {
+            return reject({
+                code: 400,
+                message: err.message
+            })
+        }
+    })
+}
+
+export  function getSeid() {
+
     return new Promise((resolve, reject) => {
         try {
 
@@ -264,7 +322,8 @@ export function getSeid() {
     })
 }
 
-export function getSn() {
+export  function getSn() {
+
     return new Promise((resolve, reject) => {
         try {
 
@@ -280,7 +339,8 @@ export function getSn() {
         }
     })
 }
-export function getRamSize() {
+export  function getRamSize() {
+
     return new Promise((resolve, reject) => {
         try {
 
@@ -297,7 +357,8 @@ export function getRamSize() {
     })
 }
 
-export function getFirmwareVersion() {
+export  function getFirmwareVersion() {
+
     return new Promise((resolve, reject) => {
         try {
             let FirmwareVersion = getDevice_manage_fuc("get_firmware_version");
