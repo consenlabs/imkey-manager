@@ -3,18 +3,26 @@
         <router-view></router-view>
     </div>
 </template>
-<script>
-    export default {
-        name: 'app'
-    }
-</script>
+
 
 <style type="text/css" lang="scss">
-    html {
-        /* 禁用html的滚动条，因为用的无框架窗口，默认就会有一个滚动条，所以去掉 */
-        overflow-y: hidden;
+    #app {
+        font-family: '微软雅黑 Bold', '微软雅黑 Regular', '微软雅黑';
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        /* text-align: center; */
+        color: #2c3e50;
+        height: 100%;
     }
-
+    /*html {*/
+    /*    !* 禁用html的滚动条，因为用的无框架窗口，默认就会有一个滚动条，所以去掉 *!*/
+    /*    overflow-y: hidden;*/
+    /*}*/
+    li{
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    }
     /*定义滚动条高宽及背景 高宽分别对应横竖滚动条的尺寸*/
     ::-webkit-scrollbar {
         width: 2px; /*滚动条宽度*/
