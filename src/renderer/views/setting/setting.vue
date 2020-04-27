@@ -10,7 +10,7 @@
     </p>
     <div class="deviceBox">
       <div class="contentBox">
-        <img src="../../assets/logoNotWin@3x.png" style="width:40px;height:auto" alt="">
+        <img src="../../assets/logo64.png" style="width:60px;height:70px" alt="">
         <div class="deviceName">
           <h3>imKey-desktop</h3>
           <p>imKey-desktop version {{oldVersionData}}</p>
@@ -88,7 +88,7 @@ export default {
 }
 .contentBox{
   display: flex;
-  
+  align-items: center;
 }
 .notice {
   display: flex;

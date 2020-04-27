@@ -6,7 +6,7 @@
       <span slot="title">Home</span>
     </el-menu-item>
     <el-menu-item index="/manager/device">
-      <i class="el-icon-s-promotion"></i>
+      <i class="el-icon-menu"></i>
       <span slot="title">Manager</span>
     </el-menu-item>
     <el-menu-item index="/setting">

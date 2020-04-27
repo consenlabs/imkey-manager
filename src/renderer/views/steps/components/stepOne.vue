@@ -31,6 +31,9 @@ export default {
   components:{
     deviceImage
   },
+  mounted() {
+    this.choose(2);
+  },
   methods: {
       connect(){
       connect_device().then(result => {

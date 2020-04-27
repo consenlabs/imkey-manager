@@ -66,7 +66,7 @@
 <script>
   import deviceImage from "../../components/deviceImage";
   import {
-    connect_device,cosUpdate,getAppList,downloadApplet,deleteApplet
+    connect_device,cosUpdate,getAppList,downloadApplet,deleteApplet,getFirmwareVersion
   } from '../../../api/devicemanager'
   export default {
     name: "manager",
@@ -74,8 +74,8 @@
       return {
         appName: "",
         isSuccess: false,
-        oldVersionData: "1.4.1",
-        newVersionData: "1.4.2",
+        oldVersionData: "",
+        newVersionData: "1.5.10",
         updateSuccess: false,
         loading: false,
         apps: []
@@ -99,11 +99,21 @@
     },
     mounted() {
       this.connect();
+      this. getFirmwareVersion();
     //加载应用
       this.AppsList();
       this.isSuccess = true;
     },
     methods: {
+      getFirmwareVersion() {
+        getFirmwareVersion().then(result => {
+          if (result.code === 200) {
+            this.oldVersionData = result.data;
+          }
+        }).catch(err => {
+
+        })
+      },
       getcosupdate() {
         this.connect();
         cosUpdate().then(result => {

@@ -19,6 +19,9 @@
 export default {
   name: "notice",
   props: { noticeVisible: Boolean },
+  mounted() {
+    this.handleClose();
+  },
   methods: {
     handleClose() {
       this.$emit("closeNotice", false);

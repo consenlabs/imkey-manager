@@ -163,14 +163,14 @@ export default {
 .line::before {
   background: #dcdcdc;
   display: inline-block;
-  content: "";
+
   position: absolute;
   border: 1px solid #666;
 }
 .deviceBoxLarge .line::before {
   width: 20px;
   height: 40px;
-
+  content: "";
   left: -6px;
 
   border-bottom-right-radius: 5px;

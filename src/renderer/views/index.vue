@@ -44,7 +44,7 @@
       closeNotice() {
         this.noticeVisible = false;
         this.$store.state.agree = false;
-        this.router.replace("/Home");
+        this.router.replace("/home");
       }
     }
   };

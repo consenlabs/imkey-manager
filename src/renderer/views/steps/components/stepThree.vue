@@ -59,8 +59,8 @@ export default {
     return {
       optionOneVisible: false,
       optionTwoVisible: false,
-      IseeOnes: false,
-      IseeTwos: false,
+      IseeOnes: true,
+      IseeTwos: true,
       nextLoading: false
 
     };
@@ -68,6 +68,9 @@ export default {
   components: {
     OptionOne,
     OptionTwo
+  },
+  mounted() {
+    this.connect();
   },
   methods: {
     connect(){

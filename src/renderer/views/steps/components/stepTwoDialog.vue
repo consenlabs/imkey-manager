@@ -9,7 +9,7 @@
     <div class="sideBox">
       <div class="chooseBox">
         <div>
-          <span class="el-icon-s-tools icon"></span>
+          <span class="el-icon-magic-stick"></span>
           <span>Activating your imKey</span>
         </div>
         <div v-loading="loading1" element-loading-spinner="el-icon-loading loading" v-if="loading1"></div>
@@ -33,7 +33,7 @@
       </div>
       <div class="chooseBox">
         <div>
-          <span class="el-icon-s-opportunity icon"></span>
+          <span class="el-icon-connection"></span>
           <span>Binding your imKey</span>
         </div>
         <div v-if="showThree">

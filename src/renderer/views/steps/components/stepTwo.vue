@@ -61,6 +61,9 @@ export default {
   components: {
     CheckBox
   },
+    mounted() {
+        this.check();
+    },
   methods: {
     changeOneType(type) {
       if (type === 1) {
