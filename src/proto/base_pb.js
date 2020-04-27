@@ -67,7 +67,8 @@ proto.SearchRequest.prototype.toObject = function(opt_includeInstance) {
 proto.SearchRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
     name: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    password: jspb.Message.getFieldWithDefault(msg, 2, "")
+    password: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    addressesMap: (f = msg.getAddressesMap()) ? f.toObject(includeInstance, undefined) : []
   };
 
   if (includeInstance) {
@@ -112,6 +113,12 @@ proto.SearchRequest.deserializeBinaryFromReader = function(msg, reader) {
       var value = /** @type {string} */ (reader.readString());
       msg.setPassword(value);
       break;
+    case 3:
+      var value = msg.getAddressesMap();
+      reader.readMessage(value, function(message, reader) {
+        jspb.Map.deserializeBinary(message, reader, jspb.BinaryReader.prototype.readString, jspb.BinaryReader.prototype.readString, null, "", "");
+         });
+      break;
     default:
       reader.skipField();
       break;
@@ -155,6 +162,10 @@ proto.SearchRequest.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getAddressesMap(true);
+  if (f && f.getLength() > 0) {
+    f.serializeBinary(3, writer, jspb.BinaryWriter.prototype.writeString, jspb.BinaryWriter.prototype.writeString);
+  }
 };
 
 
@@ -192,6 +203,28 @@ proto.SearchRequest.prototype.getPassword = function() {
 proto.SearchRequest.prototype.setPassword = function(value) {
   return jspb.Message.setProto3StringField(this, 2, value);
 };
+
+
+/**
+ * map<string, string> addresses = 3;
+ * @param {boolean=} opt_noLazyCreate Do not create the map if
+ * empty, instead returning `undefined`
+ * @return {!jspb.Map<string,string>}
+ */
+proto.SearchRequest.prototype.getAddressesMap = function(opt_noLazyCreate) {
+  return /** @type {!jspb.Map<string,string>} */ (
+      jspb.Message.getMapField(this, 3, opt_noLazyCreate,
+      null));
+};
+
+
+/**
+ * Clears values from the map. The map will be non-null.
+ * @return {!proto.SearchRequest} returns this
+ */
+proto.SearchRequest.prototype.clearAddressesMap = function() {
+  this.getAddressesMap().clear();
+  return this;};
 
 
 goog.object.extend(exports, proto);

@@ -254,12 +254,33 @@ export  function getAppList() {
             let collections = getDevice_manage_fuc("check_update").availableAppListList;
             let list = [];
             // console.log("collections:"+JSON.stringify(collections))
+            let  installLoding;
+            let  installDis;
+            let  deletDis;
+            let  deletLoding;
             for(let i=0;i<collections.length;i++){
                 //过滤imkey Applet 不显示IMK applet
                if( collections[i].appName!="IMK"){
+                   if(collections[i].installedVersion !="none" || collections[i].installedVersion != null){
+                           installLoding=false;
+                           installDis=true;
+                           deletDis=false;
+                           deletLoding= false;
+                   }else{
+                       installLoding=false;
+                       installDis=false;
+                       deletDis=true;
+                       deletLoding= false;
+                   }
                    let collection = {
-                       name: collections[i].appName,
-                       version: collections[i].installedVersion
+                           name:collections[i].appName,
+                           desc: "version "+collections[i].latestVersion,
+                           id: i,
+                           installLoding: installLoding,
+                           installDis: installDis,
+                           deletDis: deletDis,
+                           deletLoding: deletLoding,
+                           icon: collections[i].appLogo,
                    };
                    list.push(collection);
                }
@@ -559,6 +580,7 @@ export function checkUpdate() {
     })
 }
 export function downloadApplet(AppName) {
+    console.log("AppName:"+AppName)
     return new Promise((resolve, reject) => {
         try {
             resolve({
@@ -574,6 +596,7 @@ export function downloadApplet(AppName) {
     })
 }
 export function updateApplet(AppName) {
+    console.log("AppName:"+AppName)
     return new Promise((resolve, reject) => {
         try {
             resolve({
@@ -589,6 +612,7 @@ export function updateApplet(AppName) {
     })
 }
 export function deleteApplet(AppName) {
+    console.log("AppName:"+AppName)
     return new Promise((resolve, reject) => {
         try {
             resolve({

@@ -8,28 +8,28 @@
           <span class="sort">1.</span>
           <span>Activate your imKey</span>
         </p>
-        <div>
-          <el-button-group>
-            <el-button :type="yesOneType" @click="changeOneType(1)">Yes</el-button>
-            <el-button :type="noOneType" @click="changeOneType(2)">No</el-button>
-          </el-button-group>
-        </div>
+<!--        <div>-->
+<!--          <el-button-group>-->
+<!--            <el-button :type="yesOneType" @click="changeOneType(1)">Yes</el-button>-->
+<!--            <el-button :type="noOneType" @click="changeOneType(2)">No</el-button>-->
+<!--          </el-button-group>-->
+<!--        </div>-->
       </div>
       <div class="selectBox">
         <p class="text">
           <span class="sort">2.</span>
           <span>Bind your imKey</span>
         </p>
-        <div>
-          <el-button-group>
-            <el-button :type="yesTowType" @click="changeTowType(1)">Yes</el-button>
-            <el-button :type="noTowType" @click="changeTowType(2)">No</el-button>
-          </el-button-group>
-        </div>
+<!--        <div>-->
+<!--          <el-button-group>-->
+<!--            <el-button :type="yesTowType" @click="changeTowType(1)">Yes</el-button>-->
+<!--            <el-button :type="noTowType" @click="changeTowType(2)">No</el-button>-->
+<!--          </el-button-group>-->
+<!--        </div>-->
       </div>
       <div class="selectBox">
         <p class="text">
-          <span class="sort">3.</span>
+<!--          <span class="sort"></span>-->
           <span>Start active and bind your imKey</span>
         </p>
         <div>

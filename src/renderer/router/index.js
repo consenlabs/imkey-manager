@@ -15,6 +15,11 @@ const routes = [
     component: require('@/views/Menu').default
   },
   {
+    path: '/loading',
+    name: 'loading',
+    component: require('@/views/loading').default
+  },
+  {
     path: '/deviceStep',
     name: 'deviceStep',
     component: require('@/views/steps/step').default
@@ -60,8 +65,8 @@ const routes = [
 ]
 
 const router = new VueRouter({
-  mode: 'history',
-  base: process.env.BASE_URL,
+  // mode: 'history',
+  // base: process.env.BASE_URL,
   routes
 })
 

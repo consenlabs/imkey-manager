@@ -15,15 +15,15 @@
         <div v-loading="loading1" element-loading-spinner="el-icon-loading loading" v-if="loading1"></div>
         <div v-else :class="status1?'el-icon-check':'el-icon-close'"></div>
       </div>
-      <div class="chooseBox secondChoose">
+      <div class="chooseBox secondChoose" v-show="bindShow">
         <div>
-          <el-input v-model="value" style="width:250px" placeholder="enter bind code"></el-input>
+          <el-input v-model="BindCode" style="width:250px" placeholder="enter bind code"></el-input>
         </div>
         <div>
           <el-button
             type="primary"
             size="mini"
-            @click="insert"
+            @click="bind"
             v-if="!isCorret"
             :loading="loading"
             :disabled="!status1"
@@ -46,12 +46,15 @@
 </template>
 
 <script>
+import {connect_device,activeDevice,deviceBindAcquire,deviceBindCheck,deviceBindDisplay,getUserPath} from "../../../../api/devicemanager";
 export default {
   name: "checkBox",
   data() {
     return {
+      userPath:"",
+      bindShow:false,
       status1: false,
-      value: "",
+      BindCode: "",
       status3: false,
       isCorret: false,
       loading: false,
@@ -69,14 +72,161 @@ export default {
       }
     }
   },
+  mounted() {
+    this.getUserPath();
+  },
   methods: {
+    getUserPath(){
+      getUserPath().then(result => {
+        if (result.code === 200) {
+          this.userPath = result.data;
+          console.log("this.userPath"+this.userPath)
+        }
+      }).catch(err => {
+
+      })
+    },
+    connect(){
+      connect_device().then(result => {
+        if (result.code === 200) {
+          const res = result.data
+          if(res=="true"){
+            console.log("success res"+res)
+            // this.$emit("showTwo");
+          }else{
+            this.$message.warning(result.data);
+            // this.isOneChoose = false;
+            // this.isTwoChoose = false;
+          }
+        } else {
+          // this.isOneChoose = false;
+          // this.isTwoChoose = false;
+        }
+      }).catch(err => {
+        // this.isOneChoose = false;
+        // this.isTwoChoose = false;
+      })
+    },
+    getActiveDevice() {
+        setTimeout(() => {
+          activeDevice().then(result => {
+            if (result.code === 200) {
+
+              if (result.data == "true") {
+                //激活成功
+                this.loading1 = false;
+                this.status1 = true;
+                this.showTwo = true;
+                //开始判断是否绑定
+                this.getBindDevice();
+              } else {
+                console.log("activeDevice:"+result.data)
+                //激活失败
+                this.handleClose();
+                this.$message.warning(result.data);
+              }
+            }
+          }).catch(err => {
+            //激活失败
+            this.handleClose();
+          })
+
+        }, 200)
+
+    },
+    getBindDevice() {
+          deviceBindCheck(this.userPath).then(result => {
+            if (result.code === 200) {
+              console.log("result.data:"+result.data);
+              if (result.data == "" || result.data ==null) {
+                //失败的话
+                this.$emit("showTwo", false);
+                this.handleClose();
+              }else{
+                if (result.data == "bound_other") {
+                  //弹出输入框
+                  this.bindShow=true;
+
+                } else if(result.data == "unbound"){
+                  //弹出输入框
+                  this.bindShow=true;
+                  //显示绑定码
+                  this.DeviceBindDisplay();
+                }else if(result.data == "bound_this"){
+                  this.isCorret = true;
+                  this.showThree = true;
+                  this.status3 = true;
+                  this.loading3 = true;
+                  setTimeout(() => {
+                    //已经绑定
+                    this.loading3 = false;
+                  }, 2000);
+                  setTimeout(() => {
+                    //第三部成功的话
+                    this.$emit("showTree", true);
+                    this.handleClose();
+                  }, 3000);
+                }
+              }
+            }
+          }).catch(err => {
+            //失败的话
+            this.$emit("showTwo", false);
+            this.handleClose();
+          })
+
+    },
+    DeviceBindAcquire() {
+        this.loading3 = true;
+        deviceBindAcquire(this.BindCode).then(result => {
+          if (result.code === 200) {
+            if (result.data == "true") {
+              setTimeout(() => {
+                //已经绑定
+                this.loading3 = false;
+              }, 1000);
+              setTimeout(() => {
+                //第三部成功的话
+                this.$emit("showTree", true);
+                this.handleClose();
+              }, 2000);
+
+            } else {
+              //失败的话
+              this.$emit("showTwo", false);
+              this.handleClose();
+            }
+          }
+        }).catch(err => {
+        //失败的话
+          this.$emit("showTwo", false);
+          this.handleClose();
+        })
+    },
+    DeviceBindDisplay() {
+      deviceBindDisplay().then(result => {
+        if (result.code === 200) {
+          console.log("deviceBindDisplay:"+result.data)
+          if (result.data == "true") {
+
+          }else{
+            //失败的话
+            this.$emit("showTwo", false);
+            this.handleClose();
+          }
+        }
+      }).catch(err => {
+        //失败的话
+        this.$emit("showTwo", false);
+        this.handleClose();
+      })
+    },
     firstCheck() {
+      this.connect();
       this.loading1 = true;
       //第一步成功的话，继续要一步操作
       setTimeout(() => {
-        this.loading1 = false;
-        this.status1 = true;
-        this.showTwo = true;
+      this.getActiveDevice();
       }, 1000);
       //失败的话
       // this.$emit("showTree", false);
@@ -84,7 +234,7 @@ export default {
     handleClose() {
       this.$emit("closeCheckBox", false);
       this.status1 = false;
-      this.value = "";
+      this.BindCode = "";
       this.status3 = false;
       this.isCorret = false;
       this.loading = false;
@@ -93,25 +243,16 @@ export default {
       this.showTwo = false;
       this.showThree = false;
     },
-    insert() {
-      this.loading = true;
+    bind() {
+      this.connect();
+      this.loading=true;
+      this.isCorret = true;
+      this.showThree = true;
+      this.status3 = true;
+      this.loading3 = true;
       setTimeout(() => {
-        this.loading = false;
-        this.isCorret = true;
-        this.showThree = true;
-        this.status3 = true;
-        this.loading3 = true;
-      }, 800);
-      setTimeout(() => {
-        this.loading3 = false;
-      }, 2000);
-      setTimeout(() => {
-        //第三部成功的话
-        this.$emit("showTree", true);
-        //失败的话
-        // this.$emit("showTree", false);
-        this.handleClose();
-      }, 3000);
+        this.DeviceBindAcquire();
+      }, 500);
     }
   }
 };

@@ -42,17 +42,21 @@
           </div>-->
         </li>
       </ul>
-      <el-button type="primary" @click="connect" style="width:100%">Connect</el-button>
+      <el-button type="primary" @click="connect" :loading="connectLoading" style="width:100%">Connect</el-button>
     </div>
   </div>
 </template>
 
 <script>
 import deviceImage from "../../components/deviceImage";
+import {
+  connect_device,
+} from '../../../api/devicemanager'
 export default {
   name: "manager",
   data() {
     return {
+      connectLoading:false,
       firstLoding: false,
       firstSuccess: false,
       SecondSuccess: false,
@@ -73,8 +77,29 @@ export default {
   mounted() {},
   methods: {
     connect() {
-      this.router.replace("/manager/device");
-    }
+      this.connectLoading=true;
+      setTimeout(() => {
+      connect_device().then(result => {
+
+        if (result.code === 200) {
+          const res = result.data
+          if (res == "true") {
+            console.log("success res " + res)
+            this.router.replace("/manager/device");
+          } else {
+            this.$message.warning(res);
+            this.connectLoading=false;
+          }
+        } else {
+
+        }
+      }).catch(err => {
+
+      })
+      }, 200);
+    },
+
+
     // connectOne() {
     //   this.showOne = true;
     //   this.firstLoding = true;
@@ -113,10 +138,10 @@ export default {
 
 <style lang="less" scoped>
 .manager {
-  padding-top: 60px;
+  padding-top: 10px;
   width: 600px;
   margin: 0 auto;
-  margin-bottom: 10px;
+  margin-bottom: 30px;
   text-align: center;
 }
 h1 {

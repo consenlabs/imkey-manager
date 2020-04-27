@@ -43,13 +43,13 @@
         </span>
         <span class="el-icon-arrow-right"></span>
       </div>
-      <div class="btns">
-        <span>
-          <i class="el-icon-shopping-bag-2"></i>
-          Go to buy imKey Pro Device
-        </span>
-        <span class="el-icon-arrow-right"></span>
-      </div>
+<!--      <div class="btns">-->
+<!--        <span>-->
+<!--          <i class="el-icon-shopping-bag-2"></i>-->
+<!--          Go to buy imKey Pro Device-->
+<!--        </span>-->
+<!--        <span class="el-icon-arrow-right"></span>-->
+<!--      </div>-->
       <!-- <div class="btns">
         <span>
           <i class="el-icon-check"></i>

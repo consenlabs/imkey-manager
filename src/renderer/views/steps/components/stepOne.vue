@@ -2,8 +2,8 @@
   <div class="stepOne">
     <h2>Connect your imKey</h2>
     <div>
-      <div :class="['selectBox',isTwoChoose?'active':'','deviceBox']" @click="choose(2)">
-        <div class="choose el-icon-check" v-if="isTwoChoose"></div>
+      <div :class="['selectBox',isTwoChoose?'active':'','deviceBox']" :loading="connectLoading" @click="choose(2)">
+        <div class="choose el-icon-check" :loading="connectLoading" v-if="isTwoChoose"></div>
         <p></p>
         <deviceImage :small="true"></deviceImage>
         <p>imKey Pro</p>
@@ -14,10 +14,15 @@
 
 <script>
 import deviceImage from "../../../components/deviceImage";
+import {
+  connect_device,
+} from '../../../../api/devicemanager'
 export default {
   name: "Home",
   data() {
     return {
+      connectLoading:false,
+      isConnect:false,
       isOneChoose: false,
       isTwoChoose: false,
       isTreeChoose: false
@@ -27,6 +32,32 @@ export default {
     deviceImage
   },
   methods: {
+      connect(){
+      connect_device().then(result => {
+
+        if (result.code === 200) {
+          const res = result.data
+          if(res=="true"){
+            console.log("success res "+res)
+            this.$emit("showTwo");
+          }else{
+            // this.$message.warning("enter pin on your imKey");
+            this.$message.warning(result.data);
+            this.isOneChoose = false;
+            this.isTwoChoose = false;
+            this.connectLoading=false;
+          }
+        } else {
+          this.isOneChoose = false;
+          this.isTwoChoose = false;
+          this.connectLoading=false;
+        }
+      }).catch(err => {
+        this.isOneChoose = false;
+        this.isTwoChoose = false;
+        this.connectLoading=false;
+      })
+    },
     choose(index) {
       switch (index) {
         case 1:
@@ -45,9 +76,18 @@ export default {
           this.isThreeChoose = true;
           break;
       }
+      this.connectLoading=true;
       setTimeout(() => {
-        this.$emit("showTwo");
+
+        this.connect();
       }, 500);
+
+      // setTimeout(() => {
+      //  if(this.isConnect){
+      //    this.$message.warning("enter pin on your imKey");
+      //  }
+      // }, 2000);
+
     }
   }
 };

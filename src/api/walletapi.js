@@ -512,6 +512,21 @@ function  cosmosAddress(path,method_) {
         return ErrorResponse.getError();
     }
 }
+export function getBTC_Xpub_() {
+    return new Promise((resolve, reject) => {
+        try {
+            resolve({
+                code: 200,
+                data: BtcXpub("m/44'/0'/0'/0/0",Constants.MAINNET)
+            })
+        } catch (err) {
+            return reject({
+                code: 400,
+                message: err.message
+            })
+        }
+    })
+}
 export function getBTC_Xpub() {
     return BtcXpub("m/44'/0'/0'/0/0",Constants.MAINNET);
 }

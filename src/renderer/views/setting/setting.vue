@@ -13,16 +13,12 @@
         <img src="../../assets/logoNotWin@3x.png" style="width:40px;height:auto" alt="">
         <div class="deviceName">
           <h3>imKey-desktop</h3>
-          <p>imKey-desktop version 1.0.0</p>
+          <p>imKey-desktop version {{oldVersionData}}</p>
         </div>
       </div>
-      <div>
-        <span class="updateMsg">firmware is 1.0.2 avaliable</span>
-        <el-button
-          type="primary"
-          @click="update"
-          size="small"
-        >update</el-button>
+      <div v-if="!updateSuccess">
+        <span class="updateMsg">imKey-desktop version is {{newVersionData}} avaliable</span>
+        <el-button type="primary" @click="updateVersion" size="small" :loading="loading">update</el-button>
       </div>
     </div>
 
@@ -36,6 +32,10 @@ export default {
     return {
       appName: "",
       isSuccess: false,
+      oldVersionData: "1.0.0",
+      newVersionData: "1.0.2",
+      loading: false,
+      updateSuccess:false
     };
   },
   mounted() {
@@ -44,7 +44,14 @@ export default {
     }, 2000);
   },
   methods: {
-    update() {},
+    updateVersion() {
+      this.loading = true;
+      setTimeout(() => {
+        this.loading = false;
+        this.updateSuccess = true;
+        this.oldVersionData = this.newVersionData;
+      }, 1500);
+    },
     intall(val, index) {
       this.apps[index].installLoding = true;
       this.apps[index].deletLoding = false;
@@ -77,7 +84,7 @@ export default {
 <style lang="less" scoped>
 .setting {
   padding-top: 60px;
-  margin-bottom: 10px;
+  margin-bottom: 370px;
 }
 .contentBox{
   display: flex;

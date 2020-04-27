@@ -100,8 +100,8 @@ export default {
     margin: 2px;
   }
   .menu {
-    left: -2px;
-    bottom: 2px;
+    left: -35px;
+    bottom: -10px;
   }
   .media {
     right: 2px;

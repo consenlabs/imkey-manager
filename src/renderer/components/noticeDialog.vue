@@ -1,13 +1,13 @@
 <template>
   <el-dialog
-    title="Tade Safly"
+    title="welcome"
     :visible.sync="noticeVisible"
     width="600px"
     :show-close="false"
     center
   >
     <div class="body">
-      <p>Before you enten this xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</p>
+      <p>welcome to imKey-desktop</p>
     </div>
     <span slot="footer">
       <el-button type="primary" @click="sure" size="small">Got it</el-button>

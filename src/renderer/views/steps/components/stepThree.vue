@@ -29,7 +29,7 @@
           <el-button v-else type="primary" size="small" @click="IseeTwo">I See</el-button>-->
         </div>
       </div>
-      <el-button type="primary" style="width:100%" @click="next">Next</el-button>
+      <el-button type="primary" style="width:100%" :loading="nextLoading" @click="connect">Next</el-button>
       <!-- <div class="selectBox"> -->
 
       <!-- <p class="text">
@@ -49,6 +49,10 @@
 <script>
 import OptionOne from "./stepThreeDialog";
 import OptionTwo from "./stepThree2Dialog";
+import {
+  getBTC_Xpub_,
+} from '../../../../api/walletapi'
+import {connect_device, deleteApplet} from "../../../../api/devicemanager";
 export default {
   name: "Home",
   data() {
@@ -56,7 +60,9 @@ export default {
       optionOneVisible: false,
       optionTwoVisible: false,
       IseeOnes: false,
-      IseeTwos: false
+      IseeTwos: false,
+      nextLoading: false
+
     };
   },
   components: {
@@ -64,6 +70,22 @@ export default {
     OptionTwo
   },
   methods: {
+    connect(){
+        connect_device().then(result => {
+          if (result.code === 200) {
+            const res = result.data
+            if(res=="true"){
+              this.next();
+            }else{
+              this.$message.warning(result.data);
+
+            }
+          } else {
+          }
+        }).catch(err => {
+        })
+
+    },
     seeOne() {
       this.optionOneVisible = true;
     },
@@ -72,10 +94,35 @@ export default {
     },
     next() {
       if (this.IseeOnes && this.IseeTwos) {
-        this.$emit("showFour", true);
+        this.nextLoading = true;
+        //判断是否创建钱包
+        setTimeout(() => {
+          getBTC_Xpub_().then(result => {
+            if (result.code === 200) {
+              console.log("getBTC_Xpub_:"+result.data)
+              if (result.data != "" || result.data != null) {
+                if(result.data.match("xpu")){
+                  console.log("getBTC_Xpub_:"+result.data)
+                  // this.$emit("showFour", true);
+                  this.$emit("finsh");
+                } else {
+                  this.$message.warning("please create wallet");
+                  this.nextLoading = false;
+                }
+              }else{
+                this.$message.warning("please create wallet");
+                this.nextLoading = false;
+              }
+            }
+          }).catch(err => {
+            this.nextLoading = false;
+          })
+        }, 300);
+
       } else {
-        this.$message.warning("请先点击确认前两个选项");
+        this.$message.warning("please click option ");
       }
+
     },
     closeOneBox() {
       this.optionOneVisible = false;

@@ -10,14 +10,14 @@
         <el-step title="Connect"></el-step>
         <el-step title="Active&Bind"></el-step>
         <el-step title="Set PIN&Create Wallet"></el-step>
-        <el-step title="PIN code"></el-step>
+<!--        <el-step title="PIN code"></el-step>-->
       </el-steps>
     </div>
     <div>
       <One @showTwo="showTwos" v-if="showOne"></One>
       <Two @showThree="toshowThree" v-if="showTwo" @finshStatusTwo="finshStatusTwo($event)"></Two>
-      <Three @showFour="showFours" v-if="showThree"></Three>
-      <Four @finsh="finsh" v-if="showFour"></Four>
+      <Three @finsh="finsh" v-if="showThree"></Three>
+<!--      <Four @finsh="finsh" v-if="showThree"></Four>-->
     </div>
   </div>
 </template>
@@ -42,7 +42,7 @@ export default {
     One,
     Two,
     Three,
-    Four
+    // Four
   },
   methods: {
     // finshStatusOne(val) {
@@ -68,16 +68,16 @@ export default {
       this.showThree = true;
       this.activeIndex = 2;
     },
-    showFours() {
-      this.showOne = false;
-      this.showTwo = false;
-      this.showThree = false;
-      this.showFour = true;
-      this.activeIndex = 3;
-    },
+    // showFours() {
+    //   this.showOne = false;
+    //   this.showTwo = false;
+    //   this.showThree = false;
+    //   this.showFour = true;
+    //   this.activeIndex = 3;
+    // },
     finsh() {
       setTimeout(() => {
-        this.router.replace("/home");
+        this.router.replace("/index");
       }, 1000);
     }
   }
