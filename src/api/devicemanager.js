@@ -28,46 +28,47 @@ function connect(deviceModelName) {
 
     let ReqBytes = Req.serializeBinary();
     //any
-    let any1 =new  proto.google.protobuf.Any();
+    let any1 = new proto.google.protobuf.Any();
     any1.setValue(ReqBytes);
     //ImkeyAction
-    let ImkeyAction =new  api_pb.ImkeyAction();
+    let ImkeyAction = new api_pb.ImkeyAction();
     ImkeyAction.setMethod("device_connect");
     ImkeyAction.setParam(any1);
     let ImkeyActionBytes = ImkeyAction.serializeBinary();
 
     //调用rust库
-    let ResBuffer= GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
+    let ResBuffer = GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
     let Error = GoToRust.get_last_err_message();
-    if(Error ==""  || Error ==null) {
+    if (Error == "" || Error == null) {
 
         //rust库返回的数据解析
         let Response = new api_pb.Response.deserializeBinary(HexStr2Bytes(ResBuffer));
         let Result = Response.getError();
         //获取解析后的值
-        if(Result==null || Result==''||Result==""){
-            Result= 'true';
+        if (Result == null || Result == '' || Result == "") {
+            Result = 'true';
         }
         return Result;
 
-    }else {
+    } else {
         let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
         return ErrorResponse.getError();
     }
 }
+
 function getDevice_manage_fuc(method_) {
 
     //connect
 
     //ImkeyAction
-    let ImkeyAction =new  api_pb.ImkeyAction();
+    let ImkeyAction = new api_pb.ImkeyAction();
     ImkeyAction.setMethod(method_);
     let ImkeyActionBytes = ImkeyAction.serializeBinary();
 
     //调用rust库
-    let ResBuffer= GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
+    let ResBuffer = GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
     let Error = GoToRust.get_last_err_message();
-    if(Error ==""  || Error ==null) {
+    if (Error == "" || Error == null) {
         if (method_ === "get_seid") {
             let Response = new device_pb.GetSeidRes.deserializeBinary(HexStr2Bytes(ResBuffer));
             //获取解析后的值
@@ -113,74 +114,75 @@ function getDevice_manage_fuc(method_) {
             //获取解析后的值
             let Result = Response.getBleVersion();
             return Result;
-        }else if (method_ === "get_sdk_info") {
+        } else if (method_ === "get_sdk_info") {
             let Response = new device_pb.GetSdkInfoRes.deserializeBinary(HexStr2Bytes(ResBuffer));
             //获取解析后的值
             let Result = Response.getSdkVersion();
             return Result;
-        }else if (method_ === "check_update") {
+        } else if (method_ === "check_update") {
             let Response = new device_pb.CheckUpdateRes.deserializeBinary(HexStr2Bytes(ResBuffer));
             console.log(Response)
             //获取解析后的值
             let Result = Response.toObject();
             return Result;
-        }else {//method_ === "device_activate"||"device_secure_check"||"bind_display_code"
+        } else {//method_ === "device_activate"||"device_secure_check"||"bind_display_code"
             //rust库返回的数据解析
             let Response = new api_pb.Response.deserializeBinary(HexStr2Bytes(ResBuffer));
             let Result = Response.getError();
             //获取解析后的值
-            if(Result==null || Result==''||Result==""){
-                Result= 'true';
-            }else{
-                Result= 'false';
+            if (Result == null || Result == '' || Result == "") {
+                Result = 'true';
+            } else {
+                Result = 'false';
             }
             return Result;
         }
-    }else {
+    } else {
         let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
         return ErrorResponse.getError();
     }
 }
-function  AppletManage(method_,appName) {
+
+function AppletManage(method_, appName) {
     let Req;
-    if(method_=="app_download") {
+    if (method_ == "app_download") {
         Req = new device_pb.AppDownloadReq();
         Req.setAppName(appName);
     }
-    if(method_=="app_update") {
+    if (method_ == "app_update") {
         Req = new device_pb.AppUpdateReq();
         Req.setAppName(appName);
     }
-    if(method_=="app_delete") {
+    if (method_ == "app_delete") {
         Req = new device_pb.AppDeleteReq();
         Req.setAppName(appName);
     }
     let ReqBytes = Req.serializeBinary();
     //any
-    let any1 =new  proto.google.protobuf.Any();
+    let any1 = new proto.google.protobuf.Any();
     any1.setValue(ReqBytes);
     //ImkeyAction
-    let ImkeyAction =new  api_pb.ImkeyAction();
+    let ImkeyAction = new api_pb.ImkeyAction();
     ImkeyAction.setMethod(method_);
     ImkeyAction.setParam(any1);
     let ImkeyActionBytes = ImkeyAction.serializeBinary();
     //调用rust库
-    let ResBuffer= GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
+    let ResBuffer = GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
     let Error = GoToRust.get_last_err_message();
-    if(Error ==""  || Error ==null) {
+    if (Error == "" || Error == null) {
 
         //rust库返回的数据解析
         let Response = new api_pb.Response.deserializeBinary(HexStr2Bytes(ResBuffer));
         let Result = Response.getError();
         //获取解析后的值
-        if(Result==null || Result==''||Result==""){
-            Result= 'true';
-        }else{
-            Result= 'false';
+        if (Result == null || Result == '' || Result == "") {
+            Result = 'true';
+        } else {
+            Result = 'false';
         }
         return Result;
 
-    }else{
+    } else {
         let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
         return ErrorResponse.getError();
     }
@@ -188,107 +190,109 @@ function  AppletManage(method_,appName) {
 }
 
 function bindCheck(FilePath) {
-    console.log("==============FilePath:"+FilePath)
+    console.log("==============FilePath:" + FilePath)
     //BindCheckReq
-    let BindCheckReq =new  device_pb.BindCheckReq();
+    let BindCheckReq = new device_pb.BindCheckReq();
     BindCheckReq.setFilePath(FilePath);
     let BindCheckReqBytes = BindCheckReq.serializeBinary();
     //any
-    let any =new  proto.google.protobuf.Any();
+    let any = new proto.google.protobuf.Any();
     any.setValue(BindCheckReqBytes);
 
     //ImkeyAction
-    let ImkeyAction =new  api_pb.ImkeyAction();
+    let ImkeyAction = new api_pb.ImkeyAction();
     ImkeyAction.setMethod("bind_check");
     ImkeyAction.setParam(any);
     let ImkeyActionBytes = ImkeyAction.serializeBinary();
     //调用rust库
-    let ResBuffer= GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
+    let ResBuffer = GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
     //rust库返回的数据解析
     let Error = GoToRust.get_last_err_message();
-    if(Error ==""  || Error ==null) {
+    if (Error == "" || Error == null) {
         let Response = new device_pb.BindCheckRes.deserializeBinary(HexStr2Bytes(ResBuffer));
         // console.log(" Response.getBindStatus():" + Response.getBindStatus())
         return Response.getBindStatus();
-    }else{
+    } else {
         let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
         return ErrorResponse.getError();
     }
 }
+
 function bindAcquire(bindCode) {
     //BindAcquireReq
-    let BindAcquireReq =new  device_pb.BindAcquireReq();
+    let BindAcquireReq = new device_pb.BindAcquireReq();
     BindAcquireReq.setBindCode(bindCode);
     let BindCheckReqBytes = BindAcquireReq.serializeBinary();
     //any
-    let any =new  proto.google.protobuf.Any();
+    let any = new proto.google.protobuf.Any();
     any.setValue(BindCheckReqBytes);
 
     //ImkeyAction
-    let ImkeyAction =new  api_pb.ImkeyAction();
+    let ImkeyAction = new api_pb.ImkeyAction();
     ImkeyAction.setMethod("bind_acquire");
     ImkeyAction.setParam(any);
     let ImkeyActionBytes = ImkeyAction.serializeBinary();
     //调用rust库
-    let ResBuffer= GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
+    let ResBuffer = GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
     //rust库返回的数据解析
     let Error = GoToRust.get_last_err_message();
-    if(Error ==""  || Error ==null) {
+    if (Error == "" || Error == null) {
         let Response = new device_pb.BindAcquireRes.deserializeBinary(HexStr2Bytes(ResBuffer));
         // console.log(" Response.getBindResult():" + Response.getBindResult())
-        if(Response.getBindResult()=="success"){
+        if (Response.getBindResult() == "success") {
             return "true"
-        }else{
-            return  Response.getBindResult();
+        } else {
+            return Response.getBindResult();
         }
 
-    }else{
+    } else {
         let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
         return ErrorResponse.getError();
     }
 }
-export  function getAppList() {
+
+export function getAppList() {
     return new Promise((resolve, reject) => {
         try {
             // console.log("checkUpdate():"+getDevice_manage_device("check_update"))
             let collections = getDevice_manage_fuc("check_update").availableAppListList;
             let list = [];
             // console.log("collections:"+JSON.stringify(collections))
-            let  installLoding;
-            let  installDis;
-            let  deletDis;
-            let  deletLoding;
-            for(let i=0;i<collections.length;i++){
+            let installLoding;
+            let installDis;
+            let deletDis;
+            let deletLoding;
+            for (let i = 0; i < collections.length; i++) {
                 //过滤imkey Applet 不显示IMK applet
-               if( collections[i].appName!="IMK"){
-                   if(collections[i].installedVersion !="none" || collections[i].installedVersion != null){
-                           installLoding=false;
-                           installDis=true;
-                           deletDis=false;
-                           deletLoding= false;
-                   }else{
-                       installLoding=false;
-                       installDis=false;
-                       deletDis=true;
-                       deletLoding= false;
-                   }
-                   let collection = {
-                           name:collections[i].appName,
-                           desc: "version "+collections[i].latestVersion,
-                           id: i,
-                           installLoding: installLoding,
-                           installDis: installDis,
-                           deletDis: deletDis,
-                           deletLoding: deletLoding,
-                           icon: collections[i].appLogo,
-                   };
-                   list.push(collection);
-               }
+                if (collections[i].appName != "IMK") {
+                    if (collections[i].installedVersion != "none" || collections[i].installedVersion != null) {
+                        installLoding = false;
+                        installDis = true;
+                        deletDis = false;
+                        deletLoding = false;
+                    } else {
+                        installLoding = false;
+                        installDis = false;
+                        deletDis = true;
+                        deletLoding = false;
+                    }
+                    let collection = {
+                        name: collections[i].appName,
+                        desc: "version " + collections[i].latestVersion,
+                        id: i,
+                        installLoding: installLoding,
+                        installDis: installDis,
+                        deletDis: deletDis,
+                        deletLoding: deletLoding,
+                        icon: collections[i].appLogo,
+                    };
+                    list.push(collection);
+                }
 
             }
             let total = list.length;
-            console.log("result.data.list:"+list)
-            console.log("total:"+total)
+            console.log("result.data.list:" + list)
+            console.log("total:" + total)
             // let list = collection
             //     .filter(filterFun)
             //     .orderBy(pagination.sortBy, pagination.descending ? 'desc' : 'asc')
@@ -308,6 +312,7 @@ export  function getAppList() {
         }
     })
 }
+
 export function connect_device() {
     return new Promise((resolve, reject) => {
         try {
@@ -325,7 +330,7 @@ export function connect_device() {
     })
 }
 
-export  function getSeid() {
+export function getSeid() {
 
     return new Promise((resolve, reject) => {
         try {
@@ -343,7 +348,7 @@ export  function getSeid() {
     })
 }
 
-export  function getSn() {
+export function getSn() {
 
     return new Promise((resolve, reject) => {
         try {
@@ -360,14 +365,15 @@ export  function getSn() {
         }
     })
 }
-export  function getRamSize() {
+
+export function getRamSize() {
 
     return new Promise((resolve, reject) => {
         try {
 
             resolve({
                 code: 200,
-                data: parseInt(getDevice_manage_fuc("get_ram_size").substring(4,8),16)
+                data: parseInt(getDevice_manage_fuc("get_ram_size").substring(4, 8), 16)
             })
         } catch (err) {
             return reject({
@@ -378,14 +384,14 @@ export  function getRamSize() {
     })
 }
 
-export  function getFirmwareVersion() {
+export function getFirmwareVersion() {
 
     return new Promise((resolve, reject) => {
         try {
             let FirmwareVersion = getDevice_manage_fuc("get_firmware_version");
             resolve({
                 code: 200,
-                data: FirmwareVersion.substring(0,1)+"."+FirmwareVersion.substring(1,2)+"."+FirmwareVersion.substring(2)
+                data: FirmwareVersion.substring(0, 1) + "." + FirmwareVersion.substring(1, 2) + "." + FirmwareVersion.substring(2)
             })
         } catch (err) {
             return reject({
@@ -395,13 +401,14 @@ export  function getFirmwareVersion() {
         }
     })
 }
+
 export function getBatteryPower() {
     return new Promise((resolve, reject) => {
         try {
-            let batteryPower  =getDevice_manage_fuc("get_battery_power");
-            if (batteryPower!=Constants.BATTERY_CHARGING_SIGN) {
+            let batteryPower = getDevice_manage_fuc("get_battery_power");
+            if (batteryPower != Constants.BATTERY_CHARGING_SIGN) {
                 batteryPower = parseInt(batteryPower, 16).toString();
-            }else{
+            } else {
                 return reject({
                     code: 400,
                     message: 'error'
@@ -419,28 +426,29 @@ export function getBatteryPower() {
         }
     })
 }
+
 export function getLifeTime() {
     return new Promise((resolve, reject) => {
         try {
             let res = getDevice_manage_fuc("get_life_time");
-            let res_="";
+            let res_ = "";
             switch (res) {
                 case "80":
-                    res_ =  Constants.LIFE_TIME_DEVICE_INITED;
+                    res_ = Constants.LIFE_TIME_DEVICE_INITED;
                 case "89":
-                    res_ =  Constants.LIFE_TIME_DEVICE_ACTIVATED;
+                    res_ = Constants.LIFE_TIME_DEVICE_ACTIVATED;
                 case "81":
-                    res_ =  Constants.LIFE_TIME_UNSET_PIN;
+                    res_ = Constants.LIFE_TIME_UNSET_PIN;
                 case "83":
-                    res_ =  Constants.LIFE_TIME_WALLET_UNREADY;
+                    res_ = Constants.LIFE_TIME_WALLET_UNREADY;
                 case "84":
-                    res_ =  Constants.LIFE_TIME_WALLET_CREATTING;
+                    res_ = Constants.LIFE_TIME_WALLET_CREATTING;
                 case "85":
-                    res_ =  Constants.LIFE_TIME_WALLET_RECOVERING;
+                    res_ = Constants.LIFE_TIME_WALLET_RECOVERING;
                 case "86":
-                    res_ =  Constants.LIFE_TIME_WALLET_READY;
+                    res_ = Constants.LIFE_TIME_WALLET_READY;
                 default:
-                    res_ =  Constants.LIFE_TIME_UNKNOWN;
+                    res_ = Constants.LIFE_TIME_UNKNOWN;
             }
             resolve({
                 code: 200,
@@ -454,6 +462,7 @@ export function getLifeTime() {
         }
     })
 }
+
 export function getBleName() {
     return new Promise((resolve, reject) => {
         try {
@@ -470,6 +479,7 @@ export function getBleName() {
         }
     })
 }
+
 export function setBleName() {
     return new Promise((resolve, reject) => {
         try {
@@ -490,10 +500,10 @@ export function setBleName() {
 export function getBleVersion() {
     return new Promise((resolve, reject) => {
         try {
-            let bleVersion = getDevice_manage_fuc("get_ble_version").substring(0,4);
+            let bleVersion = getDevice_manage_fuc("get_ble_version").substring(0, 4);
             resolve({
                 code: 200,
-                data: bleVersion.substring(0,1)+"."+bleVersion.substring(1,2)+"."+bleVersion.substring(2)
+                data: bleVersion.substring(0, 1) + "." + bleVersion.substring(1, 2) + "." + bleVersion.substring(2)
             })
         } catch (err) {
             return reject({
@@ -503,6 +513,7 @@ export function getBleVersion() {
         }
     })
 }
+
 export function getSdkInfo() {
     return new Promise((resolve, reject) => {
         try {
@@ -534,6 +545,7 @@ export function activeDevice() {
         }
     })
 }
+
 export function cosUpdate() {
     return new Promise((resolve, reject) => {
         try {
@@ -549,6 +561,7 @@ export function cosUpdate() {
         }
     })
 }
+
 export function checkDevice() {
     return new Promise((resolve, reject) => {
         try {
@@ -564,6 +577,7 @@ export function checkDevice() {
         }
     })
 }
+
 export function checkUpdate() {
     return new Promise((resolve, reject) => {
         try {
@@ -579,13 +593,14 @@ export function checkUpdate() {
         }
     })
 }
+
 export function downloadApplet(AppName) {
-    console.log("AppName:"+AppName)
+    console.log("AppName:" + AppName)
     return new Promise((resolve, reject) => {
         try {
             resolve({
                 code: 200,
-                data: AppletManage("app_download",AppName)
+                data: AppletManage("app_download", AppName)
             })
         } catch (err) {
             return reject({
@@ -595,13 +610,14 @@ export function downloadApplet(AppName) {
         }
     })
 }
+
 export function updateApplet(AppName) {
-    console.log("AppName:"+AppName)
+    console.log("AppName:" + AppName)
     return new Promise((resolve, reject) => {
         try {
             resolve({
                 code: 200,
-                data: AppletManage("app_update",AppName)
+                data: AppletManage("app_update", AppName)
             })
         } catch (err) {
             return reject({
@@ -611,13 +627,14 @@ export function updateApplet(AppName) {
         }
     })
 }
+
 export function deleteApplet(AppName) {
-    console.log("AppName:"+AppName)
+    console.log("AppName:" + AppName)
     return new Promise((resolve, reject) => {
         try {
             resolve({
                 code: 200,
-                data: AppletManage("app_delete",AppName)
+                data: AppletManage("app_delete", AppName)
             })
         } catch (err) {
             return reject({
@@ -627,8 +644,9 @@ export function deleteApplet(AppName) {
         }
     })
 }
+
 export function deviceBindCheck(FilePath) {
-    console.log("FilePath:"+FilePath)
+    console.log("FilePath:" + FilePath)
     return new Promise((resolve, reject) => {
         try {
             resolve({
@@ -643,6 +661,7 @@ export function deviceBindCheck(FilePath) {
         }
     })
 }
+
 export function deviceBindAcquire(bindCode) {
     return new Promise((resolve, reject) => {
         try {
@@ -658,6 +677,7 @@ export function deviceBindAcquire(bindCode) {
         }
     })
 }
+
 export function deviceBindDisplay() {
     return new Promise((resolve, reject) => {
         try {
@@ -673,6 +693,7 @@ export function deviceBindDisplay() {
         }
     })
 }
+
 export function getUserPath() {
 
     return new Promise((resolve, reject) => {
@@ -689,6 +710,7 @@ export function getUserPath() {
         }
     })
 }
+
 // console.log( "getSeid:"+getSeid());
 // console.log( "getSn:"+getSn());
 // console.log( "getRamSize:"+getRamSize());
@@ -728,10 +750,10 @@ export function getUserPath() {
 /**
  * @desc 二进制数组转字符串
  */
-function Bytes2Str(arr){
+function Bytes2Str(arr) {
     let str = "";
-    for (let i = 0; i < arr.length; i++){
-        let tmp =String.fromCharCode(arr[i]);
+    for (let i = 0; i < arr.length; i++) {
+        let tmp = String.fromCharCode(arr[i]);
         // if (tmp.length === 1){
         //     tmp = "0" + tmp;
         // }
@@ -739,32 +761,34 @@ function Bytes2Str(arr){
     }
     return str;
 }
+
 /**
  * @desc 二进制数组转十六进制字符串
  */
-function Bytes2HexStr(arr){
+function Bytes2HexStr(arr) {
     let str = "";
-    for (let i = 0; i < arr.length; i++){
+    for (let i = 0; i < arr.length; i++) {
         let tmp = arr[i].toString(16);
-        if (tmp.length === 1){
+        if (tmp.length === 1) {
             tmp = "0" + tmp;
         }
         str += tmp;
     }
     return str;
 }
+
 /*
 * @desc 十六进制字符串转二进制数组
 */
-function HexStr2Bytes(str){
+function HexStr2Bytes(str) {
     let pos = 0;
     let len = str.length;
-    if (len % 2 != 0){
+    if (len % 2 != 0) {
         return null;
     }
     len /= 2;
     let hexA = new Array();
-    for (let i = 0; i < len; i++){
+    for (let i = 0; i < len; i++) {
         let s = str.substr(pos, 2);
         let v = parseInt(s, 16);
         hexA.push(v);

@@ -6,25 +6,26 @@ let ETH_LEDGER = "m/44'/60'/0'/0/0";
 let EOS_LEDGER = "m/44'/194'/0'/0/0";
 let COSMOS_LEDGER = "m/44'/118'/0'/0/0";
 
-function checkPath( path) {
+function checkPath(path) {
 
     // 深度大于1，小于10，目前规范是5
-    if(path.split("/").length < 2 || path.split("/").length > 10) {
+    if (path.split("/").length < 2 || path.split("/").length > 10) {
         throw new ImkeyException(Messages.IMKEY_PATH_ILLEGAL);
     }
 
     // 长度不超过100个字符
-    if(path.length() > 100) {
+    if (path.length() > 100) {
         throw new ImkeyException(Messages.IMKEY_PATH_ILLEGAL);
     }
 
     // 以m/开头
-    let  regEx = "^m/[0-9'/]+$";
+    let regEx = "^m/[0-9'/]+$";
     if (!Pattern.matches(regEx, path)) {
         throw new ImkeyException(Messages.IMKEY_PATH_ILLEGAL);
     }
 
 }
+
 module.exports = {
     BTC_PATH_PREFIX,
     BITCOIN_TESTNET_PATH,

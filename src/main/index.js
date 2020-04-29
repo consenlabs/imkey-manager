@@ -19,7 +19,7 @@ import pkg from '../../package.json'
 import http from 'http'
 // 引入自动启动
 // 模块
- let ApiRouter  =require('../api/apirouter')
+let ApiRouter = require('../api/apirouter')
 /**
  * Set `__static` path to static files in production
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
@@ -162,7 +162,7 @@ function createMainWindow() {
      */
 
     mainWindow.on('close', (event) => {
-        if(process.platform === 'win32') {
+        if (process.platform === 'win32') {
             if (!trayClose) {
                 // 最小化
                 mainWindow.hide()
@@ -272,8 +272,8 @@ function createTray() {
         {
             label: '帮助',
             click: function () {
-            // 打开外部链接
-            shell.openExternal('https://support.imkey.im')
+                // 打开外部链接
+                shell.openExternal('https://support.imkey.im')
             }
         },
         {
@@ -368,7 +368,7 @@ function startHttpserver() {
             console.error(err);
         });
         if (request.method === 'POST' && request.url.match('/imkey')) {
-            let { headers, method, url } = request;
+            let {headers, method, url} = request;
             let body = [];
             request.on('error', (err) => {
                 console.error(err);
@@ -390,14 +390,14 @@ function startHttpserver() {
                 let reqjson = JSON.parse(body);//获取到request请求中的json对象
                 //处理request请求的数据
                 //调用rust库把需要的数据发给rust库处理
-                console.log(" process.versions.node:"+process.versions.node);
-                console.log("request.url.split(\"/imkey/\")[1]"+request.url.split("/imkey/")[1])
-                let msg =  ApiRouter.api(request.url.split("/imkey/")[1],reqjson);
+                console.log(" process.versions.node:" + process.versions.node);
+                console.log("request.url.split(\"/imkey/\")[1]" + request.url.split("/imkey/")[1])
+                let msg = ApiRouter.api(request.url.split("/imkey/")[1], reqjson);
                 msg = JSON.stringify(msg);
 
-                console.log("msg:"+msg)
+                console.log("msg:" + msg)
                 //返回response的json对象
-                let resjson={"ReturnCode":"000000","ReturnMsg":"操作成功","ReturnData":{msg}};
+                let resjson = {"ReturnCode": "000000", "ReturnMsg": "操作成功", "ReturnData": {msg}};
                 // let responseBody = {headers, method, url, resjson};
 
                 response.write(JSON.stringify(resjson));
@@ -413,11 +413,12 @@ function startHttpserver() {
             response.statusCode = 404;
             response.end();
         }
-    }).listen(8080,'127.0.0.1');
+    }).listen(8080, '127.0.0.1');
 // 终端打印如下信息
     console.log('Server running at http://127.0.0.1:8080/imkey');
 
 }
+
 /**
  * 自动更新
  */

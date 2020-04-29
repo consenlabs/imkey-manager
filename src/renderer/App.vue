@@ -13,17 +13,20 @@
         color: #2c3e50;
         height: 100%;
     }
+
     html {
-    /*    !* 禁用html的滚动条，因为用的无框架窗口，默认就会有一个滚动条，所以去掉 *!*/
-        overflow-y:hidden;
+        /*    !* 禁用html的滚动条，因为用的无框架窗口，默认就会有一个滚动条，所以去掉 *!*/
+        overflow-y: hidden;
         /*overflow-scrolling: auto;*/
     }
-    li{
-    margin: 0;
-    padding: 0;
-    list-style: none;
+
+    li {
+        margin: 0;
+        padding: 0;
+        list-style: none;
         height: 100%;
     }
+
     /*定义滚动条高宽及背景 高宽分别对应横竖滚动条的尺寸*/
     ::-webkit-scrollbar {
         width: 2px; /*滚动条宽度*/

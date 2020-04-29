@@ -1,313 +1,330 @@
 <template>
-  <div class="manager">
-    <h1>Manager</h1>
-    <p class="notice">
-      <span>Install or unstall apps on your device</span>
-      <span>
+    <div class="manager">
+        <h1>Manager</h1>
+        <p class="notice">
+            <span>Install or unstall apps on your device</span>
+            <span>
         Need Help?
         <i class="el-icon-connection" @click="help"></i>
       </span>
-    </p>
-    <div class="deviceBox">
-      <div class="contentBox">
-        <!-- <img src="../../assets/miniDevice.png" style="width:40px;height:auto" alt /> -->
-        <deviceImage :mini="true" :line="false"></deviceImage>
-        <div class="deviceName">
-          <h3>imKey Pro</h3>
-          <p>firmware version {{oldVersionData}}</p>
+        </p>
+        <div class="deviceBox">
+            <div class="contentBox">
+                <!-- <img src="../../assets/miniDevice.png" style="width:40px;height:auto" alt /> -->
+                <deviceImage :mini="true" :line="false"></deviceImage>
+                <div class="deviceName">
+                    <h3>imKey Pro</h3>
+                    <p>firmware version {{oldVersionData}}</p>
+                </div>
+            </div>
+            <div v-if="!updateSuccess">
+                <span class="updateMsg">firmware is {{newVersionData}} avaliable</span>
+                <el-button type="primary" @click="updateVersion" size="small" :loading="loading">update</el-button>
+            </div>
         </div>
-      </div>
-      <div v-if="!updateSuccess">
-        <span class="updateMsg">firmware is {{newVersionData}} avaliable</span>
-        <el-button type="primary" @click="updateVersion" size="small" :loading="loading">update</el-button>
-      </div>
-    </div>
-    <div class="appBox">
-      <h1>App catalog</h1>
-      <el-input prefix-icon="el-icon-search" v-model="appName" placeholder="search app"></el-input>
-      <div class="appContent">
-        <div v-for="(item,index) in getApps" :key="item.id" class="appItem">
-          <div class="leftContent" >
-            <img :src="item.icon" alt="/" />
-            <div>
-              <h4>{{item.name}}</h4>
-              <p>{{item.desc}}</p>
+        <div class="appBox">
+            <h1>App catalog</h1>
+            <el-input prefix-icon="el-icon-search" v-model="appName" placeholder="search app"></el-input>
+            <div class="appContent">
+                <div v-for="(item,index) in getApps" :key="item.id" class="appItem">
+                    <div class="leftContent">
+                        <img :src="item.icon" alt="/"/>
+                        <div>
+                            <h4>{{item.name}}</h4>
+                            <p>{{item.desc}}</p>
+                        </div>
+                    </div>
+                    <div class="rightContent">
+                        <div v-if="!isSuccess" class="roate">
+                            <span class="el-icon-refresh"></span>
+                        </div>
+                        <div v-else>
+                            <el-button
+                                    plain
+                                    type="primary"
+                                    size="small"
+                                    :disabled="item.installDis"
+                                    :loading="item.installLoding"
+                                    @click="intall(item,index)"
+                            >Install
+                            </el-button>
+                            <el-button
+                                    type="danger"
+                                    size="small"
+                                    @click="delet(item,index)"
+                                    :disabled="item.deletDis"
+                                    :loading="item.deletLoding"
+                                    class="el-icon-delete"
+                            ></el-button>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
-          <div class="rightContent">
-            <div v-if="!isSuccess" class="roate">
-              <span class="el-icon-refresh"></span>
-            </div>
-            <div v-else>
-              <el-button
-                      plain
-                      type="primary"
-                      size="small"
-                      :disabled="item.installDis"
-                      :loading="item.installLoding"
-                      @click="intall(item,index)"
-              >Install</el-button>
-              <el-button
-                      type="danger"
-                      size="small"
-                      @click="delet(item,index)"
-                      :disabled="item.deletDis"
-                      :loading="item.deletLoding"
-                      class="el-icon-delete"
-              ></el-button>
-            </div>
-          </div>
         </div>
-      </div>
     </div>
-  </div>
 </template>
 
 <script>
-  import deviceImage from "../../components/deviceImage";
-  import {
-    connect_device,cosUpdate,getAppList,downloadApplet,deleteApplet,getFirmwareVersion
-  } from '../../../api/devicemanager'
-  export default {
-    name: "manager",
-    data() {
-      return {
-        appName: "",
-        isSuccess: false,
-        oldVersionData: "",
-        newVersionData: "1.5.10",
-        updateSuccess: false,
-        loading: false,
-        apps: []
-      };
-    },
-    components: {
-      deviceImage
-    },
-    computed: {
-      getApps() {
-        let arr = [];
-        arr = this.appName
-                ? this.apps.filter(ele => {
-                  if (ele.name.match(this.appName)) {
-                    return ele;
-                  }
+    import deviceImage from "../../components/deviceImage";
+    import {
+        connect_device, cosUpdate, getAppList, downloadApplet, deleteApplet, getFirmwareVersion
+    } from '../../../api/devicemanager'
+
+    export default {
+        name: "manager",
+        data() {
+            return {
+                appName: "",
+                isSuccess: false,
+                oldVersionData: "",
+                newVersionData: "1.5.10",
+                updateSuccess: false,
+                loading: false,
+                apps: []
+            };
+        },
+        components: {
+            deviceImage
+        },
+        computed: {
+            getApps() {
+                let arr = [];
+                arr = this.appName
+                    ? this.apps.filter(ele => {
+                        if (ele.name.match(this.appName)) {
+                            return ele;
+                        }
+                    })
+                    : this.apps;
+                return arr;
+            }
+        },
+        mounted() {
+            this.connect();
+            this.getFirmwareVersion();
+            //加载应用
+            this.AppsList();
+            this.isSuccess = true;
+        },
+        methods: {
+            getFirmwareVersion() {
+                getFirmwareVersion().then(result => {
+                    if (result.code === 200) {
+                        this.oldVersionData = result.data;
+                    }
+                }).catch(err => {
+
                 })
-                : this.apps;
-        return arr;
-      }
-    },
-    mounted() {
-      this.connect();
-      this. getFirmwareVersion();
-    //加载应用
-      this.AppsList();
-      this.isSuccess = true;
-    },
-    methods: {
-      getFirmwareVersion() {
-        getFirmwareVersion().then(result => {
-          if (result.code === 200) {
-            this.oldVersionData = result.data;
-          }
-        }).catch(err => {
+            },
+            getcosupdate() {
+                this.connect();
+                cosUpdate().then(result => {
+                    if (result.code === 200) {
+                        if (result.data == "true") {
+                            this.loading = false;
+                            this.updateSuccess = true;
+                            this.oldVersionData = this.newVersionData;
+                        } else {
+                            this.$message.warning(result.data);
+                            this.loading = false;
+                        }
+                    }
+                }).catch(err => {
 
-        })
-      },
-      getcosupdate() {
-        this.connect();
-        cosUpdate().then(result => {
-          if (result.code === 200) {
-            if (result.data == "true") {
-              this.loading = false;
-              this.updateSuccess = true;
-              this.oldVersionData = this.newVersionData;
-            } else {
-              this.$message.warning(result.data);
-              this.loading = false;
+                })
+            },
+            connect() {
+                connect_device().then(result => {
+
+                    if (result.code === 200) {
+                        const res = result.data
+                        console.log("res:" + res)
+                        if (res == "true") {
+                            console.log("success res " + res)
+
+                        } else {
+                            console.log("redwdsdss" + res)
+                            this.router.replace("/manager/connect");
+
+                        }
+                    } else {
+                        this.router.replace("/manager/connect");
+                    }
+                }).catch(err => {
+                    this.router.replace("/manager/connect");
+                })
+            },
+            AppsList() {
+                this.connect();
+                getAppList().then(result => {
+                    if (result.code === 200) {
+                        this.apps = result.data.list
+                        // const total = result.data.total
+                    } else {
+                        this.$message.warning(result);
+                    }
+                }).catch(err => {
+
+                })
+            },
+            updateVersion() {
+                this.loading = true;
+                setTimeout(() => {
+                    this.getcosupdate();
+                }, 200);
+
+            },
+            intall(item, index) {
+                this.connect();
+                this.apps[index].installLoding = true;
+                this.apps[index].deletLoding = false;
+
+                setTimeout(() => {
+                    downloadApplet(item.name).then(result => {
+                        if (result.code === 200) {
+
+                            if (result.data == "true") {
+                                this.apps[index].deletDis = false;
+                                this.apps[index].installDis = true;
+                                this.apps[index].installLoding = false;
+                            } else {
+                                this.apps[index].installLoding = false;
+                            }
+                        }
+                    }).catch(err => {
+                        this.apps[index].installLoding = false;
+                    })
+                }, 200);
+            },
+            delet(item, index) {
+                this.connect();
+                this.apps[index].deletLoding = true;
+                this.apps[index].installLoding = false;
+                setTimeout(() => {
+                    deleteApplet(item.name).then(result => {
+                        if (result.code === 200) {
+
+                            if (result.data == "true") {
+                                this.apps[index].deletDis = true;
+                                this.apps[index].installDis = false;
+                                this.apps[index].deletLoding = false;
+                            } else {
+                                this.apps[index].deletLoding = false;
+                            }
+                        }
+                    }).catch(err => {
+                        this.apps[index].deletLoding = false;
+                    })
+                }, 200);
+            },
+            help() {
+                window.open(
+                    "https://support.imkey.im/hc/zh-cn/articles/360019656954-如何设置与修改-PIN-码",
+                    "_blank",
+                    "scrollbars=yes,resizable=1,modal=false,alwaysRaised=yes"
+                );
             }
-          }
-        }).catch(err => {
-
-        })
-      },
-      connect() {
-        connect_device().then(result => {
-
-          if (result.code === 200) {
-            const res = result.data
-            console.log("res:" + res)
-            if (res == "true") {
-              console.log("success res " + res)
-
-            } else {
-              console.log("redwdsdss" + res)
-              this.router.replace("/manager/connect");
-
-            }
-          } else {
-            this.router.replace("/manager/connect");
-          }
-        }).catch(err => {
-          this.router.replace("/manager/connect");
-        })
-      },
-      AppsList() {
-        this.connect();
-        getAppList().then(result => {
-          if (result.code === 200) {
-            this.apps = result.data.list
-            // const total = result.data.total
-          } else {
-            this.$message.warning(result);
-          }
-        }).catch(err => {
-
-        })
-    },
-      updateVersion() {
-        this.loading = true;
-        setTimeout(() => {
-        this.getcosupdate();
-        }, 200);
-
-      },
-      intall(item, index) {
-        this.connect();
-          this.apps[index].installLoding = true;
-          this.apps[index].deletLoding = false;
-
-  setTimeout(() => {
-        downloadApplet(item.name).then(result => {
-          if (result.code === 200) {
-
-            if (result.data == "true") {
-              this.apps[index].deletDis = false;
-              this.apps[index].installDis = true;
-              this.apps[index].installLoding = false;
-            } else {
-              this.apps[index].installLoding = false;
-            }
-          }
-        }).catch(err => {
-          this.apps[index].installLoding = false;
-        })
-       }, 200);
-      },
-      delet(item, index) {
-        this.connect();
-          this.apps[index].deletLoding = true;
-          this.apps[index].installLoding = false;
-        setTimeout(() => {
-        deleteApplet(item.name).then(result => {
-          if (result.code === 200) {
-
-            if (result.data == "true") {
-              this.apps[index].deletDis = true;
-              this.apps[index].installDis = false;
-              this.apps[index].deletLoding = false;
-            } else {
-              this.apps[index].deletLoding = false;
-            }
-          }
-        }).catch(err => {
-          this.apps[index].deletLoding = false;
-        })
-        }, 200);
-      },
-      help() {
-        window.open(
-                "https://support.imkey.im/hc/zh-cn/articles/360019656954-如何设置与修改-PIN-码",
-                "_blank",
-                "scrollbars=yes,resizable=1,modal=false,alwaysRaised=yes"
-        );
-      }
-    }
-  };
+        }
+    };
 </script>
 
 <style lang="less" scoped>
-  .manager {
-    padding-top: 10px;
-    margin-bottom: 100px;
-  }
-  .contentBox {
-    display: flex;
-    align-items: center;
-  }
-  .notice {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 15px;
-  }
-  .deviceBox {
-    height: 100px;
-    background: #fff;
-    margin: 30px 0;
-    padding: 0 30px;
-    border-radius: 5px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    .updateMsg {
-      margin: 0 20px;
+    .manager {
+        padding-top: 10px;
+        margin-bottom: 100px;
     }
-    .deviceName {
-      margin-left: 10px;
-      p {
-        color: #dcdcdc;
-        margin-top: 10px;
-      }
-    }
-  }
-  .appBox {
-    .el-input {
-      margin: 10px 0;
-    }
-  }
-  .appContent {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items:center;
-    .appItem {
-      width: 45%;
-      height: 70px;
-      background: #fff;
-      border-radius: 5px;
-      margin: 10px 20px;
-      box-sizing: border-box;
-      padding: 0 20px;
-      display: flex;
-      /*justify-content: space-between;*/
-      align-items:center;
-      p {
-        color: #dcdcdc;
-      }
-      img {
-        width: 40px;
-        height: 40px;
-        margin-right: 10px;
-        /*margin-top: 30px;*/
-      }
-      .leftContent,
-      .rightContent {
-        flex: 1;
-      }
-      .rightContent {
-        text-align: right;
 
-      }
-      .leftContent {
+    .contentBox {
         display: flex;
-        justify-content: flex-start;
-        align-items:center;
-        /*margin:20px;*/
-      }
+        align-items: center;
     }
-  }
-  .el-icon-connection {
-    color: blue;
-    cursor: pointer;
-  }
+
+    .notice {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 15px;
+    }
+
+    .deviceBox {
+        height: 100px;
+        background: #fff;
+        margin: 30px 0;
+        padding: 0 30px;
+        border-radius: 5px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .updateMsg {
+            margin: 0 20px;
+        }
+
+        .deviceName {
+            margin-left: 10px;
+
+            p {
+                color: #dcdcdc;
+                margin-top: 10px;
+            }
+        }
+    }
+
+    .appBox {
+        .el-input {
+            margin: 10px 0;
+        }
+    }
+
+    .appContent {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+
+        .appItem {
+            width: 45%;
+            height: 70px;
+            background: #fff;
+            border-radius: 5px;
+            margin: 10px 20px;
+            box-sizing: border-box;
+            padding: 0 20px;
+            display: flex;
+            /*justify-content: space-between;*/
+            align-items: center;
+
+            p {
+                color: #dcdcdc;
+            }
+
+            img {
+                width: 40px;
+                height: 40px;
+                margin-right: 10px;
+                /*margin-top: 30px;*/
+            }
+
+            .leftContent,
+            .rightContent {
+                flex: 1;
+            }
+
+            .rightContent {
+                text-align: right;
+
+            }
+
+            .leftContent {
+                display: flex;
+                justify-content: flex-start;
+                align-items: center;
+                /*margin:20px;*/
+            }
+        }
+    }
+
+    .el-icon-connection {
+        color: blue;
+        cursor: pointer;
+    }
 </style>

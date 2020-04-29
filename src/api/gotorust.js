@@ -14,18 +14,21 @@ const lib = ffi.Library(library_name, {
     call_imkey_api: ['String', ['String']],
     get_last_err_message: ['String', [ref.types.void]],
 });
+
 export function call_imkey_api(protobuf_str) {
-    console.log("protobuf_str:"+protobuf_str)
+    console.log("protobuf_str:" + protobuf_str)
     lib.clear_err("");//清空之前的error
     const Res_Str = lib.call_imkey_api(protobuf_str);
-    console.log("call_tcx_api Res_Str()"+Res_Str);
+    console.log("call_tcx_api Res_Str()" + Res_Str);
     return Res_Str;
 }
+
 export function get_last_err_message() {
     const Res_Str = lib.get_last_err_message("");//获取错误的信息
-    console.log("get_last_err_message Res_Str()"+Res_Str);
+    console.log("get_last_err_message Res_Str()" + Res_Str);
     return Res_Str;
 }
+
 // module.exports = {
 //     call_tcx_api,
 //     get_last_err_message
