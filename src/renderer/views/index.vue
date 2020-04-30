@@ -1,6 +1,7 @@
 <template>
     <div class="index">
-        <NoticeBox v-if="$store.state.agree" :noticeVisible="noticeVisible" @closeNotice="closeNotice"></NoticeBox>
+        <NoticeBox v-if="$store.state.agree" :noticeVisible="noticeVisible"
+                   @closeNotice="closeNotice"></NoticeBox>
         <el-container v-else>
             <el-aside width="200px">
                 <MenuNav></MenuNav>
@@ -38,7 +39,7 @@
             };
         },
         mounted() {
-            this.noticeVisible = true;
+            this.closeNotice();
         },
         methods: {
             closeNotice() {

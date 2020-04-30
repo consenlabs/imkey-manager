@@ -39,6 +39,9 @@
                 finshStatus: "success"
             };
         },
+        mounted() {
+            this.showStep();
+        },
         components: {
             One,
             Two,
@@ -46,6 +49,25 @@
             // Four
         },
         methods: {
+            showStep() {
+                let index = this.$route.query.index;
+                switch (index) {
+                    case 1:
+                        this.showOne = true;
+                        break;
+                    case 2:
+                        this.showOne = false;
+                        this.showTwo = true;
+                        this.activeIndex = 1;
+                        break;
+                    case 3:
+                        this.showOne = false;
+                        this.showTwo = false;
+                        this.showThree = true;
+                        this.activeIndex = 2;
+                        break;
+                }
+            },
             // finshStatusOne(val) {
             //   this.finshStatus = val;
             // },

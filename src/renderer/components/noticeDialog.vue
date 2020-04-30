@@ -1,16 +1,16 @@
 <template>
     <el-dialog
-            title="welcome"
+            title="error"
             :visible.sync="noticeVisible"
-            width="600px"
+            width="550px"
             :show-close="false"
             center
     >
         <div class="body">
-            <p>welcome to imKey-desktop</p>
+            <p>{{Message}}</p>
         </div>
         <span slot="footer">
-      <el-button type="primary" @click="sure" size="small">Got it</el-button>
+      <el-button type="primary" @click="sure" size="small">ok</el-button>
     </span>
     </el-dialog>
 </template>
@@ -19,9 +19,21 @@
     export default {
         name: "notice",
         props: {noticeVisible: Boolean},
-        mounted() {
-            this.handleClose();
+        data(){
+          return{
+             Message:""
+          } ;
+
         },
+        watch: {
+            noticeVisible() {
+                if (this.noticeVisible) {
+                    console.log("this.$store.state.message:"+this.$store.state.message)
+                    this.Message=this.$store.state.message;
+                }
+            }
+        },
+
         methods: {
             handleClose() {
                 this.$emit("closeNotice", false);
@@ -35,6 +47,6 @@
 
 <style lang="less" scoped>
     .body {
-        height: 350px;
+        height: 200px;
     }
 </style>

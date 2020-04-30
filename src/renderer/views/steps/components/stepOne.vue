@@ -1,5 +1,7 @@
 <template>
     <div class="stepOne">
+        <NoticeBox  :noticeVisible="noticeVisible"
+                    @closeNotice="closeErrorView"></NoticeBox>
         <h2>Connect your imKey</h2>
         <div>
             <div :class="['selectBox',isTwoChoose?'active':'','deviceBox']" :loading="connectLoading"
@@ -18,7 +20,7 @@
     import {
         connect_device,
     } from '../../../../api/devicemanager'
-
+    import NoticeBox from "@/components/noticeDialog";
     export default {
         name: "Home",
         data() {
@@ -27,13 +29,17 @@
                 isConnect: false,
                 isOneChoose: false,
                 isTwoChoose: false,
-                isTreeChoose: false
+                isTreeChoose: false,
+                noticeVisible:false
             };
         },
         components: {
-            deviceImage
+            deviceImage,
+            NoticeBox
         },
         mounted() {
+            //禁止主页面滑动
+            this.noScroll();
             this.choose(2);
         },
         methods: {
@@ -47,20 +53,14 @@
                             this.$emit("showTwo");
                         } else {
                             // this.$message.warning("enter pin on your imKey");
-                            this.$message.warning(result.data);
-                            this.isOneChoose = false;
-                            this.isTwoChoose = false;
-                            this.connectLoading = false;
+                            this.openErrorView(res);
                         }
                     } else {
-                        this.isOneChoose = false;
-                        this.isTwoChoose = false;
-                        this.connectLoading = false;
+
+                        this.openErrorView(result.message);
                     }
                 }).catch(err => {
-                    this.isOneChoose = false;
-                    this.isTwoChoose = false;
-                    this.connectLoading = false;
+                    this.openErrorView(err);
                 })
             },
             choose(index) {
@@ -93,6 +93,17 @@
                 //  }
                 // }, 2000);
 
+            },
+            openErrorView(msg) {
+                this.isOneChoose = false;
+                this.isTwoChoose = false;
+                this.connectLoading = false;
+                this.$store.state.message=msg
+                this.noticeVisible = true;
+
+            },
+            closeErrorView(msg) {
+                this.noticeVisible = false;
             }
         }
     };

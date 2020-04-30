@@ -30,6 +30,7 @@ const routes = [
         component: require('@/views/steps/step').default
         // component: () => import('../views/steps/step.vue')
     },
+
     {
         path: '/index',
         name: 'index',

@@ -1,5 +1,7 @@
 <template>
     <div class="manager">
+        <NoticeBox  :noticeVisible="noticeVisible"
+                    @closeNotice="closeErrorView"></NoticeBox>
         <h1>Manager</h1>
         <p class="notice">
             <span>Install or unstall apps on your device</span>
@@ -69,7 +71,8 @@
     import {
         connect_device, cosUpdate, getAppList, downloadApplet, deleteApplet, getFirmwareVersion
     } from '../../../api/devicemanager'
-
+    import NoticeBox from "@/components/noticeDialog";
+    import CheckBox from "../steps/components/stepTwoDialog";
     export default {
         name: "manager",
         data() {
@@ -80,11 +83,13 @@
                 newVersionData: "1.5.10",
                 updateSuccess: false,
                 loading: false,
-                apps: []
+                apps: [],
+                noticeVisible:false
             };
         },
         components: {
-            deviceImage
+            deviceImage,
+            NoticeBox
         },
         computed: {
             getApps() {
@@ -111,9 +116,11 @@
                 getFirmwareVersion().then(result => {
                     if (result.code === 200) {
                         this.oldVersionData = result.data;
+                    }else{
+                        this.openErrorView(result.message);
                     }
                 }).catch(err => {
-
+                    this.openErrorView(err);
                 })
             },
             getcosupdate() {
@@ -125,12 +132,16 @@
                             this.updateSuccess = true;
                             this.oldVersionData = this.newVersionData;
                         } else {
-                            this.$message.warning(result.data);
                             this.loading = false;
+                            this.openErrorView(result.data);
                         }
+                    }else{
+                        this.loading = false;
+                        this.openErrorView(result.message);
                     }
                 }).catch(err => {
-
+                    this.loading = false;
+                    this.openErrorView(err);
                 })
             },
             connect() {
@@ -161,10 +172,10 @@
                         this.apps = result.data.list
                         // const total = result.data.total
                     } else {
-                        this.$message.warning(result);
+                        this.openErrorView(result.message);
                     }
                 }).catch(err => {
-
+                    this.openErrorView(err);
                 })
             },
             updateVersion() {
@@ -189,10 +200,16 @@
                                 this.apps[index].installLoding = false;
                             } else {
                                 this.apps[index].installLoding = false;
+                                this.openErrorView(result.data);
                             }
+                        }else{
+                            this.apps[index].installLoding = false;
+                            this.openErrorView(result.message);
                         }
                     }).catch(err => {
                         this.apps[index].installLoding = false;
+                        this.openErrorView(err);
+
                     })
                 }, 200);
             },
@@ -210,10 +227,14 @@
                                 this.apps[index].deletLoding = false;
                             } else {
                                 this.apps[index].deletLoding = false;
+                                this.openErrorView(result.data);
                             }
+                        }else{
+                            this.openErrorView(result.message);
                         }
                     }).catch(err => {
                         this.apps[index].deletLoding = false;
+                        this.openErrorView(err);
                     })
                 }, 200);
             },
@@ -223,6 +244,14 @@
                     "_blank",
                     "scrollbars=yes,resizable=1,modal=false,alwaysRaised=yes"
                 );
+            },
+            openErrorView(msg) {
+                this.$store.state.message=msg
+                this.noticeVisible = true;
+
+            },
+            closeErrorView(msg) {
+                this.noticeVisible = false;
             }
         }
     };

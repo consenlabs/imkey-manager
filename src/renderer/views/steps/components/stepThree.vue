@@ -1,5 +1,7 @@
 <template>
     <div class="stepThree">
+        <NoticeBox  :noticeVisible="noticeVisible"
+                    @closeNotice="closeErrorView"></NoticeBox>
         <h2>Set PIN&Create Wallet</h2>
         <p>Please Please disconnect the USB ,set PIN and create wallet</p>
         <div>
@@ -53,7 +55,7 @@
         getBTC_Xpub_,
     } from '../../../../api/walletapi'
     import {connect_device, deleteApplet} from "../../../../api/devicemanager";
-
+    import NoticeBox from "@/components/noticeDialog";
     export default {
         name: "Home",
         data() {
@@ -62,15 +64,19 @@
                 optionTwoVisible: false,
                 IseeOnes: true,
                 IseeTwos: true,
-                nextLoading: false
+                nextLoading: false,
+                noticeVisible:false
 
             };
         },
         components: {
             OptionOne,
-            OptionTwo
+            OptionTwo,
+            NoticeBox
         },
         mounted() {
+            //禁止主页面滑动
+            this.noScroll();
             this.connect();
         },
         methods: {
@@ -81,12 +87,13 @@
                         if (res == "true") {
                             this.next();
                         } else {
-                            this.$message.warning(result.data);
-
+                            this.openErrorView(res);
                         }
                     } else {
+                        this.openErrorView(result.message);
                     }
                 }).catch(err => {
+                    this.openErrorView(err);
                 })
 
             },
@@ -110,21 +117,19 @@
                                         // this.$emit("showFour", true);
                                         this.$emit("finsh");
                                     } else {
-                                        this.$message.warning("please create wallet");
-                                        this.nextLoading = false;
+                                        this.openErrorView("please create wallet");
                                     }
                                 } else {
-                                    this.$message.warning("please create wallet");
-                                    this.nextLoading = false;
+                                    this.openErrorView("please create wallet");
                                 }
                             }
                         }).catch(err => {
-                            this.nextLoading = false;
+                            this.openErrorView(err);
                         })
                     }, 300);
 
                 } else {
-                    this.$message.warning("please click option ");
+                    this.openErrorView("please click option");
                 }
 
             },
@@ -142,6 +147,15 @@
             },
             IseeTwo() {
                 this.IseeTwos = true;
+            },
+            openErrorView(msg) {
+                this.nextLoading=false;
+                this.$store.state.message=msg
+                this.noticeVisible = true;
+
+            },
+            closeErrorView(msg) {
+                this.noticeVisible = false;
             }
         }
     };

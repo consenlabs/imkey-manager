@@ -1,5 +1,7 @@
 <template>
     <div class="manager" style="-webkit-user-select: none;-webkit-app-region: drag">
+        <NoticeBox  :noticeVisible="noticeVisible"
+                    @closeNotice="closeErrorView"></NoticeBox>
         <h1 class="deviceImg">
             <deviceImage :large="true"></deviceImage>
             <!-- <img style="width:370px;height:150px" src="../../assets/device.png" alt /> -->
@@ -52,7 +54,8 @@
     import {
         connect_device,
     } from '../../../api/devicemanager'
-
+    import NoticeBox from "@/components/noticeDialog";
+    import CheckBox from "../steps/components/stepTwoDialog";
     export default {
         name: "manager",
         data() {
@@ -69,11 +72,13 @@
                 activeThree: false,
                 showThree: false,
                 showTwo: false,
-                showOne: false
+                showOne: false,
+                noticeVisible:false
             };
         },
         components: {
-            deviceImage
+            deviceImage,
+            NoticeBox
         },
         mounted() {
         },
@@ -89,18 +94,25 @@
                                 console.log("success res " + res)
                                 this.router.replace("/manager/device");
                             } else {
-                                this.$message.warning(res);
-                                this.connectLoading = false;
+                                this.openErrorView(res);
                             }
                         } else {
-
+                            this.openErrorView(result.message);
                         }
                     }).catch(err => {
-
+                        this.openErrorView(err);
                     })
                 }, 200);
             },
+        openErrorView(msg) {
+            this.connectLoading = false;
+            this.$store.state.message=msg
+            this.noticeVisible = true;
 
+        },
+        closeErrorView(msg) {
+            this.noticeVisible = false;
+        }
 
             // connectOne() {
             //   this.showOne = true;

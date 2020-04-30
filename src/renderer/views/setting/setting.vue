@@ -52,24 +52,7 @@
                     this.oldVersionData = this.newVersionData;
                 }, 1500);
             },
-            intall(val, index) {
-                this.apps[index].installLoding = true;
-                this.apps[index].deletLoding = false;
-                setTimeout(() => {
-                    this.apps[index].deletDis = false;
-                    this.apps[index].installDis = true;
-                    this.apps[index].installLoding = false;
-                }, 1500);
-            },
-            delet(val, index) {
-                this.apps[index].deletLoding = true;
-                this.apps[index].installLoding = false;
-                setTimeout(() => {
-                    this.apps[index].deletDis = true;
-                    this.apps[index].installDis = false;
-                    this.apps[index].deletLoding = false;
-                }, 1500);
-            },
+
             help() {
                 window.open(
                     "https://support.imkey.im/hc/zh-cn/articles/360019656954-如何设置与修改-PIN-码",

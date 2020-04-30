@@ -1,4 +1,5 @@
 <template>
+
     <el-dialog
             title="Active&Bind"
             :visible.sync="boxVisible"
@@ -118,19 +119,14 @@
                         const res = result.data
                         if (res == "true") {
                             console.log("success res" + res)
-                            // this.$emit("showTwo");
                         } else {
-                            this.$message.warning(result.data);
-                            // this.isOneChoose = false;
-                            // this.isTwoChoose = false;
+                            this.openErrorView(res);
                         }
                     } else {
-                        // this.isOneChoose = false;
-                        // this.isTwoChoose = false;
+                        this.openErrorView(result.message);
                     }
                 }).catch(err => {
-                    // this.isOneChoose = false;
-                    // this.isTwoChoose = false;
+                    this.openErrorView(err);
                 })
             },
             getActiveDevice() {
@@ -148,13 +144,14 @@
                             } else {
                                 console.log("activeDevice:" + result.data)
                                 //激活失败
-                                this.handleClose();
-                                this.$message.warning(result.data);
+                                this.openErrorView(result.data);
                             }
+                        } else {
+                            this.openErrorView(result.message);
                         }
                     }).catch(err => {
                         //激活失败
-                        this.handleClose();
+                        this.openErrorView(err);
                     })
 
                 }, 200)
@@ -166,8 +163,7 @@
                         console.log("result.data:" + result.data);
                         if (result.data == "" || result.data == null) {
                             //失败的话
-                            this.$emit("showTwo", false);
-                            this.handleClose();
+                            this.openErrorView("bind fail: null ");
                         } else {
                             if (result.data == "bound_other") {
                                 //弹出输入框
@@ -186,19 +182,20 @@
                                 setTimeout(() => {
                                     //已经绑定
                                     this.loading3 = false;
-                                }, 2000);
+                                }, 500);
                                 setTimeout(() => {
                                     //第三部成功的话
                                     this.$emit("showTree", true);
                                     this.handleClose();
-                                }, 3000);
+                                }, 1000);
                             }
                         }
+                    } else {
+                        this.openErrorView(result.message);
                     }
                 }).catch(err => {
                     //失败的话
-                    this.$emit("showTwo", false);
-                    this.handleClose();
+                    this.openErrorView(err);
                 })
 
             },
@@ -218,17 +215,13 @@
                             }, 2000);
 
                         } else {
-                            this.$message.warning(result.data);
-                            //失败的话
-                            this.$emit("showTwo", false);
-                            this.handleClose();
+                            this.openErrorView(result.data);
                         }
+                    } else {
+                        this.openErrorView(result.message);
                     }
                 }).catch(err => {
-                    this.$message.warning(err);
-                    //失败的话
-                    this.$emit("showTwo", false);
-                    this.handleClose();
+                    this.openErrorView(err);
                 })
             },
             DeviceBindDisplay() {
@@ -238,15 +231,13 @@
                         if (result.data == "true") {
 
                         } else {
-                            //失败的话
-                            this.$emit("showTwo", false);
-                            this.handleClose();
+                            this.openErrorView(result.data);
                         }
+                    } else {
+                        this.openErrorView(result.message);
                     }
                 }).catch(err => {
-                    //失败的话
-                    this.$emit("showTwo", false);
-                    this.handleClose();
+                    this.openErrorView(err);
                 })
             },
             firstCheck() {
@@ -255,12 +246,12 @@
                 //第一步成功的话，继续要一步操作
                 setTimeout(() => {
                     this.getActiveDevice();
-                }, 1000);
+                }, 200);
                 //失败的话
                 // this.$emit("showTree", false);
             },
-            handleClose() {
-                this.$emit("closeCheckBox", false);
+            handleClose(msg) {
+                this.$emit("closeCheckBox", msg);
                 this.status1 = false;
                 this.BindCode = "";
                 this.status3 = false;
@@ -287,8 +278,11 @@
                 this.loading3 = true;
                 setTimeout(() => {
                     this.DeviceBindAcquire();
-                }, 500);
-            }
+                }, 200);
+            },
+            openErrorView(msg) {
+                this.handleClose(msg);
+            },
         }
     };
 </script>

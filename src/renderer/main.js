@@ -10,6 +10,26 @@ Vue.prototype.$store = store;
 Vue.prototype.router = router;
 Vue.use(ElementUI)
 
+//弹出框禁止滑动
+Vue.prototype.noScroll = function () {
+    var mo = function (e) { e.preventDefault() }
+    document.body.style.overflow = 'hidden'
+    document.addEventListener('touchmove', mo, false)// 禁止页面滑动
+}
+
+//弹出框可以滑动
+Vue.prototype.canScroll = function () {
+    var mo = function (e) {
+        e.preventDefault()
+    }
+    document.body.style.overflow = ''// 出现滚动条
+    document.removeEventListener('touchmove', mo, false)
+}
+
+
+// this.canScroll()
+//主页面可滑动
+
 new Vue({
     router,
     store,

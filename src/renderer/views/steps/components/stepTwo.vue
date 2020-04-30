@@ -1,5 +1,7 @@
 <template>
     <div class="stepTwo">
+        <NoticeBox  :noticeVisible="noticeVisible"
+                    @closeNotice="closeErrorView"></NoticeBox>
         <h2>Active&Bind</h2>
         <p>Please active and bind your imKey </p>
         <div>
@@ -47,7 +49,7 @@
 
 <script>
     import CheckBox from "./stepTwoDialog";
-
+    import NoticeBox from "@/components/noticeDialog";
     export default {
         name: "Home",
         data() {
@@ -56,13 +58,17 @@
                 yesTowType: "primary",
                 noOneType: "",
                 noTowType: "",
-                boxVisible: false
+                boxVisible: false,
+                noticeVisible:false
             };
         },
         components: {
-            CheckBox
+            CheckBox,
+            NoticeBox
         },
         mounted() {
+            //禁止主页面滑动
+            this.noScroll();
             this.check();
         },
         methods: {
@@ -87,8 +93,12 @@
             check() {
                 this.boxVisible = true;
             },
-            closeCheckBox() {
+            closeCheckBox(msg) {
+                //取消显示进度的窗口，弹出错误窗口
                 this.boxVisible = false;
+                setTimeout(() => {
+                this.openErrorView(msg)
+                }, 200)
             },
             toShowTree(val) {
                 if (val) {
@@ -96,6 +106,14 @@
                 } else {
                     this.$emit("finshStatusTwo", "error");
                 }
+            },
+            openErrorView(msg) {
+                this.$store.state.message=msg
+                this.noticeVisible = true;
+
+            },
+            closeErrorView(msg) {
+                this.noticeVisible = false;
             }
         }
     };

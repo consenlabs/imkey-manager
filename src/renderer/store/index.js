@@ -5,7 +5,8 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
     state: {
-        agree: true
+        agree: true,
+        message: ""
     },
     mutations: {},
     actions: {},
