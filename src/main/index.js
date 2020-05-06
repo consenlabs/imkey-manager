@@ -146,7 +146,7 @@ function createMainWindow() {
         minHeight: 600,
         useContentSize: true,
         frame: true, // 无边框
-        transparent: true, // 透明
+        transparent: false, // 透明
         // fullscreen: true, // 全屏
         webPreferences: {
             nodeIntegration: true

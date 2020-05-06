@@ -28,6 +28,10 @@
       {
         "from": "./connector.dll",
         "to": "../"
+      },
+      {
+        "from": "./connector.dylib",
+        "to": "../"
       }
     ],
     "publish": {
