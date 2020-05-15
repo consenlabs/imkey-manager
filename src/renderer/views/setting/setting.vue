@@ -1,5 +1,28 @@
 <template>
     <div class="setting">
+
+            <el-dialog
+                    title="提示"
+                    :visible.sync="centerDialogVisible"
+                    width="30%"
+                    center>
+                <span>是否升级软件</span>
+                <span slot="footer" class="dialog-footer">
+    <el-button @click="centerDialogVisible = false">取 消</el-button>
+    <el-button type="primary" @click="updateSoft">确 定</el-button>
+  </span>
+            </el-dialog>
+        <el-dialog
+                title="提示"
+                :visible.sync="dialogUpdateNow"
+                width="30%"
+                center>
+            <span>是否退出立刻更新</span>
+            <span slot="footer" class="dialog-footer">
+    <el-button @click="centerDialogVisible = false">取 消</el-button>
+    <el-button type="primary" @click="updateNow">确 定</el-button>
+  </span>
+        </el-dialog>
         <h1>Setting</h1>
         <p class="notice">
             <span>Setting imKey-desktop</span>
@@ -18,7 +41,12 @@
             </div>
             <div v-if="!updateSuccess">
                 <span class="updateMsg">imKey-desktop version is {{newVersionData}} avaliable</span>
-                <el-button type="primary" @click="updateVersion" size="small" :loading="loading">update</el-button>
+
+                <el-button type="primary" @click="updateVersion" size="small" :loading="loading">{{updateBtnTx}}</el-button>
+
+<!--                <div  class="updateMsg" v-if="!updateSuccess">-->
+<!--                <el-progress type="circle" :percentage="downloadPercent" width="60px" ></el-progress>-->
+<!--                </div>-->
             </div>
         </div>
 
@@ -26,31 +54,110 @@
 </template>
 
 <script>
+    import {ipcRenderer} from 'electron'
+     let packagejson = require("../../../../package.json");
+
     export default {
         name: "setting",
         data() {
             return {
+                updateBtnTx:"update",
+                centerDialogVisible:false,
                 appName: "",
                 isSuccess: false,
-                oldVersionData: "1.0.0",
-                newVersionData: "1.0.2",
+                oldVersionData: packagejson.version,
+                newVersionData: "",
                 loading: false,
-                updateSuccess: false
+                updateSuccess: false,
+                updateNoticeVisible:false,
+
+                dialogUpdateNow: false,
+                downloading: false,
+                hasNewVersion: false,
+                noNewVersion: false,
+                downloadPercent: 0,
+                downloadStatus:"",
+                showError: false,
+                errorInfo: {},
+                versionInfoList: []
             };
         },
+        destroyed() {
+            // 移除事件监听
+            ipcRenderer.removeAllListeners('updateMessage')
+            ipcRenderer.removeAllListeners('downloadProgress')
+            ipcRenderer.removeAllListeners('isUpdateNow')
+        },
         mounted() {
-            setTimeout(() => {
-                this.isSuccess = true;
-            }, 2000);
+            if (process.env.NODE_ENV === 'production') {
+                this.checkForUpdate()
+            }
         },
         methods: {
-            updateVersion() {
+
+            updateSoft(){
+                this.centerDialogVisible=false;
                 this.loading = true;
-                setTimeout(() => {
-                    this.loading = false;
-                    this.updateSuccess = true;
-                    this.oldVersionData = this.newVersionData;
-                }, 1500);
+                this.updateBtnTx="updating"
+                this.downloadAndUpdate();
+            },
+            updateVersion() {
+                this.centerDialogVisible=true;
+
+            },
+
+            saveVersionInfoList(updateInfo) {
+                let versionInfoListOri = this.getVersionInfoList()
+                versionInfoListOri.some((item, index, array) => {
+                    // 判断是不是已经存在这个版本的信息,如果存在就删除它
+                    if (updateInfo.version === item.version) {
+                        array.splice(index, 1)
+                        return true
+                    }
+                })
+                // 将新的版本信息加入列表中
+                versionInfoListOri.push(updateInfo)
+                localStorage.setItem('versionInfoList', JSON.stringify(versionInfoListOri))
+            },
+            downloadAndUpdate() {
+                this.downloading = true
+                // 开始下载
+                ipcRenderer.send('downloadUpdate')
+                ipcRenderer.on('downloadProgress', (event, progressObj) => {
+                    this.progress = JSON.stringify(progressObj)
+                    // console.log(progressObj)
+                    this.downloadPercent = progressObj.percent.toFixed(0) || 0
+                    // if(this.downloadPercent === 100) { // 这样写为啥不好使呢？
+                    if (progressObj.percent === 100) {
+                        this.loading = false
+                        // 询问是否立即更新
+                        this.dialogUpdateNow = true
+                    }
+                })
+            },
+            updateNow() {
+                this.dialogUpdateNow=false;
+                // 立刻退出并更新
+                ipcRenderer.send('isUpdateNow')
+            },
+            checkForUpdate() {
+                // 开始检查
+                ipcRenderer.send('checkForUpdate')
+                // 添加自动更新事件的监听
+                ipcRenderer.on('updateMessage', (event, obj) => {
+                    if (obj.action === 'updateAva') {
+                        this.hasNewVersion = true
+                        this.newVersionData=obj.updateInfo.version;
+                    } else if (obj.action === 'error') {
+                        this.showError = true
+                        this.errorInfo = obj.errorInfo
+                    } else if (obj.action === 'updateNotAva') {
+                        // this.noNewVersion = true
+                        this.updateSuccess=false;
+                    } else {
+                        // console.log(text)
+                    }
+                })
             },
 
             help() {
