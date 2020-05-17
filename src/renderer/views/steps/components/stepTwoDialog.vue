@@ -106,8 +106,11 @@
             getUserPath() {
                 getUserPath().then(result => {
                     if (result.code === 200) {
-                        this.userPath = result.data;
-                        console.log("this.userPath" + this.userPath)
+                        const electron = require('electron');
+                        const dataPath = (electron.app || electron.remote.app).getPath('userData')+"/";
+                        console.log("dataPath:"+dataPath)
+                        this.userPath = dataPath;
+                        console.log("this.userPath" + dataPath)
                     }
                 }).catch(err => {
 

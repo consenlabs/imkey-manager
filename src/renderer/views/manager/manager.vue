@@ -69,10 +69,9 @@
 <script>
     import deviceImage from "../../components/deviceImage";
     import {
-        connect_device, cosUpdate, getAppList, downloadApplet, deleteApplet, getFirmwareVersion
+        connect_device, cosUpdate, cosCheckUpdate,getAppList, downloadApplet, deleteApplet, getFirmwareVersion
     } from '../../../api/devicemanager'
     import NoticeBox from "@/components/noticeDialog";
-    import CheckBox from "../steps/components/stepTwoDialog";
     export default {
         name: "manager",
         data() {
@@ -80,11 +79,14 @@
                 appName: "",
                 isSuccess: false,
                 oldVersionData: "",
-                newVersionData: "1.5.10",
+                newVersionData: "",
                 updateSuccess: false,
                 loading: false,
                 apps: [],
-                noticeVisible:false
+                noticeVisible:false,
+                isLatest:false,
+                updateType:"",
+                description:""
             };
         },
         components: {
@@ -105,17 +107,67 @@
             }
         },
         mounted() {
-            this.connect();
-            this.getFirmwareVersion();
-            //加载应用
-            this.AppsList();
-            this.isSuccess = true;
+            this.init();
         },
         methods: {
+            init(){
+                connect_device().then(result => {
+
+                    if (result.code === 200) {
+                        const res = result.data
+                        console.log("res:" + res)
+                        if (res == "true") {
+                            console.log("success res " + res)
+                            this.getFirmwareVersion();
+                        } else {
+                            console.log("redwdsdss" + res)
+                            this.router.replace("/manager/connect");
+
+                        }
+                    } else {
+                        this.router.replace("/manager/connect");
+                    }
+                }).catch(err => {
+                    this.router.replace("/manager/connect");
+                })
+            },
+            compareByFirmwareVersion(){
+                //如果cos版本不一致，提示用户更新
+                if(this.oldVersionData == this.newVersionData){
+                    this.updateSuccess=true;
+                }else{
+                    //显示要更新的按钮
+                    this.updateSuccess=false;
+                    //提示更新信息
+                    this.openErrorView(this.description)
+
+
+                }
+                //加载应用
+                this.AppsList();
+
+            },
             getFirmwareVersion() {
                 getFirmwareVersion().then(result => {
                     if (result.code === 200) {
                         this.oldVersionData = result.data;
+                        this.getCheckCosUpdate();
+                    }else{
+                        this.openErrorView(result.message);
+                    }
+                }).catch(err => {
+                    this.openErrorView(err);
+                })
+            },
+            getCheckCosUpdate() {
+                cosCheckUpdate().then(result => {
+                    if (result.code === 200) {
+                        this.newVersionData = result.data.latestCosVersion;
+                        this.isLatest = result.data.isLatest;
+                        this.updateType = result.data.updateType;
+                        this.description = result.data.description;
+                        //对比COS版本，提示用户是否升级
+                        this.compareByFirmwareVersion();
                     }else{
                         this.openErrorView(result.message);
                     }
@@ -152,7 +204,6 @@
                         console.log("res:" + res)
                         if (res == "true") {
                             console.log("success res " + res)
-
                         } else {
                             console.log("redwdsdss" + res)
                             this.router.replace("/manager/connect");
@@ -170,6 +221,7 @@
                 getAppList().then(result => {
                     if (result.code === 200) {
                         this.apps = result.data.list
+                        this.isSuccess = true;
                         // const total = result.data.total
                     } else {
                         this.openErrorView(result.message);

@@ -124,10 +124,12 @@
                 // 开始下载
                 ipcRenderer.send('downloadUpdate')
                 ipcRenderer.on('downloadProgress', (event, progressObj) => {
+
                     this.progress = JSON.stringify(progressObj)
                     // console.log(progressObj)
                     this.downloadPercent = progressObj.percent.toFixed(0) || 0
                     // if(this.downloadPercent === 100) { // 这样写为啥不好使呢？
+                    this.updateBtnTx="downloading "+this.downloadPercent+"%"
                     if (progressObj.percent === 100) {
                         this.loading = false
                         // 询问是否立即更新

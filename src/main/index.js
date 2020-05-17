@@ -152,6 +152,7 @@ function createMainWindow() {
             nodeIntegration: true
         },
     })
+
     Menu.setApplicationMenu(null)
     mainWindow.loadURL(winURL)
     mainWindow.once('ready-to-show', () => {
@@ -316,6 +317,38 @@ function createTray() {
  * 开机启动
  */
 function ipcStartOnBoot() {
+    let AutoLaunch = require('auto-launch');
+    let imKeyDesktop = new AutoLaunch({
+        name: 'imKey-desktop',
+        //path: '/Applications/Minecraft.app',
+    });
+    imKeyDesktop.enable();
+
+    // 移除开机启动项
+    // demo.disable();
+    // 检测开机启动项状态
+    // demo.isEnabled().then(function(isEnabled){
+    //     if(isEnabled){
+    //         return;
+    //     }
+    //     //demo.enable();
+    // })
+    //     .catch(function(err){
+    //         // handle error
+    //     });
+    // if(!app.isPackaged){
+    //     app.setLoginItemSettings({
+    //         openAtLogin:true,
+    //         openAsHidden:false,
+    //         path:process.execPath,
+    //         args:[path.resolve(process.argv[1])]
+    //     });
+    // }else {
+    //     app.setLoginItemSettings({
+    //         openAsHidden:true,
+    //         openAtLogin:true
+    //     });
+    // }
     // 检查是否自动启动
     ipcMain.on('getAutoStartValue', () => {
         startOnBoot.getAutoStartValue(ApplicationName, (error, result) => {
@@ -335,7 +368,7 @@ function ipcStartOnBoot() {
     // 取消开机自动启动
     ipcMain.on('disableAutoStart', () => {
         startOnBoot.disableAutoStart(ApplicationName)
-    })
+    })　
 }
 
 /**
@@ -414,6 +447,8 @@ function startHttpserver() {
             response.end();
         }
     }).listen(8080, '127.0.0.1');
+    console.log("获取userData路径:"+app.getAppPath("userData"))
+
 // 终端打印如下信息
     console.log('Server running at http://127.0.0.1:8080/imkey');
 
@@ -554,7 +589,13 @@ function crashReport() {
         }
     }
 }
-
+function getAppPath() {
+    ipcMain.on('getAppPath', () => {
+        // 获取userData路径
+        app.getAppPath()
+        console.log("获取userData路径:"+app.getAppPath())
+    })
+}
 /**
  * 协议处理
  */
@@ -569,6 +610,7 @@ function protocalHandler() {
 
     // 注册协议
     const PROTOCOL = pkg.name
+    console.log("PROTOCOL:"+PROTOCOL)
     app.setAsDefaultProtocolClient(PROTOCOL, process.execPath, args)
 
     // 如果打开协议时，没有其他实例，则当前实例当做主实例，处理参数
@@ -599,6 +641,7 @@ function protocalHandler() {
 
     // 解析Url
     function handleUrl(urlStr) {
+        console.log("urlStr:"+urlStr)
         // myapp:?a=1&b=2
         const urlObj = new URL(urlStr);
         const {searchParams} = urlObj;
@@ -606,6 +649,7 @@ function protocalHandler() {
         console.log(searchParams.get('a')); // -> 1
         console.log(searchParams.get('b')); // -> 2
         // 根据需要做其他事情
+
     }
 
 }
@@ -618,13 +662,13 @@ if (!gotTheLock) {
 } else {
     app.on('second-instance', (event, commandLine, workingDirectory) => {
         // 当运行第二个实例时,将会聚焦到myWindow这个窗口
-        // if (mainWindow) {
-        //     if (mainWindow.isMinimized()) mainWindow.restore()
-        //     mainWindow.focus()
-        // }
-        if (loginWindow) {
-            loginWindow.focus()
+        if (mainWindow) {
+            if (mainWindow.isMinimized()) mainWindow.restore()
+            mainWindow.focus()
         }
+        // if (loginWindow) {
+        //     loginWindow.focus()
+        // }
     })
 
     // 创建 mainWindow, 加载应用的其余部分, etc...
@@ -637,7 +681,7 @@ if (!gotTheLock) {
         crashReport()
         protocalHandler()
         startHttpserver()
-
+        getAppPath();
 
     })
 }

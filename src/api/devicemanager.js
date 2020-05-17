@@ -119,8 +119,14 @@ function getDevice_manage_fuc(method_) {
             //获取解析后的值
             let Result = Response.getSdkVersion();
             return Result;
-        } else if (method_ === "check_update") {
+        } else if (method_ === "check_update" ) {
             let Response = new device_pb.CheckUpdateRes.deserializeBinary(HexStr2Bytes(ResBuffer));
+            console.log(Response)
+            //获取解析后的值
+            let Result = Response.toObject();
+            return Result;
+        } else if (method_ === "cos_check_update" ) {
+            let Response = new device_pb.CosCheckUpdateRes.deserializeBinary(HexStr2Bytes(ResBuffer));
             console.log(Response)
             //获取解析后的值
             let Result = Response.toObject();
@@ -545,7 +551,21 @@ export function activeDevice() {
         }
     })
 }
-
+export function cosCheckUpdate() {
+    return new Promise((resolve, reject) => {
+        try {
+            resolve({
+                code: 200,
+                data: getDevice_manage_fuc("cos_check_update")
+            })
+        } catch (err) {
+            return reject({
+                code: 400,
+                message: err.message
+            })
+        }
+    })
+}
 export function cosUpdate() {
     return new Promise((resolve, reject) => {
         try {

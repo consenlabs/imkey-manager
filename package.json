@@ -15,7 +15,7 @@
     "pack:main": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.main.config.js",
     "pack:renderer": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.renderer.config.js",
     "postinstall": "",
-    "release": "node .electron-vue/build.js && electron-builder"
+    "release": "node .electron-vue/build.js && electron-builder -mw"
   },
   "build": {
     "productName": "imkey-desktop",
@@ -37,7 +37,7 @@
     "publish": {
       "provider": "github",
       "repo": "imkey-desktop",
-      "owner": "imkey",
+      "owner": "fengweiqiang-coder",
       "releaseType": "release"
     },
     "files": [
@@ -67,8 +67,12 @@
       "target": "nsis"
     },
     "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "oneClick": true,
+      "perMachine": true,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "runAfterFinish": true
     },
     "linux": {
       "icon": "build/icons/icon.icns"
@@ -76,7 +80,7 @@
   },
   "dependencies": {
     "@sentry/electron": "^0.17.1",
-    "electron-updater": "^4.0.6",
+    "electron-updater": "^4.3.1",
     "element-ui": "^2.13.1",
     "ffi": "^2.3.0",
     "fs-extra": "^8.0.1",
@@ -88,7 +92,8 @@
     "vue-router": "^3.1.6",
     "vuex": "^3.1.3",
     "vuex-electron": "^1.0.3",
-    "winreg": "^1.2.4"
+    "winreg": "^1.2.4",
+    "auto-launch": "^5.0.5"
   },
   "devDependencies": {
     "@sentry/cli": "^1.52.1",
