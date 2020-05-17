@@ -2,7 +2,7 @@
     <div class="setting">
 
             <el-dialog
-                    title="提示"
+                    title="info"
                     :visible.sync="centerDialogVisible"
                     width="30%"
                     center>
@@ -13,7 +13,7 @@
   </span>
             </el-dialog>
         <el-dialog
-                title="提示"
+                title="info"
                 :visible.sync="dialogUpdateNow"
                 width="30%"
                 center>
@@ -42,7 +42,7 @@
             <div v-if="!updateSuccess">
                 <span class="updateMsg">imKey-desktop version is {{newVersionData}} avaliable</span>
 
-                <el-button type="primary" @click="updateVersion" size="small" :loading="loading">{{updateBtnTx}}</el-button>
+                <el-button type="primary" @click="updateVersion" size="small" :loading="loading" v-if="isUpdate">{{updateBtnTx}}</el-button>
 
 <!--                <div  class="updateMsg" v-if="!updateSuccess">-->
 <!--                <el-progress type="circle" :percentage="downloadPercent" width="60px" ></el-progress>-->
@@ -70,7 +70,7 @@
                 loading: false,
                 updateSuccess: false,
                 updateNoticeVisible:false,
-
+                isUpdate:false,
                 dialogUpdateNow: false,
                 downloading: false,
                 hasNewVersion: false,
@@ -148,8 +148,10 @@
                 // 添加自动更新事件的监听
                 ipcRenderer.on('updateMessage', (event, obj) => {
                     if (obj.action === 'updateAva') {
+                        this.isUpdate = true
                         this.hasNewVersion = true
                         this.newVersionData=obj.updateInfo.version;
+                        this.description = obj.updateInfo.releaseNotes;
                     } else if (obj.action === 'error') {
                         this.showError = true
                         this.errorInfo = obj.errorInfo

@@ -40,6 +40,9 @@
       "owner": "fengweiqiang-coder",
       "releaseType": "release"
     },
+    "releaseInfo":{
+      "releaseNotes":"1.解决了更新失败的问题 \n 2.解决了绑定失败的问题"
+    },
     "files": [
       "dist/electron/**/*"
     ],

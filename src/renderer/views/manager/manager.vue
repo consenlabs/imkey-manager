@@ -139,7 +139,7 @@
                     //显示要更新的按钮
                     this.updateSuccess=false;
                     //提示更新信息
-                    this.openErrorView(this.description)
+                    this.openErrorView("info",this.description)
 
 
                 }
@@ -153,10 +153,10 @@
                         this.oldVersionData = result.data;
                         this.getCheckCosUpdate();
                     }else{
-                        this.openErrorView(result.message);
+                        this.openErrorView("error",result.message);
                     }
                 }).catch(err => {
-                    this.openErrorView(err);
+                    this.openErrorView("error",err);
                 })
             },
             getCheckCosUpdate() {
@@ -172,7 +172,7 @@
                         this.openErrorView(result.message);
                     }
                 }).catch(err => {
-                    this.openErrorView(err);
+                    this.openErrorView("error",err);
                 })
             },
             getcosupdate() {
@@ -185,15 +185,15 @@
                             this.oldVersionData = this.newVersionData;
                         } else {
                             this.loading = false;
-                            this.openErrorView(result.data);
+                            this.openErrorView("error",result.data);
                         }
                     }else{
                         this.loading = false;
-                        this.openErrorView(result.message);
+                        this.openErrorView("error",result.message);
                     }
                 }).catch(err => {
                     this.loading = false;
-                    this.openErrorView(err);
+                    this.openErrorView("error",err);
                 })
             },
             connect() {
@@ -224,10 +224,10 @@
                         this.isSuccess = true;
                         // const total = result.data.total
                     } else {
-                        this.openErrorView(result.message);
+                        this.openErrorView("error",result.message);
                     }
                 }).catch(err => {
-                    this.openErrorView(err);
+                    this.openErrorView("error",err);
                 })
             },
             updateVersion() {
@@ -252,15 +252,15 @@
                                 this.apps[index].installLoding = false;
                             } else {
                                 this.apps[index].installLoding = false;
-                                this.openErrorView(result.data);
+                                this.openErrorView("error",result.data);
                             }
                         }else{
                             this.apps[index].installLoding = false;
-                            this.openErrorView(result.message);
+                            this.openErrorView("error",result.message);
                         }
                     }).catch(err => {
                         this.apps[index].installLoding = false;
-                        this.openErrorView(err);
+                        this.openErrorView("error",err);
 
                     })
                 }, 200);
@@ -279,14 +279,14 @@
                                 this.apps[index].deletLoding = false;
                             } else {
                                 this.apps[index].deletLoding = false;
-                                this.openErrorView(result.data);
+                                this.openErrorView("error",result.data);
                             }
                         }else{
-                            this.openErrorView(result.message);
+                            this.openErrorView("error",result.message);
                         }
                     }).catch(err => {
                         this.apps[index].deletLoding = false;
-                        this.openErrorView(err);
+                        this.openErrorView("error",err);
                     })
                 }, 200);
             },
@@ -297,8 +297,9 @@
                     "scrollbars=yes,resizable=1,modal=false,alwaysRaised=yes"
                 );
             },
-            openErrorView(msg) {
-                this.$store.state.message=msg
+            openErrorView(title,msg) {
+                this.$store.state.title=title;
+                this.$store.state.message=msg;
                 this.noticeVisible = true;
 
             },
