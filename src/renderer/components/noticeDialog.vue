@@ -1,6 +1,6 @@
 <template>
     <el-dialog
-            title={{Title}}
+            title="info"
             :visible.sync="noticeVisible"
             width="550px"
             :show-close="false"
@@ -22,7 +22,6 @@
         data(){
           return{
               Message:"",
-              Title:"error"
           } ;
 
         },
@@ -30,7 +29,6 @@
             noticeVisible() {
                 if (this.noticeVisible) {
                     console.log("this.$store.state.message:"+this.$store.state.message)
-                    this.Title=this.$store.state.title;
                     this.Message=this.$store.state.message;
                 }
             }

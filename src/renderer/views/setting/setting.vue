@@ -6,7 +6,8 @@
                     :visible.sync="centerDialogVisible"
                     width="30%"
                     center>
-                <span>是否升级软件</span>
+                <span>{{description}}</span>
+                <span>是否去升级</span>
                 <span slot="footer" class="dialog-footer">
     <el-button @click="centerDialogVisible = false">取 消</el-button>
     <el-button type="primary" @click="updateSoft">确 定</el-button>
@@ -42,7 +43,7 @@
             <div v-if="!updateSuccess">
                 <span class="updateMsg">imKey-desktop version is {{newVersionData}} avaliable</span>
 
-                <el-button type="primary" @click="updateVersion" size="small" :loading="loading" v-if="isUpdate">{{updateBtnTx}}</el-button>
+                <el-button type="primary" @click="updateVersion" size="small" :loading="loading" >{{updateBtnTx}}</el-button>
 
 <!--                <div  class="updateMsg" v-if="!updateSuccess">-->
 <!--                <el-progress type="circle" :percentage="downloadPercent" width="60px" ></el-progress>-->
@@ -68,7 +69,7 @@
                 oldVersionData: packagejson.version,
                 newVersionData: "",
                 loading: false,
-                updateSuccess: false,
+                updateSuccess: true,
                 updateNoticeVisible:false,
                 isUpdate:false,
                 dialogUpdateNow: false,
@@ -79,7 +80,8 @@
                 downloadStatus:"",
                 showError: false,
                 errorInfo: {},
-                versionInfoList: []
+                versionInfoList: [],
+                description:""
             };
         },
         destroyed() {
@@ -148,16 +150,18 @@
                 // 添加自动更新事件的监听
                 ipcRenderer.on('updateMessage', (event, obj) => {
                     if (obj.action === 'updateAva') {
-                        this.isUpdate = true
-                        this.hasNewVersion = true
+
+
                         this.newVersionData=obj.updateInfo.version;
                         this.description = obj.updateInfo.releaseNotes;
+                        this.hasNewVersion = true
+                        this.updateSuccess=false
                     } else if (obj.action === 'error') {
                         this.showError = true
                         this.errorInfo = obj.errorInfo
                     } else if (obj.action === 'updateNotAva') {
                         // this.noNewVersion = true
-                        this.updateSuccess=false;
+                        this.updateSuccess=true;
                     } else {
                         // console.log(text)
                     }

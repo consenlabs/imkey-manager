@@ -7,7 +7,6 @@ export default new Vuex.Store({
     state: {
         agree: true,
         message: "",
-        title:""
     },
     mutations: {},
     actions: {},
