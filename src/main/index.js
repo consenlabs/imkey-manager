@@ -61,71 +61,71 @@ if (process.platform === 'win32') {
 /**
  * 创建主窗口
  */
-function createLoginWindow() {
-    if (loginWindow) {
-        return
-    }
-
-    /**
-     * Initial window options
-     */
-    loginWindow = new BrowserWindow({
-        show: true,
-        height: 360,
-        width: 300,
-        maxHeight: 360,
-        maxWidth: 300,
-        useContentSize: true,
-        frame: false, // 无边框
-        transparent: true, // 透明
-        // fullscreen: true, // 全屏,
-        resizable: false,
-        maximizable: false,
-        minimizable: false,
-        webPreferences: {
-            nodeIntegration: true
-        },
-    })
-
-    loginWindow.loadURL(loginURL)
-
-    // 为了防止闪烁，让画面准备好了再显示
-    // 对于一个复杂的应用，ready-to-show 可能发出的太晚，会让应用感觉缓慢。 在这种情况下，建议立刻显示窗口，并使用接近应用程序背景的 backgroundColor
-    // 请注意，即使是使用 ready-to-show 事件的应用程序，仍建议使用设置 backgroundColor 使应用程序感觉更原生。
-    loginWindow.once('ready-to-show', () => {
-        loginWindow.show()
-    })
-
-    loginWindow.on('close', (event) => {
-
-    })
-
-    loginWindow.on('closed', () => {
-        loginWindow = null
-    })
-
-    ipcMain.on('openMainWindow', () => {
-        if (!mainWindow) {
-            createMainWindow()
-        }
-
-        // loginWindow.hide()
-        loginWindow.destroy()
-        mainWindow.show()
-        mainWindow.focus()
-    })
-
-    ipcMain.on('openLoginWindow', () => {
-        if (!loginWindow) {
-            createLoginWindow()
-        }
-
-        // loginWindow.hide()
-        mainWindow.destroy()
-        loginWindow.show()
-        loginWindow.focus()
-    })
-}
+// function createLoginWindow() {
+//     if (loginWindow) {
+//         return
+//     }
+//
+//     /**
+//      * Initial window options
+//      */
+//     loginWindow = new BrowserWindow({
+//         show: true,
+//         height: 360,
+//         width: 300,
+//         maxHeight: 360,
+//         maxWidth: 300,
+//         useContentSize: true,
+//         frame: false, // 无边框
+//         transparent: true, // 透明
+//         // fullscreen: true, // 全屏,
+//         resizable: false,
+//         maximizable: false,
+//         minimizable: false,
+//         webPreferences: {
+//             nodeIntegration: true
+//         },
+//     })
+//
+//     loginWindow.loadURL(loginURL)
+//
+//     // 为了防止闪烁，让画面准备好了再显示
+//     // 对于一个复杂的应用，ready-to-show 可能发出的太晚，会让应用感觉缓慢。 在这种情况下，建议立刻显示窗口，并使用接近应用程序背景的 backgroundColor
+//     // 请注意，即使是使用 ready-to-show 事件的应用程序，仍建议使用设置 backgroundColor 使应用程序感觉更原生。
+//     loginWindow.once('ready-to-show', () => {
+//         loginWindow.show()
+//     })
+//
+//     loginWindow.on('close', (event) => {
+//
+//     })
+//
+//     loginWindow.on('closed', () => {
+//         loginWindow = null
+//     })
+//
+//     ipcMain.on('openMainWindow', () => {
+//         if (!mainWindow) {
+//             createMainWindow()
+//         }
+//
+//         // loginWindow.hide()
+//         loginWindow.destroy()
+//         mainWindow.show()
+//         mainWindow.focus()
+//     })
+//
+//     ipcMain.on('openLoginWindow', () => {
+//         if (!loginWindow) {
+//             createLoginWindow()
+//         }
+//
+//         // loginWindow.hide()
+//         mainWindow.destroy()
+//         loginWindow.show()
+//         loginWindow.focus()
+//     })
+// }
 
 /**
  * 创建主窗口
@@ -317,12 +317,12 @@ function createTray() {
  * 开机启动
  */
 function ipcStartOnBoot() {
-    let AutoLaunch = require('auto-launch');
-    let imKeyDesktop = new AutoLaunch({
-        name: 'imKey-desktop',
-        //path: '/Applications/Minecraft.app',
-    });
-    imKeyDesktop.enable();
+    // let AutoLaunch = require('auto-launch');
+    // let imKeyDesktop = new AutoLaunch({
+    //     name: 'imKey-desktop',
+    //     //path: '/Applications/Minecraft.app',
+    // });
+    // imKeyDesktop.enable();
 
     // 移除开机启动项
     // demo.disable();
@@ -350,25 +350,25 @@ function ipcStartOnBoot() {
     //     });
     // }
     // 检查是否自动启动
-    ipcMain.on('getAutoStartValue', () => {
-        startOnBoot.getAutoStartValue(ApplicationName, (error, result) => {
-            if (error) {
-                mainWindow.webContents.send('getAutoStartValue', false)
-            } else {
-                mainWindow.webContents.send('getAutoStartValue', true)
-            }
-        })
-    })
-
-    // 设置开机自动启动
-    ipcMain.on('enableAutoStart', () => {
-        startOnBoot.enableAutoStart(ApplicationName, process.execPath)
-    })
-
-    // 取消开机自动启动
-    ipcMain.on('disableAutoStart', () => {
-        startOnBoot.disableAutoStart(ApplicationName)
-    })　
+    // ipcMain.on('getAutoStartValue', () => {
+    //     startOnBoot.getAutoStartValue(ApplicationName, (error, result) => {
+    //         if (error) {
+    //             mainWindow.webContents.send('getAutoStartValue', false)
+    //         } else {
+    //             mainWindow.webContents.send('getAutoStartValue', true)
+    //         }
+    //     })
+    // })
+    //
+    // // 设置开机自动启动
+    // ipcMain.on('enableAutoStart', () => {
+    //     startOnBoot.enableAutoStart(ApplicationName, process.execPath)
+    // })
+    //
+    // // 取消开机自动启动
+    // ipcMain.on('disableAutoStart', () => {
+    //     startOnBoot.disableAutoStart(ApplicationName)
+    // })　
 }
 
 /**
@@ -589,13 +589,7 @@ function crashReport() {
         }
     }
 }
-function getAppPath() {
-    ipcMain.on('getAppPath', () => {
-        // 获取userData路径
-        app.getAppPath()
-        console.log("获取userData路径:"+app.getAppPath())
-    })
-}
+
 /**
  * 协议处理
  */
@@ -676,12 +670,11 @@ if (!gotTheLock) {
         // createLoginWindow()
         createMainWindow()
         createTray()
-        ipcStartOnBoot()
+        // ipcStartOnBoot()
         autoUpdate()
         crashReport()
         protocalHandler()
         startHttpserver()
-        getAppPath();
 
     })
 }
