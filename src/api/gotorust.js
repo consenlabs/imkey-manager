@@ -11,7 +11,11 @@ const path = require('path');
 let library_name = path.resolve('connector');
 
 if (process.platform === 'win32') {
-    library_name =path.resolve('connector');
+    if (process.env.NODE_ENV === 'development') {
+        library_name = path.resolve('connector');
+    } else {
+        library_name = path.resolve(__dirname, 'connector.dll').replace('\\resources\\app.asar\\dist\\electron', '');
+    }
 }
 if (process.platform === 'darwin') {
     if (process.env.NODE_ENV === 'development') {
@@ -20,7 +24,6 @@ if (process.platform === 'darwin') {
         library_name = path.resolve(__dirname, 'connector').replace('/Resources/app.asar/dist/electron', '');
     }
 }
-
     const lib = ffi.Library(library_name, {
     // [a, [b，c....]] a是函数出参类型，[b，c]是dll函数的入参类型
     clear_err: [ref.types.void, [ref.types.void]],
