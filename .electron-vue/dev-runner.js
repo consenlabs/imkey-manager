@@ -115,7 +115,6 @@ function startMain() {
 
 function startElectron() {
     var args = [
-        '--inspect=5858',
         // 为了方便调试chrome://inspect，本地调试用，此代码不能提交
         // '--inspect-brk=5858',
         path.join(__dirname, '../dist/electron/main.js')

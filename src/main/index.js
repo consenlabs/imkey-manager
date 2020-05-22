@@ -4,7 +4,7 @@ import {app, BrowserWindow, ipcMain, Menu, shell, Tray, Notification, dialog, cr
 import {autoUpdater} from 'electron-updater'
 
 // 引入自动启动模块
-const startOnBoot = require('./startOnBoot.js')
+// const startOnBoot = require('./startOnBoot.js')
 
 // 崩溃报告
 import * as Sentry from '@sentry/electron'
@@ -30,7 +30,7 @@ if (process.env.NODE_ENV !== 'development') {
 
 let mainWindow, loginWindow
 const winURL = process.env.NODE_ENV === 'development'
-    ? `http://localhost:9080`
+    ? `http://localhost:10080`
     : `file://${__dirname}/index.html`
 
 // const loginURL = process.env.NODE_ENV === 'development'
