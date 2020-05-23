@@ -30,7 +30,7 @@ if (process.env.NODE_ENV !== 'development') {
 
 let mainWindow, loginWindow
 const winURL = process.env.NODE_ENV === 'development'
-    ? `http://localhost:10080`
+    ? `http://localhost:9080`
     : `file://${__dirname}/index.html`
 
 // const loginURL = process.env.NODE_ENV === 'development'
