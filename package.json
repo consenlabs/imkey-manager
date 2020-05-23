@@ -6,7 +6,7 @@
   "license": "MIT",
   "main": "./dist/electron/main.js",
   "scripts": {
-    "build": "node .electron-vue/build.js && electron-builder -mw",
+    "build": "node .electron-vue/build.js && electron-builder",
     "build:dir": "node .electron-vue/build.js && electron-builder --dir",
     "build:clean": "cross-env BUILD_TARGET=clean node .electron-vue/build.js",
     "build:web": "cross-env BUILD_TARGET=web node .electron-vue/build.js",
@@ -15,7 +15,7 @@
     "pack:main": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.main.config.js",
     "pack:renderer": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.renderer.config.js",
     "postinstall": "",
-    "release": "node .electron-vue/build.js && electron-builder -mw"
+    "release": "node .electron-vue/build.js && electron-builder"
   },
   "build": {
     "productName": "imkey-desktop",
@@ -82,7 +82,7 @@
     }
   },
   "dependencies": {
-    "@sentry/electron": "^0.17.1",
+    "@sentry/electron": "^1.3.0",
     "electron-updater": "^4.3.1",
     "element-ui": "^2.13.1",
     "ffi": "github:lxe/node-ffi#node-12",
@@ -98,8 +98,8 @@
     "winreg": "^1.2.4"
   },
   "devDependencies": {
-    "@sentry/cli": "^1.52.1",
-    "@vue/devtools": "^5.0.9",
+    "@sentry/cli": "^1.53.0",
+    "@vue/devtools": "^5.3.3",
     "ajv": "^6.10.0",
     "babel-core": "^6.26.3",
     "babel-loader": "^7.1.4",
