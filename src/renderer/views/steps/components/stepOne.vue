@@ -2,7 +2,7 @@
     <div class="stepOne">
         <NoticeBox  :noticeVisible="noticeVisible"
                     @closeNotice="closeErrorView"></NoticeBox>
-        <h2>Connect your imKey</h2>
+        <h2>{{$t('m.stepOne.connect_imKey')}}</h2>
         <div>
             <div :class="['selectBox',isTwoChoose?'active':'','deviceBox']" :loading="connectLoading"
                  @click="choose(2)">

@@ -3,15 +3,15 @@
         <div class="black"></div>
         <el-menu-item index="/home">
             <i class="el-icon-s-home"></i>
-            <span slot="title">Home</span>
+            <span slot="title">{{$t('m.menu.home')}}</span>
         </el-menu-item>
-        <el-menu-item index="/manager/device">
+        <el-menu-item index="/manager/manager">
             <i class="el-icon-menu"></i>
-            <span slot="title">Manager</span>
+            <span slot="title">{{$t('m.menu.manager')}}</span>
         </el-menu-item>
         <el-menu-item index="/setting">
             <i class="el-icon-setting"></i>
-            <span slot="title">Setting</span>
+            <span slot="title">{{$t('m.menu.setting')}}</span>
         </el-menu-item>
     </el-menu>
 </template>
@@ -44,7 +44,7 @@
         height: 60px;
     }
 
-    /deep/ .el-menu-item {
+      /deep/ .el-menu-item {
         text-align: left;
     }
 </style>

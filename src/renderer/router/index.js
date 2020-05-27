@@ -52,10 +52,10 @@ const routes = [
                 // component: () => import('../views/manager/connect.vue')
             },
             {
-                path: "/manager/device",
+                path: "/manager/manager",
                 name: "manager",
                 meta: {
-                    activePath: "/manager/connect"
+                    activePath: "/manager/manager"
                 },
                 component: require('@/views/manager/manager').default
                 // component: () => import('../views/manager/manager.vue')

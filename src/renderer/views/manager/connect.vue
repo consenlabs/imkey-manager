@@ -1,19 +1,19 @@
 <template>
-    <div class="manager" style="-webkit-user-select: none;-webkit-app-region: drag">
+    <div class="connect" style="-webkit-user-select: none;-webkit-app-region: drag">
         <NoticeBox  :noticeVisible="noticeVisible"
                     @closeNotice="closeErrorView"></NoticeBox>
         <h1 class="deviceImg">
             <deviceImage :large="true"></deviceImage>
             <!-- <img style="width:370px;height:150px" src="../../assets/device.png" alt /> -->
         </h1>
-        <h1>Connect your imKey</h1>
-        <p class="sideTtile">Follow the steps below to the Manager</p>
+        <h1>{{$t('m.connect.connect_imKey')}}</h1>
+        <p class="sideTtile">{{$t('m.connect.follow_steps')}}</p>
         <div class="deviceBox">
             <ul>
                 <li :class="activeOne?'active':''">
           <span>
             <i class="el-icon-setting"></i>
-            Connect the imKey  to your Computer
+            {{$t('m.connect.connect_imKey_to_computer')}}
           </span>
                     <!-- <div v-if="showOne">
                       <span v-if="firstLoding" class="el-icon-loading"></span>
@@ -24,7 +24,7 @@
                 <li :class="activeTwo?'active':''">
           <span>
             <i class="el-icon-news"></i>
-            Click the connect button
+            {{$t('m.connect.click_connect')}}
           </span>
                     <!-- <div v-if="showTwo">
                       <span v-if="SecondLoding" class="el-icon-loading"></span>
@@ -35,7 +35,7 @@
                 <li :class="activeThree?'active':''">
           <span>
             <i class="el-icon-set-up"></i>
-            Enter the PIN code on your imKey
+            {{$t('m.connect.enter_pin_imKey')}}
           </span>
                     <!-- <div v-if="showThree">
                       <span v-if="thirdLoding" class="el-icon-loading"></span>
@@ -44,7 +44,7 @@
                     </div>-->
                 </li>
             </ul>
-            <el-button type="primary" @click="connect" :loading="connectLoading" style="width:100%">Connect</el-button>
+            <el-button type="primary" @click="connect" :loading="connectLoading" style="width:100%">{{$t('m.connect.connect')}}</el-button>
         </div>
     </div>
 </template>
@@ -57,7 +57,7 @@
     import NoticeBox from "@/components/noticeDialog";
     import CheckBox from "../steps/components/stepTwoDialog";
     export default {
-        name: "manager",
+        name: "connect",
         data() {
             return {
                 connectLoading: false,
@@ -151,7 +151,7 @@
 </script>
 
 <style lang="less" scoped>
-    .manager {
+    .connect {
         padding-top: 10px;
         width: 600px;
         margin: 0 auto;

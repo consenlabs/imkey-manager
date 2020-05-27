@@ -4,7 +4,8 @@
                    @closeNotice="closeErrorView"></NoticeBox>
         <div class="logoview">
             <img style="height:100px" src="../assets/logo.png" alt="">
-            <h2>Get start with yor imKey Pro device</h2>
+            <h2>{{$t('m.connectDevice.get_start_imKey')}}</h2>
+<!--            <h2>{{this.$i18n.messages[this.$i18n.locale].m.connectDevice.get_start_imKey}}</h2>-->
         </div>
         <div class="bottomBox">
             <div class="selectBox">
@@ -12,11 +13,10 @@
             </div>
             <div class="textBox">
                 <ul>
-                    <li>1. Connect the imKey to your Computer</li>
-                    <li>2. Click the connect button</li>
-                    <li>3. Enter the PIN code on imKey</li>
-                    <h5>*If you have not set the pin code of the imKey, you don't need to enter the pin code on
-                        imKey</h5>
+                    <li>1. {{$t('m.connectDevice.info_connect_imKey')}}</li>
+                    <li>2. {{$t('m.connectDevice.info_click_button')}}</li>
+                    <li>3. {{$t('m.connectDevice.info_enter_pin')}}</li>
+                    <h5>*{{$t('m.connectDevice.info_if_pin')}}</h5>
                 </ul>
             </div>
         </div>
@@ -56,7 +56,7 @@
                 one: false,
                 two: false,
                 connectLoading: false,
-                connectText: "Connect",
+                connectText: this.$t('m.connectDevice.connect'),
                 connectStatus: false,
                 BLStatus: false,
                 activeStatus: false,
@@ -91,7 +91,8 @@
 
             },
             checkIsBL() {
-                this.connectText = "check BL";
+                // this.connectText = "check BL";
+                this.connectText = this.$t('m.connectDevice.check_BL');
                 setTimeout(() => {
                     //通过getseid来判断是否处于BL状态
                     getSeid().then(result => {
@@ -114,14 +115,14 @@
                 }, 100)
             },
             checkIsActive() {
-                this.connectText = "check active";
+                this.connectText = this.$t('m.connectDevice.check_active');
                 setTimeout(() => {
                     checkUpdate().then(result => {
                         if (result.code === 200) {
                             let activeStatus = result.data.status
                             if (activeStatus == "latest") {
                                 console.log("activeStatus:" + activeStatus);
-                                this.connectText = "Active success";
+                                this.connectText = this.$t('m.connectDevice.active_success');
                                 this.checkIsBind();
                             } else {
                                 //还没有激活，跳转到激活界面
@@ -136,7 +137,7 @@
                 }, 200)
             },
             checkIsBind() {
-                this.connectText = "check bind";
+                this.connectText = this.$t('m.connectDevice.check_bind');
                 setTimeout(() => {
                     deviceBindCheck(this.userPath).then(result => {
                         if (result.code === 200) {
@@ -170,7 +171,7 @@
                 }, 200)
             },
             checkIsCreateWallet() {
-                this.connectText = "check create wallet";
+                this.connectText = this.$t('m.connectDevice.check_create_wallet');
                 setTimeout(() => {
                     getBTC_Xpub_().then(result => {
                         if (result.code === 200) {
@@ -200,14 +201,16 @@
             },
             connect() {
                 this.connectLoading = true;
-                this.connectText = "Connectting";
+                // this.connectText = "Connecting";
+                this.connectText = this.$t('m.connectDevice.connecting');
                 setTimeout(() => {
                     connect_device().then(result => {
                         const res = result.data
                         if (res == "true") {
                             console.log("success res " + res)
                             // this.connectText="Please wait for a moment,Checking your imKey";
-                            this.connectText = "Connect success ";
+                            // this.connectText = "Connect success ";
+                            this.connectText = this.$t('m.connectDevice.connect_success');
                             this.connectStatus = true;
                             this.checkIsBL();
                         } else {
@@ -220,7 +223,7 @@
                 }, 200)
             },
             getcosupdate() {
-                this.connectText = "Upgrading firmware";
+                this.connectText = this.$t('m.connectDevice.upgrading_firmware');
                 setTimeout(() => {
                 cosUpdate().then(result => {
                     if (result.code === 200) {
@@ -289,7 +292,7 @@
 
             },
             closeErrorView(msg) {
-                this.connectText="Connect";
+                this.connectText=this.$t('m.connectDevice.connect')
                 this.noticeVisible = false;
                 if(msg.toString().indexOf("connect:") !== -1 ){
                     this.connect();

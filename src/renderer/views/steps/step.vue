@@ -4,20 +4,20 @@
             <el-steps
                     :space="200"
                     :active="activeIndex"
-                    :finish-status="finshStatus"
+                    :finish-status="finishStatus"
                     :align-center="true"
             >
-                <el-step title="Connect"></el-step>
-                <el-step title="Active&Bind"></el-step>
-                <el-step title="Set PIN&Create Wallet"></el-step>
+                <el-step :title="$t('m.step.connect')"></el-step>
+                <el-step :title="$t('m.step.active_bind')"></el-step>
+                <el-step :title="$t('m.step.set_pin_create_wallet')"></el-step>
                 <!--        <el-step title="PIN code"></el-step>-->
             </el-steps>
         </div>
         <div>
             <One @showTwo="showTwos" v-if="showOne"></One>
-            <Two @showThree="toshowThree" v-if="showTwo" @finshStatusTwo="finshStatusTwo($event)"></Two>
-            <Three @finsh="finsh" v-if="showThree"></Three>
-            <!--      <Four @finsh="finsh" v-if="showThree"></Four>-->
+            <Two @showThree="toshowThree" v-if="showTwo" @finishStatusTwo="finishStatusTwo($event)"></Two>
+            <Three @finish="finish" v-if="showThree"></Three>
+            <!--      <Four @finish="finish" v-if="showThree"></Four>-->
         </div>
     </div>
 </template>
@@ -31,12 +31,15 @@
         name: "step",
         data() {
             return {
+                title_connect:"",
+                title_active_bind:"",
+                title_set_pin_create_wallet:"",
                 activeIndex: 0,
                 showOne: true,
                 showTwo: false,
                 showThree: false,
                 showFour: false,
-                finshStatus: "success"
+                finishStatus: "success"
             };
         },
         mounted() {
@@ -68,17 +71,17 @@
                         break;
                 }
             },
-            // finshStatusOne(val) {
-            //   this.finshStatus = val;
+            // finishStatusOne(val) {
+            //   this.finishStatus = val;
             // },
-            finshStatusTwo(val) {
-                this.finshStatus = val;
+            finishStatusTwo(val) {
+                this.finishStatus = val;
             },
-            // finshStatusThree(val) {
-            //   this.finshStatus = val;
+            // finishStatusThree(val) {
+            //   this.finishStatus = val;
             // },
-            // finshStatusFour(val) {
-            //   this.finshStatus = val;
+            // finishStatusFour(val) {
+            //   this.finishStatus = val;
             // },
             showTwos() {
                 this.showOne = false;
@@ -98,7 +101,7 @@
             //   this.showFour = true;
             //   this.activeIndex = 3;
             // },
-            finsh() {
+            finish() {
                 setTimeout(() => {
                     this.router.replace("/index");
                 }, 1000);

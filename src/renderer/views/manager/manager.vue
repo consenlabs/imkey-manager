@@ -2,13 +2,13 @@
     <div class="manager">
         <NoticeBox  :noticeVisible="noticeVisible"
                     @closeNotice="closeErrorView"></NoticeBox>
-        <h1>Manager</h1>
+        <h1>{{$t('m.manager.manager')}}</h1>
         <p class="notice">
-            <span>Install or unstall apps on your device</span>
-            <span>
-        Need Help?
-        <i class="el-icon-connection" @click="help"></i>
-      </span>
+            <span>{{$t('m.manager.install_uninstall_apps')}}</span>
+<!--            <span>-->
+<!--        Need Help?-->
+<!--        <i class="el-icon-connection" @click="help"></i>-->
+<!--      </span>-->
         </p>
         <div class="deviceBox">
             <div class="contentBox">
@@ -16,18 +16,18 @@
                 <deviceImage :mini="true" :line="false"></deviceImage>
                 <div class="deviceName">
                     <h3>imKey Pro</h3>
-                    <p>firmware version {{oldVersionData}}</p>
+                    <p>{{$t('m.manager.firmware_version')}} {{oldVersionData}}</p>
                 </div>
             </div>
             <div v-if="!updateSuccess">
-                <span class="updateMsg">firmware is {{newVersionData}} avaliable</span>
-                <el-button type="primary" @click="updateVersion" size="small" :loading="loading">update</el-button>
+                <span class="updateMsg">{{$t('m.manager.firmware_is')}} {{newVersionData}} {{$t('m.manager.available')}}</span>
+                <el-button type="primary" @click="updateVersion" size="small" :loading="loading">{{$t('m.manager.update')}}</el-button>
             </div>
         </div>
         <div class="appBox">
-            <h1>App catalog</h1>
-            <el-input prefix-icon="el-icon-search" v-model="appName" placeholder="search app"></el-input>
-            <div class="appContent">
+            <h1>{{$t('m.manager.app_catalog')}}</h1>
+            <el-input prefix-icon="el-icon-search" v-model="appName" :placeholder="$t('m.manager.search_app')"></el-input>
+            <div class="appContent" >
                 <div v-for="(item,index) in getApps" :key="item.id" class="appItem">
                     <div class="leftContent">
                         <img :src="item.icon" alt="/"/>
@@ -48,7 +48,7 @@
                                     :disabled="item.installDis"
                                     :loading="item.installLoding"
                                     @click="intall(item,index)"
-                            >Install
+                            >{{$t('m.manager.install')}}
                             </el-button>
                             <el-button
                                     type="danger"
@@ -80,7 +80,7 @@
                 isSuccess: false,
                 oldVersionData: "",
                 newVersionData: "",
-                updateSuccess: false,
+                updateSuccess: true,
                 loading: false,
                 apps: [],
                 noticeVisible:false,
@@ -107,7 +107,9 @@
             }
         },
         mounted() {
+            setTimeout(() => {
             this.init();
+            }, 10);
         },
         methods: {
             init(){
@@ -133,15 +135,17 @@
             },
             compareByFirmwareVersion(){
                 //如果cos版本不一致，提示用户更新
-                if(this.oldVersionData == this.newVersionData){
+                if(this.newVersionData ==null || this.newVersionData ==""){
                     this.updateSuccess=true;
                 }else{
+                if(this.oldVersionData == this.newVersionData){
+                    this.updateSuccess=true;
+                }else {
                     //显示要更新的按钮
-                    this.updateSuccess=false;
+                    this.updateSuccess = false;
                     //提示更新信息
                     this.openErrorView(this.description)
-
-
+                }
                 }
                 //加载应用
                 this.AppsList();

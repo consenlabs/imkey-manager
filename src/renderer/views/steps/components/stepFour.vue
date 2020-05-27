@@ -59,7 +59,7 @@
                             const res = result.data
                             if (res == "true") {
                                 console.log("success res " + res)
-                                this.$emit("finsh");
+                                this.$emit("finish");
                             } else {
                                 this.$message.warning(result.data);
                             }

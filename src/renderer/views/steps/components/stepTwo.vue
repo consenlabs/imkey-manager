@@ -2,13 +2,13 @@
     <div class="stepTwo">
         <NoticeBox  :noticeVisible="noticeVisible"
                     @closeNotice="closeErrorView"></NoticeBox>
-        <h2>Active&Bind</h2>
-        <p>Please active and bind your imKey </p>
+        <h2>{{$t('m.stepTwo.active_bind')}}</h2>
+        <p>{{$t('m.stepTwo.please_active_bind')}}</p>
         <div>
             <div class="selectBox">
                 <p class="text">
                     <span class="sort">1.</span>
-                    <span>Activate your imKey</span>
+                    <span>{{$t('m.stepTwo.active_imKey')}}</span>
                 </p>
                 <!--        <div>-->
                 <!--          <el-button-group>-->
@@ -20,7 +20,7 @@
             <div class="selectBox">
                 <p class="text">
                     <span class="sort">2.</span>
-                    <span>Bind your imKey</span>
+                    <span>{{$t('m.stepTwo.bind_imKey')}}</span>
                 </p>
                 <!--        <div>-->
                 <!--          <el-button-group>-->
@@ -32,10 +32,10 @@
             <div class="selectBox">
                 <p class="text">
                     <!--          <span class="sort"></span>-->
-                    <span>Start active and bind your imKey</span>
+                    <span>{{$t('m.stepTwo.start_active_bind_imKey')}}</span>
                 </p>
                 <div>
-                    <el-button type="primary" style="width:123px" @click="check">Start</el-button>
+                    <el-button type="primary" style="width:123px" @click="check">{{$t('m.stepTwo.start')}}</el-button>
                 </div>
             </div>
         </div>
@@ -104,13 +104,14 @@
                 if (val) {
                     this.$emit("showThree", true);
                 } else {
-                    this.$emit("finshStatusTwo", "error");
+                    this.$emit("finishStatusTwo", "error");
                 }
             },
             openErrorView(msg) {
-                this.$store.state.message=msg
-                this.noticeVisible = true;
-
+                if(msg!="function () { [native code] }"){
+                    this.$store.state.message=msg
+                    this.noticeVisible = true;
+                }
             },
             closeErrorView(msg) {
                 this.noticeVisible = false;

@@ -2,15 +2,15 @@
     <div class="setting">
 
             <el-dialog
-                    title="info"
+                    :title="$t('m.setting.info')"
                     :visible.sync="centerDialogVisible"
                     width="30%"
                     center>
                 <span>{{description}}</span>
-                <span>是否去升级</span>
+                <span>{{$t('m.setting.is_update')}}</span>
                 <span slot="footer" class="dialog-footer">
-    <el-button @click="centerDialogVisible = false">取 消</el-button>
-    <el-button type="primary" @click="updateSoft">确 定</el-button>
+    <el-button @click="centerDialogVisible = false">{{$t('m.setting.cancel')}}</el-button>
+    <el-button type="primary" @click="updateSoft">{{$t('m.setting.ok')}}</el-button>
   </span>
             </el-dialog>
         <el-dialog
@@ -18,17 +18,17 @@
                 :visible.sync="dialogUpdateNow"
                 width="30%"
                 center>
-            <span>是否退出立刻更新</span>
+            <span>{{$t('m.setting.is_quit_update')}}</span>
             <span slot="footer" class="dialog-footer">
-    <el-button @click="centerDialogVisible = false">取 消</el-button>
-    <el-button type="primary" @click="updateNow">确 定</el-button>
+    <el-button @click="centerDialogVisible = false">{{$t('m.setting.cancel')}}</el-button>
+    <el-button type="primary" @click="updateNow">{{$t('m.setting.ok')}}</el-button>
   </span>
         </el-dialog>
-        <h1>Setting</h1>
+        <h1>{{$t('m.setting.setting')}}</h1>
         <p class="notice">
-            <span>Setting imKey-desktop</span>
+            <span>{{$t('m.setting.setting_imKey_desktop')}}</span>
             <span>
-        Need Help?
+        {{$t('m.setting.need_help')}}
         <i class="el-icon-connection" @click="help"></i>
       </span>
         </p>
@@ -37,11 +37,11 @@
                 <img src="../../assets/logo64.png" style="width:60px;height:70px" alt="">
                 <div class="deviceName">
                     <h3>imKey-desktop</h3>
-                    <p>imKey-desktop version {{oldVersionData}}</p>
+                    <p>{{$t('m.setting.imKey_desktop_version')}} {{oldVersionData}}</p>
                 </div>
             </div>
             <div v-if="!updateSuccess">
-                <span class="updateMsg">imKey-desktop version is {{newVersionData}} avaliable</span>
+                <span class="updateMsg">{{$t('m.setting.imKey_desktop_version_is')}} {{newVersionData}} {{$t('m.setting.available')}}</span>
 
                 <el-button type="primary" @click="updateVersion" size="small" :loading="loading" >{{updateBtnTx}}</el-button>
 

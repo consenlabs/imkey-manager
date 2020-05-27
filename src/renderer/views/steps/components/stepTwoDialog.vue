@@ -1,7 +1,7 @@
 <template>
 
     <el-dialog
-            title="Active&Bind"
+            :title="$t('m.stepTwo.active_bind')"
             :visible.sync="boxVisible"
             width="400px"
             :before-close="handleClose"
@@ -11,20 +11,18 @@
             <div class="chooseBox">
                 <div>
                     <span class="el-icon-magic-stick"></span>
-                    <span>Activating your imKey</span>
+                    <span>{{$t('m.stepTwo.activating_imKey')}}</span>
                 </div>
                 <div v-loading="loading1" element-loading-spinner="el-icon-loading loading" v-if="loading1"></div>
                 <div v-else :class="status1?'el-icon-check':'el-icon-close'"></div>
             </div>
             <div class="chooseBox secondChoose" v-show="bindShow">
-                <div>
+                <div class="inputBindCode">
                     <el-input v-model="BindCode"
                               style="width:250px"
                               placeholder="enter bind code"
                               @blur="handleBlur"
                               :class="isError?'errorBorder':''"></el-input>
-                </div>
-                <div>
                     <el-button
                             type="primary"
                             size="mini"
@@ -32,16 +30,19 @@
                             v-if="!isCorret"
                             :loading="loading"
                             :disabled="!status1"
-                    >Bind
+                    >{{$t('m.stepTwo.bind')}}
                     </el-button>
                     <span v-else :class="isCorret?'el-icon-check':'el-icon-close'"></span>
                 </div>
-                <p v-if="isError" class="errorNotice">{{notcieText}}</p>
+
+                <div class="inputBindCode">
+                <h1 v-if="isError" class="errorNotice">{{notcieText}}</h1>
+                    </div>
             </div>
             <div class="chooseBox">
                 <div>
                     <span class="el-icon-connection"></span>
-                    <span>Binding your imKey</span>
+                    <span>{{$t('m.stepTwo.binding_imKey')}}</span>
                 </div>
                 <div v-if="showThree">
                     <span v-loading="loading3" element-loading-spinner="el-icon-loading" v-if="loading3"></span>
@@ -95,7 +96,7 @@
         },
         methods: {
             handleBlur() {
-                const reg = /^[A-HJ-NP-Z2-9]{8}$/;
+                const reg = /^[a-hj-np-zA-HJ-NP-Z2-9]{8}$/;
                 if (!reg.test(this.BindCode)) {
                     this.isError = true;
                     this.notcieText = "";
@@ -191,6 +192,9 @@
                                     this.$emit("showTree", true);
                                     this.handleClose();
                                 }, 1000);
+                            }else{
+                                //如果其他错误，弹出提示框
+                                this.openErrorView(result.message);
                             }
                         }
                     } else {
@@ -254,7 +258,7 @@
                 // this.$emit("showTree", false);
             },
             handleClose(msg) {
-                this.$emit("closeCheckBox", msg);
+                console.log("vdsbjhsdhvs:"+msg)
                 this.status1 = false;
                 this.BindCode = "";
                 this.status3 = false;
@@ -265,11 +269,12 @@
                 this.showTwo = false;
                 this.showThree = false;
                 this.isError = false;
+                this.$emit("closeCheckBox", msg);
             },
             bind() {
                 if (this.isError || !this.BindCode) {
                     this.isError = true;
-                    this.notcieText = !this.BindCode ? "BindCode is Not Null" : "BindCode is not in correct format";
+                    this.notcieText = !this.BindCode ? this.$t('m.stepTwo.bind_code_is_null') : this.$t('m.stepTwo.bind_code_is_correct');
                     return;
                 }
 
@@ -285,6 +290,8 @@
             },
             openErrorView(msg) {
                 this.handleClose(msg);
+                //     this.$store.state.message=msg
+                //     this.noticeVisible = true;
             },
         }
     };
@@ -304,9 +311,18 @@
     .secondChoose {
         border-top: 1px solid #dcdcdc;
         border-bottom: 1px solid #dcdcdc;
-        height: 80px;
+        height: 110px;
     }
-
+    .inputBindCode{
+        /*display: flex;*/
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+    }
+    .errorNotice{
+        margin-top: -30px;
+        font-size: 12px;
+    }
     .sideBox {
         border: 1px solid #dcdcdc;
         border-radius: 5px;

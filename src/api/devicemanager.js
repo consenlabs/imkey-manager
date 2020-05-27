@@ -687,7 +687,7 @@ export function deviceBindAcquire(bindCode) {
         try {
             resolve({
                 code: 200,
-                data: bindAcquire(bindCode)
+                data: bindAcquire(bindCode.toUpperCase())
             })
         } catch (err) {
             return reject({

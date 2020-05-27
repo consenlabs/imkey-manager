@@ -2,7 +2,7 @@
     <div>
         <div class="bannerBox">
             <img src="../assets/banner.png" alt/>
-            <button class="bayBtn" @click="buy()">现在购买</button>
+            <button class="bayBtn" @click="buy()">{{$t('m.home.buy_now')}}</button>
         </div>
         <div id="box" :style="{display:isShow}" align="center">
             <div id="box1">
@@ -10,15 +10,15 @@
                     <a href="javascript:;" @click="close()" class="close">X</a>
                 </p>
                 <div :class="{btnBox,active:isActive1}" align="center">
-                    <h2>请使用 imToken 2.0 扫码购买</h2>
+                    <h2>{{$t('m.home.use_imToken_to_buy')}}</h2>
                     <img src="../assets/erweima2.png" alt/>
                 </div>
                 <div :class="{btnBox,active:isActive2}" align="center">
-                    <h2>请使用微信/支付宝扫码购买</h2>
+                    <h2>{{$t('m.home.use_WeChat_AliPay_to_buy')}}</h2>
                     <img src="../assets/erweima1.png" alt/>
                 </div>
                 <div class="btnBar">
-                    <div :class="{active:isActive1}" @click="btn1()">微信/支付宝</div>
+                    <div :class="{active:isActive1}" @click="btn1()">{{$t('m.home.WeChat_AliPay')}}</div>
                     <div :class="{active:isActive2}" @click="btn2()">imToken</div>
                 </div>
             </div>

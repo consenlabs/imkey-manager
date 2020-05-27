@@ -2,13 +2,13 @@
     <div class="stepThree">
         <NoticeBox  :noticeVisible="noticeVisible"
                     @closeNotice="closeErrorView"></NoticeBox>
-        <h2>Set PIN&Create Wallet</h2>
-        <p>Please Please disconnect the USB ,set PIN and create wallet</p>
+        <h2>{{$t('m.stepThree.set_pin_create_wallet')}}</h2>
+        <p>{{$t('m.stepThree.please_disconnect')}}</p>
         <div>
             <div class="selectBox">
                 <div class="text">
                     <span class="sort">1.</span>
-                    <span>Set and modify PIN code</span>
+                    <span>{{$t('m.stepThree.set_modify_pin')}}</span>
                     <span class="el-icon-link" @click="seeOne"></span>
                 </div>
                 <div>
@@ -21,7 +21,7 @@
             <div class="selectBox">
                 <div class="text">
                     <span class="sort">2.</span>
-                    <span>Create or restore wallets</span>
+                    <span>{{$t('m.stepThree.create_wallet')}}</span>
                     <span class="el-icon-link" @click="seeTwo"></span>
                 </div>
                 <div>
@@ -31,7 +31,7 @@
                     <el-button v-else type="primary" size="small" @click="IseeTwo">I See</el-button>-->
                 </div>
             </div>
-            <el-button type="primary" style="width:100%" :loading="nextLoading" @click="connect">Next</el-button>
+            <el-button type="primary" style="width:100%" :loading="nextLoading" @click="connect">{{$t('m.stepThree.next')}}</el-button>
             <!-- <div class="selectBox"> -->
 
             <!-- <p class="text">
@@ -115,7 +115,7 @@
                                     if (result.data.match("xpu")) {
                                         console.log("getBTC_Xpub_:" + result.data)
                                         // this.$emit("showFour", true);
-                                        this.$emit("finsh");
+                                        this.$emit("finish");
                                     } else {
                                         this.openErrorView("please create wallet");
                                     }
@@ -150,9 +150,10 @@
             },
             openErrorView(msg) {
                 this.nextLoading=false;
-                this.$store.state.message=msg
+                this.$store.state.message=msg;
                 this.noticeVisible = true;
-
+                this.IseeOnes=false;
+                this.IseeTwos=false;
             },
             closeErrorView(msg) {
                 this.noticeVisible = false;
