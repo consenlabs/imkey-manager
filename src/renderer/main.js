@@ -26,12 +26,20 @@ Vue.prototype.canScroll = function () {
     document.body.style.overflow = ''// 出现滚动条
     document.removeEventListener('touchmove', mo, false)
 }
+let app = require('electron').remote.app
+let sysLocale = app.getLocale();
+if(sysLocale != "zh-CN"){
+    sysLocale="en-US";
+}
+
 //VueI18n
 const i18n = new VueI18n({
     // 默认中文
-    locale: 'zh-CN',
+    // locale: 'zh-CN',
     // locale: 'en-US',
     //this.$i18n.locale // 通过切换locale的值来实现语言切换
+    //获取系统语言，根据系统语言来切换语言
+    locale: sysLocale,
     messages: {
         // 语言包路径
         'zh-CN': require('./common/lang/zh'),
