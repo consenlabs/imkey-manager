@@ -1,9 +1,29 @@
 let walletApi = require('./walletapi');
 let DeviceManger = require('./devicemanagerapi');
-let FilePath = require("path").resolve('./')
+// let FilePath = require("path").resolve('./')
+const electron = require('electron');
+const FilePath = (electron.app || electron.remote.app).getPath('userData')+"/";
 
 export function api(api_name, json) {
-    DeviceManger.connect("imKey Pro");
+    let result;
+    let connectRes = DeviceManger.connect("imKey Pro");
+    console.log("connectRes:"+connectRes)
+    if(connectRes!="true"){
+        result = {
+            error: connectRes,
+        };
+        return result;
+    }else{
+        //检查是否绑定
+        let bindCheckRes = DeviceManger.deviceBindCheck(FilePath);
+        if(bindCheckRes != "bound_this") {
+            result = {
+                error: bindCheckRes,
+            };
+            return result;
+        }
+    }
+
     if (api_name == null) {
         return "input api fuction is null"
     }
@@ -24,83 +44,130 @@ export function api(api_name, json) {
         // else if(api_name =="deleteApplet"){ return DeviceManger.deleteApplet()}
     // else if(api_name =="deviceBindCheck"){return DeviceManger.deviceBindCheck()}
     else if (api_name == "transactionBTC") {
-        DeviceManger.deviceBindCheck(FilePath);
         let response = walletApi.BitcoinTransaction_BTC(json)
-        let result = {
-            txHash: response.getTxHash(),
-            txData: response.getTxData(),
-        };
+
+        if(response.getTxHash()=="" ||response.getTxHash()==null || response.getTxHash().isUndefined){
+             result = {
+                error: response,
+            };
+        }else {
+             result = {
+                txHash: response.getTxHash(),
+                txData: response.getTxData(),
+            };
+        }
         return result;
     } else if (api_name == "transactionBTCSEGWIT") {
-        DeviceManger.deviceBindCheck(FilePath);
         let response = walletApi.BitcoinTransaction_BTC_SEGWIT(json)
-        let result = {
-            txHash: response.getTxHash(),
-            witnessTxData: response.getWitnessTxData(),
-            wtxHash: response.getWtxHash()
-        };
+        if(response.getTxHash()=="" ||response.getTxHash()==null || response.getTxHash().isUndefined){
+             result = {
+                error: response,
+            };
+        }else {
+            result = {
+                txHash: response.getTxHash(),
+                witnessTxData: response.getWitnessTxData(),
+                wtxHash: response.getWtxHash()
+            };
+        }
         return result;
     } else if (api_name == "transactionBTCUSDT") {
-        DeviceManger.deviceBindCheck(FilePath);
         let response = walletApi.BitcoinTransaction_BTC_USDT(json)
-        let result = {
-            txHash: response.getTxHash(),
-            txData: response.getTxData(),
-        };
+        if(response.getTxHash()=="" ||response.getTxHash()==null || response.getTxHash().isUndefined){
+            result = {
+                error: response,
+            };
+        }else {
+            result = {
+                txHash: response.getTxHash(),
+                txData: response.getTxData(),
+            };
+        }
         return result;
     } else if (api_name == "transactionBTCUSDTSEGWIT") {
-        DeviceManger.deviceBindCheck(FilePath);
         let response = walletApi.BitcoinTransaction_BTC_USDT_SEGWIT(json)
-        let result = {
-            txHash: response.getTxHash(),
-            witnessTxData: response.getWitnessTxData(),
-            wtxHash: response.getWtxHash()
-        };
+        if(response.getTxHash()=="" ||response.getTxHash()==null || response.getTxHash().isUndefined){
+            result = {
+                error: response,
+            };
+        }else {
+            result = {
+                txHash: response.getTxHash(),
+                witnessTxData: response.getWitnessTxData(),
+                wtxHash: response.getWtxHash()
+            };
+        }
         return result;
     } else if (api_name == "transactionETHSIGNTX") {
-        DeviceManger.deviceBindCheck(FilePath);
         let response = walletApi.ETHTransaction_sign_TX(json)
-        let result = {
-            txHash: response.getTxHash(),
-            txData: response.getTxData(),
-        };
+        if(response.getTxHash()=="" ||response.getTxHash()==null || response.getTxHash().isUndefined){
+            result = {
+                error: response,
+            };
+        }else {
+            result = {
+                txHash: response.getTxHash(),
+                txData: response.getTxData(),
+            };
+        }
         return result;
     } else if (api_name == "transactionETHSIGNMSG") {
-        DeviceManger.deviceBindCheck(FilePath);
         let response = walletApi.ETHTransaction_sign_MSG(json)
-        let result = {
-            signature: response.getSignature(),
-        };
+        if(response.getSignature()=="" ||response.getSignature()==null || response.getSignature().isUndefined){
+            result = {
+                error: response,
+            };
+        }else {
+            result = {
+                signature: response.getSignature(),
+            };
+        }
         return result;
     } else if (api_name == "transactionEOSSIGNTX") {
-        DeviceManger.deviceBindCheck(FilePath);
         let response = walletApi.EOSTransaction_sign_TX(json)
-
+        if (response.getHash() == "" || response.getHash() == null || response.getHash().isUndefined) {
+            result = {
+                error: response,
+            };
+            return result;
+        } else {
         let list = [];
         for (let i = 0; i < response.length; i++) {
             let tx_hash = response[i].getHash();
             let signs = response[i].getSignsList();
-            let result = {
+            result = {
                 tx_hash: tx_hash,
                 signs: signs
             };
             list.push(result);
         }
         return list;
+    }
     } else if (api_name == "transactionEOSSIGNMSG") {
-        DeviceManger.deviceBindCheck(FilePath);
         let response = walletApi.EOSTransaction_sign_MSG(json)
-        let result = {
+        if(response.getSignature()=="" ||response.getSignature()==null || response.getSignature().isUndefined){
+            result = {
+                error: response,
+            };
+        }else{
+        result = {
             signature: response.getSignature(),
         };
+        }
         return result;
     } else if (api_name == "transactionCOSMOSSIGNTX") {
-        DeviceManger.deviceBindCheck(FilePath);
         let response = walletApi.COSMOSTransaction_sign_TX(json)
-        let result = {
-            txHash: response.getTxHash(),
-            signature: response.getTxData(),
-        };
+        if(response.getTxHash()=="" ||response.getTxHash()==null || response.getTxHash().isUndefined){
+            result = {
+                error: response,
+            };
+        }else{
+            result = {
+                txHash: response.getTxHash(),
+                signature: response.getTxData(),
+            };
+        }
+       
         return result;
     } else {
         return "not found api function！ "
