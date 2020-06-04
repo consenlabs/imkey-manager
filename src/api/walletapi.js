@@ -1,249 +1,181 @@
-// https://blog.csdn.net/spiritring/article/details/61975299
-// function getseid() {
-//
-//     let basepb = require('../proto/base_pb');
-//     // console.log(basepb);
-//
-//     let message = new basepb.SearchRequest();
-//     console.log(message);
-//
-//     message.setName("TS");
-//     message.setPassword("123456");
-//
-//     let bytes = message.serializeBinary();
-//     console.log(bytes);
-//
-//     let message2 = basepb.SearchRequest.deserializeBinary(bytes);
-//     console.log(message2);
-
 let api_pb = require('../proto/api_pb');
 let btc_pb = require('../proto/btc_pb');
 let eth_pb = require('../proto/eth_pb');
 let eos_pb = require('../proto/eos_pb');
 let cosmos_pb = require('../proto/cosmos_pb');
-let GoToRust = require('./gotorust');
-let Constants = require('../common/Constants');
-let Path = require('../common/Path');
+let callImKeyCore = require('./callimkeycore');
+let constants = require('../common/constants');
+let path = require('../common/path');
 
 function  IBitcoinTransaction_BTC(json,method_) {
     let utxos = json.utxo;
-    console.log("utxos:"+utxos)
-    let BtcTxReq =new  btc_pb.BtcTxReq();
+    let btcTxReq =new  btc_pb.BtcTxReq();
     for (let i = 0;i<utxos.length;i++){
-        //Utxo
-        let Utxo =new  btc_pb.Utxo();
+        let utxo =new  btc_pb.Utxo();
         let utxoObj = utxos[i];
-        Utxo.setTxHash(utxoObj.txHash)
-        Utxo.setVout(utxoObj.vout)
-        Utxo.setAmount(utxoObj.amount)
-        Utxo.setAddress(utxoObj.address)
-        Utxo.setScriptPubkey(utxoObj.scriptPubkey)
-        Utxo.setDerivedPath(utxoObj.derivedPath)
-        Utxo.setSequence(utxoObj.sequence)
-        BtcTxReq.addUnspents(Utxo)
+        utxo.setTxHash(utxoObj.txHash)
+        utxo.setVout(utxoObj.vout)
+        utxo.setAmount(utxoObj.amount)
+        utxo.setAddress(utxoObj.address)
+        utxo.setScriptPubkey(utxoObj.scriptPubkey)
+        utxo.setDerivedPath(utxoObj.derivedPath)
+        utxo.setSequence(utxoObj.sequence)
+        btcTxReq.addUnspents(utxo)
     }
-
-
-    BtcTxReq.setTo(json.to)
-    BtcTxReq.setAmount(json.amount)
-    BtcTxReq.setFee(json.fee)
-    BtcTxReq.setChangeAddressIndex(json.changeIdx)
+    btcTxReq.setTo(json.to)
+    btcTxReq.setAmount(json.amount)
+    btcTxReq.setFee(json.fee)
+    btcTxReq.setChangeAddressIndex(json.changeIdx)
     if(json.extraData !=null || json.extraData!=null) {
-        BtcTxReq.setExtraData(new Buffer(json.extraData, 'hex'))
+        btcTxReq.setExtraData(new Buffer(json.extraData, 'hex'))
     }
     if(json.propertyId !=null || json.propertyId!=null) {
-        BtcTxReq.setPropertyId(json.propertyId)
+        btcTxReq.setPropertyId(json.propertyId)
     }
-    BtcTxReq.setNetwork(Constants.TESTNET)
-    BtcTxReq.setPathPrefix(Path.BITCOIN_TESTNET_PATH)
-    let BtcTxReqbytes = BtcTxReq.serializeBinary();
-    //any1
+    btcTxReq.setNetwork(constants.TESTNET)
+    btcTxReq.setPathPrefix(path.BITCOIN_TESTNET_PATH)
+    let btcTxReqBytes = btcTxReq.serializeBinary();
     let any =new  proto.google.protobuf.Any();
-    any.setValue(BtcTxReqbytes);
-
-    //ImkeyAction
-    let ImkeyAction =new  api_pb.ImkeyAction();
-    ImkeyAction.setMethod(method_);
-    ImkeyAction.setParam(any);
-
-    let ImkeyActionBytes = ImkeyAction.serializeBinary();
-    //调用rust库
-    let ResBuffer= GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
-    let Error = GoToRust.get_last_err_message();
-    if(Error ==""  || Error ==null) {
-            //rust库返回的数据解析
-            let Response = new btc_pb.BtcTxRes.deserializeBinary(HexStr2Bytes(ResBuffer));
-
-            return Response;
+    any.setValue(btcTxReqBytes);
+    let imKeyAction =new  api_pb.ImkeyAction();
+    imKeyAction.setMethod(method_);
+    imKeyAction.setParam(any);
+    let imKeyActionBytes = imKeyAction.serializeBinary();
+    let resBuffer= callImKeyCore.call_imkey_api(bytes2HexStr(imKeyActionBytes));
+    let error = callImKeyCore.get_last_err_message();
+    if(error ==""  || error ==null) {
+            let response = new btc_pb.BtcTxRes.deserializeBinary(hexStr2Bytes(resBuffer));
+            return response;
     }else{
-        let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
-        console.log("ErrorResponse.getError():"+ErrorResponse.getError())
-        return ErrorResponse.getError();
+        let errorResponse = new api_pb.Response.deserializeBinary(hexStr2Bytes(error));
+        return errorResponse.getError();
     }
 }
 function  IBitcoinTransaction_BTC_SEGWIT(json,method_) {
     let utxos = json.utxo;
-    console.log("utxos:"+utxos)
-    let BtcSegwitTxReq =new  btc_pb.BtcSegwitTxReq();
+    let btcSegwitTxReq =new  btc_pb.BtcSegwitTxReq();
     for (let i = 0;i<utxos.length;i++){
-        //Utxo
-        let Utxo =new  btc_pb.Utxo();
+        let utxo =new  btc_pb.Utxo();
         let utxoObj = utxos[i];
-        Utxo.setTxHash(utxoObj.txHash)
-        Utxo.setVout(utxoObj.vout)
-        Utxo.setAmount(utxoObj.amount)
-        Utxo.setAddress(utxoObj.address)
-        Utxo.setScriptPubkey(utxoObj.scriptPubkey)
-        Utxo.setDerivedPath(utxoObj.derivedPath)
-        Utxo.setSequence(utxoObj.sequence)
-        BtcSegwitTxReq.addUnspents(Utxo)
+        utxo.setTxHash(utxoObj.txHash)
+        utxo.setVout(utxoObj.vout)
+        utxo.setAmount(utxoObj.amount)
+        utxo.setAddress(utxoObj.address)
+        utxo.setScriptPubkey(utxoObj.scriptPubkey)
+        utxo.setDerivedPath(utxoObj.derivedPath)
+        utxo.setSequence(utxoObj.sequence)
+        btcSegwitTxReq.addUnspents(utxo)
     }
-
-
-    BtcSegwitTxReq.setTo(json.to)
-    BtcSegwitTxReq.setAmount(json.amount)
-    BtcSegwitTxReq.setFee(json.fee)
-    BtcSegwitTxReq.setChangeAddressIndex(json.changeIdx)
+    btcSegwitTxReq.setTo(json.to)
+    btcSegwitTxReq.setAmount(json.amount)
+    btcSegwitTxReq.setFee(json.fee)
+    btcSegwitTxReq.setChangeAddressIndex(json.changeIdx)
     if(json.extraData !=null || json.extraData!=null) {
-        BtcSegwitTxReq.setExtraData(new Buffer(json.extraData, 'hex'))
+        btcSegwitTxReq.setExtraData(new Buffer(json.extraData, 'hex'))
     }
     if(json.propertyId !=null || json.propertyId!=null) {
-        BtcSegwitTxReq.setPropertyId(json.propertyId)
+        btcSegwitTxReq.setPropertyId(json.propertyId)
     }
-    BtcSegwitTxReq.setNetwork(Constants.TESTNET)
-    BtcSegwitTxReq.setPathPrefix(Path.BITCOIN_SEGWIT_TESTNET_PATH)
-    let BtcSegwitTxReqbytes = BtcSegwitTxReq.serializeBinary();
-    //any1
+    btcSegwitTxReq.setNetwork(constants.TESTNET)
+    btcSegwitTxReq.setPathPrefix(path.BITCOIN_SEGWIT_TESTNET_PATH)
+    let btcSegwitTxReqBytes = btcSegwitTxReq.serializeBinary();
     let any =new  proto.google.protobuf.Any();
-    any.setValue(BtcSegwitTxReqbytes);
-    //ImkeyAction
-    let ImkeyAction =new  api_pb.ImkeyAction();
-    ImkeyAction.setMethod(method_);
-    ImkeyAction.setParam(any);
-
-    let ImkeyActionBytes = ImkeyAction.serializeBinary();
-    //调用rust库
-    let ResBuffer= GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
-    let Error = GoToRust.get_last_err_message();
-    if(Error ==""  || Error ==null) {
-        //rust库返回的数据解析
-        let Response = new btc_pb.BtcSegwitTxRes.deserializeBinary(HexStr2Bytes(ResBuffer));
-
-        return Response;
+    any.setValue(btcSegwitTxReqBytes);
+    let imKeyAction =new  api_pb.ImkeyAction();
+    imKeyAction.setMethod(method_);
+    imKeyAction.setParam(any);
+    let imKeyActionBytes = imKeyAction.serializeBinary();
+    let resBuffer= callImKeyCore.call_imkey_api(bytes2HexStr(imKeyActionBytes));
+    let error = callImKeyCore.get_last_err_message();
+    if(error ==""  || error ==null) {
+        let response = new btc_pb.BtcSegwitTxRes.deserializeBinary(hexStr2Bytes(resBuffer));
+        return response;
     }else{
-        let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
-        console.log("ErrorResponse.getError():"+ErrorResponse.getError())
-        return ErrorResponse.getError();
+        let errorResponse = new api_pb.Response.deserializeBinary(hexStr2Bytes(error));
+        return errorResponse.getError();
     }
 }
 
 function  IETHTransaction_sign_TX(json) {
     let transaction = json.transaction;
     let preview = json.preview;
-    let EthTxReq =new  eth_pb.EthTxReq();
-
-    EthTxReq.setNonce(transaction.nonce.toString())
-    EthTxReq.setGasPrice(transaction.gasPrice.toString())
-    EthTxReq.setGasLimit(transaction.gasLimit.toString())
-    EthTxReq.setTo(transaction.to)
-    EthTxReq.setValue(transaction.value.toString())
-    EthTxReq.setData(transaction.data)
-    EthTxReq.setChainId(transaction.v.toString())
-
-    EthTxReq.setPayment(preview.payment)
-    EthTxReq.setReceiver(preview.receiver)
-    EthTxReq.setSender(preview.sender)
-    EthTxReq.setFee(preview.fee)
-    EthTxReq.setPath(Path.ETH_LEDGER);
-    let EthTxReqbytes = EthTxReq.serializeBinary();
-    //any1
+    let ethTxReq =new  eth_pb.EthTxReq();
+    ethTxReq.setNonce(transaction.nonce.toString())
+    ethTxReq.setGasPrice(transaction.gasPrice.toString())
+    ethTxReq.setGasLimit(transaction.gasLimit.toString())
+    ethTxReq.setTo(transaction.to)
+    ethTxReq.setValue(transaction.value.toString())
+    ethTxReq.setData(transaction.data)
+    ethTxReq.setChainId(transaction.v.toString())
+    ethTxReq.setPayment(preview.payment)
+    ethTxReq.setReceiver(preview.receiver)
+    ethTxReq.setSender(preview.sender)
+    ethTxReq.setFee(preview.fee)
+    ethTxReq.setPath(path.ETH_LEDGER);
+    let ethTxReqBytes = ethTxReq.serializeBinary();
     let any =new  proto.google.protobuf.Any();
-    any.setValue(EthTxReqbytes);
-
-    //ImkeyAction
-    let ImkeyAction =new  api_pb.ImkeyAction();
-    ImkeyAction.setMethod("eth_tx_sign");
-    ImkeyAction.setParam(any);
-
-    let ImkeyActionBytes = ImkeyAction.serializeBinary();
-    //调用rust库
-    let ResBuffer= GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
-    let Error = GoToRust.get_last_err_message();
-    if(Error ==""  || Error ==null) {
-        //rust库返回的数据解析
-        let Response = new eth_pb.EthTxRes.deserializeBinary(HexStr2Bytes(ResBuffer));
-
-        return Response;
+    any.setValue(ethTxReqBytes);
+    let imKeyAction =new  api_pb.ImkeyAction();
+    imKeyAction.setMethod("eth_tx_sign");
+    imKeyAction.setParam(any);
+    let imKeyActionBytes = imKeyAction.serializeBinary();
+    let resBuffer= callImKeyCore.call_imkey_api(bytes2HexStr(imKeyActionBytes));
+    let error = callImKeyCore.get_last_err_message();
+    if(error ==""  || error ==null) {
+        let response = new eth_pb.EthTxRes.deserializeBinary(hexStr2Bytes(resBuffer));
+        return response;
     }else{
-        let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
-        console.log("ErrorResponse.getError():"+ErrorResponse.getError())
-        return ErrorResponse.getError();
+        let errorResponse = new api_pb.Response.deserializeBinary(hexStr2Bytes(error));
+        return errorResponse.getError();
     }
 }
+
 function  IETHTransaction_sign_MSG(json) {
-
-    let EthMessageSignReq =new  eth_pb.EthMessageSignReq();
-    EthMessageSignReq.setPath(Path.ETH_LEDGER);
-    EthMessageSignReq.setMessage(json.data)
-    EthMessageSignReq.setSender(json.sender)
-
-    let EthMessageSignReqbytes = EthMessageSignReq.serializeBinary();
-    //any1
+    let ethMessageSignReq =new  eth_pb.EthMessageSignReq();
+    ethMessageSignReq.setPath(path.ETH_LEDGER);
+    ethMessageSignReq.setMessage(json.data)
+    ethMessageSignReq.setSender(json.sender)
+    let ethMessageSignReqBytes = ethMessageSignReq.serializeBinary();
+    
     let any =new  proto.google.protobuf.Any();
-    any.setValue(EthMessageSignReqbytes);
-
-    //ImkeyAction
-    let ImkeyAction =new  api_pb.ImkeyAction();
-    ImkeyAction.setMethod("eth_message_sign");
-    ImkeyAction.setParam(any);
-
-    let ImkeyActionBytes = ImkeyAction.serializeBinary();
-    //调用rust库
-    let ResBuffer= GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
-    let Error = GoToRust.get_last_err_message();
-    if(Error ==""  || Error ==null) {
-        //rust库返回的数据解析
-        let Response = new eth_pb.EthMessageSignRes.deserializeBinary(HexStr2Bytes(ResBuffer));
-
-        return Response;
+    any.setValue(ethMessageSignReqBytes);
+    let imKeyAction =new  api_pb.ImkeyAction();
+    imKeyAction.setMethod("eth_message_sign");
+    imKeyAction.setParam(any);
+    let imKeyActionBytes = imKeyAction.serializeBinary();
+    let resBuffer= callImKeyCore.call_imkey_api(bytes2HexStr(imKeyActionBytes));
+    let error = callImKeyCore.get_last_err_message();
+    if(error ==""  || error ==null) {
+        let response = new eth_pb.EthMessageSignRes.deserializeBinary(hexStr2Bytes(resBuffer));
+        return response;
     }else{
-        let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
-        console.log("ErrorResponse.getError():"+ErrorResponse.getError())
-        return ErrorResponse.getError();
+        let errorResponse = new api_pb.Response.deserializeBinary(hexStr2Bytes(error));
+        return errorResponse.getError();
     }
 }
 function  IEOSTransaction_sign_MSG(json) {
     let data=json.data;
     let publicKey=json.publicKey;
-    let EosMessageSignReq =new  eos_pb.EosMessageSignReq();
-    EosMessageSignReq.setPath(Path.EOS_LEDGER);
-    EosMessageSignReq.setData(data)
-    // EosMessageSignReq.isHex(false)
-    EosMessageSignReq.setPubkey(publicKey)
-
-    let EosMessageSignReqbytes = EosMessageSignReq.serializeBinary();
-    //any1
+    let eosMessageSignReq =new  eos_pb.EosMessageSignReq();
+    eosMessageSignReq.setPath(path.EOS_LEDGER);
+    eosMessageSignReq.setData(data)
+    // eosMessageSignReq.isHex(false)
+    eosMessageSignReq.setPubkey(publicKey)
+    let eosMessageSignReqBytes = eosMessageSignReq.serializeBinary();
     let any =new  proto.google.protobuf.Any();
-    any.setValue(EosMessageSignReqbytes);
-
-    //ImkeyAction
-    let ImkeyAction =new  api_pb.ImkeyAction();
-    ImkeyAction.setMethod("eos_message_sign");
-    ImkeyAction.setParam(any);
-
-    let ImkeyActionBytes = ImkeyAction.serializeBinary();
-    //调用rust库
-    let ResBuffer= GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
-    let Error = GoToRust.get_last_err_message();
-    if(Error ==""  || Error ==null) {
-        //rust库返回的数据解析
-        let Response = new eos_pb.EosMessageSignRes.deserializeBinary(HexStr2Bytes(ResBuffer));
-
-        return Response;
+    any.setValue(eosMessageSignReqBytes);
+    let imKeyAction =new  api_pb.ImkeyAction();
+    imKeyAction.setMethod("eos_message_sign");
+    imKeyAction.setParam(any);
+    let imKeyActionBytes = imKeyAction.serializeBinary();
+    let resBuffer= callImKeyCore.call_imkey_api(bytes2HexStr(imKeyActionBytes));
+    let error = callImKeyCore.get_last_err_message();
+    if(error ==""  || error ==null) {
+        let response = new eos_pb.EosMessageSignRes.deserializeBinary(hexStr2Bytes(resBuffer));
+        return response;
     }else{
-        let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
-        console.log("ErrorResponse.getError():"+ErrorResponse.getError())
-        return ErrorResponse.getError();
+        let errorResponse = new api_pb.Response.deserializeBinary(hexStr2Bytes(error));
+        return errorResponse.getError();
     }
 }
 function  IEOSTransaction_sign_TX(json) {
@@ -251,273 +183,221 @@ function  IEOSTransaction_sign_TX(json) {
     let chainId=json.chainId;
     let txHex=json.txHex;
     let preview=json.preview;
-    let EosSignData =new  eos_pb.EosSignData();
-
+    let eosSignData =new  eos_pb.EosSignData();
     for (let i = 0; i < publicKeys.length; i++) {
-        EosSignData.addPubKeys(publicKeys[i].publicKey);
+        eosSignData.addPubKeys(publicKeys[i].publicKey);
     }
-    EosSignData.setTxData(txHex)
-    EosSignData.setChainId(chainId);
-    EosSignData.setTo(preview.to)
-    EosSignData.setFrom(preview.from)
-    EosSignData.setPayment(preview.payment)
-
-    let EosTxReq =new  eos_pb.EosTxReq();
-    EosTxReq.setPath(Path.EOS_LEDGER)
-    EosTxReq.addSignDatas(EosSignData)
-    let EosTxReqbytes = EosTxReq.serializeBinary();
-    //any1
+    eosSignData.setTxData(txHex)
+    eosSignData.setChainId(chainId);
+    eosSignData.setTo(preview.to)
+    eosSignData.setFrom(preview.from)
+    eosSignData.setPayment(preview.payment)
+    let eosTxReq =new  eos_pb.EosTxReq();
+    eosTxReq.setPath(path.EOS_LEDGER)
+    eosTxReq.addSignDatas(eosSignData)
+    let eosTxReqbytes = eosTxReq.serializeBinary();
     let any =new  proto.google.protobuf.Any();
-    any.setValue(EosTxReqbytes);
-
-    //ImkeyAction
-    let ImkeyAction =new  api_pb.ImkeyAction();
-    ImkeyAction.setMethod("eos_tx_sign");
-    ImkeyAction.setParam(any);
-
-    let ImkeyActionBytes = ImkeyAction.serializeBinary();
-    //调用rust库
-    let ResBuffer= GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
-    let Error = GoToRust.get_last_err_message();
-    if(Error ==""  || Error ==null) {
-        //rust库返回的数据解析
-        let Response = new eos_pb.EosTxRes.deserializeBinary(HexStr2Bytes(ResBuffer));
-
-        let list = Response.getTransMultiSignsList();
+    any.setValue(eosTxReqbytes);
+    let imKeyAction =new  api_pb.ImkeyAction();
+    imKeyAction.setMethod("eos_tx_sign");
+    imKeyAction.setParam(any);
+    let imKeyActionBytes = imKeyAction.serializeBinary();
+    let resBuffer= callImKeyCore.call_imkey_api(bytes2HexStr(imKeyActionBytes));
+    let error = callImKeyCore.get_last_err_message();
+    if(error ==""  || error ==null) {
+        let response = new eos_pb.EosTxRes.deserializeBinary(hexStr2Bytes(resBuffer));
+        let list = response.getTransMultiSignsList();
         let resultList=[];
         for (let i = 0; i < list.length; i++) {
             resultList.push(list[i]);
         }
         return resultList;
     }else{
-        let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
-        console.log("ErrorResponse.getError():"+ErrorResponse.getError())
-        return ErrorResponse.getError();
+        let errorResponse = new api_pb.Response.deserializeBinary(hexStr2Bytes(error));
+        return errorResponse.getError();
     }
 }
 function  ICOSMOSTransaction_sign_TX(json) {
-    let StdFee= new  cosmos_pb.StdFee()
-    let SignData= new  cosmos_pb.SignData()
+    let stdFee= new  cosmos_pb.StdFee()
+    let signData= new  cosmos_pb.SignData()
     let amountList=json.fee.amount;
     for (let i = 0; i < amountList.length; i++) {
-        let Coin =new  cosmos_pb.Coin()
-        Coin.setAmount(amountList[i].amount)
-        Coin.setDenom(amountList[i].denom)
-        StdFee.addAmount(Coin)
+        let coin =new  cosmos_pb.Coin()
+        coin.setAmount(amountList[i].amount)
+        coin.setDenom(amountList[i].denom)
+        stdFee.addAmount(coin)
     }
-    StdFee.setGas(json.fee.gas)
-
+    stdFee.setGas(json.fee.gas)
     let msgList=json.msg
     for (let i = 0; i < msgList.length; i++) {
-        let Msg =new  cosmos_pb.Msg()
-        Msg.setType(msgList[i].type)
-        let MsgValue =new  cosmos_pb.MsgValue()
+        let msg =new  cosmos_pb.Msg()
+        msg.setType(msgList[i].type)
+        let msgValue =new  cosmos_pb.MsgValue()
         let amountArray=msgList[i].value.amount;
         for (let i = 0; i < amountArray.length; i++) {
-            let Coin =new  cosmos_pb.Coin()
-            Coin.setAmount(amountArray[i].amount)
-            Coin.setDenom(amountArray[i].denom)
-            MsgValue.addAmount(Coin)
+            let coin =new  cosmos_pb.Coin()
+            coin.setAmount(amountArray[i].amount)
+            coin.setDenom(amountArray[i].denom)
+            msgValue.addAmount(coin)
         }
         if(msgList[i].value.hasOwnProperty("to_address")){
-            MsgValue.getAddressesMap().set("to_address",msgList[i].value.to_address)
-            MsgValue.getAddressesMap().set("from_address",msgList[i].value.from_address)
-
+            msgValue.getAddressesMap().set("to_address",msgList[i].value.to_address)
+            msgValue.getAddressesMap().set("from_address",msgList[i].value.from_address)
         }else if(msgList[i].value.hasOwnProperty("delegator_address")) {
-
-            MsgValue.getAddressesMap.set("delegator_address",msgList[i].value.delegator_address)
-            MsgValue.getAddressesMap.setset("validator_address",msgList[i].value.validator_address)
-            MsgValue.addressesMap=adderssMap
+            msgValue.getAddressesMap.set("delegator_address",msgList[i].value.delegator_address)
+            msgValue.getAddressesMap.set("validator_address",msgList[i].value.validator_address)
         }
-        Msg.setValue(MsgValue)
-        SignData.addMsgs(Msg)
+        msg.setValue(msgValue)
+        signData.addMsgs(msg)
     }
-    SignData.setFee(StdFee)
-    SignData.setAccountNumber(json.accountNumber)
-    SignData.setChainId(json.chainId)
-    SignData.setMemo(json.memo)
-    SignData.setSequence(json.sequence)
-    let CosmosTxReq =new  cosmos_pb.CosmosTxReq();
-    CosmosTxReq.setPath(Path.COSMOS_LEDGER)
-    CosmosTxReq.setSigndata(SignData)
-    CosmosTxReq.setPaymentDis(json.preview.payment)
-    CosmosTxReq.setToDis(json.preview.receiver)
-    CosmosTxReq.setFromDis(json.preview.sender)
-    CosmosTxReq.setFeeDis(json.preview.fee)
-    let CosmosTxReqbytes = CosmosTxReq.serializeBinary();
-    //any1
+    signData.setFee(stdFee)
+    signData.setAccountNumber(json.accountNumber)
+    signData.setChainId(json.chainId)
+    signData.setMemo(json.memo)
+    signData.setSequence(json.sequence)
+    let cosmosTxReq =new  cosmos_pb.CosmosTxReq();
+    cosmosTxReq.setPath(path.COSMOS_LEDGER)
+    cosmosTxReq.setSigndata(signData)
+    cosmosTxReq.setPaymentDis(json.preview.payment)
+    cosmosTxReq.setToDis(json.preview.receiver)
+    cosmosTxReq.setFromDis(json.preview.sender)
+    cosmosTxReq.setFeeDis(json.preview.fee)
+    let cosmosTxReqBytes = cosmosTxReq.serializeBinary();
     let any =new  proto.google.protobuf.Any();
-    any.setValue(CosmosTxReqbytes);
-
-    //ImkeyAction
-    let ImkeyAction =new  api_pb.ImkeyAction();
-    ImkeyAction.setMethod("cosmos_tx_sign");
-    ImkeyAction.setParam(any);
-
-    let ImkeyActionBytes = ImkeyAction.serializeBinary();
-    //调用rust库
-    let ResBuffer= GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
-    let Error = GoToRust.get_last_err_message();
-    if(Error ==""  || Error ==null) {
-        //rust库返回的数据解析
-        let Response =new cosmos_pb.CosmosTxRes.deserializeBinary(HexStr2Bytes(ResBuffer));
-
-        return Response;
+    any.setValue(cosmosTxReqBytes);
+    let imKeyAction =new  api_pb.ImkeyAction();
+    imKeyAction.setMethod("cosmos_tx_sign");
+    imKeyAction.setParam(any);
+    let imKeyActionBytes = imKeyAction.serializeBinary();
+    let resBuffer= callImKeyCore.call_imkey_api(bytes2HexStr(imKeyActionBytes));
+    let error = callImKeyCore.get_last_err_message();
+    if(error ==""  || error ==null) {
+        let response =new cosmos_pb.CosmosTxRes.deserializeBinary(hexStr2Bytes(resBuffer));
+        return response;
     }else{
-        let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
-        console.log("ErrorResponse.getError():"+ErrorResponse.getError())
-        return ErrorResponse.getError();
+        let errorResponse = new api_pb.Response.deserializeBinary(hexStr2Bytes(error));
+        return errorResponse.getError();
     }
 }
 
-function  BtcXpub(path,netWork) {
-    let BtcXpubReq =new  btc_pb.BtcXpubReq();
-    BtcXpubReq.setPath(path)
-    BtcXpubReq.setNetwork(netWork)
-    let BtcXpubReqBytes = BtcXpubReq.serializeBinary();
-    //any
+function  btcXpub(path,netWork) {
+    let btcXpubReq =new  btc_pb.BtcXpubReq();
+    btcXpubReq.setPath(path)
+    btcXpubReq.setNetwork(netWork)
+    let btcXpubReqBytes = btcXpubReq.serializeBinary();
     let any =new  proto.google.protobuf.Any();
-    any.setValue(BtcXpubReqBytes);
-
-    //ImkeyAction
-    let ImkeyAction =new  api_pb.ImkeyAction();
-    ImkeyAction.setMethod("btc_get_xpub");
-    ImkeyAction.setParam(any);
-
-    let ImkeyActionBytes = ImkeyAction.serializeBinary();
-    //调用rust库
-    let ResBuffer= GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
-    let Error = GoToRust.get_last_err_message();
-    if(Error ==""  || Error ==null) {
-        //rust库返回的数据解析
-        let Response = new btc_pb.BtcXpubRes.deserializeBinary(HexStr2Bytes(ResBuffer));
-        let  xpub = Response.getXpub()
+    any.setValue(btcXpubReqBytes);
+    let imKeyAction =new  api_pb.ImkeyAction();
+    imKeyAction.setMethod("btc_get_xpub");
+    imKeyAction.setParam(any);
+    let imKeyActionBytes = imKeyAction.serializeBinary();
+    let resBuffer= callImKeyCore.call_imkey_api(bytes2HexStr(imKeyActionBytes));
+    let error = callImKeyCore.get_last_err_message();
+    if(error ==""  || error ==null) {
+        let response = new btc_pb.BtcXpubRes.deserializeBinary(hexStr2Bytes(resBuffer));
+        let  xpub = response.getXpub()
         return xpub;
     }else{
-        let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
-        console.log("ErrorResponse.getError():"+ErrorResponse.getError())
-        return ErrorResponse.getError();
+        let errorResponse = new api_pb.Response.deserializeBinary(hexStr2Bytes(error));
+        return errorResponse.getError();
     }
 }
+
 function  BtcAddress(path,netWork,method_) {
-    let BtcAddressReq =new  btc_pb.BtcAddressReq();
-    BtcAddressReq.setPath(path)
-    BtcAddressReq.setNetwork(netWork)
-    let BtcAddressReqBytes = BtcAddressReq.serializeBinary();
-    //any
+    let btcAddressReq =new  btc_pb.BtcAddressReq();
+    btcAddressReq.setPath(path)
+    btcAddressReq.setNetwork(netWork)
+    let btcAddressReqBytes = btcAddressReq.serializeBinary();
     let any =new  proto.google.protobuf.Any();
-    any.setValue(BtcAddressReqBytes);
-
-    //ImkeyAction
-    let ImkeyAction =new  api_pb.ImkeyAction();
-    ImkeyAction.setMethod(method_);
-    ImkeyAction.setParam(any);
-
-    let ImkeyActionBytes = ImkeyAction.serializeBinary();
-    //调用rust库
-    let ResBuffer= GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
-    let Error = GoToRust.get_last_err_message();
-    if(Error ==""  || Error ==null) {
-        //rust库返回的数据解析
-        let Response = new btc_pb.BtcAddressRes.deserializeBinary(HexStr2Bytes(ResBuffer));
-        let  address = Response.getAddress()
-        return address;
+    any.setValue(btcAddressReqBytes);
+    let imKeyAction =new  api_pb.ImkeyAction();
+    imKeyAction.setMethod(method_);
+    imKeyAction.setParam(any);
+    let imKeyActionBytes = imKeyAction.serializeBinary();
+    let resBuffer= callImKeyCore.call_imkey_api(bytes2HexStr(imKeyActionBytes));
+    let error = callImKeyCore.get_last_err_message();
+    if(error ==""  || error ==null) {
+        let response = new btc_pb.BtcAddressRes.deserializeBinary(hexStr2Bytes(resBuffer));
+        return response.getAddress()
+        
     }else{
-        let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
-        console.log("ErrorResponse.getError():"+ErrorResponse.getError())
-        return ErrorResponse.getError();
+        let errorResponse = new api_pb.Response.deserializeBinary(hexStr2Bytes(error));
+        return errorResponse.getError();
     }
 }
+
 function  ethAddress(path) {
-    let EthAddressReq =new  eth_pb.EthAddressReq();
-    EthAddressReq.setPath(path)
-    let EthAddressReqBytes = EthAddressReq.serializeBinary();
-    //any
+    let ethAddressReq =new  eth_pb.EthAddressReq();
+    ethAddressReq.setPath(path)
+    let ethAddressReqBytes = ethAddressReq.serializeBinary();
     let any =new  proto.google.protobuf.Any();
-    any.setValue(EthAddressReqBytes);
-
-    //ImkeyAction
-    let ImkeyAction =new  api_pb.ImkeyAction();
-    ImkeyAction.setMethod(method_);
-    ImkeyAction.setParam(any);
-
-    let ImkeyActionBytes = ImkeyAction.serializeBinary();
-    //调用rust库
-    let ResBuffer= GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
-    let Error = GoToRust.get_last_err_message();
-    if(Error ==""  || Error ==null) {
-        //rust库返回的数据解析
-        let Response = new eth_pb.EthAddressRes.deserializeBinary(HexStr2Bytes(ResBuffer));
-        let  address = Response.getAddress()
+    any.setValue(ethAddressReqBytes);
+    let imKeyAction =new  api_pb.ImkeyAction();
+    imKeyAction.setMethod(method_);
+    imKeyAction.setParam(any);
+    let imKeyActionBytes = imKeyAction.serializeBinary();
+    let resBuffer= callImKeyCore.call_imkey_api(bytes2HexStr(imKeyActionBytes));
+    let error = callImKeyCore.get_last_err_message();
+    if(error ==""  || error ==null) {
+        let response = new eth_pb.EthAddressRes.deserializeBinary(hexStr2Bytes(resBuffer));
+        let  address = response.getAddress()
         return address;
     }else{
-        let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
-        console.log("ErrorResponse.getError():"+ErrorResponse.getError())
-        return ErrorResponse.getError();
+        let errorResponse = new api_pb.Response.deserializeBinary(hexStr2Bytes(error));
+        return errorResponse.getError();
     }
 }
+
 function  eosPubkey(path,method_) {
-    let EosPubkeyReq =new  eos_pb.EosPubkeyReq();
-    EosPubkeyReq.setPath(path)
-    let EosPubkeyReqBytes = EosPubkeyReq.serializeBinary();
-    //any
+    let eosPubkeyReq =new  eos_pb.EosPubkeyReq();
+    eosPubkeyReq.setPath(path)
+    let eosPubkeyReqBytes = eosPubkeyReq.serializeBinary();
     let any =new  proto.google.protobuf.Any();
-    any.setValue(EosPubkeyReqBytes);
-
-    //ImkeyAction
-    let ImkeyAction =new  api_pb.ImkeyAction();
-    ImkeyAction.setMethod(method_);
-    ImkeyAction.setParam(any);
-
-    let ImkeyActionBytes = ImkeyAction.serializeBinary();
-    //调用rust库
-    let ResBuffer= GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
-    let Error = GoToRust.get_last_err_message();
-    if(Error ==""  || Error ==null) {
-        //rust库返回的数据解析
-        let Response = new eos_pb.EosPubkeyRes.deserializeBinary(HexStr2Bytes(ResBuffer));
-        let  address = Response.getPubkey()
+    any.setValue(eosPubkeyReqBytes);
+    let imKeyAction =new  api_pb.ImkeyAction();
+    imKeyAction.setMethod(method_);
+    imKeyAction.setParam(any);
+    let imKeyActionBytes = imKeyAction.serializeBinary();
+    let resBuffer= callImKeyCore.call_imkey_api(bytes2HexStr(imKeyActionBytes));
+    let error = callImKeyCore.get_last_err_message();
+    if(error ==""  || error ==null) {
+        let response = new eos_pb.EosPubkeyRes.deserializeBinary(hexStr2Bytes(resBuffer));
+        let  address = response.getPubkey()
         return address;
     }else{
-        let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
-        console.log("ErrorResponse.getError():"+ErrorResponse.getError())
-        return ErrorResponse.getError();
+        let errorResponse = new api_pb.Response.deserializeBinary(hexStr2Bytes(error));
+        return errorResponse.getError();
     }
 }
+
 function  cosmosAddress(path,method_) {
-    let CosmosAddressReq =new  cosmos_pb.CosmosAddressReq();
-    CosmosAddressReq.setPath(path)
-    let CosmosAddressReqBytes = CosmosAddressReq.serializeBinary();
-    //any
+    let cosmosAddressReq =new  cosmos_pb.CosmosAddressReq();
+    cosmosAddressReq.setPath(path)
+    let cosmosAddressReqBytes = cosmosAddressReq.serializeBinary();
     let any =new  proto.google.protobuf.Any();
-    any.setValue(CosmosAddressReqBytes);
-
-    //ImkeyAction
-    let ImkeyAction =new  api_pb.ImkeyAction();
-    ImkeyAction.setMethod(method_);
-    ImkeyAction.setParam(any);
-
-    let ImkeyActionBytes = ImkeyAction.serializeBinary();
-    //调用rust库
-    let ResBuffer= GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
-    let Error = GoToRust.get_last_err_message();
-    if(Error ==""  || Error ==null) {
-        //rust库返回的数据解析
-        let Response = new cosmos_pb.CosmosAddressRes.deserializeBinary(HexStr2Bytes(ResBuffer));
-        let  address = Response.getAddress()
+    any.setValue(cosmosAddressReqBytes);
+    let imKeyAction =new  api_pb.ImkeyAction();
+    imKeyAction.setMethod(method_);
+    imKeyAction.setParam(any);
+    let imKeyActionBytes = imKeyAction.serializeBinary();
+    let resBuffer= callImKeyCore.call_imkey_api(bytes2HexStr(imKeyActionBytes));
+    let error = callImKeyCore.get_last_err_message();
+    if(error ==""  || error ==null) {
+        let response = new cosmos_pb.CosmosAddressRes.deserializeBinary(hexStr2Bytes(resBuffer));
+        let  address = response.getAddress()
         return address;
     }else{
-        let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
-        console.log("ErrorResponse.getError():"+ErrorResponse.getError())
-        return ErrorResponse.getError();
+        let errorResponse = new api_pb.Response.deserializeBinary(hexStr2Bytes(error));
+        return errorResponse.getError();
     }
 }
+
 export function getBTC_Xpub_() {
     return new Promise((resolve, reject) => {
         try {
             resolve({
                 code: 200,
-                data: BtcXpub("m/44'/0'/0'/0/0",Constants.MAINNET)
+                data: btcXpub("m/44'/0'/0'/0/0",constants.MAINNET)
             })
         } catch (err) {
             return reject({
@@ -528,40 +408,40 @@ export function getBTC_Xpub_() {
     })
 }
 export function getBTC_Xpub() {
-    return BtcXpub("m/44'/0'/0'/0/0",Constants.MAINNET);
+    return btcXpub("m/44'/0'/0'/0/0",constants.MAINNET);
 }
 export function getBTC_Address() {
-    return BtcAddress("m/44'/0'/0'/0/0",Constants.MAINNET,"btc_get_address");
+    return BtcAddress("m/44'/0'/0'/0/0",constants.MAINNET,"btc_get_address");
 }
 export function getBTC_displayAddress() {
-    return BtcAddress("m/44'/0'/0'/0/0",Constants.MAINNET,"btc_register_address");
+    return BtcAddress("m/44'/0'/0'/0/0",constants.MAINNET,"btc_register_address");
 }
 export function getBTC_SegWitAddress() {
-    return BtcAddress("m/49'/0'/0'/0/22",Constants.MAINNET,"btc_get_setwit_address");
+    return BtcAddress("m/49'/0'/0'/0/22",constants.MAINNET,"btc_get_setwit_address");
 }
 export function getBTC_displaySegWitAddress() {
-    return BtcAddress("m/49'/0'/0'/0/0",Constants.MAINNET,"btc_register_segwit_address");
+    return BtcAddress("m/49'/0'/0'/0/0",constants.MAINNET,"btc_register_segwit_address");
 }
 
 export function getCOSMOS_Address(path) {
-    return cosmosAddress(Path.COSMOS_LEDGER,"cosmos_get_address");
+    return cosmosAddress(path.COSMOS_LEDGER,"cosmos_get_address");
 }
 export function getCOSMOS_displayAddress(path) {
-    return cosmosAddress(Path.COSMOS_LEDGER,"cosmos_register_address");
+    return cosmosAddress(path.COSMOS_LEDGER,"cosmos_register_address");
 }
 
 export function getEOS_Address() {
-    return eosPubkey(Path.EOS_LEDGER,"eos_get_pubkey");
+    return eosPubkey(path.EOS_LEDGER,"eos_get_pubkey");
 }
 export function getEOS_displayAddress() {
-    return eosPubkey(Path.EOS_LEDGER,"eos_register_pubkey");
+    return eosPubkey(path.EOS_LEDGER,"eos_register_pubkey");
 }
 
 export function getETH_Address() {
-    return ethAddress(Path.ETH_LEDGER);
+    return ethAddress(path.ETH_LEDGER);
 }
 export function getETH_displayAddress() {
-    return ethAddress(Path.ETH_LEDGER);
+    return ethAddress(path.ETH_LEDGER);
 }
 
 export function BitcoinTransaction_BTC(json) {
@@ -591,32 +471,13 @@ export function EOSTransaction_sign_MSG(json) {
 export function COSMOSTransaction_sign_TX(json) {
     return ICOSMOSTransaction_sign_TX(json);
 }
-// module.exports = {
-//     BitcoinTransaction_BTC,
-//     BitcoinTransaction_BTC_SEGWIT,
-//     BitcoinTransaction_BTC_USDT,
-//     BitcoinTransaction_BTC_USDT_SEGWIT,
-//     ETHTransaction_sign_TX,
-//     ETHTransaction_sign_MSG,
-//     EOSTransaction_sign_MSG,
-//     EOSTransaction_sign_TX,
-//     COSMOSTransaction_sign_TX,
-//     getBTC_Xpub,
-//     getBTC_Address,
-//     getBTC_displayAddress,
-//     getBTC_SegWitAddress,
-//     getBTC_displaySegWitAddress,
-//     getCOSMOS_Address,
-//     getCOSMOS_displayAddress,
-//     getEOS_Address,
-//     getEOS_displayAddress,
-//     getETH_Address,
-//     getETH_displayAddress
-// }
+
 /**
- * @desc 二进制数组转字符串
+ *  @desc 二进制数组转字符串
+ * @param arr
+ * @returns {string}
  */
-function Bytes2Str(arr){
+function bytes2Str(arr){
     let str = "";
     for (let i = 0; i < arr.length; i++){
         let tmp =String.fromCharCode(arr[i]);
@@ -627,10 +488,13 @@ function Bytes2Str(arr){
     }
     return str;
 }
+
 /**
  * @desc 二进制数组转十六进制字符串
+ * @param arr
+ * @returns {string}
  */
-function Bytes2HexStr(arr){
+function bytes2HexStr(arr){
     let str = "";
     for (let i = 0; i < arr.length; i++){
         let tmp = arr[i].toString(16);
@@ -641,10 +505,13 @@ function Bytes2HexStr(arr){
     }
     return str;
 }
-/*
-* @desc 十六进制字符串转二进制数组
-*/
-function HexStr2Bytes(str){
+
+/**
+ * @desc 十六进制字符串转二进制数组
+ * @param str
+ * @returns {any[]|null}
+ */
+function hexStr2Bytes(str){
     let pos = 0;
     let len = str.length;
     if (len % 2 != 0){

@@ -7,9 +7,6 @@
                 <MenuNav></MenuNav>
             </el-aside>
             <el-container class="right">
-                <!-- <el-header>
-                  <headeTop></headeTop>
-                </el-header>-->
                 <el-main>
                     <div class="main">
                         <el-scrollbar style="height:100%">
@@ -24,14 +21,12 @@
 <script>
     import MenuNav from "@/components/menuNav";
     import NoticeBox from "@/components/noticeDialog";
-    // import headeTop from "@//components/head";
     export default {
         name: "index",
 
         components: {
             MenuNav,
             NoticeBox
-            // headeTop
         },
         data() {
             return {

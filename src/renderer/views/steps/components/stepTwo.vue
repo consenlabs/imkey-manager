@@ -10,28 +10,15 @@
                     <span class="sort">1.</span>
                     <span>{{$t('m.stepTwo.active_imKey')}}</span>
                 </p>
-                <!--        <div>-->
-                <!--          <el-button-group>-->
-                <!--            <el-button :type="yesOneType" @click="changeOneType(1)">Yes</el-button>-->
-                <!--            <el-button :type="noOneType" @click="changeOneType(2)">No</el-button>-->
-                <!--          </el-button-group>-->
-                <!--        </div>-->
             </div>
             <div class="selectBox">
                 <p class="text">
                     <span class="sort">2.</span>
                     <span>{{$t('m.stepTwo.bind_imKey')}}</span>
                 </p>
-                <!--        <div>-->
-                <!--          <el-button-group>-->
-                <!--            <el-button :type="yesTowType" @click="changeTowType(1)">Yes</el-button>-->
-                <!--            <el-button :type="noTowType" @click="changeTowType(2)">No</el-button>-->
-                <!--          </el-button-group>-->
-                <!--        </div>-->
             </div>
             <div class="selectBox">
                 <p class="text">
-                    <!--          <span class="sort"></span>-->
                     <span>{{$t('m.stepTwo.start_active_bind_imKey')}}</span>
                 </p>
                 <div>
@@ -72,24 +59,6 @@
             this.check();
         },
         methods: {
-            changeOneType(type) {
-                if (type === 1) {
-                    this.yesOneType = "primary";
-                    this.noOneType = "";
-                } else {
-                    this.yesOneType = "";
-                    this.noOneType = "primary";
-                }
-            },
-            changeTowType(type) {
-                if (type === 1) {
-                    this.yesTowType = "primary";
-                    this.noTowType = "";
-                } else {
-                    this.yesTowType = "";
-                    this.noTowType = "primary";
-                }
-            },
             check() {
                 this.boxVisible = true;
             },

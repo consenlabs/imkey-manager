@@ -1,24 +1,13 @@
 import {app, BrowserWindow, ipcMain, Menu, shell, Tray, Notification, dialog, crashReporter} from 'electron'
-
 // 自动更新相关
 import {autoUpdater} from 'electron-updater'
-
-// 引入自动启动模块
-// const startOnBoot = require('./startOnBoot.js')
-
 // 崩溃报告
 import * as Sentry from '@sentry/electron'
-
 // package.json
 import pkg from '../../package.json'
-
-// const server_name = require('path').resolve(__dirname, './server.js');
-// var child_process = require('child_process');
-// var exec = child_process.exec;
-// var openExec;
+//http
 import http from 'http'
-// 引入自动启动
-// 模块
+// api模块
 let ApiRouter = require('../api/apirouter')
 /**
  * Set `__static` path to static files in production
@@ -28,14 +17,10 @@ if (process.env.NODE_ENV !== 'development') {
     global.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
 }
 
-let mainWindow, loginWindow
+let mainWindow
 const winURL = process.env.NODE_ENV === 'development'
     ? `http://localhost:9080`
     : `file://${__dirname}/index.html`
-
-// const loginURL = process.env.NODE_ENV === 'development'
-//     ? `http://localhost:9080/#login`
-//     : `file://${__dirname}/index.html#login`
 
 const path = require('path')
 const ApplicationName = pkg.name
@@ -57,75 +42,6 @@ const gotTheLock = app.requestSingleInstanceLock()
 if (process.platform === 'win32') {
     app.setAppUserModelId(ApplicationName)
 }
-
-/**
- * 创建主窗口
- */
-// function createLoginWindow() {
-//     if (loginWindow) {
-//         return
-//     }
-//
-//     /**
-//      * Initial window options
-//      */
-//     loginWindow = new BrowserWindow({
-//         show: true,
-//         height: 360,
-//         width: 300,
-//         maxHeight: 360,
-//         maxWidth: 300,
-//         useContentSize: true,
-//         frame: false, // 无边框
-//         transparent: true, // 透明
-//         // fullscreen: true, // 全屏,
-//         resizable: false,
-//         maximizable: false,
-//         minimizable: false,
-//         webPreferences: {
-//             nodeIntegration: true
-//         },
-//     })
-//
-//     loginWindow.loadURL(loginURL)
-//
-//     // 为了防止闪烁，让画面准备好了再显示
-//     // 对于一个复杂的应用，ready-to-show 可能发出的太晚，会让应用感觉缓慢。 在这种情况下，建议立刻显示窗口，并使用接近应用程序背景的 backgroundColor
-//     // 请注意，即使是使用 ready-to-show 事件的应用程序，仍建议使用设置 backgroundColor 使应用程序感觉更原生。
-//     loginWindow.once('ready-to-show', () => {
-//         loginWindow.show()
-//     })
-//
-//     loginWindow.on('close', (event) => {
-//
-//     })
-//
-//     loginWindow.on('closed', () => {
-//         loginWindow = null
-//     })
-//
-//     ipcMain.on('openMainWindow', () => {
-//         if (!mainWindow) {
-//             createMainWindow()
-//         }
-//
-//         // loginWindow.hide()
-//         loginWindow.destroy()
-//         mainWindow.show()
-//         mainWindow.focus()
-//     })
-//
-//     ipcMain.on('openLoginWindow', () => {
-//         if (!loginWindow) {
-//             createLoginWindow()
-//         }
-//
-//         // loginWindow.hide()
-//         mainWindow.destroy()
-//         loginWindow.show()
-//         loginWindow.focus()
-//     })
-// }
 
 /**
  * 创建主窗口
@@ -158,10 +74,10 @@ function createMainWindow() {
     mainWindow.once('ready-to-show', () => {
         mainWindow.show()
     })
+    
     /**
      * 监听
      */
-
     mainWindow.on('close', (event) => {
         if (process.platform === 'win32') {
             if (!trayClose) {
@@ -204,90 +120,21 @@ function createTray() {
 
     // 系统托盘右键菜单
     trayMenuTemplate = [
-        // {
-        //     label: '崩溃报告测试 process.crash()',
-        //     click: function () {
-        //         console.log('process.crash()')
-        //         process.crash()
-        //     }
-        // },
-        // {
-        //     label: '崩溃报告测试throw new Error',
-        //     click: function () {
-        //         console.log('Error test in main progress')
-        //         throw new Error('Error test in main progress')
-        //     }
-        // },
-        // {
-        //     label: '托盘闪烁',
-        //     click: function () {
-        //         // 判断如果上一个定时器是否执行完
-        //         if (flashTrayTimer) {
-        //             return
-        //         }
-        //
-        //         // 任务栏闪烁
-        //         // if (!mainWindow.isFocused()) {
-        //         //     mainWindow.showInactive();
-        //         //     mainWindow.flashFrame(true);
-        //         // }
-        //
-        //         //系统托盘图标闪烁
-        //         appTray.setImage(iconMessagePath)
-        //         let count = 0;
-        //         flashTrayTimer = setInterval(function () {
-        //             count++;
-        //             if (count % 2 == 0) {
-        //                 appTray.setImage(iconTransparentPath)
-        //             } else {
-        //                 appTray.setImage(iconMessagePath)
-        //             }
-        //         }, 600);
-        //     }
-        // },
-        // {
-        //     label: '弹出通知',
-        //     click: function () {
-        //         console.log(Notification.isSupported())
-        //         let notification = new Notification({
-        //             title: '通知的标题', // 通知的标题, 将在通知窗口的顶部显示
-        //             body: '通知的正文文本', // 通知的正文文本, 将显示在标题或副标题下面
-        //             icon: iconNoticePath, // 用于在该通知上显示的图标
-        //             silent: true, // 在显示通知时是否发出系统提示音
-        //         })
-        //
-        //         notification.show()
-        //         notification.on('click', () => {
-        //             notification.close()
-        //             console.log('click notification')
-        //         })
-        //     }
-        // },
-        // {
-        //     label: '关于项目',
-        //     click: function () {
-        //         // 打开外部链接
-        //         shell.openExternal('https://github.com/consenlabs/imkey-desktop')
-        //     }
-        // },
         {
             label: '帮助',
             click: function () {
-                // 打开外部链接
                 shell.openExternal('https://support.imkey.im')
             }
         },
         {
             label: '关于imKey',
             click: function () {
-                // 打开外部链接
                 shell.openExternal('https://imkey.im')
             }
         },
         {
             label: '退出',
             click: function () {
-                // 退出
                 trayClose = true
                 app.quit()
             }
@@ -296,7 +143,6 @@ function createTray() {
 
     appTray = new Tray(iconPath)
     // 图标的上上下文
-
     contextMenu = Menu.buildFromTemplate(trayMenuTemplate)
     // 设置此托盘图标的悬停提示内容
     appTray.setToolTip(ApplicationName)
@@ -313,84 +159,11 @@ function createTray() {
     })
 }
 
-/**
- * 开机启动
- */
-function ipcStartOnBoot() {
-    // let AutoLaunch = require('auto-launch');
-    // let imKeyDesktop = new AutoLaunch({
-    //     name: 'imKey-desktop',
-    //     //path: '/Applications/Minecraft.app',
-    // });
-    // imKeyDesktop.enable();
-
-    // 移除开机启动项
-    // demo.disable();
-    // 检测开机启动项状态
-    // demo.isEnabled().then(function(isEnabled){
-    //     if(isEnabled){
-    //         return;
-    //     }
-    //     //demo.enable();
-    // })
-    //     .catch(function(err){
-    //         // handle error
-    //     });
-    // if(!app.isPackaged){
-    //     app.setLoginItemSettings({
-    //         openAtLogin:true,
-    //         openAsHidden:false,
-    //         path:process.execPath,
-    //         args:[path.resolve(process.argv[1])]
-    //     });
-    // }else {
-    //     app.setLoginItemSettings({
-    //         openAsHidden:true,
-    //         openAtLogin:true
-    //     });
-    // }
-    // 检查是否自动启动
-    // ipcMain.on('getAutoStartValue', () => {
-    //     startOnBoot.getAutoStartValue(ApplicationName, (error, result) => {
-    //         if (error) {
-    //             mainWindow.webContents.send('getAutoStartValue', false)
-    //         } else {
-    //             mainWindow.webContents.send('getAutoStartValue', true)
-    //         }
-    //     })
-    // })
-    //
-    // // 设置开机自动启动
-    // ipcMain.on('enableAutoStart', () => {
-    //     startOnBoot.enableAutoStart(ApplicationName, process.execPath)
-    // })
-    //
-    // // 取消开机自动启动
-    // ipcMain.on('disableAutoStart', () => {
-    //     startOnBoot.disableAutoStart(ApplicationName)
-    // })　
-}
 
 /**
  * 启动 http server
  */
-function startHttpserver() {
-    // process.dlopen = () => {
-    //     throw new Error('Load native module is not safe')
-    // }
-    // let worker = new Worker('server.js')
-//创建子进程，直接打开当前目录下的server.js
-//     openExec = exec('node '+server_name, function (error, stdout, stderr) {
-//         if (error) {
-//             console.log(error.stack);
-//             console.log('Error code: ' + error.code);
-//             return;
-//         }
-//         console.log('使用exec方法输出: ' + stdout);
-//         console.log(`stderr: ${stderr}`);
-//         console.log(process.pid)
-//     });
-
+function startHttpServer() {
     http.createServer((request, response) => {
         request.on('error', (err) => {
             console.error(err);
@@ -437,9 +210,7 @@ function startHttpserver() {
                 response.end();
                 // Note: the 2 lines above could be replaced with this next one:
                 // response.end(JSON.stringify(responseBody))
-
                 // END OF NEW STUFF
-
             });
             // request.pipe(response);
         } else {
@@ -447,11 +218,6 @@ function startHttpserver() {
             response.end();
         }
     }).listen(8080, '127.0.0.1');
-    console.log("获取userData路径:"+app.getAppPath("userData"))
-
-// 终端打印如下信息
-    console.log('Server running at http://127.0.0.1:8080/imkey');
-
 }
 
 /**
@@ -462,7 +228,6 @@ function autoUpdate() {
     function sendUpdateMessage(obj) {
         mainWindow.webContents.send('updateMessage', obj)
     }
-
     // 监测更新，在你想要检查更新的时候执行，renderer事件触发后的操作自行编写
     const message = {
         error: '检查更新出错',
@@ -660,21 +425,16 @@ if (!gotTheLock) {
             if (mainWindow.isMinimized()) mainWindow.restore()
             mainWindow.focus()
         }
-        // if (loginWindow) {
-        //     loginWindow.focus()
-        // }
     })
 
     // 创建 mainWindow, 加载应用的其余部分, etc...
     app.on('ready', () => {
-        // createLoginWindow()
         createMainWindow()
         createTray()
-        // ipcStartOnBoot()
         autoUpdate()
         crashReport()
         protocalHandler()
-        startHttpserver()
+        startHttpServer()
 
     })
 }
@@ -684,35 +444,9 @@ app.on('window-all-closed', () => {
         app.quit()
     }
 })
-// app.on('window-all-closed', () => {
-//     // 在 macOS 上，除非用户用 Cmd + Q 确定地退出，
-//     // 否则绝大部分应用及其菜单栏会保持激活。
-//     if (process.platform !== 'darwin') {
-//         app.quit();
-//         // 判断openExec是否存在，存在就杀掉node进程
-//         if (!openExec) {
-//             // console.log('openExec is null')
-//         } else {
-//             exec('taskkill /f /t /im node.exe', function (error, stdout, stderr) {
-//                 if (error) {
-//                     console.log(error.stack);
-//                     console.log('Error code: ' + error.code);
-//                     return;
-//                 }
-//                 console.log('使用exec方法输出: ' + stdout);
-//                 console.log(`stderr: ${stderr}`);
-//             });
-//         }
-//     }
-//
-// })
 
 app.on('activate', () => {
     if (mainWindow === null) {
         createMainWindow()
     }
-
-    // if (loginWindow === null) {
-    //     createLoginWindow()
-    // }
 })

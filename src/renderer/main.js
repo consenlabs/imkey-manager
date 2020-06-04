@@ -46,8 +46,6 @@ const i18n = new VueI18n({
         'en-US': require('./common/lang/en')
     }
 })
-// this.canScroll()
-//主页面可滑动
 
 new Vue({
     i18n,

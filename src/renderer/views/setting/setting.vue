@@ -44,10 +44,6 @@
                 <span class="updateMsg">{{$t('m.setting.imKey_desktop_version_is')}} {{newVersionData}} {{$t('m.setting.available')}}</span>
 
                 <el-button type="primary" @click="updateVersion" size="small" :loading="loading" >{{updateBtnTx}}</el-button>
-
-<!--                <div  class="updateMsg" v-if="!updateSuccess">-->
-<!--                <el-progress type="circle" :percentage="downloadPercent" width="60px" ></el-progress>-->
-<!--                </div>-->
             </div>
         </div>
 
@@ -64,20 +60,16 @@
             return {
                 updateBtnTx:"update",
                 centerDialogVisible:false,
-                appName: "",
-                isSuccess: false,
                 oldVersionData: packagejson.version,
                 newVersionData: "",
                 loading: false,
                 updateSuccess: true,
-                updateNoticeVisible:false,
                 isUpdate:false,
                 dialogUpdateNow: false,
                 downloading: false,
                 hasNewVersion: false,
                 noNewVersion: false,
                 downloadPercent: 0,
-                downloadStatus:"",
                 showError: false,
                 errorInfo: {},
                 versionInfoList: [],
@@ -96,7 +88,6 @@
             }
         },
         methods: {
-
             updateSoft(){
                 this.centerDialogVisible=false;
                 this.loading = true;
@@ -105,32 +96,14 @@
             },
             updateVersion() {
                 this.centerDialogVisible=true;
-
-            },
-
-            saveVersionInfoList(updateInfo) {
-                let versionInfoListOri = this.getVersionInfoList()
-                versionInfoListOri.some((item, index, array) => {
-                    // 判断是不是已经存在这个版本的信息,如果存在就删除它
-                    if (updateInfo.version === item.version) {
-                        array.splice(index, 1)
-                        return true
-                    }
-                })
-                // 将新的版本信息加入列表中
-                versionInfoListOri.push(updateInfo)
-                localStorage.setItem('versionInfoList', JSON.stringify(versionInfoListOri))
             },
             downloadAndUpdate() {
                 this.downloading = true
                 // 开始下载
                 ipcRenderer.send('downloadUpdate')
                 ipcRenderer.on('downloadProgress', (event, progressObj) => {
-
                     this.progress = JSON.stringify(progressObj)
-                    // console.log(progressObj)
                     this.downloadPercent = progressObj.percent.toFixed(0) || 0
-                    // if(this.downloadPercent === 100) { // 这样写为啥不好使呢？
                     this.updateBtnTx="downloading "+this.downloadPercent+"%"
                     if (progressObj.percent === 100) {
                         this.loading = false

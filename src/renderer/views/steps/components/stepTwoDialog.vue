@@ -27,16 +27,16 @@
                             type="primary"
                             size="mini"
                             @click="bind"
-                            v-if="!isCorret"
+                            v-if="!isCorrect"
                             :loading="loading"
                             :disabled="!status1"
                     >{{$t('m.stepTwo.bind')}}
                     </el-button>
-                    <span v-else :class="isCorret?'el-icon-check':'el-icon-close'"></span>
+                    <span v-else :class="isCorrect?'el-icon-check':'el-icon-close'"></span>
                 </div>
 
                 <div class="inputBindCode">
-                <h1 v-if="isError" class="errorNotice">{{notcieText}}</h1>
+                <h1 v-if="isError" class="errorNotice">{{noticeText}}</h1>
                     </div>
             </div>
             <div class="chooseBox">
@@ -72,14 +72,14 @@
                 status1: false,
                 BindCode: "",
                 status3: false,
-                isCorret: false,
+                isCorrect: false,
                 loading: false,
                 loading1: true,
                 loading3: false,
                 showTwo: false,
                 showThree: false,
                 isError: false,
-                notcieText: ""
+                noticeText: ""
 
             };
         },
@@ -99,7 +99,7 @@
                 const reg = /^[a-hj-np-zA-HJ-NP-Z2-9]{8}$/;
                 if (!reg.test(this.BindCode)) {
                     this.isError = true;
-                    this.notcieText = "";
+                    this.noticeText = "";
                 } else {
                     this.isError = false;
                 }
@@ -109,9 +109,7 @@
                     if (result.code === 200) {
                         const electron = require('electron');
                         const dataPath = (electron.app || electron.remote.app).getPath('userData')+"/";
-                        console.log("dataPath:"+dataPath)
                         this.userPath = dataPath;
-                        console.log("this.userPath" + dataPath)
                     }
                 }).catch(err => {
 
@@ -122,7 +120,6 @@
                     if (result.code === 200) {
                         const res = result.data
                         if (res == "true") {
-                            console.log("success res" + res)
                         } else {
                             this.openErrorView(res);
                         }
@@ -146,7 +143,6 @@
                                 //开始判断是否绑定
                                 this.getBindDevice();
                             } else {
-                                console.log("activeDevice:" + result.data)
                                 //激活失败
                                 this.openErrorView(result.data);
                             }
@@ -164,7 +160,6 @@
             getBindDevice() {
                 deviceBindCheck(this.userPath).then(result => {
                     if (result.code === 200) {
-                        console.log("result.data:" + result.data);
                         if (result.data == "" || result.data == null) {
                             //失败的话
                             this.openErrorView("bind fail: null ");
@@ -179,7 +174,7 @@
                                 //显示绑定码
                                 this.DeviceBindDisplay();
                             } else if (result.data == "bound_this") {
-                                this.isCorret = true;
+                                this.isCorrect = true;
                                 this.showThree = true;
                                 this.status3 = true;
                                 this.loading3 = true;
@@ -250,19 +245,15 @@
             firstCheck() {
                 this.connect();
                 this.loading1 = true;
-                //第一步成功的话，继续要一步操作
                 setTimeout(() => {
                     this.getActiveDevice();
                 }, 200);
-                //失败的话
-                // this.$emit("showTree", false);
             },
             handleClose(msg) {
-                console.log("vdsbjhsdhvs:"+msg)
                 this.status1 = false;
                 this.BindCode = "";
                 this.status3 = false;
-                this.isCorret = false;
+                this.isCorrect = false;
                 this.loading = false;
                 this.loading1 = true;
                 this.loading3 = false;
@@ -274,13 +265,13 @@
             bind() {
                 if (this.isError || !this.BindCode) {
                     this.isError = true;
-                    this.notcieText = !this.BindCode ? this.$t('m.stepTwo.bind_code_is_null') : this.$t('m.stepTwo.bind_code_is_correct');
+                    this.noticeText = !this.BindCode ? this.$t('m.stepTwo.bind_code_is_null') : this.$t('m.stepTwo.bind_code_is_correct');
                     return;
                 }
 
                 this.connect();
                 this.loading = true;
-                this.isCorret = true;
+                this.isCorrect = true;
                 this.showThree = true;
                 this.status3 = true;
                 this.loading3 = true;
@@ -290,8 +281,6 @@
             },
             openErrorView(msg) {
                 this.handleClose(msg);
-                //     this.$store.state.message=msg
-                //     this.noticeVisible = true;
             },
         }
     };

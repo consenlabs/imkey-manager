@@ -1,22 +1,21 @@
 let walletApi = require('./walletapi');
 let DeviceManger = require('./devicemanagerapi');
-// let FilePath = require("path").resolve('./')
 const electron = require('electron');
-const FilePath = (electron.app || electron.remote.app).getPath('userData')+"/";
+const filePath = (electron.app || electron.remote.app).getPath('userData') + "/";
 
-export function api(api_name, json) {
+export function api(apiName, json) {
     let result;
     let connectRes = DeviceManger.connect("imKey Pro");
-    console.log("connectRes:"+connectRes)
-    if(connectRes!="true"){
+    console.log("connectRes:" + connectRes)
+    if (connectRes != "true") {
         result = {
             error: connectRes,
         };
         return result;
-    }else{
+    } else {
         //检查是否绑定
-        let bindCheckRes = DeviceManger.deviceBindCheck(FilePath);
-        if(bindCheckRes != "bound_this") {
+        let bindCheckRes = DeviceManger.deviceBindCheck(filePath);
+        if (bindCheckRes != "bound_this") {
             result = {
                 error: bindCheckRes,
             };
@@ -24,46 +23,48 @@ export function api(api_name, json) {
         }
     }
 
-    if (api_name == null) {
-        return "input api fuction is null"
+    if (apiName == null || apiName == "" || apiName.isUndefined) {
+        result = {
+            error: "input api fuction is null",
+        };
+        return result;
     }
-        // else if(api_name =="getSeid"){return DeviceManger.getSeid()}
-        // else if(api_name =="getSn"){ return DeviceManger.getSn()}
-        // else if(api_name =="getRamSize"){ return DeviceManger.getRamSize()}
-        // else if(api_name =="getFirmwareVersion"){ return DeviceManger.getFirmwareVersion()}
-        // else if(api_name =="getBatteryPower"){ return DeviceManger.getBatteryPower()}
-        // else if(api_name =="getLifeTime"){ return DeviceManger.getLifeTime()}
-        // else if(api_name =="getBleName"){ return DeviceManger.getBleName()}
-        // else if(api_name =="setBleName"){ return DeviceManger.setBleName()}
-        // else if(api_name =="getBleVersion"){ return DeviceManger.getBleVersion()}
-        // else if(api_name =="activeDevice"){ return DeviceManger.activeDevice()}
-        // else if(api_name =="checkDevice"){ return DeviceManger.checkDevice()}
-        // else if(api_name =="checkUpdate"){ return DeviceManger.checkUpdate()}
-        // else if(api_name =="downloadApplet"){ return DeviceManger.downloadApplet()}
-        // else if(api_name =="updateApplet"){ return DeviceManger.updateApplet()}
-        // else if(api_name =="deleteApplet"){ return DeviceManger.deleteApplet()}
-    // else if(api_name =="deviceBindCheck"){return DeviceManger.deviceBindCheck()}
-    else if (api_name == "transactionBTC") {
+        // else if(apiName =="getSeid"){return DeviceManger.getSeid()}
+        // else if(apiName =="getSn"){ return DeviceManger.getSn()}
+        // else if(apiName =="getRamSize"){ return DeviceManger.getRamSize()}
+        // else if(apiName =="getFirmwareVersion"){ return DeviceManger.getFirmwareVersion()}
+        // else if(apiName =="getBatteryPower"){ return DeviceManger.getBatteryPower()}
+        // else if(apiName =="getLifeTime"){ return DeviceManger.getLifeTime()}
+        // else if(apiName =="getBleName"){ return DeviceManger.getBleName()}
+        // else if(apiName =="setBleName"){ return DeviceManger.setBleName()}
+        // else if(apiName =="getBleVersion"){ return DeviceManger.getBleVersion()}
+        // else if(apiName =="activeDevice"){ return DeviceManger.activeDevice()}
+        // else if(apiName =="checkDevice"){ return DeviceManger.checkDevice()}
+        // else if(apiName =="checkUpdate"){ return DeviceManger.checkUpdate()}
+        // else if(apiName =="downloadApplet"){ return DeviceManger.downloadApplet()}
+        // else if(apiName =="updateApplet"){ return DeviceManger.updateApplet()}
+        // else if(apiName =="deleteApplet"){ return DeviceManger.deleteApplet()}
+    // else if(apiName =="deviceBindCheck"){return DeviceManger.deviceBindCheck()}
+    else if (apiName == "transactionBTC") {
         let response = walletApi.BitcoinTransaction_BTC(json)
-
-        if(response.getTxHash()=="" ||response.getTxHash()==null || response.getTxHash().isUndefined){
-             result = {
+        if (response.getTxHash() == "" || response.getTxHash() == null || response.getTxHash().isUndefined) {
+            result = {
                 error: response,
             };
-        }else {
-             result = {
+        } else {
+            result = {
                 txHash: response.getTxHash(),
                 txData: response.getTxData(),
             };
         }
         return result;
-    } else if (api_name == "transactionBTCSEGWIT") {
+    } else if (apiName == "transactionBTCSEGWIT") {
         let response = walletApi.BitcoinTransaction_BTC_SEGWIT(json)
-        if(response.getTxHash()=="" ||response.getTxHash()==null || response.getTxHash().isUndefined){
-             result = {
+        if (response.getTxHash() == "" || response.getTxHash() == null || response.getTxHash().isUndefined) {
+            result = {
                 error: response,
             };
-        }else {
+        } else {
             result = {
                 txHash: response.getTxHash(),
                 witnessTxData: response.getWitnessTxData(),
@@ -71,26 +72,26 @@ export function api(api_name, json) {
             };
         }
         return result;
-    } else if (api_name == "transactionBTCUSDT") {
+    } else if (apiName == "transactionBTCUSDT") {
         let response = walletApi.BitcoinTransaction_BTC_USDT(json)
-        if(response.getTxHash()=="" ||response.getTxHash()==null || response.getTxHash().isUndefined){
+        if (response.getTxHash() == "" || response.getTxHash() == null || response.getTxHash().isUndefined) {
             result = {
                 error: response,
             };
-        }else {
+        } else {
             result = {
                 txHash: response.getTxHash(),
                 txData: response.getTxData(),
             };
         }
         return result;
-    } else if (api_name == "transactionBTCUSDTSEGWIT") {
+    } else if (apiName == "transactionBTCUSDTSEGWIT") {
         let response = walletApi.BitcoinTransaction_BTC_USDT_SEGWIT(json)
-        if(response.getTxHash()=="" ||response.getTxHash()==null || response.getTxHash().isUndefined){
+        if (response.getTxHash() == "" || response.getTxHash() == null || response.getTxHash().isUndefined) {
             result = {
                 error: response,
             };
-        }else {
+        } else {
             result = {
                 txHash: response.getTxHash(),
                 witnessTxData: response.getWitnessTxData(),
@@ -98,32 +99,32 @@ export function api(api_name, json) {
             };
         }
         return result;
-    } else if (api_name == "transactionETHSIGNTX") {
+    } else if (apiName == "transactionETHSIGNTX") {
         let response = walletApi.ETHTransaction_sign_TX(json)
-        if(response.getTxHash()=="" ||response.getTxHash()==null || response.getTxHash().isUndefined){
+        if (response.getTxHash() == "" || response.getTxHash() == null || response.getTxHash().isUndefined) {
             result = {
                 error: response,
             };
-        }else {
+        } else {
             result = {
                 txHash: response.getTxHash(),
                 txData: response.getTxData(),
             };
         }
         return result;
-    } else if (api_name == "transactionETHSIGNMSG") {
+    } else if (apiName == "transactionETHSIGNMSG") {
         let response = walletApi.ETHTransaction_sign_MSG(json)
-        if(response.getSignature()=="" ||response.getSignature()==null || response.getSignature().isUndefined){
+        if (response.getSignature() == "" || response.getSignature() == null || response.getSignature().isUndefined) {
             result = {
                 error: response,
             };
-        }else {
+        } else {
             result = {
                 signature: response.getSignature(),
             };
         }
         return result;
-    } else if (api_name == "transactionEOSSIGNTX") {
+    } else if (apiName == "transactionEOSSIGNTX") {
         let response = walletApi.EOSTransaction_sign_TX(json)
         if (response.getHash() == "" || response.getHash() == null || response.getHash().isUndefined) {
             result = {
@@ -131,43 +132,43 @@ export function api(api_name, json) {
             };
             return result;
         } else {
-        let list = [];
-        for (let i = 0; i < response.length; i++) {
-            let tx_hash = response[i].getHash();
-            let signs = response[i].getSignsList();
-            result = {
-                tx_hash: tx_hash,
-                signs: signs
-            };
-            list.push(result);
+            let list = [];
+            for (let i = 0; i < response.length; i++) {
+                let tx_hash = response[i].getHash();
+                let signs = response[i].getSignsList();
+                result = {
+                    tx_hash: tx_hash,
+                    signs: signs
+                };
+                list.push(result);
+            }
+            return list;
         }
-        return list;
-    }
-    } else if (api_name == "transactionEOSSIGNMSG") {
+    } else if (apiName == "transactionEOSSIGNMSG") {
         let response = walletApi.EOSTransaction_sign_MSG(json)
-        if(response.getSignature()=="" ||response.getSignature()==null || response.getSignature().isUndefined){
+        if (response.getSignature() == "" || response.getSignature() == null || response.getSignature().isUndefined) {
             result = {
                 error: response,
             };
-        }else{
-        result = {
-            signature: response.getSignature(),
-        };
+        } else {
+            result = {
+                signature: response.getSignature(),
+            };
         }
         return result;
-    } else if (api_name == "transactionCOSMOSSIGNTX") {
+    } else if (apiName == "transactionCOSMOSSIGNTX") {
         let response = walletApi.COSMOSTransaction_sign_TX(json)
-        if(response.getTxHash()=="" ||response.getTxHash()==null || response.getTxHash().isUndefined){
+        if (response.getTxHash() == "" || response.getTxHash() == null || response.getTxHash().isUndefined) {
             result = {
                 error: response,
             };
-        }else{
+        } else {
             result = {
                 txHash: response.getTxHash(),
                 signature: response.getTxData(),
             };
         }
-       
+
         return result;
     } else {
         return "not found api function！ "

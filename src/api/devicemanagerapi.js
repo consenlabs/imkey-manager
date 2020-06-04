@@ -1,306 +1,226 @@
-// https://blog.csdn.net/spiritring/article/details/61975299
-// function getseid() {
-//
-//     let basepb = require('../proto/base_pb');
-//     // console.log(basepb);
-//
-//     let message = new basepb.SearchRequest();
-//     console.log(message);
-//
-//     message.setName("TS");
-//     message.setPassword("123456");
-//
-//     let bytes = message.serializeBinary();
-//     console.log(bytes);
-//
-//     let message2 = basepb.SearchRequest.deserializeBinary(bytes);
-//     console.log(message2);
-
 let api_pb = require('../proto/api_pb');
 let device_pb = require('../proto/device_pb');
-let GoToRust = require('./gotorust');
-let Constants = require('../common/Constants');
-let path = require('path');
+let callImKeyCore = require('./callimkeycore');
+let constants = require('../common/constants');
 
 function connect(deviceModelName) {
-
-    let Req = new device_pb.DeviceConnectReq();
-    Req.setDeviceModelName(deviceModelName);
-
-    let ReqBytes = Req.serializeBinary();
-    //any
-    let any1 = new proto.google.protobuf.Any();
-    any1.setValue(ReqBytes);
-    //ImkeyAction
-    let ImkeyAction = new api_pb.ImkeyAction();
-    ImkeyAction.setMethod("device_connect");
-    ImkeyAction.setParam(any1);
-    let ImkeyActionBytes = ImkeyAction.serializeBinary();
-
-    //调用rust库
-    let ResBuffer = GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
-    let Error = GoToRust.get_last_err_message();
-    if (Error == "" || Error == null) {
-
-        //rust库返回的数据解析
-        let Response = new api_pb.Response.deserializeBinary(HexStr2Bytes(ResBuffer));
-        let Result = Response.getError();
-        //获取解析后的值
-        if (Result == null || Result == '' || Result == "") {
-            Result = 'true';
+    let request = new device_pb.DeviceConnectReq();
+    request.setDeviceModelName(deviceModelName);
+    let requestBytes = request.serializeBinary();
+    let any = new proto.google.protobuf.Any();
+    any.setValue(requestBytes);
+    let imKeyAction = new api_pb.ImkeyAction();
+    imKeyAction.setMethod("device_connect");
+    imKeyAction.setParam(any);
+    let imKeyActionBytes = imKeyAction.serializeBinary();
+    let resBuffer = callImKeyCore.call_imkey_api(bytes2HexStr(imKeyActionBytes));
+    let error = callImKeyCore.get_last_err_message();
+    let result;
+    if (error === "" || error === null) {
+        let response = new api_pb.response.deserializeBinary(hexStr2Bytes(resBuffer));
+        result = response.getError();
+        if (result === null || result === '' || result === "") {
+            result = 'true';
         }
-        return Result;
-
+        return result;
     } else {
-        let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
-        return ErrorResponse.getError();
+        let errorResponse = new api_pb.response.deserializeBinary(hexStr2Bytes(error));
+        return errorResponse.getError();
     }
 }
 
-function getDevice_manage_fuc(method_) {
-
-    //ImkeyAction
-    let ImkeyAction = new api_pb.ImkeyAction();
-    ImkeyAction.setMethod(method_);
-    let ImkeyActionBytes = ImkeyAction.serializeBinary();
-
-    //调用rust库
-    let ResBuffer = GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
-    let Error = GoToRust.get_last_err_message();
-    if (Error == "" || Error == null) {
+function getDeviceManageFunction(method_) {
+    let imKeyAction = new api_pb.ImkeyAction();
+    imKeyAction.setMethod(method_);
+    let imKeyActionBytes = imKeyAction.serializeBinary();
+    let resBuffer = callImKeyCore.call_imkey_api(bytes2HexStr(imKeyActionBytes));
+    let error = callImKeyCore.get_last_err_message();
+    let result;
+    if (error === "" || error === null) {
         if (method_ === "get_seid") {
-            let Response = new device_pb.GetSeidRes.deserializeBinary(HexStr2Bytes(ResBuffer));
-            //获取解析后的值
-            let Result = Response.getSeid();
-            return Result;
+            let response = new device_pb.GetSeidRes.deserializeBinary(hexStr2Bytes(resBuffer));
+            result = response.getSeid();
         } else if (method_ === "get_sn") {
-            let Response = new device_pb.GetSnRes.deserializeBinary(HexStr2Bytes(ResBuffer));
-            //获取解析后的值
-            let Result = Response.getSn();
-            return Result;
+            let response = new device_pb.GetSnRes.deserializeBinary(hexStr2Bytes(resBuffer));
+            result = response.getSn();
         } else if (method_ === "get_ram_size") {
-            let Response = new device_pb.GetRamSizeRes.deserializeBinary(HexStr2Bytes(ResBuffer));
-            //获取解析后的值
-            let Result = Response.getRamSize();
-            return Result;
+            let response = new device_pb.GetRamSizeRes.deserializeBinary(hexStr2Bytes(resBuffer));
+            result = response.getRamSize();
         } else if (method_ === "get_firmware_version") {
-            let Response = new device_pb.GetFirmwareVersionRes.deserializeBinary(HexStr2Bytes(ResBuffer));
-            //获取解析后的值
-            let Result = Response.getFirmwareVersion();
-            return Result;
+            let response = new device_pb.GetFirmwareVersionRes.deserializeBinary(hexStr2Bytes(resBuffer));
+            result = response.getFirmwareVersion();
         } else if (method_ === "get_battery_power") {
-            let Response = new device_pb.GetBatteryPowerRes.deserializeBinary(HexStr2Bytes(ResBuffer));
-            //获取解析后的值
-            let Result = Response.getBatteryPower();
-            return Result;
+            let response = new device_pb.GetBatteryPowerRes.deserializeBinary(hexStr2Bytes(resBuffer));
+            result = response.getBatteryPower();
         } else if (method_ === "get_life_time") {
-            let Response = new device_pb.GetLifeTimeRes.deserializeBinary(HexStr2Bytes(ResBuffer));
-            //获取解析后的值
-            let Result = Response.getLifeTime();
-            return Result;
+            let response = new device_pb.GetLifeTimeRes.deserializeBinary(hexStr2Bytes(resBuffer));
+            result = response.getLifeTime();
         } else if (method_ === "get_ble_name") {
-            let Response = new device_pb.GetBleNameRes.deserializeBinary(HexStr2Bytes(ResBuffer));
-            //获取解析后的值
-            let Result = Response.getBleName();
-            return Result;
+            let response = new device_pb.GetBleNameRes.deserializeBinary(hexStr2Bytes(resBuffer));
+            result = response.getBleName();
         } else if (method_ === "set_ble_name") {
-            let Response = new device_pb.SetBleNameReq.deserializeBinary(HexStr2Bytes(ResBuffer));
-            //获取解析后的值
-            let Result = Response.getBleName();
-            return Result;
+            let response = new device_pb.SetBleNameReq.deserializeBinary(hexStr2Bytes(resBuffer));
+            result = response.getBleName();
         } else if (method_ === "get_ble_version") {
-            let Response = new device_pb.GetBleVersionRes.deserializeBinary(HexStr2Bytes(ResBuffer));
-            //获取解析后的值
-            let Result = Response.getBleVersion();
-            return Result;
+            let response = new device_pb.GetBleVersionRes.deserializeBinary(hexStr2Bytes(resBuffer));
+            result = response.getBleVersion();
         } else if (method_ === "get_sdk_info") {
-            let Response = new device_pb.GetSdkInfoRes.deserializeBinary(HexStr2Bytes(ResBuffer));
-            //获取解析后的值
-            let Result = Response.getSdkVersion();
-            return Result;
+            let response = new device_pb.GetSdkInfoRes.deserializeBinary(hexStr2Bytes(resBuffer));
+            result = response.getSdkVersion();
         } else if (method_ === "check_update") {
-            let Response = new device_pb.CheckUpdateRes.deserializeBinary(HexStr2Bytes(ResBuffer));
-            //获取解析后的值
-            let Result = Response.toObject();
-            return Result;
+            let response = new device_pb.CheckUpdateRes.deserializeBinary(hexStr2Bytes(resBuffer));
+            result = response.toObject();
         } else {//method_ === "device_activate"||"device_secure_check"||"bind_display_code"
-            //rust库返回的数据解析
-            let Response = new api_pb.Response.deserializeBinary(HexStr2Bytes(ResBuffer));
-            let Result = Response.getError();
-            //获取解析后的值
-            if (Result == null || Result == '' || Result == "") {
-                Result = 'true';
+            let response = new api_pb.response.deserializeBinary(hexStr2Bytes(resBuffer));
+            result = response.getError();
+            if (result === null || result === '' || result === "") {
+                result = 'true';
             } else {
-                Result = 'false';
+                result = 'false';
             }
-            return Result;
         }
+        return result;
     } else {
-        let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
-        console.log("ErrorResponse.getError():" + ErrorResponse.getError())
-        return ErrorResponse.getError();
+        let errorResponse = new api_pb.response.deserializeBinary(hexStr2Bytes(error));
+        return errorResponse.getError();
     }
 }
 
 function AppletManage(method_, appName) {
-    let Req;
-    if (method_ == "app_download") {
-        Req = new device_pb.AppDownloadReq();
-        Req.setAppName(appName);
+    let request;
+    if (method_ === "app_download") {
+        request = new device_pb.AppDownloadReq();
+        request.setAppName(appName);
     }
-    if (method_ == "app_update") {
-        Req = new device_pb.AppUpdateReq();
-        Req.setAppName(appName);
+    if (method_ === "app_update") {
+        request = new device_pb.AppUpdateReq();
+        request.setAppName(appName);
     }
-    if (method_ == "app_delete") {
-        Req = new device_pb.AppDeleteReq();
-        Req.setAppName(appName);
+    if (method_ === "app_delete") {
+        request = new device_pb.AppDeleteReq();
+        request.setAppName(appName);
     }
-    let ReqBytes = Req.serializeBinary();
-    //any
-    let any1 = new proto.google.protobuf.Any();
-    any1.setValue(ReqBytes);
-    //ImkeyAction
-    let ImkeyAction = new api_pb.ImkeyAction();
-    ImkeyAction.setMethod(method_);
-    ImkeyAction.setParam(any1);
-    let ImkeyActionBytes = ImkeyAction.serializeBinary();
-    //调用rust库
-    let ResBuffer = GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
-    let Error = GoToRust.get_last_err_message();
-    if (Error == "" || Error == null) {
-
-        //rust库返回的数据解析
-        let Response = new api_pb.Response.deserializeBinary(HexStr2Bytes(ResBuffer));
-        let Result = Response.getError();
-        //获取解析后的值
-        if (Result == null || Result == '' || Result == "") {
-            Result = 'true';
+    let requestBytes = request.serializeBinary();
+    let any = new proto.google.protobuf.Any();
+    any.setValue(requestBytes);
+    let imKeyAction = new api_pb.ImkeyAction();
+    imKeyAction.setMethod(method_);
+    imKeyAction.setParam(any);
+    let imKeyActionBytes = imKeyAction.serializeBinary();
+    let resBuffer = callImKeyCore.call_imkey_api(bytes2HexStr(imKeyActionBytes));
+    let error = callImKeyCore.get_last_err_message();
+    let result;
+    if (error === "" || error === null) {
+        let response = new api_pb.response.deserializeBinary(hexStr2Bytes(resBuffer));
+        result = response.getError();
+        if (result === null || result === '' || result === "") {
+            result = 'true';
         } else {
-            Result = 'false';
+            result = 'false';
         }
-        return Result;
-
+        return result;
     } else {
-        let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
-        return ErrorResponse.getError();
+        let errorResponse = new api_pb.response.deserializeBinary(hexStr2Bytes(error));
+        return errorResponse.getError();
     }
-
 }
 
-function bindCheck(FilePath) {
-    console.log("=================FilePath=============:" + FilePath)
-    //BindCheckReq
-    let BindCheckReq = new device_pb.BindCheckReq();
-    BindCheckReq.setFilePath(FilePath);
-    let BindCheckReqBytes = BindCheckReq.serializeBinary();
-    //any
+function bindCheck(filePath) {
+    let bindCheckReq = new device_pb.BindCheckReq();
+    bindCheckReq.setFilePath(filePath);
+    let bindCheckReqBytes = bindCheckReq.serializeBinary();
     let any = new proto.google.protobuf.Any();
-    any.setValue(BindCheckReqBytes);
-
-    //ImkeyAction
-    let ImkeyAction = new api_pb.ImkeyAction();
-    ImkeyAction.setMethod("bind_check");
-    ImkeyAction.setParam(any);
-    let ImkeyActionBytes = ImkeyAction.serializeBinary();
-    //调用rust库
-    let ResBuffer = GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
-    //rust库返回的数据解析
-    let Error = GoToRust.get_last_err_message();
-    if (Error == "" || Error == null) {
-        let Response = new device_pb.BindCheckRes.deserializeBinary(HexStr2Bytes(ResBuffer));
-        // console.log(" Response.getBindStatus():" + Response.getBindStatus())
-        return Response.getBindStatus();
+    any.setValue(bindCheckReqBytes);
+    let imKeyAction = new api_pb.ImkeyAction();
+    imKeyAction.setMethod("bind_check");
+    imKeyAction.setParam(any);
+    let imKeyActionBytes = imKeyAction.serializeBinary();
+    let resBuffer = callImKeyCore.call_imkey_api(bytes2HexStr(imKeyActionBytes));
+    let error = callImKeyCore.get_last_err_message();
+    if (error === "" || error === null) {
+        let response = new device_pb.BindCheckRes.deserializeBinary(hexStr2Bytes(resBuffer));
+        return response.getBindStatus();
     } else {
-        let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
-        return ErrorResponse.getError();
+        let errorResponse = new api_pb.response.deserializeBinary(hexStr2Bytes(error));
+        return errorResponse.getError();
     }
 }
 
 function bindAcquire(bindCode) {
-    //BindAcquireReq
-    let BindAcquireReq = new device_pb.BindAcquireReq();
-    BindAcquireReq.setBindCode(bindCode);
-    let BindCheckReqBytes = BindAcquireReq.serializeBinary();
-    //any
+    let bindAcquireReq = new device_pb.BindAcquireReq();
+    bindAcquireReq.setBindCode(bindCode);
+    let bindAcquireReqBytes = bindAcquireReq.serializeBinary();
     let any = new proto.google.protobuf.Any();
-    any.setValue(BindCheckReqBytes);
-
-    //ImkeyAction
-    let ImkeyAction = new api_pb.ImkeyAction();
-    ImkeyAction.setMethod("bind_acquire");
-    ImkeyAction.setParam(any);
-    let ImkeyActionBytes = ImkeyAction.serializeBinary();
-    //调用rust库
-    let ResBuffer = GoToRust.call_imkey_api(Bytes2HexStr(ImkeyActionBytes));
-    //rust库返回的数据解析
-    let Error = GoToRust.get_last_err_message();
-    if (Error == "" || Error == null) {
-        let Response = new device_pb.BindAcquireRes.deserializeBinary(HexStr2Bytes(ResBuffer));
-        // console.log(" Response.getBindResult():" + Response.getBindResult())
-        if (Response.getBindResult() == "success") {
+    any.setValue(bindAcquireReqBytes);
+    let imKeyAction = new api_pb.ImkeyAction();
+    imKeyAction.setMethod("bind_acquire");
+    imKeyAction.setParam(any);
+    let imKeyActionBytes = imKeyAction.serializeBinary();
+    let resBuffer = callImKeyCore.call_imkey_api(bytes2HexStr(imKeyActionBytes));
+    let error = callImKeyCore.get_last_err_message();
+    if (error === "" || error === null) {
+        let response = new device_pb.BindAcquireRes.deserializeBinary(hexStr2Bytes(resBuffer));
+        if (response.getBindResult() === "success") {
             return "true"
         } else {
-            return Response.getBindResult();
+            return response.getBindResult();
         }
-
     } else {
-        let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
-        return ErrorResponse.getError();
+        let errorResponse = new api_pb.response.deserializeBinary(hexStr2Bytes(error));
+        return errorResponse.getError();
     }
 }
 
-
 function getSeid() {
-    return getDevice_manage_fuc("get_seid");
+    return getDeviceManageFunction("get_seid");
 }
 
 function getSn() {
-    return getDevice_manage_fuc("get_sn");
+    return getDeviceManageFunction("get_sn");
 }
 
 function getRamSize() {
-    return parseInt(getDevice_manage_fuc("get_ram_size").substring(4, 8), 16);
+    return parseInt(getDeviceManageFunction("get_ram_size").substring(4, 8), 16);
 }
 
 function getFirmwareVersion() {
-    let FirmwareVersion = getDevice_manage_fuc("get_firmware_version");
+    let FirmwareVersion = getDeviceManageFunction("get_firmware_version");
     return FirmwareVersion.substring(0, 1) + "." + FirmwareVersion.substring(1, 2) + "." + FirmwareVersion.substring(2);
 }
 
 function getBatteryPower() {
 
-    let batteryPower = getDevice_manage_fuc("get_battery_power");
-    if (batteryPower != Constants.BATTERY_CHARGING_SIGN) {
+    let batteryPower = getDeviceManageFunction("get_battery_power");
+    if (batteryPower != constants.BATTERY_CHARGING_SIGN) {
         batteryPower = parseInt(batteryPower, 16).toString();
     }
     return batteryPower;
 }
 
 function getLifeTime() {
-    let res = getDevice_manage_fuc("get_life_time");
+    let res = getDeviceManageFunction("get_life_time");
     switch (res) {
         case "80":
-            return Constants.LIFE_TIME_DEVICE_INITED;
+            return constants.LIFE_TIME_DEVICE_INITED;
         case "89":
-            return Constants.LIFE_TIME_DEVICE_ACTIVATED;
+            return constants.LIFE_TIME_DEVICE_ACTIVATED;
         case "81":
-            return Constants.LIFE_TIME_UNSET_PIN;
+            return constants.LIFE_TIME_UNSET_PIN;
         case "83":
-            return Constants.LIFE_TIME_WALLET_UNREADY;
+            return constants.LIFE_TIME_WALLET_UNREADY;
         case "84":
-            return Constants.LIFE_TIME_WALLET_CREATTING;
+            return constants.LIFE_TIME_WALLET_CREATTING;
         case "85":
-            return Constants.LIFE_TIME_WALLET_RECOVERING;
+            return constants.LIFE_TIME_WALLET_RECOVERING;
         case "86":
-            return Constants.LIFE_TIME_WALLET_READY;
+            return constants.LIFE_TIME_WALLET_READY;
         default:
-            return Constants.LIFE_TIME_UNKNOWN;
+            return constants.LIFE_TIME_UNKNOWN;
     }
 }
 
 function getBleName() {
-    return getDevice_manage_fuc("get_ble_name");
+    return getDeviceManageFunction("get_ble_name");
 }
 
 function setBleName(bleName) {
@@ -308,33 +228,33 @@ function setBleName(bleName) {
     // if(!matches(regEx, bleName)) {
     //     throw new ImkeyException(Messages.IMKEY_SDK_ILLEGAL_ARGUMENT);
     // }
-    return Bytes2Str(getDevice_manage_fuc("set_ble_name"));
+    return bytes2Str(getDeviceManageFunction("set_ble_name"));
 }
 
 function getBleVersion() {
-    let bleVersion = getDevice_manage_fuc("get_ble_version").substring(0, 4);
+    let bleVersion = getDeviceManageFunction("get_ble_version").substring(0, 4);
     return bleVersion.substring(0, 1) + "." + bleVersion.substring(1, 2) + "." + bleVersion.substring(2);
-    return Bytes2Str(HexStr2Bytes(getDevice_manage_fuc("get_ble_version")));
+    return bytes2Str(hexStr2Bytes(getDeviceManageFunction("get_ble_version")));
 }
 
 function getSdkInfo() {
-    return getDevice_manage_fuc("get_sdk_info");
+    return getDeviceManageFunction("get_sdk_info");
 }
 
 function activeDevice() {
-    return getDevice_manage_fuc("device_activate");
+    return getDeviceManageFunction("device_activate");
 }
 
 function cosUpdate() {
-    return getDevice_manage_fuc("cos_update");
+    return getDeviceManageFunction("cos_update");
 }
 
 function checkDevice() {
-    return getDevice_manage_fuc("device_secure_check");
+    return getDeviceManageFunction("device_secure_check");
 }
 
 function checkUpdate() {
-    return getDevice_manage_fuc("check_update");
+    return getDeviceManageFunction("check_update");
 }
 
 function downloadApplet(AppName) {
@@ -349,8 +269,8 @@ function deleteApplet(AppName) {
     return AppletManage("app_delete", AppName);
 }
 
-function deviceBindCheck(FilePath) {
-    return bindCheck(FilePath);
+function deviceBindCheck(filePath) {
+    return bindCheck(filePath);
 }
 
 function deviceBindAcquire(bindCode) {
@@ -358,26 +278,8 @@ function deviceBindAcquire(bindCode) {
 }
 
 function deviceBindDisplay() {
-    return getDevice_manage_fuc("bind_display_code");
+    return getDeviceManageFunction("bind_display_code");
 }
-
-// console.log( "getSeid:"+getSeid());
-// console.log( "getSn:"+getSn());
-// console.log( "getRamSize:"+getRamSize());
-// console.log( "getFirmwareVersion:"+getFirmwareVersion());
-// console.log( "getBatteryPower:"+getBatteryPower());
-// console.log( "getLifeTime:"+getLifeTime());
-// console.log( "getBleName:"+getBleName());
-// console.log( "setBleName:"+setBleName());
-// console.log( "getBleVersion:"+getBleVersion());
-
-
-// console.log( "activeDevice:"+activeDevice());
-// console.log( "checkDevice:"+checkDevice());
-// console.log( "checkUpdate:"+checkUpdate());
-// console.log( "downloadApplet:"+downloadApplet());
-// console.log( "updateApplet:"+updateApplet());
-// console.log( "deleteApplet:"+deleteApplet());
 
 module.exports = {
     connect,
@@ -404,9 +306,11 @@ module.exports = {
 }
 
 /**
- * @desc 二进制数组转字符串
+ *  @desc 二进制数组转字符串
+ * @param arr
+ * @returns {string}
  */
-function Bytes2Str(arr) {
+function bytes2Str(arr) {
     let str = "";
     for (let i = 0; i < arr.length; i++) {
         let tmp = String.fromCharCode(arr[i]);
@@ -420,8 +324,10 @@ function Bytes2Str(arr) {
 
 /**
  * @desc 二进制数组转十六进制字符串
+ * @param arr
+ * @returns {string}
  */
-function Bytes2HexStr(arr) {
+function bytes2HexStr(arr) {
     let str = "";
     for (let i = 0; i < arr.length; i++) {
         let tmp = arr[i].toString(16);
@@ -433,10 +339,12 @@ function Bytes2HexStr(arr) {
     return str;
 }
 
-/*
-* @desc 十六进制字符串转二进制数组
-*/
-function HexStr2Bytes(str) {
+/**
+ *  @desc 十六进制字符串转二进制数组
+ * @param str
+ * @returns {any[]|null}
+ */
+function hexStr2Bytes(str) {
     let pos = 0;
     let len = str.length;
     if (len % 2 != 0) {

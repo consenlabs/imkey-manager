@@ -1,33 +1,31 @@
 <template>
     <div class="manager">
-        <NoticeBox  :noticeVisible="noticeVisible"
-                    @closeNotice="closeErrorView"></NoticeBox>
+        <NoticeBox :noticeVisible="noticeVisible"
+                   @closeNotice="closeErrorView"></NoticeBox>
         <h1>{{$t('m.manager.manager')}}</h1>
         <p class="notice">
             <span>{{$t('m.manager.install_uninstall_apps')}}</span>
-<!--            <span>-->
-<!--        Need Help?-->
-<!--        <i class="el-icon-connection" @click="help"></i>-->
-<!--      </span>-->
         </p>
         <div class="deviceBox">
             <div class="contentBox">
-                <!-- <img src="../../assets/miniDevice.png" style="width:40px;height:auto" alt /> -->
                 <deviceImage :mini="true" :line="false"></deviceImage>
                 <div class="deviceName">
                     <h3>imKey Pro</h3>
                     <p>{{$t('m.manager.firmware_version')}} {{oldVersionData}}</p>
                 </div>
             </div>
-            <div v-if="!updateSuccess">
+            <div v-if="updateSuccess">
                 <span class="updateMsg">{{$t('m.manager.firmware_is')}} {{newVersionData}} {{$t('m.manager.available')}}</span>
-                <el-button type="primary" @click="updateVersion" size="small" :loading="loading">{{$t('m.manager.update')}}</el-button>
+                <el-button type="primary" @click="updateVersion" size="small" :loading="loading">
+                    {{$t('m.manager.update')}}
+                </el-button>
             </div>
         </div>
         <div class="appBox">
             <h1>{{$t('m.manager.app_catalog')}}</h1>
-            <el-input prefix-icon="el-icon-search" v-model="appName" :placeholder="$t('m.manager.search_app')"></el-input>
-            <div class="appContent" >
+            <el-input prefix-icon="el-icon-search" v-model="appName"
+                      :placeholder="$t('m.manager.search_app')"></el-input>
+            <div class="appContent">
                 <div v-for="(item,index) in getApps" :key="item.id" class="appItem">
                     <div class="leftContent">
                         <img :src="item.icon" alt="/"/>
@@ -46,7 +44,7 @@
                                     type="primary"
                                     size="small"
                                     :disabled="item.installDis"
-                                    :loading="item.installLoding"
+                                    :loading="item.installLoading"
                                     @click="intall(item,index)"
                             >{{$t('m.manager.install')}}
                             </el-button>
@@ -54,8 +52,8 @@
                                     type="danger"
                                     size="small"
                                     @click="delet(item,index)"
-                                    :disabled="item.deletDis"
-                                    :loading="item.deletLoding"
+                                    :disabled="item.deleteDis"
+                                    :loading="item.deleteLoading"
                                     class="el-icon-delete"
                             ></el-button>
                         </div>
@@ -69,9 +67,10 @@
 <script>
     import deviceImage from "../../components/deviceImage";
     import {
-        connect_device, cosUpdate, cosCheckUpdate,getAppList, downloadApplet, deleteApplet, getFirmwareVersion
+        connect_device, cosUpdate, cosCheckUpdate, getAppList, downloadApplet, deleteApplet, getFirmwareVersion
     } from '../../../api/devicemanager'
     import NoticeBox from "@/components/noticeDialog";
+
     export default {
         name: "manager",
         data() {
@@ -80,13 +79,13 @@
                 isSuccess: false,
                 oldVersionData: "",
                 newVersionData: "",
-                updateSuccess: true,
+                updateSuccess: false,
                 loading: false,
                 apps: [],
-                noticeVisible:false,
-                isLatest:false,
-                updateType:"",
-                description:""
+                noticeVisible: false,
+                isLatest: false,
+                updateType: "",
+                description: ""
             };
         },
         components: {
@@ -107,24 +106,30 @@
             }
         },
         mounted() {
-            setTimeout(() => {
-            this.init();
-            }, 10);
+                this.init();
         },
         methods: {
-            init(){
+            init() {
                 connect_device().then(result => {
-
                     if (result.code === 200) {
                         const res = result.data
-                        console.log("res:" + res)
                         if (res == "true") {
-                            console.log("success res " + res)
-                            this.getFirmwareVersion();
+                            if (this.$store.state.updateSuccess == false) {
+                                this.getFirmwareVersion();
+                            } else {
+                                this.updateSuccess = this.$store.state.updateSuccess;
+                                this.oldVersionData = this.$store.state.oldVersionData;
+                                this.newVersionData = this.$store.state.newVersionData;
+                                if (this.$store.state.apps == "" || this.$store.state.apps == null || this.$store.state.apps == []) {
+                                    //加载应用
+                                    this.AppsList();
+                                } else {
+                                    this.apps = this.$store.state.apps;
+                                    this.isSuccess = true;
+                                }
+                            }
                         } else {
-                            console.log("redwdsdss" + res)
                             this.router.replace("/manager/connect");
-
                         }
                     } else {
                         this.router.replace("/manager/connect");
@@ -133,30 +138,46 @@
                     this.router.replace("/manager/connect");
                 })
             },
-            compareByFirmwareVersion(){
+            compareByFirmwareVersion() {
                 //如果cos版本不一致，提示用户更新
-                if(this.newVersionData ==null || this.newVersionData ==""){
-                    this.updateSuccess=true;
-                }else{
-                if(this.oldVersionData == this.newVersionData){
-                    this.updateSuccess=true;
-                }else {
-                    //显示要更新的按钮
+                if (this.newVersionData == null || this.newVersionData == "") {
                     this.updateSuccess = false;
-                    //提示更新信息
-                    this.openErrorView(this.description)
+                } else {
+                    if (this.oldVersionData == this.newVersionData) {
+                        this.updateSuccess = false;
+                    } else {
+                        //显示要更新的按钮
+                        this.updateSuccess = true;
+                        this.$store.state.updateSuccess = true;
+                        this.$store.state.newVersionData = this.newVersionData;
+                        //提示更新信息
+                        this.openErrorView(this.description)
+                    }
                 }
+                if (this.$store.state.apps == "" || this.$store.state.apps == null || this.$store.state.apps == []) {
+                    //加载应用
+                    this.AppsList();
+                } else {
+                    this.apps = this.$store.state.apps;
+                    this.isSuccess = true;
                 }
-                //加载应用
-                this.AppsList();
-
+            },
+            copyArr(arr) {
+                return arr.map((e) => {
+                    if (typeof e === 'object') {
+                        return Object.assign({}, e)
+                    } else {
+                        return e
+                    }
+                })
             },
             getFirmwareVersion() {
                 getFirmwareVersion().then(result => {
                     if (result.code === 200) {
                         this.oldVersionData = result.data;
+                        this.$store.state.oldVersionData = result.data;
                         this.getCheckCosUpdate();
-                    }else{
+                    } else {
                         this.openErrorView(result.message);
                     }
                 }).catch(err => {
@@ -172,26 +193,26 @@
                         this.description = result.data.description;
                         //对比COS版本，提示用户是否升级
                         this.compareByFirmwareVersion();
-                    }else{
+                    } else {
                         this.openErrorView(result.message);
                     }
                 }).catch(err => {
                     this.openErrorView(err);
                 })
             },
-            getcosupdate() {
-                // this.connect();
+            getCosUpdate() {
                 cosUpdate().then(result => {
                     if (result.code === 200) {
                         if (result.data == "true") {
                             this.loading = false;
-                            this.updateSuccess = true;
+                            this.updateSuccess = false;
                             this.oldVersionData = this.newVersionData;
                         } else {
+                            this.updateSuccess = true;
                             this.loading = false;
                             this.openErrorView(result.data);
                         }
-                    }else{
+                    } else {
                         this.loading = false;
                         this.openErrorView(result.message);
                     }
@@ -202,14 +223,10 @@
             },
             connect() {
                 connect_device().then(result => {
-
                     if (result.code === 200) {
                         const res = result.data
-                        console.log("res:" + res)
                         if (res == "true") {
-                            console.log("success res " + res)
                         } else {
-                            console.log("redwdsdss" + res)
                             this.router.replace("/manager/connect");
 
                         }
@@ -221,10 +238,10 @@
                 })
             },
             AppsList() {
-                // this.connect();
                 getAppList().then(result => {
                     if (result.code === 200) {
-                        this.apps = result.data.list
+                        this.apps = result.data.list;
+                        this.$store.state.apps = result.data.list;
                         this.isSuccess = true;
                         // const total = result.data.total
                     } else {
@@ -237,33 +254,33 @@
             updateVersion() {
                 this.loading = true;
                 setTimeout(() => {
-                    this.getcosupdate();
+                    this.getCosUpdate();
                 }, 200);
 
             },
             intall(item, index) {
                 this.connect();
-                this.apps[index].installLoding = true;
-                this.apps[index].deletLoding = false;
+                this.apps[index].installLoading = true;
+                this.apps[index].deleteLoading = false;
 
                 setTimeout(() => {
                     downloadApplet(item.name).then(result => {
                         if (result.code === 200) {
 
                             if (result.data == "true") {
-                                this.apps[index].deletDis = false;
+                                this.apps[index].deleteDis = false;
                                 this.apps[index].installDis = true;
-                                this.apps[index].installLoding = false;
+                                this.apps[index].installLoading = false;
                             } else {
-                                this.apps[index].installLoding = false;
+                                this.apps[index].installLoading = false;
                                 this.openErrorView(result.data);
                             }
-                        }else{
-                            this.apps[index].installLoding = false;
+                        } else {
+                            this.apps[index].installLoading = false;
                             this.openErrorView(result.message);
                         }
                     }).catch(err => {
-                        this.apps[index].installLoding = false;
+                        this.apps[index].installLoading = false;
                         this.openErrorView(err);
 
                     })
@@ -271,38 +288,32 @@
             },
             delet(item, index) {
                 this.connect();
-                this.apps[index].deletLoding = true;
-                this.apps[index].installLoding = false;
+                this.apps[index].deleteLoading = true;
+                this.apps[index].installLoading = false;
                 setTimeout(() => {
                     deleteApplet(item.name).then(result => {
                         if (result.code === 200) {
 
                             if (result.data == "true") {
-                                this.apps[index].deletDis = true;
+                                this.apps[index].deleteDis = true;
                                 this.apps[index].installDis = false;
-                                this.apps[index].deletLoding = false;
+                                this.apps[index].deleteLoading = false;
                             } else {
-                                this.apps[index].deletLoding = false;
+                                this.apps[index].deleteLoading = false;
                                 this.openErrorView(result.data);
                             }
-                        }else{
+                        } else {
                             this.openErrorView(result.message);
                         }
                     }).catch(err => {
-                        this.apps[index].deletLoding = false;
+                        this.apps[index].deleteLoading = false;
                         this.openErrorView(err);
                     })
                 }, 200);
             },
-            help() {
-                window.open(
-                    "https://support.imkey.im/hc/zh-cn/articles/360019656954-如何设置与修改-PIN-码",
-                    "_blank",
-                    "scrollbars=yes,resizable=1,modal=false,alwaysRaised=yes"
-                );
-            },
+           
             openErrorView(msg) {
-                this.$store.state.message=msg
+                this.$store.state.message = msg
                 this.noticeVisible = true;
 
             },
@@ -375,7 +386,6 @@
             box-sizing: border-box;
             padding: 0 20px;
             display: flex;
-            /*justify-content: space-between;*/
             align-items: center;
 
             p {
@@ -386,7 +396,6 @@
                 width: 40px;
                 height: 40px;
                 margin-right: 10px;
-                /*margin-top: 30px;*/
             }
 
             .leftContent,
@@ -403,7 +412,6 @@
                 display: flex;
                 justify-content: flex-start;
                 align-items: center;
-                /*margin:20px;*/
             }
         }
     }

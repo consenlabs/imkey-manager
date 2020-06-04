@@ -12,10 +12,7 @@
                     <span class="el-icon-link" @click="seeOne"></span>
                 </div>
                 <div>
-                    <el-checkbox v-model="IseeOnes" label></el-checkbox>
-
-                    <!-- <span v-if="IseeOnes" class="el-icon-check"></span>
-                    <el-button v-else type="primary" size="small" @click="IseeOne">I See</el-button>-->
+                    <el-checkbox v-model="isSeeOne" label></el-checkbox>
                 </div>
             </div>
             <div class="selectBox">
@@ -25,23 +22,10 @@
                     <span class="el-icon-link" @click="seeTwo"></span>
                 </div>
                 <div>
-                    <el-checkbox v-model="IseeTwos" label></el-checkbox>
-
-                    <!-- <span v-if="IseeTwos" class="el-icon-check"></span>
-                    <el-button v-else type="primary" size="small" @click="IseeTwo">I See</el-button>-->
+                    <el-checkbox v-model="isSeeTwos" label></el-checkbox>
                 </div>
             </div>
             <el-button type="primary" style="width:100%" :loading="nextLoading" @click="connect">{{$t('m.stepThree.next')}}</el-button>
-            <!-- <div class="selectBox"> -->
-
-            <!-- <p class="text">
-                <span class="sort"></span>
-                <span>To Next</span>
-              </p>
-              <div>
-                <el-button type="primary" style="width:123px" @click="next">Next</el-button>
-            </div>-->
-            <!-- </div> -->
         </div>
         <OptionOne :optionOneVisible="optionOneVisible" @closeOneBox="closeOneBox($event)"></OptionOne>
         <OptionTwo :optionTwoVisible="optionTwoVisible" @closeTwoBox="closeTwoBox($event)"></OptionTwo>
@@ -54,7 +38,7 @@
     import {
         getBTC_Xpub_,
     } from '../../../../api/walletapi'
-    import {connect_device, deleteApplet} from "../../../../api/devicemanager";
+    import {connect_device,} from "../../../../api/devicemanager";
     import NoticeBox from "@/components/noticeDialog";
     export default {
         name: "Home",
@@ -62,11 +46,10 @@
             return {
                 optionOneVisible: false,
                 optionTwoVisible: false,
-                IseeOnes: true,
-                IseeTwos: true,
+                isSeeOne: true,
+                isSeeTwos: true,
                 nextLoading: false,
                 noticeVisible:false
-
             };
         },
         components: {
@@ -95,7 +78,6 @@
                 }).catch(err => {
                     this.openErrorView(err);
                 })
-
             },
             seeOne() {
                 this.optionOneVisible = true;
@@ -104,17 +86,14 @@
                 this.optionTwoVisible = true;
             },
             next() {
-                if (this.IseeOnes && this.IseeTwos) {
+                if (this.isSeeOne && this.isSeeTwos) {
                     this.nextLoading = true;
                     //判断是否创建钱包
                     setTimeout(() => {
                         getBTC_Xpub_().then(result => {
                             if (result.code === 200) {
-                                console.log("getBTC_Xpub_:" + result.data)
                                 if (result.data != "" || result.data != null) {
                                     if (result.data.match("xpu")) {
-                                        console.log("getBTC_Xpub_:" + result.data)
-                                        // this.$emit("showFour", true);
                                         this.$emit("finish");
                                     } else {
                                         this.openErrorView("please create wallet");
@@ -143,17 +122,17 @@
                 this.$emit("showThree", true);
             },
             IseeOne() {
-                this.IseeOnes = true;
+                this.isSeeOne = true;
             },
             IseeTwo() {
-                this.IseeTwos = true;
+                this.isSeeTwos = true;
             },
             openErrorView(msg) {
                 this.nextLoading=false;
                 this.$store.state.message=msg;
                 this.noticeVisible = true;
-                this.IseeOnes=false;
-                this.IseeTwos=false;
+                this.isSeeOne=false;
+                this.isSeeTwos=false;
             },
             closeErrorView(msg) {
                 this.noticeVisible = false;

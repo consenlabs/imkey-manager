@@ -10,11 +10,11 @@ export const m = {
         connect_success:"connect success",
         connecting:"Connecting",
         check_BL:"Check BL",
+        upgrading_firmware:"Upgrading firmware",
         check_active:"Check Active",
         active_success:"Active Success",
         check_bind:"Check Bind",
         check_create_wallet:"Check Create Wallet",
-        upgrading_firmware:"Upgrading firmware"
     },
     step:{
         connect: "Connect",

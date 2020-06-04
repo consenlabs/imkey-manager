@@ -132,16 +132,6 @@
     }
 
     .device .deviceBoxLarge {
-        // .circle{
-        //   width: 15px;
-        //   height: 15px;
-        // }
-        /*li {*/
-        /*  width: 10px;*/
-        /*  height: 10px;*/
-        /*  margin: 8px;*/
-        /*}*/
-
         .menu {
             left: -30px;
             bottom: 10px;
@@ -176,8 +166,6 @@
     }
 
     .deviceBoxLarge .line {
-        // background-color: #dcdcdc;
-
         border-bottom: none;
         top: 250px;
         left: 15px;

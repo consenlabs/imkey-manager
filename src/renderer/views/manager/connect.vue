@@ -4,7 +4,6 @@
                     @closeNotice="closeErrorView"></NoticeBox>
         <h1 class="deviceImg">
             <deviceImage :large="true"></deviceImage>
-            <!-- <img style="width:370px;height:150px" src="../../assets/device.png" alt /> -->
         </h1>
         <h1>{{$t('m.connect.connect_imKey')}}</h1>
         <p class="sideTtile">{{$t('m.connect.follow_steps')}}</p>
@@ -15,33 +14,18 @@
             <i class="el-icon-setting"></i>
             {{$t('m.connect.connect_imKey_to_computer')}}
           </span>
-                    <!-- <div v-if="showOne">
-                      <span v-if="firstLoding" class="el-icon-loading"></span>
-                      <span v-if="!firstLoding&&firstSuccess" class="el-icon-check"></span>
-                      <span v-if="!firstLoding&&!firstSuccess" class="el-icon-close"></span>
-                    </div>-->
                 </li>
                 <li :class="activeTwo?'active':''">
           <span>
             <i class="el-icon-news"></i>
             {{$t('m.connect.click_connect')}}
           </span>
-                    <!-- <div v-if="showTwo">
-                      <span v-if="SecondLoding" class="el-icon-loading"></span>
-                      <span v-if="!SecondLoding&&SecondSuccess" class="el-icon-check"></span>
-                      <span v-if="!SecondLoding&&!SecondSuccess" class="el-icon-close"></span>
-                    </div>-->
                 </li>
                 <li :class="activeThree?'active':''">
           <span>
             <i class="el-icon-set-up"></i>
             {{$t('m.connect.enter_pin_imKey')}}
           </span>
-                    <!-- <div v-if="showThree">
-                      <span v-if="thirdLoding" class="el-icon-loading"></span>
-                      <span v-if="!thirdLoding&&thirdSuccess" class="el-icon-check"></span>
-                      <span v-if="!thirdLoding&&!thirdSuccess" class="el-icon-close"></span>
-                    </div>-->
                 </li>
             </ul>
             <el-button type="primary" @click="connect" :loading="connectLoading" style="width:100%">{{$t('m.connect.connect')}}</el-button>
@@ -61,18 +45,9 @@
         data() {
             return {
                 connectLoading: false,
-                firstLoding: false,
-                firstSuccess: false,
-                SecondSuccess: false,
-                SecondLoding: false,
-                thirdSuccess: false,
-                thirdLoding: false,
                 activeOne: false,
                 activeTwo: false,
                 activeThree: false,
-                showThree: false,
-                showTwo: false,
-                showOne: false,
                 noticeVisible:false
             };
         },
@@ -114,38 +89,6 @@
             this.noticeVisible = false;
         }
 
-            // connectOne() {
-            //   this.showOne = true;
-            //   this.firstLoding = true;
-            //   this.activeOne = true;
-            //   setTimeout(() => {
-            //     this.firstLoding = false;
-            //     this.firstSuccess = true;
-            //   }, 2000);
-            // },
-            // connectTwo() {
-            //   this.activeOne = false;
-            //   this.SecondLoding = true;
-            //   this.activeTwo = true;
-            //   this.showTwo = true;
-            //   setTimeout(() => {
-            //     this.SecondLoding = false;
-            //     this.SecondSuccess = true;
-            //     this.thirdLoding = true;
-            //   }, 2000);
-            // },
-            // connectThree() {
-            //   this.activeThree = true;
-            //   this.activeTwo = false;
-            //   this.showThree = true;
-            //   setTimeout(() => {
-            //     this.thirdLoding = false;
-            //     this.thirdSuccess = true;
-            //   }, 2000);
-            //   setTimeout(() => {
-            //     this.router.replace("/manager/device");
-            //   }, 3000);
-            // }
         }
     };
 </script>

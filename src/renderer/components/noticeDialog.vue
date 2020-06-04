@@ -23,12 +23,11 @@
           return{
               Message:"",
           } ;
-
         },
+
         watch: {
             noticeVisible() {
                 if (this.noticeVisible) {
-                    console.log("this.$store.state.message:"+this.$store.state.message)
                     this.Message=this.$store.state.message;
                 }
             }

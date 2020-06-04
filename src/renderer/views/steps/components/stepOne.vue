@@ -52,7 +52,6 @@
                             console.log("success res " + res)
                             this.$emit("showTwo");
                         } else {
-                            // this.$message.warning("enter pin on your imKey");
                             this.openErrorView(res);
                         }
                     } else {
@@ -86,13 +85,6 @@
 
                     this.connect();
                 }, 500);
-
-                // setTimeout(() => {
-                //  if(this.isConnect){
-                //    this.$message.warning("enter pin on your imKey");
-                //  }
-                // }, 2000);
-
             },
             openErrorView(msg) {
                 this.isOneChoose = false;

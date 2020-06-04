@@ -10,7 +10,11 @@ export const m = {
         connect_success:"连接成功",
         connecting:"连接中",
         check_BL:"检查BL",
-        upgrading_firmware:"升级固件中"
+        upgrading_firmware:"升级固件中",
+        check_active:"检查激活",
+        active_success:"激活成功",
+        check_bind:"检查绑定",
+        check_create_wallet:"检查创建钱包",
     },
     step:{
         connect: "连接",
