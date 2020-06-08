@@ -1,4 +1,5 @@
 let walletApi = require('./walletapi');
+let constants = require('../common/constants');
 let DeviceManger = require('./devicemanagerapi');
 const electron = require('electron');
 const filePath = (electron.app || electron.remote.app).getPath('userData') + "/";
@@ -6,8 +7,7 @@ const filePath = (electron.app || electron.remote.app).getPath('userData') + "/"
 export function api(apiName, json) {
     let result;
     let connectRes = DeviceManger.connect("imKey Pro");
-    console.log("connectRes:" + connectRes)
-    if (connectRes != "true") {
+    if (connectRes != constants.RESULT_STATUS_SUCCESS) {
         result = {
             error: connectRes,
         };
@@ -25,7 +25,7 @@ export function api(apiName, json) {
 
     if (apiName == null || apiName == "" || apiName.isUndefined) {
         result = {
-            error: "input api fuction is null",
+            error: "input api function is null",
         };
         return result;
     }

@@ -36,6 +36,7 @@ export const m = {
         bind:"Bind",
         bind_code_is_null:"BindCode is Not Null",
         bind_code_is_correct:"BindCode is not in correct format",
+        enter_bind_code:"enter bind code",
     },
     stepThree:{
         set_pin_create_wallet:"Set PIN&Create Wallet",

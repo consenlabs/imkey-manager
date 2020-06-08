@@ -26,6 +26,7 @@ Vue.prototype.canScroll = function () {
     document.body.style.overflow = ''// 出现滚动条
     document.removeEventListener('touchmove', mo, false)
 }
+//获取系统语言，根据系统语言来切换语言
 let app = require('electron').remote.app
 let sysLocale = app.getLocale();
 if(sysLocale != "zh-CN"){

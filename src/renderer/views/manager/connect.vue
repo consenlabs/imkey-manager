@@ -1,7 +1,7 @@
 <template>
     <div class="connect" style="-webkit-user-select: none;-webkit-app-region: drag">
-        <NoticeBox  :noticeVisible="noticeVisible"
-                    @closeNotice="closeErrorView"></NoticeBox>
+        <NoticeBox :noticeVisible="noticeVisible"
+                   @closeNotice="closeErrorView"></NoticeBox>
         <h1 class="deviceImg">
             <deviceImage :large="true"></deviceImage>
         </h1>
@@ -28,18 +28,21 @@
           </span>
                 </li>
             </ul>
-            <el-button type="primary" @click="connect" :loading="connectLoading" style="width:100%">{{$t('m.connect.connect')}}</el-button>
+            <el-button type="primary" @click="connect" :loading="connectLoading" style="width:100%">
+                {{$t('m.connect.connect')}}
+            </el-button>
         </div>
     </div>
 </template>
 
 <script>
     import deviceImage from "../../components/deviceImage";
+    import constants from "../../../common/constants";
     import {
-        connect_device,
+        connectDevice,
     } from '../../../api/devicemanager'
     import NoticeBox from "@/components/noticeDialog";
-    import CheckBox from "../steps/components/stepTwoDialog";
+
     export default {
         name: "connect",
         data() {
@@ -48,7 +51,7 @@
                 activeOne: false,
                 activeTwo: false,
                 activeThree: false,
-                noticeVisible:false
+                noticeVisible: false
             };
         },
         components: {
@@ -61,11 +64,11 @@
             connect() {
                 this.connectLoading = true;
                 setTimeout(() => {
-                    connect_device().then(result => {
+                    connectDevice().then(result => {
 
                         if (result.code === 200) {
                             const res = result.data
-                            if (res == "true") {
+                            if (res == constants.RESULT_STATUS_SUCCESS) {
                                 console.log("success res " + res)
                                 this.router.replace("/manager/device");
                             } else {
@@ -79,15 +82,15 @@
                     })
                 }, 200);
             },
-        openErrorView(msg) {
-            this.connectLoading = false;
-            this.$store.state.message=msg
-            this.noticeVisible = true;
+            openErrorView(msg) {
+                this.connectLoading = false;
+                this.$store.state.message = msg
+                this.noticeVisible = true;
 
-        },
-        closeErrorView(msg) {
-            this.noticeVisible = false;
-        }
+            },
+            closeErrorView(msg) {
+                this.noticeVisible = false;
+            }
 
         }
     };

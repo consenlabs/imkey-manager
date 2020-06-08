@@ -16,7 +16,7 @@
             </div>
             <div v-if="updateSuccess">
                 <span class="updateMsg">{{$t('m.manager.firmware_is')}} {{newVersionData}} {{$t('m.manager.available')}}</span>
-                <el-button type="primary" @click="updateVersion" size="small" :loading="loading">
+                <el-button type="primary" @click="updateFirmware" size="small" :loading="loading">
                     {{$t('m.manager.update')}}
                 </el-button>
             </div>
@@ -45,13 +45,13 @@
                                     size="small"
                                     :disabled="item.installDis"
                                     :loading="item.installLoading"
-                                    @click="intall(item,index)"
-                            >{{$t('m.manager.install')}}
+                                    @click="install(item,index)"
+                            >{{item.buttonTexts}}
                             </el-button>
                             <el-button
                                     type="danger"
                                     size="small"
-                                    @click="delet(item,index)"
+                                    @click="delete(item,index)"
                                     :disabled="item.deleteDis"
                                     :loading="item.deleteLoading"
                                     class="el-icon-delete"
@@ -66,8 +66,9 @@
 
 <script>
     import deviceImage from "../../components/deviceImage";
+    import constants from "../../../common/constants";
     import {
-        connect_device, cosUpdate, cosCheckUpdate, getAppList, downloadApplet, deleteApplet, getFirmwareVersion
+        connectDevice, cosUpdate, cosCheckUpdate, checkUpdate, downloadApplet,updateApplet, deleteApplet, getFirmwareVersion
     } from '../../../api/devicemanager'
     import NoticeBox from "@/components/noticeDialog";
 
@@ -75,6 +76,10 @@
         name: "manager",
         data() {
             return {
+                readOnly: {
+                    type: Boolean,
+                    default: false
+                },
                 appName: "",
                 isSuccess: false,
                 oldVersionData: "",
@@ -106,16 +111,16 @@
             }
         },
         mounted() {
-                this.init();
+            this.init();
         },
         methods: {
             init() {
-                connect_device().then(result => {
+                connectDevice().then(result => {
                     if (result.code === 200) {
                         const res = result.data
-                        if (res == "true") {
+                        if (res == constants.RESULT_STATUS_SUCCESS) {
                             if (this.$store.state.updateSuccess == false) {
-                                this.getFirmwareVersion();
+                                this.firmwareVersion();
                             } else {
                                 this.updateSuccess = this.$store.state.updateSuccess;
                                 this.oldVersionData = this.$store.state.oldVersionData;
@@ -156,7 +161,7 @@
                 }
                 if (this.$store.state.apps == "" || this.$store.state.apps == null || this.$store.state.apps == []) {
                     //加载应用
-                    this.AppsList();
+                    this.getAppsList();
                 } else {
                     this.apps = this.$store.state.apps;
                     this.isSuccess = true;
@@ -171,12 +176,12 @@
                     }
                 })
             },
-            getFirmwareVersion() {
+            firmwareVersion() {
                 getFirmwareVersion().then(result => {
                     if (result.code === 200) {
                         this.oldVersionData = result.data;
                         this.$store.state.oldVersionData = result.data;
-                        this.getCheckCosUpdate();
+                        this.toCosCheckUpdate();
                     } else {
                         this.openErrorView(result.message);
                     }
@@ -184,7 +189,7 @@
                     this.openErrorView(err);
                 })
             },
-            getCheckCosUpdate() {
+            toCosCheckUpdate() {
                 cosCheckUpdate().then(result => {
                     if (result.code === 200) {
                         this.newVersionData = result.data.latestCosVersion;
@@ -200,32 +205,36 @@
                     this.openErrorView(err);
                 })
             },
-            getCosUpdate() {
-                cosUpdate().then(result => {
-                    if (result.code === 200) {
-                        if (result.data == "true") {
-                            this.loading = false;
-                            this.updateSuccess = false;
-                            this.oldVersionData = this.newVersionData;
+            updateFirmware() {
+                this.loading = true;
+                setTimeout(() => {
+                    this.connect();
+                    cosUpdate().then(result => {
+                        if (result.code === 200) {
+                            if (result.data == constants.RESULT_STATUS_SUCCESS) {
+                                this.loading = false;
+                                this.updateSuccess = false;
+                                this.oldVersionData = this.newVersionData;
+                            } else {
+                                this.updateSuccess = true;
+                                this.loading = false;
+                                this.openErrorView(result.data);
+                            }
                         } else {
-                            this.updateSuccess = true;
                             this.loading = false;
-                            this.openErrorView(result.data);
+                            this.openErrorView(result.message);
                         }
-                    } else {
+                    }).catch(err => {
                         this.loading = false;
-                        this.openErrorView(result.message);
-                    }
-                }).catch(err => {
-                    this.loading = false;
-                    this.openErrorView(err);
-                })
+                        this.openErrorView(err);
+                    })
+                }, 200);
             },
             connect() {
-                connect_device().then(result => {
+                connectDevice().then(result => {
                     if (result.code === 200) {
                         const res = result.data
-                        if (res == "true") {
+                        if (res == constants.RESULT_STATUS_SUCCESS) {
                         } else {
                             this.router.replace("/manager/connect");
 
@@ -237,8 +246,8 @@
                     this.router.replace("/manager/connect");
                 })
             },
-            AppsList() {
-                getAppList().then(result => {
+            getAppsList() {
+                checkUpdate().then(result => {
                     if (result.code === 200) {
                         this.apps = result.data.list;
                         this.$store.state.apps = result.data.list;
@@ -251,23 +260,16 @@
                     this.openErrorView(err);
                 })
             },
-            updateVersion() {
-                this.loading = true;
-                setTimeout(() => {
-                    this.getCosUpdate();
-                }, 200);
 
-            },
-            intall(item, index) {
-                this.connect();
+            install(item, index) {
                 this.apps[index].installLoading = true;
                 this.apps[index].deleteLoading = false;
-
                 setTimeout(() => {
+                    this.connect();
                     downloadApplet(item.name).then(result => {
                         if (result.code === 200) {
 
-                            if (result.data == "true") {
+                            if (result.data == constants.RESULT_STATUS_SUCCESS) {
                                 this.apps[index].deleteDis = false;
                                 this.apps[index].installDis = true;
                                 this.apps[index].installLoading = false;
@@ -286,15 +288,44 @@
                     })
                 }, 200);
             },
-            delet(item, index) {
-                this.connect();
+
+            update(item, index) {
+                this.apps[index].installLoading = true;
+                this.apps[index].deleteLoading = false;
+                setTimeout(() => {
+                    this.connect();
+                    updateApplet(item.name).then(result => {
+                        if (result.code === 200) {
+
+                            if (result.data == constants.RESULT_STATUS_SUCCESS) {
+                                this.apps[index].deleteDis = false;
+                                this.apps[index].installDis = true;
+                                this.apps[index].installLoading = false;
+                            } else {
+                                this.apps[index].installLoading = false;
+                                this.openErrorView(result.data);
+                            }
+                        } else {
+                            this.apps[index].installLoading = false;
+                            this.openErrorView(result.message);
+                        }
+                    }).catch(err => {
+                        this.apps[index].installLoading = false;
+                        this.openErrorView(err);
+
+                    })
+                }, 200);
+            },
+
+            delete(item, index) {
                 this.apps[index].deleteLoading = true;
                 this.apps[index].installLoading = false;
                 setTimeout(() => {
+                    this.connect();
                     deleteApplet(item.name).then(result => {
                         if (result.code === 200) {
 
-                            if (result.data == "true") {
+                            if (result.data == constants.RESULT_STATUS_SUCCESS) {
                                 this.apps[index].deleteDis = true;
                                 this.apps[index].installDis = false;
                                 this.apps[index].deleteLoading = false;
@@ -311,7 +342,7 @@
                     })
                 }, 200);
             },
-           
+
             openErrorView(msg) {
                 this.$store.state.message = msg
                 this.noticeVisible = true;

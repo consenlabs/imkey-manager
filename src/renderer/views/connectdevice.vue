@@ -33,15 +33,16 @@
 
 <script>
     import deviceImage from "../components/deviceImage";
+    import constants from "../../common/constants";
     import {
         checkUpdate,
-        connect_device, cosUpdate, deviceBindCheck, getUserPath, getSeid
+        connectDevice, cosUpdate, deviceBindCheck, getUserPath, isBLStatus
     } from '../../api/devicemanager'
-    import {getBTC_Xpub_} from "../../api/walletapi";
+    import {get_BTC_Xpub} from "../../api/walletapi";
     import NoticeBox from "@/components/noticeDialog";
 
     export default {
-        name: "ConnectDevice",
+        name: "connectDevice",
         data() {
             return {
                 userPath: "",
@@ -73,13 +74,14 @@
             checkIsBL() {
                 this.connectText = this.$t('m.connectDevice.check_BL');
                 setTimeout(() => {
-                    //通过getseid来判断是否处于BL状态
-                    getSeid().then(result => {
+                    //通过getSeid来判断是否处于BL状态
+                    isBLStatus().then(result => {
                         if (result.code === 200) {
                             let res = result.data
-                            if (res == "" || res == null) {
+                            if (res) {
+                                //处于BL状态
                                 //更新COS
-                                this.getcosupdate();
+                                this.toCosUpdate();
                             } else {
                                 //无需更新COS
                                 this.BLStatus = true;
@@ -99,8 +101,11 @@
                     checkUpdate().then(result => {
                         if (result.code === 200) {
                             let activeStatus = result.data.status
+                            //缓存激活状态
+                            this.$store.state.activeStatus = result.data.status;
+                            //缓存应用数据
+                            this.$store.state.apps = result.data.list;
                             if (activeStatus == "latest") {
-                                console.log("activeStatus:" + activeStatus);
                                 this.connectText = this.$t('m.connectDevice.active_success');
                                 this.checkIsBind();
                             } else {
@@ -135,7 +140,7 @@
                                     this.bindStatus = true;
                                     this.checkIsCreateWallet();
                                 }else{
-                                    this.goStep(2);
+                                    this.openErrorView(result.data);
                                 }
                             }
                         } else {
@@ -151,7 +156,7 @@
             checkIsCreateWallet() {
                 this.connectText = this.$t('m.connectDevice.check_create_wallet');
                 setTimeout(() => {
-                    getBTC_Xpub_().then(result => {
+                    get_BTC_Xpub().then(result => {
                         if (result.code === 200) {
                             if (result.data != "" || result.data != null) {
                                 if (result.data.match("xpu")) {
@@ -179,9 +184,9 @@
                 this.connectLoading = true;
                 this.connectText = this.$t('m.connectDevice.connecting');
                 setTimeout(() => {
-                    connect_device().then(result => {
+                    connectDevice().then(result => {
                         const res = result.data
-                        if (res == "true") {
+                        if (res == constants.RESULT_STATUS_SUCCESS) {
                             this.connectText = this.$t('m.connectDevice.connect_success');
                             this.connectStatus = true;
                             this.checkIsBL();
@@ -194,12 +199,12 @@
                     })
                 }, 200)
             },
-            getcosupdate() {
+            toCosUpdate() {
                 this.connectText = this.$t('m.connectDevice.upgrading_firmware');
                 setTimeout(() => {
                 cosUpdate().then(result => {
                     if (result.code === 200) {
-                        if (result.data == "true") {
+                        if (result.data == constants.RESULT_STATUS_SUCCESS) {
                             //cos更新成功检查是否激活
                             this.BLStatus = true;
                             this.checkIsActive();

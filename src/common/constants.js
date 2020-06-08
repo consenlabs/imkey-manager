@@ -28,6 +28,10 @@ let BIND_STATUS_BOUND_OTHER = "AA";
 //  network
 let MAINNET = "MAINNET";
 let TESTNET = "TESTNET";
+//imKey device name
+let DEVICE_NAME_IMKEY_PRO = "imKey Pro";
+//成功状态
+let RESULT_STATUS_SUCCESS = "success"
 module.exports = {
     version,
     BATTERY_CHARGING_SIGN,
@@ -44,5 +48,6 @@ module.exports = {
     BIND_STATUS_BOUND_OTHER,
     MAINNET,
     TESTNET,
-
+    DEVICE_NAME_IMKEY_PRO,
+    RESULT_STATUS_SUCCESS,
 }

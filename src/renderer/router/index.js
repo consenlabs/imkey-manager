@@ -7,12 +7,12 @@ const routes = [
     {
         path: '/',
         name: '/',
-        component: require('@/views/connectDevice').default
+        component: require('@/views/connectdevice').default
     },
     {
         path: '/connectDevice',
         name: 'connectDevice',
-        component: require('@/views/connectDevice').default
+        component: require('@/views/connectdevice').default
     },
     {
         path: '/deviceStep',

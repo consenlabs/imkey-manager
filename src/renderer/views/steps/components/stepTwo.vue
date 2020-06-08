@@ -29,7 +29,7 @@
         <CheckBox
                 :boxVisible="boxVisible"
                 @closeCheckBox="closeCheckBox($event)"
-                @showTree="toShowTree"
+                @showThree="toShowThree"
         ></CheckBox>
     </div>
 </template>
@@ -69,7 +69,7 @@
                 this.openErrorView(msg)
                 }, 200)
             },
-            toShowTree(val) {
+            toShowThree(val) {
                 if (val) {
                     this.$emit("showThree", true);
                 } else {

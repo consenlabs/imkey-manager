@@ -36,6 +36,7 @@ export const m = {
         bind:"绑定",
         bind_code_is_null:"绑定码不能为空",
         bind_code_is_correct:"绑定码格式不正确",
+        enter_bind_code:"输入绑定码"
     },
     stepThree:{
         set_pin_create_wallet:"设置PIN&创建钱包",

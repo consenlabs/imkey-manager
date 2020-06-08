@@ -18,14 +18,10 @@ function connect(deviceModelName) {
     let resBuffer = callImKeyCore.call_imkey_api(bytes2HexStr(imKeyActionBytes));
     let error = callImKeyCore.get_last_err_message();
     if (error == "" || error == null) {
-        let response = new api_pb.Response.deserializeBinary(hexStr2Bytes(resBuffer));
-        let result = response.getError();
-        if (result == null || result == '' || result == "") {
-            result = 'true';
-        }
-        return result;
+        let response = new api_pb.CommonResponse.deserializeBinary(hexStr2Bytes(resBuffer));
+        return response.getResult();
     } else {
-        let errorResponse = new api_pb.Response.deserializeBinary(hexStr2Bytes(error));
+        let errorResponse = new api_pb.ErrorResponse.deserializeBinary(hexStr2Bytes(error));
         return errorResponse.getError();
     }
 }
@@ -51,22 +47,7 @@ function getDeviceManageFunction(method_) {
         } else if (method_ === "get_firmware_version") {
             let response = new device_pb.GetFirmwareVersionRes.deserializeBinary(hexStr2Bytes(resBuffer));
             result = response.getFirmwareVersion();
-        } else if (method_ === "get_battery_power") {
-            let response = new device_pb.GetBatteryPowerRes.deserializeBinary(hexStr2Bytes(resBuffer));
-            result = response.getBatteryPower();
-        } else if (method_ === "get_life_time") {
-            let response = new device_pb.GetLifeTimeRes.deserializeBinary(hexStr2Bytes(resBuffer));
-            result = response.getLifeTime();
-        } else if (method_ === "get_ble_name") {
-            let response = new device_pb.GetBleNameRes.deserializeBinary(hexStr2Bytes(resBuffer));
-            result = response.getBleName();
-        } else if (method_ === "set_ble_name") {
-            let response = new device_pb.SetBleNameReq.deserializeBinary(hexStr2Bytes(resBuffer));
-            result = response.getBleName();
-        } else if (method_ === "get_ble_version") {
-            let response = new device_pb.GetBleVersionRes.deserializeBinary(hexStr2Bytes(resBuffer));
-            result = response.getBleVersion();
-        } else if (method_ === "get_sdk_info") {
+        }  else if (method_ === "get_sdk_info") {
             let response = new device_pb.GetSdkInfoRes.deserializeBinary(hexStr2Bytes(resBuffer));
             result = response.getSdkVersion();
         } else if (method_ === "check_update") {
@@ -75,18 +56,16 @@ function getDeviceManageFunction(method_) {
         } else if (method_ === "cos_check_update") {
             let response = new device_pb.CosCheckUpdateRes.deserializeBinary(hexStr2Bytes(resBuffer));
             result = response.toObject();
+        } else if (method_ === "is_bl_status") {
+            let response = new device_pb.IsBlStatusRes.deserializeBinary(hexStr2Bytes(resBuffer));
+            result = response.getCheckResult();
         } else {//method_ === "device_activate"||"device_secure_check"||"bind_display_code"
-            let response = new api_pb.Response.deserializeBinary(hexStr2Bytes(resBuffer));
-            result = response.getError();
-            if (result == null || result == '' || result == "") {
-                result = 'true';
-            } else {
-                result = 'false';
-            }
+                let response = new api_pb.CommonResponse.deserializeBinary(hexStr2Bytes(resBuffer));
+                result =  response.getResult();
         }
         return result;
     } else {
-        let errorResponse = new api_pb.Response.deserializeBinary(hexStr2Bytes(error));
+        let errorResponse = new api_pb.ErrorResponse.deserializeBinary(hexStr2Bytes(error));
         return errorResponse.getError();
     }
 }
@@ -117,17 +96,10 @@ function AppletManage(method_, appName) {
     let resBuffer = callImKeyCore.call_imkey_api(bytes2HexStr(imKeyActionBytes));
     let error = callImKeyCore.get_last_err_message();
     if (error == "" || error == null) {
-        let response = new api_pb.Response.deserializeBinary(hexStr2Bytes(resBuffer));
-        let result = response.getError();
-        if (result == null || result == '' || result == "") {
-            result = 'true';
-        } else {
-            result = 'false';
-        }
-        return result;
-
+        let response = new api_pb.CommonResponse.deserializeBinary(hexStr2Bytes(resBuffer));
+        return response.getResult();
     } else {
-        let errorResponse = new api_pb.Response.deserializeBinary(hexStr2Bytes(error));
+        let errorResponse = new api_pb.ErrorResponse.deserializeBinary(hexStr2Bytes(error));
         return errorResponse.getError();
     }
 
@@ -154,7 +126,7 @@ function bindCheck(filePath) {
         let response = new device_pb.BindCheckRes.deserializeBinary(hexStr2Bytes(resBuffer));
         return response.getBindStatus();
     } else {
-        let errorResponse = new api_pb.Response.deserializeBinary(hexStr2Bytes(error));
+        let errorResponse = new api_pb.ErrorResponse.deserializeBinary(hexStr2Bytes(error));
         return errorResponse.getError();
     }
 }
@@ -178,30 +150,27 @@ function bindAcquire(bindCode) {
     let error = callImKeyCore.get_last_err_message();
     if (error == "" || error == null) {
         let response = new device_pb.BindAcquireRes.deserializeBinary(hexStr2Bytes(resBuffer));
-        if (response.getBindResult() == "success") {
-            return "true"
-        } else {
             return response.getBindResult();
-        }
-
     } else {
-        let errorResponse = new api_pb.Response.deserializeBinary(hexStr2Bytes(error));
+        let errorResponse = new api_pb.ErrorResponse.deserializeBinary(hexStr2Bytes(error));
         return errorResponse.getError();
     }
 }
 
-export function getAppList() {
+export function checkUpdate() {
     return new Promise((resolve, reject) => {
         try {
-            let collections = getDeviceManageFunction("check_update").availableAppListList;
-            let list = [];
+            let response = getDeviceManageFunction("check_update");
+            let collections = response.availableAppListList;
+                let list = [];
             let installLoading;
             let installDis;
             let deleteDis;
             let deleteLoading;
+            let buttonTexts;
             for (let i = 0; i < collections.length; i++) {
                 //过滤imkey Applet 不显示IMK applet
-                if (collections[i].appName != "IMK") {
+
                     if (collections[i].installedVersion != "none" || collections[i].installedVersion != null) {
                         installLoading = false;
                         installDis = true;
@@ -213,6 +182,11 @@ export function getAppList() {
                         deleteDis = true;
                         deleteLoading = false;
                     }
+                buttonTexts = "安装";
+                if (collections[i].appName == "IMK"|| collections[i].appName == "BTC"){
+                    deleteDis = true;
+                    buttonTexts = "更新";
+                }
                     let collection = {
                         name: collections[i].appName,
                         desc: "version " + collections[i].latestVersion,
@@ -222,14 +196,16 @@ export function getAppList() {
                         deleteDis: deleteDis,
                         deleteLoading: deleteLoading,
                         icon: collections[i].appLogo,
+                        buttonTexts:buttonTexts,
                     };
                     list.push(collection);
-                }
+
             }
             let total = list.length;
+            let status = response.status;
             resolve({
                 code: 200,
-                data: _.cloneDeep({total: total, list: list})
+                data: _.cloneDeep({status:status,total: total, list: list})
             })
         } catch (err) {
             return reject({
@@ -240,13 +216,13 @@ export function getAppList() {
     })
 }
 
-export function connect_device() {
+export function connectDevice() {
     return new Promise((resolve, reject) => {
         try {
 
             resolve({
                 code: 200,
-                data: connect("imKey Pro")
+                data: connect(constants.DEVICE_NAME_IMKEY_PRO)
             })
         } catch (err) {
             return reject({
@@ -328,109 +304,13 @@ export function getFirmwareVersion() {
         }
     })
 }
+export function isBLStatus() {
 
-export function getBatteryPower() {
     return new Promise((resolve, reject) => {
         try {
-            let batteryPower = getDeviceManageFunction("get_battery_power");
-            if (batteryPower != constants.BATTERY_CHARGING_SIGN) {
-                batteryPower = parseInt(batteryPower, 16).toString();
-            } else {
-                return reject({
-                    code: 400,
-                    message: 'error'
-                })
-            }
             resolve({
                 code: 200,
-                data: batteryPower
-            })
-        } catch (err) {
-            return reject({
-                code: 400,
-                message: err.message
-            })
-        }
-    })
-}
-
-export function getLifeTime() {
-    return new Promise((resolve, reject) => {
-        try {
-            let res = getDeviceManageFunction("get_life_time");
-            let res_ = "";
-            switch (res) {
-                case "80":
-                    res_ = constants.LIFE_TIME_DEVICE_INITED;
-                case "89":
-                    res_ = constants.LIFE_TIME_DEVICE_ACTIVATED;
-                case "81":
-                    res_ = constants.LIFE_TIME_UNSET_PIN;
-                case "83":
-                    res_ = constants.LIFE_TIME_WALLET_UNREADY;
-                case "84":
-                    res_ = constants.LIFE_TIME_WALLET_CREATTING;
-                case "85":
-                    res_ = constants.LIFE_TIME_WALLET_RECOVERING;
-                case "86":
-                    res_ = constants.LIFE_TIME_WALLET_READY;
-                default:
-                    res_ = constants.LIFE_TIME_UNKNOWN;
-            }
-            resolve({
-                code: 200,
-                data: res_
-            })
-        } catch (err) {
-            return reject({
-                code: 400,
-                message: err.message
-            })
-        }
-    })
-}
-
-export function getBleName() {
-    return new Promise((resolve, reject) => {
-        try {
-
-            resolve({
-                code: 200,
-                data: getDeviceManageFunction("get_ble_name")
-            })
-        } catch (err) {
-            return reject({
-                code: 400,
-                message: err.message
-            })
-        }
-    })
-}
-
-export function setBleName() {
-    return new Promise((resolve, reject) => {
-        try {
-
-            resolve({
-                code: 200,
-                data: getDeviceManageFunction("set_ble_name")
-            })
-        } catch (err) {
-            return reject({
-                code: 400,
-                message: err.message
-            })
-        }
-    })
-}
-
-export function getBleVersion() {
-    return new Promise((resolve, reject) => {
-        try {
-            let bleVersion = getDeviceManageFunction("get_ble_version").substring(0, 4);
-            resolve({
-                code: 200,
-                data: bleVersion.substring(0, 1) + "." + bleVersion.substring(1, 2) + "." + bleVersion.substring(2)
+                data: getDeviceManageFunction("is_bl_status")
             })
         } catch (err) {
             return reject({
@@ -521,21 +401,21 @@ export function checkDevice() {
     })
 }
 
-export function checkUpdate() {
-    return new Promise((resolve, reject) => {
-        try {
-            resolve({
-                code: 200,
-                data: getDeviceManageFunction("check_update")
-            })
-        } catch (err) {
-            return reject({
-                code: 400,
-                message: err.message
-            })
-        }
-    })
-}
+// export function checkUpdate() {
+//     return new Promise((resolve, reject) => {
+//         try {
+//             resolve({
+//                 code: 200,
+//                 data: getDeviceManageFunction("check_update")
+//             })
+//         } catch (err) {
+//             return reject({
+//                 code: 400,
+//                 message: err.message
+//             })
+//         }
+//     })
+// }
 
 export function downloadApplet(AppName) {
     console.log("AppName:" + AppName)

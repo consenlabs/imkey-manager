@@ -47,7 +47,7 @@ function  IBitcoinTransaction_BTC(json,method_) {
             let response = new btc_pb.BtcTxRes.deserializeBinary(hexStr2Bytes(resBuffer));
             return response;
     }else{
-        let errorResponse = new api_pb.Response.deserializeBinary(hexStr2Bytes(error));
+        let errorResponse = new api_pb.ErrorResponse.deserializeBinary(hexStr2Bytes(error));
         return errorResponse.getError();
     }
 }
@@ -91,7 +91,7 @@ function  IBitcoinTransaction_BTC_SEGWIT(json,method_) {
         let response = new btc_pb.BtcSegwitTxRes.deserializeBinary(hexStr2Bytes(resBuffer));
         return response;
     }else{
-        let errorResponse = new api_pb.Response.deserializeBinary(hexStr2Bytes(error));
+        let errorResponse = new api_pb.ErrorResponse.deserializeBinary(hexStr2Bytes(error));
         return errorResponse.getError();
     }
 }
@@ -125,7 +125,7 @@ function  IETHTransaction_sign_TX(json) {
         let response = new eth_pb.EthTxRes.deserializeBinary(hexStr2Bytes(resBuffer));
         return response;
     }else{
-        let errorResponse = new api_pb.Response.deserializeBinary(hexStr2Bytes(error));
+        let errorResponse = new api_pb.ErrorResponse.deserializeBinary(hexStr2Bytes(error));
         return errorResponse.getError();
     }
 }
@@ -149,7 +149,7 @@ function  IETHTransaction_sign_MSG(json) {
         let response = new eth_pb.EthMessageSignRes.deserializeBinary(hexStr2Bytes(resBuffer));
         return response;
     }else{
-        let errorResponse = new api_pb.Response.deserializeBinary(hexStr2Bytes(error));
+        let errorResponse = new api_pb.ErrorResponse.deserializeBinary(hexStr2Bytes(error));
         return errorResponse.getError();
     }
 }
@@ -174,7 +174,7 @@ function  IEOSTransaction_sign_MSG(json) {
         let response = new eos_pb.EosMessageSignRes.deserializeBinary(hexStr2Bytes(resBuffer));
         return response;
     }else{
-        let errorResponse = new api_pb.Response.deserializeBinary(hexStr2Bytes(error));
+        let errorResponse = new api_pb.ErrorResponse.deserializeBinary(hexStr2Bytes(error));
         return errorResponse.getError();
     }
 }
@@ -213,7 +213,7 @@ function  IEOSTransaction_sign_TX(json) {
         }
         return resultList;
     }else{
-        let errorResponse = new api_pb.Response.deserializeBinary(hexStr2Bytes(error));
+        let errorResponse = new api_pb.ErrorResponse.deserializeBinary(hexStr2Bytes(error));
         return errorResponse.getError();
     }
 }
@@ -275,7 +275,7 @@ function  ICOSMOSTransaction_sign_TX(json) {
         let response =new cosmos_pb.CosmosTxRes.deserializeBinary(hexStr2Bytes(resBuffer));
         return response;
     }else{
-        let errorResponse = new api_pb.Response.deserializeBinary(hexStr2Bytes(error));
+        let errorResponse = new api_pb.ErrorResponse.deserializeBinary(hexStr2Bytes(error));
         return errorResponse.getError();
     }
 }
@@ -298,7 +298,7 @@ function  btcXpub(path,netWork) {
         let  xpub = response.getXpub()
         return xpub;
     }else{
-        let errorResponse = new api_pb.Response.deserializeBinary(hexStr2Bytes(error));
+        let errorResponse = new api_pb.ErrorResponse.deserializeBinary(hexStr2Bytes(error));
         return errorResponse.getError();
     }
 }
@@ -321,7 +321,7 @@ function  BtcAddress(path,netWork,method_) {
         return response.getAddress()
         
     }else{
-        let errorResponse = new api_pb.Response.deserializeBinary(hexStr2Bytes(error));
+        let errorResponse = new api_pb.ErrorResponse.deserializeBinary(hexStr2Bytes(error));
         return errorResponse.getError();
     }
 }
@@ -343,7 +343,7 @@ function  ethAddress(path) {
         let  address = response.getAddress()
         return address;
     }else{
-        let errorResponse = new api_pb.Response.deserializeBinary(hexStr2Bytes(error));
+        let errorResponse = new api_pb.ErrorResponse.deserializeBinary(hexStr2Bytes(error));
         return errorResponse.getError();
     }
 }
@@ -365,7 +365,7 @@ function  eosPubkey(path,method_) {
         let  address = response.getPubkey()
         return address;
     }else{
-        let errorResponse = new api_pb.Response.deserializeBinary(hexStr2Bytes(error));
+        let errorResponse = new api_pb.ErrorResponse.deserializeBinary(hexStr2Bytes(error));
         return errorResponse.getError();
     }
 }
@@ -387,12 +387,12 @@ function  cosmosAddress(path,method_) {
         let  address = response.getAddress()
         return address;
     }else{
-        let errorResponse = new api_pb.Response.deserializeBinary(hexStr2Bytes(error));
+        let errorResponse = new api_pb.ErrorResponse.deserializeBinary(hexStr2Bytes(error));
         return errorResponse.getError();
     }
 }
 
-export function getBTC_Xpub_() {
+export function get_BTC_Xpub() {
     return new Promise((resolve, reject) => {
         try {
             resolve({

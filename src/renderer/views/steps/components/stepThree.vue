@@ -35,10 +35,11 @@
 <script>
     import OptionOne from "./stepThreeDialog";
     import OptionTwo from "./stepThree2Dialog";
+    import constants from "../../../../common/constants";
     import {
-        getBTC_Xpub_,
+        get_BTC_Xpub,
     } from '../../../../api/walletapi'
-    import {connect_device,} from "../../../../api/devicemanager";
+    import {connectDevice,} from "../../../../api/devicemanager";
     import NoticeBox from "@/components/noticeDialog";
     export default {
         name: "Home",
@@ -64,11 +65,11 @@
         },
         methods: {
             connect() {
-                connect_device().then(result => {
+                connectDevice().then(result => {
                     if (result.code === 200) {
                         const res = result.data
-                        if (res == "true") {
-                            this.next();
+                        if (res == constants.RESULT_STATUS_SUCCESS) {
+                            this.checkWalletExist();
                         } else {
                             this.openErrorView(res);
                         }
@@ -85,12 +86,12 @@
             seeTwo() {
                 this.optionTwoVisible = true;
             },
-            next() {
+            checkWalletExist() {
                 if (this.isSeeOne && this.isSeeTwos) {
                     this.nextLoading = true;
                     //判断是否创建钱包
                     setTimeout(() => {
-                        getBTC_Xpub_().then(result => {
+                        get_BTC_Xpub().then(result => {
                             if (result.code === 200) {
                                 if (result.data != "" || result.data != null) {
                                     if (result.data.match("xpu")) {
@@ -118,13 +119,13 @@
             closeTwoBox() {
                 this.optionTwoVisible = false;
             },
-            toShowTree() {
+            toShowThree() {
                 this.$emit("showThree", true);
             },
-            IseeOne() {
+            isSeeOne() {
                 this.isSeeOne = true;
             },
-            IseeTwo() {
+            isSeeTwo() {
                 this.isSeeTwos = true;
             },
             openErrorView(msg) {

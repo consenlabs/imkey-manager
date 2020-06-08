@@ -16,15 +16,11 @@ function connect(deviceModelName) {
     let resBuffer = callImKeyCore.call_imkey_api(bytes2HexStr(imKeyActionBytes));
     let error = callImKeyCore.get_last_err_message();
     let result;
-    if (error === "" || error === null) {
-        let response = new api_pb.response.deserializeBinary(hexStr2Bytes(resBuffer));
-        result = response.getError();
-        if (result === null || result === '' || result === "") {
-            result = 'true';
-        }
-        return result;
+    if (error == "" || error == null) {
+        let response = new api_pb.CommonResponse.deserializeBinary(hexStr2Bytes(resBuffer));
+        return response.getResult();
     } else {
-        let errorResponse = new api_pb.response.deserializeBinary(hexStr2Bytes(error));
+        let errorResponse = new api_pb.ErrorResponse.deserializeBinary(hexStr2Bytes(error));
         return errorResponse.getError();
     }
 }
@@ -49,39 +45,22 @@ function getDeviceManageFunction(method_) {
         } else if (method_ === "get_firmware_version") {
             let response = new device_pb.GetFirmwareVersionRes.deserializeBinary(hexStr2Bytes(resBuffer));
             result = response.getFirmwareVersion();
-        } else if (method_ === "get_battery_power") {
-            let response = new device_pb.GetBatteryPowerRes.deserializeBinary(hexStr2Bytes(resBuffer));
-            result = response.getBatteryPower();
-        } else if (method_ === "get_life_time") {
-            let response = new device_pb.GetLifeTimeRes.deserializeBinary(hexStr2Bytes(resBuffer));
-            result = response.getLifeTime();
-        } else if (method_ === "get_ble_name") {
-            let response = new device_pb.GetBleNameRes.deserializeBinary(hexStr2Bytes(resBuffer));
-            result = response.getBleName();
-        } else if (method_ === "set_ble_name") {
-            let response = new device_pb.SetBleNameReq.deserializeBinary(hexStr2Bytes(resBuffer));
-            result = response.getBleName();
-        } else if (method_ === "get_ble_version") {
-            let response = new device_pb.GetBleVersionRes.deserializeBinary(hexStr2Bytes(resBuffer));
-            result = response.getBleVersion();
         } else if (method_ === "get_sdk_info") {
             let response = new device_pb.GetSdkInfoRes.deserializeBinary(hexStr2Bytes(resBuffer));
             result = response.getSdkVersion();
         } else if (method_ === "check_update") {
             let response = new device_pb.CheckUpdateRes.deserializeBinary(hexStr2Bytes(resBuffer));
             result = response.toObject();
+        } else if (method_ === "is_bl_status") {
+            let response = new device_pb.IsBlStatusRes.deserializeBinary(hexStr2Bytes(resBuffer));
+            result = response.getCheckResult();
         } else {//method_ === "device_activate"||"device_secure_check"||"bind_display_code"
-            let response = new api_pb.response.deserializeBinary(hexStr2Bytes(resBuffer));
-            result = response.getError();
-            if (result === null || result === '' || result === "") {
-                result = 'true';
-            } else {
-                result = 'false';
-            }
+            let response = new api_pb.CommonResponse.deserializeBinary(hexStr2Bytes(resBuffer));
+            result =  response.getResult();
         }
         return result;
     } else {
-        let errorResponse = new api_pb.response.deserializeBinary(hexStr2Bytes(error));
+        let errorResponse = new api_pb.ErrorResponse.deserializeBinary(hexStr2Bytes(error));
         return errorResponse.getError();
     }
 }
@@ -109,18 +88,11 @@ function AppletManage(method_, appName) {
     let imKeyActionBytes = imKeyAction.serializeBinary();
     let resBuffer = callImKeyCore.call_imkey_api(bytes2HexStr(imKeyActionBytes));
     let error = callImKeyCore.get_last_err_message();
-    let result;
-    if (error === "" || error === null) {
-        let response = new api_pb.response.deserializeBinary(hexStr2Bytes(resBuffer));
-        result = response.getError();
-        if (result === null || result === '' || result === "") {
-            result = 'true';
-        } else {
-            result = 'false';
-        }
-        return result;
+    if (error == "" || error == null) {
+        let response = new api_pb.CommonResponse.deserializeBinary(hexStr2Bytes(resBuffer));
+        return response.getResult();
     } else {
-        let errorResponse = new api_pb.response.deserializeBinary(hexStr2Bytes(error));
+        let errorResponse = new api_pb.ErrorResponse.deserializeBinary(hexStr2Bytes(error));
         return errorResponse.getError();
     }
 }
@@ -141,7 +113,7 @@ function bindCheck(filePath) {
         let response = new device_pb.BindCheckRes.deserializeBinary(hexStr2Bytes(resBuffer));
         return response.getBindStatus();
     } else {
-        let errorResponse = new api_pb.response.deserializeBinary(hexStr2Bytes(error));
+        let errorResponse = new api_pb.ErrorResponse.deserializeBinary(hexStr2Bytes(error));
         return errorResponse.getError();
     }
 }
@@ -160,13 +132,9 @@ function bindAcquire(bindCode) {
     let error = callImKeyCore.get_last_err_message();
     if (error === "" || error === null) {
         let response = new device_pb.BindAcquireRes.deserializeBinary(hexStr2Bytes(resBuffer));
-        if (response.getBindResult() === "success") {
-            return "true"
-        } else {
             return response.getBindResult();
-        }
     } else {
-        let errorResponse = new api_pb.response.deserializeBinary(hexStr2Bytes(error));
+        let errorResponse = new api_pb.ErrorResponse.deserializeBinary(hexStr2Bytes(error));
         return errorResponse.getError();
     }
 }
@@ -188,55 +156,6 @@ function getFirmwareVersion() {
     return FirmwareVersion.substring(0, 1) + "." + FirmwareVersion.substring(1, 2) + "." + FirmwareVersion.substring(2);
 }
 
-function getBatteryPower() {
-
-    let batteryPower = getDeviceManageFunction("get_battery_power");
-    if (batteryPower != constants.BATTERY_CHARGING_SIGN) {
-        batteryPower = parseInt(batteryPower, 16).toString();
-    }
-    return batteryPower;
-}
-
-function getLifeTime() {
-    let res = getDeviceManageFunction("get_life_time");
-    switch (res) {
-        case "80":
-            return constants.LIFE_TIME_DEVICE_INITED;
-        case "89":
-            return constants.LIFE_TIME_DEVICE_ACTIVATED;
-        case "81":
-            return constants.LIFE_TIME_UNSET_PIN;
-        case "83":
-            return constants.LIFE_TIME_WALLET_UNREADY;
-        case "84":
-            return constants.LIFE_TIME_WALLET_CREATTING;
-        case "85":
-            return constants.LIFE_TIME_WALLET_RECOVERING;
-        case "86":
-            return constants.LIFE_TIME_WALLET_READY;
-        default:
-            return constants.LIFE_TIME_UNKNOWN;
-    }
-}
-
-function getBleName() {
-    return getDeviceManageFunction("get_ble_name");
-}
-
-function setBleName(bleName) {
-    // let regEx = "^[a-zA-Z0-9\\-]{1,12}$";
-    // if(!matches(regEx, bleName)) {
-    //     throw new ImkeyException(Messages.IMKEY_SDK_ILLEGAL_ARGUMENT);
-    // }
-    return bytes2Str(getDeviceManageFunction("set_ble_name"));
-}
-
-function getBleVersion() {
-    let bleVersion = getDeviceManageFunction("get_ble_version").substring(0, 4);
-    return bleVersion.substring(0, 1) + "." + bleVersion.substring(1, 2) + "." + bleVersion.substring(2);
-    return bytes2Str(hexStr2Bytes(getDeviceManageFunction("get_ble_version")));
-}
-
 function getSdkInfo() {
     return getDeviceManageFunction("get_sdk_info");
 }
@@ -247,6 +166,10 @@ function activeDevice() {
 
 function cosUpdate() {
     return getDeviceManageFunction("cos_update");
+}
+
+function isBLStatus() {
+    return getDeviceManageFunction("is_bl_status");
 }
 
 function checkDevice() {
@@ -287,14 +210,10 @@ module.exports = {
     getSn,
     getRamSize,
     getFirmwareVersion,
-    getBatteryPower,
-    getLifeTime,
-    getBleName,
-    setBleName,
-    getBleVersion,
     getSdkInfo,
     activeDevice,
     cosUpdate,
+    isBLStatus,
     checkDevice,
     checkUpdate,
     downloadApplet,

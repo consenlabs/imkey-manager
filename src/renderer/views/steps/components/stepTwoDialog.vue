@@ -20,7 +20,7 @@
                 <div class="inputBindCode">
                     <el-input v-model="BindCode"
                               style="width:250px"
-                              placeholder="enter bind code"
+                              placeholder="$t('m.stepTwo.enter_bind_code')"
                               @blur="handleBlur"
                               :class="isError?'errorBorder':''"></el-input>
                     <el-button
@@ -36,8 +36,8 @@
                 </div>
 
                 <div class="inputBindCode">
-                <h1 v-if="isError" class="errorNotice">{{noticeText}}</h1>
-                    </div>
+                    <h1 v-if="isError" class="errorNotice">{{noticeText}}</h1>
+                </div>
             </div>
             <div class="chooseBox">
                 <div>
@@ -54,8 +54,9 @@
 </template>
 
 <script>
+    import constants from "../../../../common/constants";
     import {
-        connect_device,
+        connectDevice,
         activeDevice,
         deviceBindAcquire,
         deviceBindCheck,
@@ -87,7 +88,7 @@
         watch: {
             boxVisible() {
                 if (this.boxVisible) {
-                    this.firstCheck();
+                    this.checkActiveAndBind();
                 }
             }
         },
@@ -108,7 +109,7 @@
                 getUserPath().then(result => {
                     if (result.code === 200) {
                         const electron = require('electron');
-                        const dataPath = (electron.app || electron.remote.app).getPath('userData')+"/";
+                        const dataPath = (electron.app || electron.remote.app).getPath('userData') + "/";
                         this.userPath = dataPath;
                     }
                 }).catch(err => {
@@ -116,10 +117,10 @@
                 })
             },
             connect() {
-                connect_device().then(result => {
+                connectDevice().then(result => {
                     if (result.code === 200) {
                         const res = result.data
-                        if (res == "true") {
+                        if (res == constants.RESULT_STATUS_SUCCESS) {
                         } else {
                             this.openErrorView(res);
                         }
@@ -130,18 +131,18 @@
                     this.openErrorView(err);
                 })
             },
-            getActiveDevice() {
+            activeDevice() {
                 setTimeout(() => {
                     activeDevice().then(result => {
                         if (result.code === 200) {
 
-                            if (result.data == "true") {
+                            if (result.data == constants.RESULT_STATUS_SUCCESS) {
                                 //激活成功
                                 this.loading1 = false;
                                 this.status1 = true;
                                 this.showTwo = true;
                                 //开始判断是否绑定
-                                this.getBindDevice();
+                                this.bindDevice();
                             } else {
                                 //激活失败
                                 this.openErrorView(result.data);
@@ -157,7 +158,7 @@
                 }, 200)
 
             },
-            getBindDevice() {
+            bindDevice() {
                 deviceBindCheck(this.userPath).then(result => {
                     if (result.code === 200) {
                         if (result.data == "" || result.data == null) {
@@ -172,7 +173,7 @@
                                 //弹出输入框
                                 this.bindShow = true;
                                 //显示绑定码
-                                this.DeviceBindDisplay();
+                                this.bindDisplay();
                             } else if (result.data == "bound_this") {
                                 this.isCorrect = true;
                                 this.showThree = true;
@@ -184,12 +185,12 @@
                                 }, 500);
                                 setTimeout(() => {
                                     //第三部成功的话
-                                    this.$emit("showTree", true);
+                                    this.$emit("showThree", true);
                                     this.handleClose();
                                 }, 1000);
-                            }else{
+                            } else {
                                 //如果其他错误，弹出提示框
-                                this.openErrorView(result.message);
+                                this.openErrorView(result.data);
                             }
                         }
                     } else {
@@ -201,18 +202,18 @@
                 })
 
             },
-            DeviceBindAcquire() {
+            bindAcquire() {
                 this.loading3 = true;
                 deviceBindAcquire(this.BindCode).then(result => {
                     if (result.code === 200) {
-                        if (result.data == "true") {
+                        if (result.data == constants.RESULT_STATUS_SUCCESS) {
                             setTimeout(() => {
                                 //已经绑定
                                 this.loading3 = false;
                             }, 1000);
                             setTimeout(() => {
                                 //第三部成功的话
-                                this.$emit("showTree", true);
+                                this.$emit("showThree", true);
                                 this.handleClose();
                             }, 2000);
 
@@ -226,11 +227,10 @@
                     this.openErrorView(err);
                 })
             },
-            DeviceBindDisplay() {
+            bindDisplay() {
                 deviceBindDisplay().then(result => {
                     if (result.code === 200) {
-                        console.log("deviceBindDisplay:" + result.data)
-                        if (result.data == "true") {
+                        if (result.data == constants.RESULT_STATUS_SUCCESS) {
 
                         } else {
                             this.openErrorView(result.data);
@@ -242,11 +242,21 @@
                     this.openErrorView(err);
                 })
             },
-            firstCheck() {
+            checkActiveAndBind() {
                 this.connect();
                 this.loading1 = true;
                 setTimeout(() => {
-                    this.getActiveDevice();
+                    //判断是否已激活
+                    if (this.$store.state.activeStatus == "latest") {
+                        //激活成功
+                        this.loading1 = false;
+                        this.status1 = true;
+                        this.showTwo = true;
+                        //开始判断是否绑定
+                        this.bindDevice();
+                    } else {
+                        this.activeDevice();
+                    }
                 }, 200);
             },
             handleClose(msg) {
@@ -276,7 +286,7 @@
                 this.status3 = true;
                 this.loading3 = true;
                 setTimeout(() => {
-                    this.DeviceBindAcquire();
+                    this.bindAcquire();
                 }, 200);
             },
             openErrorView(msg) {
@@ -302,16 +312,19 @@
         border-bottom: 1px solid #dcdcdc;
         height: 110px;
     }
-    .inputBindCode{
+
+    .inputBindCode {
         /*display: flex;*/
         align-items: center;
         justify-content: space-between;
         flex-wrap: wrap;
     }
-    .errorNotice{
+
+    .errorNotice {
         margin-top: -30px;
         font-size: 12px;
     }
+
     .sideBox {
         border: 1px solid #dcdcdc;
         border-radius: 5px;

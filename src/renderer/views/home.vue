@@ -18,8 +18,8 @@
                     <img src="../assets/erweima1.png" alt/>
                 </div>
                 <div class="btnBar">
-                    <div :class="{active:isActive1}" @click="btn1()">{{$t('m.home.WeChat_AliPay')}}</div>
-                    <div :class="{active:isActive2}" @click="btn2()">imToken</div>
+                    <div :class="{active:isActive1}" @click="btn_wechat_alipay()">{{$t('m.home.WeChat_AliPay')}}</div>
+                    <div :class="{active:isActive2}" @click="btn_imtoken()">imToken</div>
                 </div>
             </div>
         </div>
@@ -49,11 +49,11 @@
             buy() {
                 this.isShow = "block";
             },
-            btn1() {
+            btn_wechat_alipay() {
                 this.isActive1 = false;
                 this.isActive2 = true;
             },
-            btn2() {
+            btn_imtoken() {
                 this.isActive1 = true;
                 this.isActive2 = false;
             }

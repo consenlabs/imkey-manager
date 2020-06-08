@@ -7,6 +7,7 @@ export default new Vuex.Store({
     state: {
         agree: true,
         message: "",
+        activeStatus:"",
         apps: [],
         updateSuccess: false,
         oldVersionData: "",

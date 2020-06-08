@@ -17,8 +17,9 @@
 
 <script>
     import deviceImage from "../../../components/deviceImage";
+    import constants from "../../../../common/constants";
     import {
-        connect_device,
+        connectDevice,
     } from '../../../../api/devicemanager'
     import NoticeBox from "@/components/noticeDialog";
     export default {
@@ -44,11 +45,11 @@
         },
         methods: {
             connect() {
-                connect_device().then(result => {
+                connectDevice().then(result => {
 
                     if (result.code === 200) {
                         const res = result.data
-                        if (res == "true") {
+                        if (res == constants.RESULT_STATUS_SUCCESS) {
                             console.log("success res " + res)
                             this.$emit("showTwo");
                         } else {
