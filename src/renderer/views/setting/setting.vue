@@ -26,7 +26,7 @@
         </el-dialog>
         <h1>{{$t('m.setting.setting')}}</h1>
         <p class="notice">
-            <span>{{$t('m.setting.setting_imKey_desktop')}}</span>
+            <span>{{$t('m.setting.setting_imKey_manager')}}</span>
             <span>
         {{$t('m.setting.need_help')}}
         <i class="el-icon-connection" @click="help"></i>
@@ -36,12 +36,12 @@
             <div class="contentBox">
                 <img src="../../assets/logo64.png" style="width:60px;height:70px" alt="">
                 <div class="deviceName">
-                    <h3>imKey-desktop</h3>
-                    <p>{{$t('m.setting.imKey_desktop_version')}} {{oldVersionData}}</p>
+                    <h3>imKey-manager</h3>
+                    <p>{{$t('m.setting.imKey_manager_version')}} {{oldVersionData}}</p>
                 </div>
             </div>
             <div v-if="!updateSuccess">
-                <span class="updateMsg">{{$t('m.setting.imKey_desktop_version_is')}} {{newVersionData}} {{$t('m.setting.available')}}</span>
+                <span class="updateMsg">{{$t('m.setting.imKey_manager_version_is')}} {{newVersionData}} {{$t('m.setting.available')}}</span>
 
                 <el-button type="primary" @click="updateVersion" size="small" :loading="loading" >{{updateBtnTx}}</el-button>
             </div>

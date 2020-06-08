@@ -45,13 +45,13 @@
                                     size="small"
                                     :disabled="item.installDis"
                                     :loading="item.installLoading"
-                                    @click="install(item,index)"
+                                    @click="installApp(item,index)"
                             >{{item.buttonTexts}}
                             </el-button>
                             <el-button
                                     type="danger"
                                     size="small"
-                                    @click="delete(item,index)"
+                                    @click="deleteApp(item,index)"
                                     :disabled="item.deleteDis"
                                     :loading="item.deleteLoading"
                                     class="el-icon-delete"
@@ -68,7 +68,14 @@
     import deviceImage from "../../components/deviceImage";
     import constants from "../../../common/constants";
     import {
-        connectDevice, cosUpdate, cosCheckUpdate, checkUpdate, downloadApplet,updateApplet, deleteApplet, getFirmwareVersion
+        connectDevice,
+        cosUpdate,
+        cosCheckUpdate,
+        checkUpdate,
+        downloadApplet,
+        updateApplet,
+        deleteApplet,
+        getFirmwareVersion
     } from '../../../api/devicemanager'
     import NoticeBox from "@/components/noticeDialog";
 
@@ -80,6 +87,7 @@
                     type: Boolean,
                     default: false
                 },
+                buttonTexts: "",
                 appName: "",
                 isSuccess: false,
                 oldVersionData: "",
@@ -127,7 +135,7 @@
                                 this.newVersionData = this.$store.state.newVersionData;
                                 if (this.$store.state.apps == "" || this.$store.state.apps == null || this.$store.state.apps == []) {
                                     //加载应用
-                                    this.AppsList();
+                                    this.getAppsList();
                                 } else {
                                     this.apps = this.$store.state.apps;
                                     this.isSuccess = true;
@@ -249,10 +257,32 @@
             getAppsList() {
                 checkUpdate().then(result => {
                     if (result.code === 200) {
-                        this.apps = result.data.list;
-                        this.$store.state.apps = result.data.list;
+                        let appList = [];
+                        let tempAppList = result.data.list;
+                        for (let i = 0; i < tempAppList.length; i++) {
+                            let buttonTexts;
+                            if (tempAppList[i].buttonTexts == "update") {
+                                buttonTexts = this.$t('m.manager.update')
+                            } else {
+                                buttonTexts = this.$t('m.manager.install')
+                            }
+
+                            let collection = {
+                                name: tempAppList[i].name,
+                                desc: tempAppList[i].desc,
+                                id: i,
+                                installLoading: tempAppList[i].installLoading,
+                                installDis: tempAppList[i].installDis,
+                                deleteDis: tempAppList[i].deleteDis,
+                                deleteLoading: tempAppList[i].deleteLoading,
+                                icon: tempAppList[i].icon,
+                                buttonTexts: buttonTexts,
+                            };
+                            appList.push(collection);
+                        }
+                        this.apps = appList;
+                        this.$store.state.apps = appList;
                         this.isSuccess = true;
-                        // const total = result.data.total
                     } else {
                         this.openErrorView(result.message);
                     }
@@ -261,35 +291,39 @@
                 })
             },
 
-            install(item, index) {
-                this.apps[index].installLoading = true;
-                this.apps[index].deleteLoading = false;
-                setTimeout(() => {
-                    this.connect();
-                    downloadApplet(item.name).then(result => {
-                        if (result.code === 200) {
+            installApp(item, index) {
+                if (this.apps[index].buttonTexts == "update" || this.apps[index].buttonTexts == "更新") {
+                    this.updateApp(item, index);
+                } else {
+                    this.apps[index].installLoading = true;
+                    this.apps[index].deleteLoading = false;
+                    setTimeout(() => {
+                        this.connect();
+                        downloadApplet(item.name).then(result => {
+                            if (result.code === 200) {
 
-                            if (result.data == constants.RESULT_STATUS_SUCCESS) {
-                                this.apps[index].deleteDis = false;
-                                this.apps[index].installDis = true;
-                                this.apps[index].installLoading = false;
+                                if (result.data == constants.RESULT_STATUS_SUCCESS) {
+                                    this.apps[index].deleteDis = false;
+                                    this.apps[index].installDis = true;
+                                    this.apps[index].installLoading = false;
+                                } else {
+                                    this.apps[index].installLoading = false;
+                                    this.openErrorView(result.data);
+                                }
                             } else {
                                 this.apps[index].installLoading = false;
-                                this.openErrorView(result.data);
+                                this.openErrorView(result.message);
                             }
-                        } else {
+                        }).catch(err => {
                             this.apps[index].installLoading = false;
-                            this.openErrorView(result.message);
-                        }
-                    }).catch(err => {
-                        this.apps[index].installLoading = false;
-                        this.openErrorView(err);
+                            this.openErrorView(err);
 
-                    })
-                }, 200);
+                        })
+                    }, 200);
+                }
             },
 
-            update(item, index) {
+            updateApp(item, index) {
                 this.apps[index].installLoading = true;
                 this.apps[index].deleteLoading = false;
                 setTimeout(() => {
@@ -317,7 +351,7 @@
                 }, 200);
             },
 
-            delete(item, index) {
+            deleteApp(item, index) {
                 this.apps[index].deleteLoading = true;
                 this.apps[index].installLoading = false;
                 setTimeout(() => {

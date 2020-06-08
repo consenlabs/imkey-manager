@@ -107,10 +107,10 @@ export const m = {
         ok:"Ok",
         is_quit_update:"Exit update now ？",
         setting:"Setting",
-        setting_imKey_desktop:"Setting imKey-desktop",
+        setting_imKey_manager:"Setting imKey-manager",
         need_help:"Need Help?",
-        imKey_desktop_version:"imKey-desktop version",
-        imKey_desktop_version_is :"imKey-desktop version is ",
+        imKey_manager_version:"imKey-manager version",
+        imKey_manager_version_is :"imKey-manager version is ",
         available:"available",
 
     },

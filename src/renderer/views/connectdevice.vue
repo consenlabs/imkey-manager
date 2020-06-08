@@ -104,7 +104,30 @@
                             //缓存激活状态
                             this.$store.state.activeStatus = result.data.status;
                             //缓存应用数据
-                            this.$store.state.apps = result.data.list;
+                            let appList =[];
+                            let tempAppList = result.data.list;
+                            for (let i = 0; i < tempAppList.length; i++) {
+                                let buttonTexts;
+                                if (tempAppList[i].buttonTexts == "update") {
+                                    buttonTexts = this.$t('m.manager.update')
+                                } else {
+                                    buttonTexts = this.$t('m.manager.install')
+                                }
+
+                                let collection = {
+                                    name: tempAppList[i].name,
+                                    desc: tempAppList[i].desc,
+                                    id: i,
+                                    installLoading: tempAppList[i].installLoading,
+                                    installDis: tempAppList[i].installDis,
+                                    deleteDis: tempAppList[i].deleteDis,
+                                    deleteLoading: tempAppList[i].deleteLoading,
+                                    icon: tempAppList[i].icon,
+                                    buttonTexts: buttonTexts,
+                                };
+                                appList.push(collection);
+                            }
+                            this.$store.state.apps = appList;
                             if (activeStatus == "latest") {
                                 this.connectText = this.$t('m.connectDevice.active_success');
                                 this.checkIsBind();

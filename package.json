@@ -1,8 +1,8 @@
 {
-  "name": "imkey-desktop",
+  "name": "imKey-manager",
   "version": "0.0.9",
   "author": "imkey <weiqiang@imkey.im>",
-  "description": "imkey-desktop @2020",
+  "description": "imKey-manager @2020",
   "license": "MIT",
   "main": "./dist/electron/main.js",
   "scripts": {
@@ -18,8 +18,8 @@
     "release": "node .electron-vue/build.js && electron-builder"
   },
   "build": {
-    "productName": "imkey-desktop",
-    "appId": "com.imkey.imkey-desktop",
+    "productName": "imkey-manager",
+    "appId": "com.imkey.imkey-manager",
     "copyright": "Copyright © 2020 imkey",
     "directories": {
       "output": "build"
@@ -36,7 +36,7 @@
     ],
     "publish": {
       "provider": "github",
-      "repo": "imkey-desktop",
+      "repo": "imkey-manager",
       "owner": "fengweiqiang-coder",
       "releaseType": "release"
     },
@@ -148,10 +148,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/consenlabs/imkey-desktop.git"
+    "url": "git+https://github.com/consenlabs/imkey-manager.git"
   },
   "bugs": {
-    "url": "https://github.com/consenlabs/imkey-desktop/issues"
+    "url": "https://github.com/consenlabs/imkey-manager/issues"
   },
-  "homepage": "https://github.com/consenlabs/imkey-desktop#readme"
+  "homepage": "https://github.com/consenlabs/imkey-manager#readme"
 }

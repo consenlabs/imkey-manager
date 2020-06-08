@@ -182,16 +182,20 @@ export function checkUpdate() {
                         deleteDis = true;
                         deleteLoading = false;
                     }
-                buttonTexts = "安装";
-                if (collections[i].appName == "IMK"|| collections[i].appName == "BTC"){
+
+                    if(collections[i].latestVersion == collections[i].installedVersion){
+                        buttonTexts = "update";
+                    }else{
+                        buttonTexts = "install";
+                    }
+                if (collections[i].appName == "IMK" || collections[i].appName == "BTC"){
                     deleteDis = true;
-                    buttonTexts = "更新";
                 }
                     let collection = {
                         name: collections[i].appName,
-                        desc: "version " + collections[i].latestVersion,
+                        desc: "version " + collections[i].installedVersion,
                         id: i,
-                        installLoading: deleteLoading,
+                        installLoading: installLoading,
                         installDis: installDis,
                         deleteDis: deleteDis,
                         deleteLoading: deleteLoading,

@@ -109,10 +109,10 @@ export const m = {
         ok:"确定",
         is_quit_update:"是否立刻退出更新？",
         setting:"设置",
-        setting_imKey_desktop:"设置imKey-desktop",
+        setting_imKey_manager:"设置imKey-manager",
         need_help:"帮助?",
-        imKey_desktop_version:"imKey-desktop版本",
-        imKey_desktop_version_is :"imKey-desktop有新的版本",
+        imKey_manager_version:"imKey-manager版本",
+        imKey_manager_version_is :"imKey-manager有新的版本",
         available:"可用",
     },
     menu:{
