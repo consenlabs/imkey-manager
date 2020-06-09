@@ -74,7 +74,7 @@ function createMainWindow() {
     mainWindow.once('ready-to-show', () => {
         mainWindow.show()
     })
-    
+
     /**
      * 监听
      */
@@ -228,6 +228,7 @@ function autoUpdate() {
     function sendUpdateMessage(obj) {
         mainWindow.webContents.send('updateMessage', obj)
     }
+
     // 监测更新，在你想要检查更新的时候执行，renderer事件触发后的操作自行编写
     const message = {
         error: '检查更新出错',
@@ -369,7 +370,7 @@ function protocalHandler() {
 
     // 注册协议
     const PROTOCOL = pkg.name
-    console.log("PROTOCOL:"+PROTOCOL)
+    console.log("PROTOCOL:" + PROTOCOL)
     app.setAsDefaultProtocolClient(PROTOCOL, process.execPath, args)
 
     // 如果打开协议时，没有其他实例，则当前实例当做主实例，处理参数
@@ -400,7 +401,7 @@ function protocalHandler() {
 
     // 解析Url
     function handleUrl(urlStr) {
-        console.log("urlStr:"+urlStr)
+        console.log("urlStr:" + urlStr)
         // myapp:?a=1&b=2
         const urlObj = new URL(urlStr);
         const {searchParams} = urlObj;

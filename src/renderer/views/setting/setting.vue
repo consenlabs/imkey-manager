@@ -1,18 +1,17 @@
 <template>
     <div class="setting">
-
-            <el-dialog
-                    :title="$t('m.setting.info')"
-                    :visible.sync="centerDialogVisible"
-                    width="30%"
-                    center>
-                <span>{{description}}</span>
-                <span>{{$t('m.setting.is_update')}}</span>
-                <span slot="footer" class="dialog-footer">
+        <el-dialog
+                :title="$t('m.setting.info')"
+                :visible.sync="centerDialogVisible"
+                width="30%"
+                center>
+            <span>{{description}}</span>
+            <span>{{$t('m.setting.is_update')}}</span>
+            <span slot="footer" class="dialog-footer">
     <el-button @click="centerDialogVisible = false">{{$t('m.setting.cancel')}}</el-button>
     <el-button type="primary" @click="updateSoft">{{$t('m.setting.ok')}}</el-button>
   </span>
-            </el-dialog>
+        </el-dialog>
         <el-dialog
                 title="info"
                 :visible.sync="dialogUpdateNow"
@@ -43,7 +42,8 @@
             <div v-if="!updateSuccess">
                 <span class="updateMsg">{{$t('m.setting.imKey_manager_version_is')}} {{newVersionData}} {{$t('m.setting.available')}}</span>
 
-                <el-button type="primary" @click="updateVersion" size="small" :loading="loading" >{{updateBtnTx}}</el-button>
+                <el-button type="primary" @click="updateVersion" size="small" :loading="loading">{{updateBtnTx}}
+                </el-button>
             </div>
         </div>
 
@@ -52,19 +52,20 @@
 
 <script>
     import {ipcRenderer} from 'electron'
-     let packagejson = require("../../../../package.json");
+
+    let packagejson = require("../../../../package.json");
 
     export default {
         name: "setting",
         data() {
             return {
-                updateBtnTx:"update",
-                centerDialogVisible:false,
+                updateBtnTx: "update",
+                centerDialogVisible: false,
                 oldVersionData: packagejson.version,
                 newVersionData: "",
                 loading: false,
                 updateSuccess: true,
-                isUpdate:false,
+                isUpdate: false,
                 dialogUpdateNow: false,
                 downloading: false,
                 hasNewVersion: false,
@@ -73,7 +74,7 @@
                 showError: false,
                 errorInfo: {},
                 versionInfoList: [],
-                description:""
+                description: ""
             };
         },
         destroyed() {
@@ -84,18 +85,18 @@
         },
         mounted() {
             if (process.env.NODE_ENV === 'production') {
-                this.checkForUpdate()
+                this.checkSoftUpdate()
             }
         },
         methods: {
-            updateSoft(){
-                this.centerDialogVisible=false;
+            updateSoft() {
+                this.centerDialogVisible = false;
                 this.loading = true;
-                this.updateBtnTx="updating"
+                this.updateBtnTx = "updating"
                 this.downloadAndUpdate();
             },
             updateVersion() {
-                this.centerDialogVisible=true;
+                this.centerDialogVisible = true;
             },
             downloadAndUpdate() {
                 this.downloading = true
@@ -104,7 +105,7 @@
                 ipcRenderer.on('downloadProgress', (event, progressObj) => {
                     this.progress = JSON.stringify(progressObj)
                     this.downloadPercent = progressObj.percent.toFixed(0) || 0
-                    this.updateBtnTx="downloading "+this.downloadPercent+"%"
+                    this.updateBtnTx = "downloading " + this.downloadPercent + "%"
                     if (progressObj.percent === 100) {
                         this.loading = false
                         // 询问是否立即更新
@@ -113,28 +114,27 @@
                 })
             },
             updateNow() {
-                this.dialogUpdateNow=false;
+                this.dialogUpdateNow = false;
                 // 立刻退出并更新
                 ipcRenderer.send('isUpdateNow')
             },
-            checkForUpdate() {
+            checkSoftUpdate() {
                 // 开始检查
                 ipcRenderer.send('checkForUpdate')
                 // 添加自动更新事件的监听
                 ipcRenderer.on('updateMessage', (event, obj) => {
                     if (obj.action === 'updateAva') {
 
-
-                        this.newVersionData=obj.updateInfo.version;
+                        this.newVersionData = obj.updateInfo.version;
                         this.description = obj.updateInfo.releaseNotes;
                         this.hasNewVersion = true
-                        this.updateSuccess=false
+                        this.updateSuccess = false
                     } else if (obj.action === 'error') {
                         this.showError = true
                         this.errorInfo = obj.errorInfo
                     } else if (obj.action === 'updateNotAva') {
                         // this.noNewVersion = true
-                        this.updateSuccess=true;
+                        this.updateSuccess = true;
                     } else {
                         // console.log(text)
                     }

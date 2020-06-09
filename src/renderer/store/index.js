@@ -7,11 +7,11 @@ export default new Vuex.Store({
     state: {
         agree: true,
         message: "",
-        activeStatus:"",
+        activeStatus: "",
         apps: [],
         updateSuccess: false,
         oldVersionData: "",
-        buttonTexts:""
+        buttonTexts: ""
     },
     mutations: {},
     actions: {},

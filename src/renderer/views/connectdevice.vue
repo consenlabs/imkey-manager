@@ -104,7 +104,7 @@
                             //缓存激活状态
                             this.$store.state.activeStatus = result.data.status;
                             //缓存应用数据
-                            let appList =[];
+                            let appList = [];
                             let tempAppList = result.data.list;
                             for (let i = 0; i < tempAppList.length; i++) {
                                 let buttonTexts;
@@ -162,7 +162,7 @@
                                     //成功绑定 继续
                                     this.bindStatus = true;
                                     this.checkIsCreateWallet();
-                                }else{
+                                } else {
                                     this.openErrorView(result.data);
                                 }
                             }
@@ -214,7 +214,7 @@
                             this.connectStatus = true;
                             this.checkIsBL();
                         } else {
-                            this.openErrorView("connect:"+res);
+                            this.openErrorView("connect:" + res);
                         }
 
                     }).catch(err => {
@@ -225,21 +225,21 @@
             toCosUpdate() {
                 this.connectText = this.$t('m.connectDevice.upgrading_firmware');
                 setTimeout(() => {
-                cosUpdate().then(result => {
-                    if (result.code === 200) {
-                        if (result.data == constants.RESULT_STATUS_SUCCESS) {
-                            //cos更新成功检查是否激活
-                            this.BLStatus = true;
-                            this.checkIsActive();
+                    cosUpdate().then(result => {
+                        if (result.code === 200) {
+                            if (result.data == constants.RESULT_STATUS_SUCCESS) {
+                                //cos更新成功检查是否激活
+                                this.BLStatus = true;
+                                this.checkIsActive();
+                            } else {
+                                this.openErrorView(result.data);
+                            }
                         } else {
-                            this.openErrorView(result.data);
+                            this.openErrorView(result.message);
                         }
-                    } else {
-                        this.openErrorView(result.message);
-                    }
-                }).catch(err => {
-                    this.openErrorView(err);
-                })
+                    }).catch(err => {
+                        this.openErrorView(err);
+                    })
                 }, 200)
             },
             getUserPath() {
@@ -247,7 +247,7 @@
                 getUserPath().then(result => {
                     if (result.code === 200) {
                         const electron = require('electron');
-                        const dataPath = (electron.app || electron.remote.app).getPath('userData')+"/";
+                        const dataPath = (electron.app || electron.remote.app).getPath('userData') + "/";
                         this.userPath = dataPath;
                     }
                 }).catch(err => {
@@ -290,9 +290,9 @@
 
             },
             closeErrorView(msg) {
-                this.connectText=this.$t('m.connectDevice.connect')
+                this.connectText = this.$t('m.connectDevice.connect')
                 this.noticeVisible = false;
-                if(msg.toString().indexOf("connect:") !== -1 ){
+                if (msg.toString().indexOf("connect:") !== -1) {
                     this.connect();
                 }
             }

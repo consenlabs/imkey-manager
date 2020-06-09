@@ -1,7 +1,7 @@
 <template>
     <div class="stepThree">
-        <NoticeBox  :noticeVisible="noticeVisible"
-                    @closeNotice="closeErrorView"></NoticeBox>
+        <NoticeBox :noticeVisible="noticeVisible"
+                   @closeNotice="closeErrorView"></NoticeBox>
         <h2>{{$t('m.stepThree.set_pin_create_wallet')}}</h2>
         <p>{{$t('m.stepThree.please_disconnect')}}</p>
         <div>
@@ -25,7 +25,9 @@
                     <el-checkbox v-model="isSeeTwos" label></el-checkbox>
                 </div>
             </div>
-            <el-button type="primary" style="width:100%" :loading="nextLoading" @click="connect">{{$t('m.stepThree.next')}}</el-button>
+            <el-button type="primary" style="width:100%" :loading="nextLoading" @click="connect">
+                {{$t('m.stepThree.next')}}
+            </el-button>
         </div>
         <OptionOne :optionOneVisible="optionOneVisible" @closeOneBox="closeOneBox($event)"></OptionOne>
         <OptionTwo :optionTwoVisible="optionTwoVisible" @closeTwoBox="closeTwoBox($event)"></OptionTwo>
@@ -41,6 +43,7 @@
     } from '../../../../api/walletapi'
     import {connectDevice,} from "../../../../api/devicemanager";
     import NoticeBox from "@/components/noticeDialog";
+
     export default {
         name: "Home",
         data() {
@@ -50,7 +53,7 @@
                 isSeeOne: true,
                 isSeeTwos: true,
                 nextLoading: false,
-                noticeVisible:false
+                noticeVisible: false
             };
         },
         components: {
@@ -129,11 +132,11 @@
                 this.isSeeTwos = true;
             },
             openErrorView(msg) {
-                this.nextLoading=false;
-                this.$store.state.message=msg;
+                this.nextLoading = false;
+                this.$store.state.message = msg;
                 this.noticeVisible = true;
-                this.isSeeOne=false;
-                this.isSeeTwos=false;
+                this.isSeeOne = false;
+                this.isSeeTwos = false;
             },
             closeErrorView(msg) {
                 this.noticeVisible = false;

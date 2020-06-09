@@ -56,7 +56,7 @@ function getDeviceManageFunction(method_) {
             result = response.getCheckResult();
         } else {//method_ === "device_activate"||"device_secure_check"||"bind_display_code"
             let response = new api_pb.CommonResponse.deserializeBinary(hexStr2Bytes(resBuffer));
-            result =  response.getResult();
+            result = response.getResult();
         }
         return result;
     } else {
@@ -132,7 +132,7 @@ function bindAcquire(bindCode) {
     let error = callImKeyCore.get_last_err_message();
     if (error === "" || error === null) {
         let response = new device_pb.BindAcquireRes.deserializeBinary(hexStr2Bytes(resBuffer));
-            return response.getBindResult();
+        return response.getBindResult();
     } else {
         let errorResponse = new api_pb.ErrorResponse.deserializeBinary(hexStr2Bytes(error));
         return errorResponse.getError();

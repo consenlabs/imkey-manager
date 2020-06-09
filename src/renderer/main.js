@@ -12,14 +12,16 @@ Vue.prototype.router = router;
 Vue.use(ElementUI)
 Vue.use(VueI18n);
 //弹出框禁止滑动
-Vue.prototype.noScroll = function () {
-    var mo = function (e) { e.preventDefault() }
-    document.body.style.overflow = 'hidden'
-    document.addEventListener('touchmove', mo, false)// 禁止页面滑动
+Vue.prototype.noScroll = function () {
+    var mo = function (e) {
+        e.preventDefault()
+    }
+    document.body.style.overflow = 'hidden'
+    document.addEventListener('touchmove', mo, false)// 禁止页面滑动
 }
 
 //弹出框可以滑动
-Vue.prototype.canScroll = function () {
+Vue.prototype.canScroll = function () {
     var mo = function (e) {
         e.preventDefault()
     }
@@ -29,8 +31,8 @@ Vue.prototype.canScroll = function () {
 //获取系统语言，根据系统语言来切换语言
 let app = require('electron').remote.app
 let sysLocale = app.getLocale();
-if(sysLocale != "zh-CN"){
-    sysLocale="en-US";
+if (sysLocale != "zh-CN") {
+    sysLocale = "en-US";
 }
 
 //VueI18n

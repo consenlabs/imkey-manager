@@ -1,7 +1,7 @@
 <template>
     <div class="stepTwo">
-        <NoticeBox  :noticeVisible="noticeVisible"
-                    @closeNotice="closeErrorView"></NoticeBox>
+        <NoticeBox :noticeVisible="noticeVisible"
+                   @closeNotice="closeErrorView"></NoticeBox>
         <h2>{{$t('m.stepTwo.active_bind')}}</h2>
         <p>{{$t('m.stepTwo.please_active_bind')}}</p>
         <div>
@@ -37,6 +37,7 @@
 <script>
     import CheckBox from "./stepTwoDialog";
     import NoticeBox from "@/components/noticeDialog";
+
     export default {
         name: "Home",
         data() {
@@ -46,7 +47,7 @@
                 noOneType: "",
                 noTowType: "",
                 boxVisible: false,
-                noticeVisible:false
+                noticeVisible: false
             };
         },
         components: {
@@ -66,7 +67,7 @@
                 //取消显示进度的窗口，弹出错误窗口
                 this.boxVisible = false;
                 setTimeout(() => {
-                this.openErrorView(msg)
+                    this.openErrorView(msg)
                 }, 200)
             },
             toShowThree(val) {
@@ -77,8 +78,8 @@
                 }
             },
             openErrorView(msg) {
-                if(msg!="function () { [native code] }"){
-                    this.$store.state.message=msg
+                if (msg != "function () { [native code] }") {
+                    this.$store.state.message = msg
                     this.noticeVisible = true;
                 }
             },

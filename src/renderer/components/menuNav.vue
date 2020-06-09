@@ -43,7 +43,7 @@
         height: 60px;
     }
 
-      /deep/ .el-menu-item {
+    /deep/ .el-menu-item {
         text-align: left;
     }
 </style>

@@ -47,7 +47,7 @@ function getDeviceManageFunction(method_) {
         } else if (method_ === "get_firmware_version") {
             let response = new device_pb.GetFirmwareVersionRes.deserializeBinary(hexStr2Bytes(resBuffer));
             result = response.getFirmwareVersion();
-        }  else if (method_ === "get_sdk_info") {
+        } else if (method_ === "get_sdk_info") {
             let response = new device_pb.GetSdkInfoRes.deserializeBinary(hexStr2Bytes(resBuffer));
             result = response.getSdkVersion();
         } else if (method_ === "check_update") {
@@ -60,8 +60,8 @@ function getDeviceManageFunction(method_) {
             let response = new device_pb.IsBlStatusRes.deserializeBinary(hexStr2Bytes(resBuffer));
             result = response.getCheckResult();
         } else {//method_ === "device_activate"||"device_secure_check"||"bind_display_code"
-                let response = new api_pb.CommonResponse.deserializeBinary(hexStr2Bytes(resBuffer));
-                result =  response.getResult();
+            let response = new api_pb.CommonResponse.deserializeBinary(hexStr2Bytes(resBuffer));
+            result = response.getResult();
         }
         return result;
     } else {
@@ -150,7 +150,7 @@ function bindAcquire(bindCode) {
     let error = callImKeyCore.get_last_err_message();
     if (error == "" || error == null) {
         let response = new device_pb.BindAcquireRes.deserializeBinary(hexStr2Bytes(resBuffer));
-            return response.getBindResult();
+        return response.getBindResult();
     } else {
         let errorResponse = new api_pb.ErrorResponse.deserializeBinary(hexStr2Bytes(error));
         return errorResponse.getError();
@@ -162,7 +162,7 @@ export function checkUpdate() {
         try {
             let response = getDeviceManageFunction("check_update");
             let collections = response.availableAppListList;
-                let list = [];
+            let list = [];
             let installLoading;
             let installDis;
             let deleteDis;
@@ -171,45 +171,45 @@ export function checkUpdate() {
             for (let i = 0; i < collections.length; i++) {
                 //过滤imkey Applet 不显示IMK applet
 
-                    if (collections[i].installedVersion != "none" || collections[i].installedVersion != null) {
-                        installLoading = false;
-                        installDis = true;
-                        deleteDis = false;
-                        deleteLoading = false;
-                    } else {
-                        installLoading = false;
-                        installDis = false;
-                        deleteDis = true;
-                        deleteLoading = false;
-                    }
+                if (collections[i].installedVersion != "none" || collections[i].installedVersion != null) {
+                    installLoading = false;
+                    installDis = true;
+                    deleteDis = false;
+                    deleteLoading = false;
+                } else {
+                    installLoading = false;
+                    installDis = false;
+                    deleteDis = true;
+                    deleteLoading = false;
+                }
 
-                    if(collections[i].latestVersion == collections[i].installedVersion){
-                        buttonTexts = "update";
-                    }else{
-                        buttonTexts = "install";
-                    }
-                if (collections[i].appName == "IMK" || collections[i].appName == "BTC"){
+                if (collections[i].latestVersion == collections[i].installedVersion) {
+                    buttonTexts = "update";
+                } else {
+                    buttonTexts = "install";
+                }
+                if (collections[i].appName == "IMK" || collections[i].appName == "BTC") {
                     deleteDis = true;
                 }
-                    let collection = {
-                        name: collections[i].appName,
-                        desc: "version " + collections[i].installedVersion,
-                        id: i,
-                        installLoading: installLoading,
-                        installDis: installDis,
-                        deleteDis: deleteDis,
-                        deleteLoading: deleteLoading,
-                        icon: collections[i].appLogo,
-                        buttonTexts:buttonTexts,
-                    };
-                    list.push(collection);
+                let collection = {
+                    name: collections[i].appName,
+                    desc: "version " + collections[i].installedVersion,
+                    id: i,
+                    installLoading: installLoading,
+                    installDis: installDis,
+                    deleteDis: deleteDis,
+                    deleteLoading: deleteLoading,
+                    icon: collections[i].appLogo,
+                    buttonTexts: buttonTexts,
+                };
+                list.push(collection);
 
             }
             let total = list.length;
             let status = response.status;
             resolve({
                 code: 200,
-                data: _.cloneDeep({status:status,total: total, list: list})
+                data: _.cloneDeep({status: status, total: total, list: list})
             })
         } catch (err) {
             return reject({
@@ -308,6 +308,7 @@ export function getFirmwareVersion() {
         }
     })
 }
+
 export function isBLStatus() {
 
     return new Promise((resolve, reject) => {

@@ -19,16 +19,16 @@
     export default {
         name: "notice",
         props: {noticeVisible: Boolean},
-        data(){
-          return{
-              Message:"",
-          } ;
+        data() {
+            return {
+                Message: "",
+            };
         },
 
         watch: {
             noticeVisible() {
                 if (this.noticeVisible) {
-                    this.Message=this.$store.state.message;
+                    this.Message = this.$store.state.message;
                 }
             }
         },

@@ -1,7 +1,7 @@
 <template>
     <div class="stepOne">
-        <NoticeBox  :noticeVisible="noticeVisible"
-                    @closeNotice="closeErrorView"></NoticeBox>
+        <NoticeBox :noticeVisible="noticeVisible"
+                   @closeNotice="closeErrorView"></NoticeBox>
         <h2>{{$t('m.stepOne.connect_imKey')}}</h2>
         <div>
             <div :class="['selectBox',isTwoChoose?'active':'','deviceBox']" :loading="connectLoading"
@@ -22,6 +22,7 @@
         connectDevice,
     } from '../../../../api/devicemanager'
     import NoticeBox from "@/components/noticeDialog";
+
     export default {
         name: "Home",
         data() {
@@ -31,7 +32,7 @@
                 isOneChoose: false,
                 isTwoChoose: false,
                 isTreeChoose: false,
-                noticeVisible:false
+                noticeVisible: false
             };
         },
         components: {
@@ -50,7 +51,6 @@
                     if (result.code === 200) {
                         const res = result.data
                         if (res == constants.RESULT_STATUS_SUCCESS) {
-                            console.log("success res " + res)
                             this.$emit("showTwo");
                         } else {
                             this.openErrorView(res);
@@ -91,7 +91,7 @@
                 this.isOneChoose = false;
                 this.isTwoChoose = false;
                 this.connectLoading = false;
-                this.$store.state.message=msg
+                this.$store.state.message = msg
                 this.noticeVisible = true;
 
             },

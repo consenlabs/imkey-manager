@@ -1,12 +1,12 @@
 let walletApi = require('./walletapi');
 let constants = require('../common/constants');
-let DeviceManger = require('./devicemanagerapi');
+let deviceManger = require('./devicemanagerapi');
 const electron = require('electron');
 const filePath = (electron.app || electron.remote.app).getPath('userData') + "/";
 
 export function api(apiName, json) {
     let result;
-    let connectRes = DeviceManger.connect("imKey Pro");
+    let connectRes = deviceManger.connect("imKey Pro");
     if (connectRes != constants.RESULT_STATUS_SUCCESS) {
         result = {
             error: connectRes,
@@ -14,7 +14,7 @@ export function api(apiName, json) {
         return result;
     } else {
         //检查是否绑定
-        let bindCheckRes = DeviceManger.deviceBindCheck(filePath);
+        let bindCheckRes = deviceManger.deviceBindCheck(filePath);
         if (bindCheckRes != "bound_this") {
             result = {
                 error: bindCheckRes,
@@ -29,22 +29,22 @@ export function api(apiName, json) {
         };
         return result;
     }
-        // else if(apiName =="getSeid"){return DeviceManger.getSeid()}
-        // else if(apiName =="getSn"){ return DeviceManger.getSn()}
-        // else if(apiName =="getRamSize"){ return DeviceManger.getRamSize()}
-        // else if(apiName =="getFirmwareVersion"){ return DeviceManger.getFirmwareVersion()}
-        // else if(apiName =="getBatteryPower"){ return DeviceManger.getBatteryPower()}
-        // else if(apiName =="getLifeTime"){ return DeviceManger.getLifeTime()}
-        // else if(apiName =="getBleName"){ return DeviceManger.getBleName()}
-        // else if(apiName =="setBleName"){ return DeviceManger.setBleName()}
-        // else if(apiName =="getBleVersion"){ return DeviceManger.getBleVersion()}
-        // else if(apiName =="activeDevice"){ return DeviceManger.activeDevice()}
-        // else if(apiName =="checkDevice"){ return DeviceManger.checkDevice()}
-        // else if(apiName =="checkUpdate"){ return DeviceManger.checkUpdate()}
-        // else if(apiName =="downloadApplet"){ return DeviceManger.downloadApplet()}
-        // else if(apiName =="updateApplet"){ return DeviceManger.updateApplet()}
-        // else if(apiName =="deleteApplet"){ return DeviceManger.deleteApplet()}
-    // else if(apiName =="deviceBindCheck"){return DeviceManger.deviceBindCheck()}
+        // else if(apiName =="getSeid"){return deviceManger.getSeid()}
+        // else if(apiName =="getSn"){ return deviceManger.getSn()}
+        // else if(apiName =="getRamSize"){ return deviceManger.getRamSize()}
+        // else if(apiName =="getFirmwareVersion"){ return deviceManger.getFirmwareVersion()}
+        // else if(apiName =="getBatteryPower"){ return deviceManger.getBatteryPower()}
+        // else if(apiName =="getLifeTime"){ return deviceManger.getLifeTime()}
+        // else if(apiName =="getBleName"){ return deviceManger.getBleName()}
+        // else if(apiName =="setBleName"){ return deviceManger.setBleName()}
+        // else if(apiName =="getBleVersion"){ return deviceManger.getBleVersion()}
+        // else if(apiName =="activeDevice"){ return deviceManger.activeDevice()}
+        // else if(apiName =="checkDevice"){ return deviceManger.checkDevice()}
+        // else if(apiName =="checkUpdate"){ return deviceManger.checkUpdate()}
+        // else if(apiName =="downloadApplet"){ return deviceManger.downloadApplet()}
+        // else if(apiName =="updateApplet"){ return deviceManger.updateApplet()}
+        // else if(apiName =="deleteApplet"){ return deviceManger.deleteApplet()}
+    // else if(apiName =="deviceBindCheck"){return deviceManger.deviceBindCheck()}
     else if (apiName == "transactionBTC") {
         let response = walletApi.BitcoinTransaction_BTC(json)
         if (response.getTxHash() == "" || response.getTxHash() == null || response.getTxHash().isUndefined) {

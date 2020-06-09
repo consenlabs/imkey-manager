@@ -21,6 +21,7 @@
 <script>
     import MenuNav from "@/components/menuNav";
     import NoticeBox from "@/components/noticeDialog";
+
     export default {
         name: "index",
 

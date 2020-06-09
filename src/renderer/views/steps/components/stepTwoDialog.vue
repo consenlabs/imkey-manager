@@ -113,7 +113,7 @@
                         this.userPath = dataPath;
                     }
                 }).catch(err => {
-
+                    this.openErrorView(err);
                 })
             },
             connect() {
