@@ -168,32 +168,40 @@ export function checkUpdate() {
             let deleteDis;
             let deleteLoading;
             let buttonTexts;
+            let version;
             for (let i = 0; i < collections.length; i++) {
-                //过滤imkey Applet 不显示IMK applet
 
-                if (collections[i].installedVersion != "none" || collections[i].installedVersion != null) {
-                    installLoading = false;
-                    installDis = true;
-                    deleteDis = false;
-                    deleteLoading = false;
-                } else {
+                if (collections[i].installedVersion === "none" || collections[i].installedVersion === null) {
                     installLoading = false;
                     installDis = false;
                     deleteDis = true;
                     deleteLoading = false;
-                }
-
-                if (collections[i].latestVersion == collections[i].installedVersion) {
-                    buttonTexts = "update";
                 } else {
-                    buttonTexts = "install";
+                    installLoading = false;
+                    installDis = true;
+                    deleteDis = false;
+                    deleteLoading = false;
                 }
+                if (collections[i].latestVersion === collections[i].installedVersion) {
+                    buttonTexts = "install";
+                    version = "version " + collections[i].installedVersion;
+                } else {
+                    if (collections[i].installedVersion === "none" || collections[i].installedVersion === null) {
+                        buttonTexts = "install";
+                        version = "";
+                    } else {
+                        buttonTexts = "update";
+                        version = "version " + collections[i].installedVersion
+                    }
+                }
+                //过滤imkey Applet BTC Applet 不能删除
                 if (collections[i].appName == "IMK" || collections[i].appName == "BTC") {
                     deleteDis = true;
                 }
                 let collection = {
                     name: collections[i].appName,
-                    desc: "version " + collections[i].installedVersion,
+                    desc: version,
+                    lastVersion: "version " + collections[i].latestVersion,
                     id: i,
                     installLoading: installLoading,
                     installDis: installDis,
@@ -423,7 +431,6 @@ export function checkDevice() {
 // }
 
 export function downloadApplet(AppName) {
-    console.log("AppName:" + AppName)
     return new Promise((resolve, reject) => {
         try {
             resolve({
@@ -440,7 +447,6 @@ export function downloadApplet(AppName) {
 }
 
 export function updateApplet(AppName) {
-    console.log("AppName:" + AppName)
     return new Promise((resolve, reject) => {
         try {
             resolve({
@@ -457,7 +463,6 @@ export function updateApplet(AppName) {
 }
 
 export function deleteApplet(AppName) {
-    console.log("AppName:" + AppName)
     return new Promise((resolve, reject) => {
         try {
             resolve({

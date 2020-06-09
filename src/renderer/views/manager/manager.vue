@@ -223,6 +223,14 @@
                                 this.loading = false;
                                 this.updateSuccess = false;
                                 this.oldVersionData = this.newVersionData;
+                                //更新完cos之后需要清除缓存重新加载数据刷新页面
+                                this.$store.state.updateSuccess = false;
+                                this.$store.state.oldVersionData = "";
+                                this.$store.state.newVersionData = "";
+                                this.$store.state.apps = [];
+                                setTimeout(() => {
+                                    this.init();
+                                }, 200);
                             } else {
                                 this.updateSuccess = true;
                                 this.loading = false;
@@ -270,6 +278,7 @@
                             let collection = {
                                 name: tempAppList[i].name,
                                 desc: tempAppList[i].desc,
+                                lastVersion: tempAppList[i].lastVersion,
                                 id: i,
                                 installLoading: tempAppList[i].installLoading,
                                 installDis: tempAppList[i].installDis,
@@ -306,6 +315,7 @@
                                     this.apps[index].deleteDis = false;
                                     this.apps[index].installDis = true;
                                     this.apps[index].installLoading = false;
+                                    this.apps[index].desc = this.apps[index].lastVersion;
                                 } else {
                                     this.apps[index].installLoading = false;
                                     this.openErrorView(result.data);
@@ -335,6 +345,7 @@
                                 this.apps[index].deleteDis = false;
                                 this.apps[index].installDis = true;
                                 this.apps[index].installLoading = false;
+                                this.apps[index].desc = this.apps[index].lastVersion;
                             } else {
                                 this.apps[index].installLoading = false;
                                 this.openErrorView(result.data);
@@ -363,6 +374,7 @@
                                 this.apps[index].deleteDis = true;
                                 this.apps[index].installDis = false;
                                 this.apps[index].deleteLoading = false;
+                                this.apps[index].desc = "";
                             } else {
                                 this.apps[index].deleteLoading = false;
                                 this.openErrorView(result.data);

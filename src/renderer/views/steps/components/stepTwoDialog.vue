@@ -20,7 +20,7 @@
                 <div class="inputBindCode">
                     <el-input v-model="BindCode"
                               style="width:250px"
-                              placeholder="$t('m.stepTwo.enter_bind_code')"
+                              :placeholder="$t('m.stepTwo.enter_bind_code')"
                               @blur="handleBlur"
                               :class="isError?'errorBorder':''"></el-input>
                     <el-button

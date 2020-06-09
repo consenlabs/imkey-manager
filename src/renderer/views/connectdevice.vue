@@ -117,6 +117,7 @@
                                 let collection = {
                                     name: tempAppList[i].name,
                                     desc: tempAppList[i].desc,
+                                    lastVersion: tempAppList[i].lastVersion,
                                     id: i,
                                     installLoading: tempAppList[i].installLoading,
                                     installDis: tempAppList[i].installDis,

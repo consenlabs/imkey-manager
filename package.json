@@ -24,16 +24,6 @@
     "directories": {
       "output": "build"
     },
-    "extraResources": [
-      {
-        "from": "./connector.dll",
-        "to": "../"
-      },
-      {
-        "from": "./connector.dylib",
-        "to": "../"
-      }
-    ],
     "publish": {
       "provider": "github",
       "repo": "imkey-manager",
@@ -62,12 +52,24 @@
       ]
     },
     "mac": {
-      "icon": "build/icons/icon.icns"
+      "icon": "build/icons/icon.icns",
+      "extraResources": [
+        {
+          "from": "./connector.dylib",
+          "to": "../"
+        }
+      ]
     },
     "win": {
       "icon": "build/icons/icon.ico",
       "requestedExecutionLevel": "highestAvailable",
-      "target": "nsis"
+      "target": "nsis",
+      "extraResources": [
+        {
+          "from": "./connector.dll",
+          "to": "../"
+        }
+      ]
     },
     "nsis": {
       "oneClick": false,

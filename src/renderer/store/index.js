@@ -11,6 +11,7 @@ export default new Vuex.Store({
         apps: [],
         updateSuccess: false,
         oldVersionData: "",
+        newVersionData: "",
         buttonTexts: ""
     },
     mutations: {},
