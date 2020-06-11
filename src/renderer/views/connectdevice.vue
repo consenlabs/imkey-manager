@@ -153,13 +153,13 @@
                                 //失败的话
                                 this.openErrorView("bind error: null");
                             } else {
-                                if (result.data == "bound_other") {
+                                if (result.data == constants.BIND_STATUS_STRING_BOUND_OTHER) {
                                     //跳转到绑定界面
                                     this.goStep(2);
-                                } else if (result.data == "unbound") {
+                                } else if (result.data == constants.BIND_STATUS_STRING_UNBOUND) {
                                     //跳转到绑定界面
                                     this.goStep(2);
-                                } else if (result.data == "bound_this") {
+                                } else if (result.data == constants.BIND_STATUS_STRING_BOUND_THIS) {
                                     //成功绑定 继续
                                     this.bindStatus = true;
                                     this.checkIsCreateWallet();

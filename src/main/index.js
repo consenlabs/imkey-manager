@@ -8,7 +8,7 @@ import pkg from '../../package.json'
 //http
 import http from 'http'
 // api模块
-let ApiRouter = require('../api/apirouter')
+let apiRouter = require('../api/apirouter')
 /**
  * Set `__static` path to static files in production
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
@@ -173,7 +173,7 @@ function startHttpServer() {
         response.on('error', (err) => {
             console.error(err);
         });
-        if (request.method === 'POST' && request.url.match('/imkey')) {
+        if (request.method === 'POST' && request.url.match('/imKey')) {
             let {headers, method, url} = request;
             let body = [];
             request.on('error', (err) => {
@@ -193,20 +193,18 @@ function startHttpServer() {
                 // Note: the 2 lines above could be replaced with this next one:
                 // response.writeHead(200, {'Content-Type': 'application/json'})
                 // {"ReturnCode":"000000","ReturnData":{"nextStepKey":"05","seid":"18080000000000860001010000000015"},"ReturnMsg":"操作成功"}
-                let reqjson = JSON.parse(body);//获取到request请求中的json对象
+                let requestJson = JSON.parse(body);//获取到request请求中的json对象
                 //处理request请求的数据
                 //调用rust库把需要的数据发给rust库处理
-                console.log(" process.versions.node:" + process.versions.node);
-                console.log("request.url.split(\"/imkey/\")[1]" + request.url.split("/imkey/")[1])
-                let msg = ApiRouter.api(request.url.split("/imkey/")[1], reqjson);
-                msg = JSON.stringify(msg);
-
-                console.log("msg:" + msg)
+                // console.log(" process.versions.node:" + process.versions.node);
+                // console.log("request.url.split(\"/imkey/\")[1]" + request.url.split("/imkey/")[1])
+                let responseJson = apiRouter.api(requestJson);
+                responseJson = JSON.stringify(responseJson);
                 //返回response的json对象
-                let resjson = {"ReturnCode": "000000", "ReturnMsg": "操作成功", "ReturnData": {msg}};
+                // let resjson = {"ReturnCode": "000000", "ReturnMsg": "操作成功", "ReturnData": {responseJson}};
                 // let responseBody = {headers, method, url, resjson};
 
-                response.write(JSON.stringify(resjson));
+                response.write(JSON.stringify(responseJson));
                 response.end();
                 // Note: the 2 lines above could be replaced with this next one:
                 // response.end(JSON.stringify(responseBody))

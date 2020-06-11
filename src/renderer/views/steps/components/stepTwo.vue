@@ -68,7 +68,7 @@
                 this.boxVisible = false;
                 setTimeout(() => {
                     this.openErrorView(msg)
-                }, 200)
+                }, 10)
             },
             toShowThree(val) {
                 if (val) {
