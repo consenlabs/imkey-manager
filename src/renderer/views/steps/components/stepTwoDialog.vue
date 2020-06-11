@@ -93,7 +93,7 @@
             }
         },
         mounted() {
-            this.getUserPath();
+            this.connect();
         },
         methods: {
             handleBlur() {
@@ -121,6 +121,7 @@
                     if (result.code === 200) {
                         const res = result.data
                         if (res == constants.RESULT_STATUS_SUCCESS) {
+                            this.getUserPath();
                         } else {
                             this.openErrorView(res);
                         }
@@ -165,16 +166,16 @@
                             //失败的话
                             this.openErrorView("bind fail: null ");
                         } else {
-                            if (result.data == "bound_other") {
+                            if (result.data == constants.BIND_STATUS_STRING_BOUND_OTHER) {
                                 //弹出输入框
                                 this.bindShow = true;
 
-                            } else if (result.data == "unbound") {
+                            } else if (result.data == constants.BIND_STATUS_STRING_UNBOUND) {
                                 //弹出输入框
                                 this.bindShow = true;
                                 //显示绑定码
                                 this.bindDisplay();
-                            } else if (result.data == "bound_this") {
+                            } else if (result.data == constants.BIND_STATUS_STRING_BOUND_THIS) {
                                 this.isCorrect = true;
                                 this.showThree = true;
                                 this.status3 = true;

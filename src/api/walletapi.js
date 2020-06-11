@@ -25,15 +25,15 @@ function IBitcoinTransaction_BTC(json, method_) {
     btcTxReq.setTo(json.to)
     btcTxReq.setAmount(json.amount)
     btcTxReq.setFee(json.fee)
-    btcTxReq.setChangeAddressIndex(json.changeIdx)
+    btcTxReq.setChangeAddressIndex(json.changeAddressIndex)
     if (json.extraData != null || json.extraData != null) {
         btcTxReq.setExtraData(new Buffer(json.extraData, 'hex'))
     }
     if (json.propertyId != null || json.propertyId != null) {
         btcTxReq.setPropertyId(json.propertyId)
     }
-    btcTxReq.setNetwork(constants.TESTNET)
-    btcTxReq.setPathPrefix(path.BITCOIN_TESTNET_PATH)
+    btcTxReq.setNetwork(json.network)
+    btcTxReq.setPathPrefix(json.pathPrefix)
     let btcTxReqBytes = btcTxReq.serializeBinary();
     let any = new proto.google.protobuf.Any();
     any.setValue(btcTxReqBytes);
@@ -70,15 +70,15 @@ function IBitcoinTransaction_BTC_SEGWIT(json, method_) {
     btcSegwitTxReq.setTo(json.to)
     btcSegwitTxReq.setAmount(json.amount)
     btcSegwitTxReq.setFee(json.fee)
-    btcSegwitTxReq.setChangeAddressIndex(json.changeIdx)
+    btcSegwitTxReq.setChangeAddressIndex(json.changeAddressIndex)
     if (json.extraData != null || json.extraData != null) {
         btcSegwitTxReq.setExtraData(new Buffer(json.extraData, 'hex'))
     }
     if (json.propertyId != null || json.propertyId != null) {
         btcSegwitTxReq.setPropertyId(json.propertyId)
     }
-    btcSegwitTxReq.setNetwork(constants.TESTNET)
-    btcSegwitTxReq.setPathPrefix(path.BITCOIN_SEGWIT_TESTNET_PATH)
+    btcSegwitTxReq.setNetwork(json.network)
+    btcSegwitTxReq.setPathPrefix(json.pathPrefix)
     let btcSegwitTxReqBytes = btcSegwitTxReq.serializeBinary();
     let any = new proto.google.protobuf.Any();
     any.setValue(btcSegwitTxReqBytes);
@@ -107,7 +107,7 @@ function IETHTransaction_sign_TX(json) {
     ethTxReq.setTo(transaction.to)
     ethTxReq.setValue(transaction.value.toString())
     ethTxReq.setData(transaction.data)
-    ethTxReq.setChainId(transaction.v.toString())
+    ethTxReq.setChainId(transaction.chainId.toString())
     ethTxReq.setPayment(preview.payment)
     ethTxReq.setReceiver(preview.receiver)
     ethTxReq.setSender(preview.sender)
@@ -133,7 +133,7 @@ function IETHTransaction_sign_TX(json) {
 
 function IETHTransaction_sign_MSG(json) {
     let ethMessageSignReq = new eth_pb.EthMessageSignReq();
-    ethMessageSignReq.setPath(path.ETH_LEDGER);
+    ethMessageSignReq.setPath(json.path);
     ethMessageSignReq.setMessage(json.data)
     ethMessageSignReq.setSender(json.sender)
     let ethMessageSignReqBytes = ethMessageSignReq.serializeBinary();
@@ -156,13 +156,11 @@ function IETHTransaction_sign_MSG(json) {
 }
 
 function IEOSTransaction_sign_MSG(json) {
-    let data = json.data;
-    let publicKey = json.publicKey;
     let eosMessageSignReq = new eos_pb.EosMessageSignReq();
-    eosMessageSignReq.setPath(path.EOS_LEDGER);
-    eosMessageSignReq.setData(data)
-    // eosMessageSignReq.isHex(false)
-    eosMessageSignReq.setPubkey(publicKey)
+    eosMessageSignReq.setPath(json.path);
+    eosMessageSignReq.setData(json.data)
+    eosMessageSignReq.setIsHex(json.isHex);
+    eosMessageSignReq.setPubkey(json.publicKey)
     let eosMessageSignReqBytes = eosMessageSignReq.serializeBinary();
     let any = new proto.google.protobuf.Any();
     any.setValue(eosMessageSignReqBytes);
@@ -184,19 +182,19 @@ function IEOSTransaction_sign_MSG(json) {
 function IEOSTransaction_sign_TX(json) {
     let publicKeys = json.publicKeys;
     let chainId = json.chainId;
-    let txHex = json.txHex;
+    let txData = json.txData;
     let preview = json.preview;
     let eosSignData = new eos_pb.EosSignData();
     for (let i = 0; i < publicKeys.length; i++) {
         eosSignData.addPubKeys(publicKeys[i].publicKey);
     }
-    eosSignData.setTxData(txHex)
+    eosSignData.setTxData(txData)
     eosSignData.setChainId(chainId);
     eosSignData.setTo(preview.to)
     eosSignData.setFrom(preview.from)
     eosSignData.setPayment(preview.payment)
     let eosTxReq = new eos_pb.EosTxReq();
-    eosTxReq.setPath(path.EOS_LEDGER)
+    eosTxReq.setPath(json.path)
     eosTxReq.addSignDatas(eosSignData)
     let eosTxReqbytes = eosTxReq.serializeBinary();
     let any = new proto.google.protobuf.Any();
@@ -245,11 +243,11 @@ function ICOSMOSTransaction_sign_TX(json) {
             msgValue.addAmount(coin)
         }
         if (msgList[i].value.hasOwnProperty("to_address")) {
-            msgValue.getAddressesMap().set("to_address", msgList[i].value.to_address)
-            msgValue.getAddressesMap().set("from_address", msgList[i].value.from_address)
+            msgValue.getAddressesMap().set("to_address", msgList[i].value.toAddress)
+            msgValue.getAddressesMap().set("from_address", msgList[i].value.fromAddress)
         } else if (msgList[i].value.hasOwnProperty("delegator_address")) {
-            msgValue.getAddressesMap.set("delegator_address", msgList[i].value.delegator_address)
-            msgValue.getAddressesMap.set("validator_address", msgList[i].value.validator_address)
+            msgValue.getAddressesMap.set("delegator_address", msgList[i].value.delegatorAddress)
+            msgValue.getAddressesMap.set("validator_address", msgList[i].value.validatorAddress)
         }
         msg.setValue(msgValue)
         signData.addMsgs(msg)
@@ -260,12 +258,12 @@ function ICOSMOSTransaction_sign_TX(json) {
     signData.setMemo(json.memo)
     signData.setSequence(json.sequence)
     let cosmosTxReq = new cosmos_pb.CosmosTxReq();
-    cosmosTxReq.setPath(path.COSMOS_LEDGER)
+    cosmosTxReq.setPath(json.path)
     cosmosTxReq.setSigndata(signData)
-    cosmosTxReq.setPaymentDis(json.preview.payment)
-    cosmosTxReq.setToDis(json.preview.receiver)
-    cosmosTxReq.setFromDis(json.preview.sender)
-    cosmosTxReq.setFeeDis(json.preview.fee)
+    cosmosTxReq.setPaymentDis(json.preview.paymentDisplay)
+    cosmosTxReq.setToDis(json.preview.receiverDisplay)
+    cosmosTxReq.setFromDis(json.preview.senderDisplay)
+    cosmosTxReq.setFeeDis(json.preview.feeDisplay)
     let cosmosTxReqBytes = cosmosTxReq.serializeBinary();
     let any = new proto.google.protobuf.Any();
     any.setValue(cosmosTxReqBytes);
@@ -374,6 +372,7 @@ function eosPubkey(path, method_) {
 }
 
 function cosmosAddress(path, method_) {
+    console.log("path:"+path)
     let cosmosAddressReq = new cosmos_pb.CosmosAddressReq();
     cosmosAddressReq.setPath(path)
     let cosmosAddressReqBytes = cosmosAddressReq.serializeBinary();
@@ -411,48 +410,48 @@ export function get_BTC_Xpub() {
     })
 }
 
-export function getBTC_Xpub() {
-    return btcXpub("m/44'/0'/0'/0/0", constants.MAINNET);
+export function getBTC_Xpub(json) {
+    return btcXpub(json.path,json.network);
 }
 
-export function getBTC_Address() {
-    return BtcAddress("m/44'/0'/0'/0/0", constants.MAINNET, "btc_get_address");
+export function getBTC_Address(json) {
+    return BtcAddress(json.path,json.network, "btc_get_address");
 }
 
-export function getBTC_displayAddress() {
-    return BtcAddress("m/44'/0'/0'/0/0", constants.MAINNET, "btc_register_address");
+export function getBTC_RegisterAddress(json) {
+    return BtcAddress(json.path,json.network, "btc_register_address");
 }
 
-export function getBTC_SegWitAddress() {
-    return BtcAddress("m/49'/0'/0'/0/22", constants.MAINNET, "btc_get_setwit_address");
+export function getBTC_SegWitAddress(json) {
+    return BtcAddress(json.path,json.network, "btc_get_setwit_address");
 }
 
-export function getBTC_displaySegWitAddress() {
-    return BtcAddress("m/49'/0'/0'/0/0", constants.MAINNET, "btc_register_segwit_address");
+export function getBTC_RegisterSegWitAddress(json) {
+    return BtcAddress(json.path,json.network, "btc_register_segwit_address");
 }
 
-export function getCOSMOS_Address(path) {
-    return cosmosAddress(path.COSMOS_LEDGER, "cosmos_get_address");
+export function getCOSMOS_Address(json) {
+    return cosmosAddress(json.path, "cosmos_get_address");
 }
 
-export function getCOSMOS_displayAddress(path) {
-    return cosmosAddress(path.COSMOS_LEDGER, "cosmos_register_address");
+export function getCOSMOS_RegisterAddress(json) {
+    return cosmosAddress(json.path, "cosmos_register_address");
 }
 
-export function getEOS_Address() {
-    return eosPubkey(path.EOS_LEDGER, "eos_get_pubkey");
+export function getEOS_PubKey(json) {
+    return eosPubkey(json.path, "eos_get_pubkey");
 }
 
-export function getEOS_displayAddress() {
-    return eosPubkey(path.EOS_LEDGER, "eos_register_pubkey");
+export function getEOS_RegisterPubKey(json) {
+    return eosPubkey(json.path, "eos_register_pubkey");
 }
 
-export function getETH_Address() {
-    return ethAddress(path.ETH_LEDGER);
+export function getETH_Address(json) {
+    return ethAddress(json.path);
 }
 
-export function getETH_displayAddress() {
-    return ethAddress(path.ETH_LEDGER);
+export function getETH_RegisterAddress(json) {
+    return ethAddress(json.path);
 }
 
 export function BitcoinTransaction_BTC(json) {
