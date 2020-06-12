@@ -170,7 +170,6 @@ function IEOSTransaction_sign_MSG(json) {
     let imKeyActionBytes = imKeyAction.serializeBinary();
     let resBuffer = callImKeyCore.call_imkey_api(bytes2HexStr(imKeyActionBytes));
     let error = callImKeyCore.get_last_err_message();
-    debugger
     if (error == "" || error == null) {
         let response = new eos_pb.EosMessageSignRes.deserializeBinary(hexStr2Bytes(resBuffer));
         return response;
