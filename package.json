@@ -24,7 +24,7 @@
     "directories": {
       "output": "build"
     },
-    "extraResources":  [
+    "extraResources": [
       {
         "from": "./connector.dll",
         "to": "../"
