@@ -1,4 +1,4 @@
-<template>
+    <template>
     <div class="connectdevice">
         <NoticeBox :noticeVisible="noticeVisible"
                    @closeNotice="closeErrorView"></NoticeBox>

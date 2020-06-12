@@ -203,9 +203,9 @@ function startHttpServer() {
                 //返回response的json对象
                 // let resjson = {"ReturnCode": "000000", "ReturnMsg": "操作成功", "ReturnData": {responseJson}};
                 // let responseBody = {headers, method, url, resjson};
-
-                response.write(JSON.stringify(responseJson));
-                response.end();
+                response.writeHead(200, {"Content-Type": "application/json"});
+                // response.write(JSON.stringify(responseJson));
+                response.end(responseJson);
                 // Note: the 2 lines above could be replaced with this next one:
                 // response.end(JSON.stringify(responseBody))
                 // END OF NEW STUFF
