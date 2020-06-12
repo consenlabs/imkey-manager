@@ -1,6 +1,0 @@
-syntax = "proto3";
-
-message SearchRequest {
-    string name = 1;
-    string password = 2;
-}

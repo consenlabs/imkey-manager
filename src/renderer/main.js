@@ -1,40 +1,58 @@
-// TODO：如果不用，记得注释掉，否则travis 和 appveyor 构建会失败
-// import devtools from '@vue/devtools'
 import Vue from 'vue'
-import axios from 'axios'
-
-import App from './App'
+import App from './App.vue'
 import router from './router'
 import store from './store'
-import Vuetify from 'vuetify' // 引入Vuetify
-import 'vuetify/dist/vuetify.min.css' // 引入Vuetify的css文件
-import 'material-design-icons-iconfont/dist/material-design-icons.css' // 引入Material Desgin Icon的css文件
-import ElementUI from 'element-ui'
-import 'element-ui/lib/theme-chalk/index.css'
+import ElementUI from 'element-ui';
+import 'element-ui/lib/theme-chalk/index.css';
+import VueI18n from 'vue-i18n';
 
-// import {Upload, Button,Tabs} from 'element-ui'
-import Request from './views/utils/request' // 引入封装的文件
-
-const { request } = Request
-Vue.prototype.$request = request // 挂载到全局上
-// import server from './server/server'
-Vue.use(Vuetify)
-// Vue.use(ElementUI)
-// Vue.use(Button)
-// Vue.use(Upload)
-// Vue.use(Tabs)
-if (!process.env.IS_WEB) Vue.use(require('vue-electron'))
-Vue.http = Vue.prototype.$http = axios
 Vue.config.productionTip = false
+Vue.prototype.$store = store;
+Vue.prototype.router = router;
+Vue.use(ElementUI)
+Vue.use(VueI18n);
+//弹出框禁止滑动
+Vue.prototype.noScroll = function () {
+    var mo = function (e) {
+        e.preventDefault()
+    }
+    document.body.style.overflow = 'hidden'
+    document.addEventListener('touchmove', mo, false)// 禁止页面滑动
+}
 
-/* eslint-disable no-new */
+//弹出框可以滑动
+Vue.prototype.canScroll = function () {
+    var mo = function (e) {
+        e.preventDefault()
+    }
+    document.body.style.overflow = ''// 出现滚动条
+    document.removeEventListener('touchmove', mo, false)
+}
+//获取系统语言，根据系统语言来切换语言
+let app = require('electron').remote.app
+let sysLocale = app.getLocale();
+if (sysLocale != "zh-CN") {
+    sysLocale = "en-US";
+}
+
+//VueI18n
+const i18n = new VueI18n({
+    // 默认中文
+    // locale: 'zh-CN',
+    // locale: 'en-US',
+    //this.$i18n.locale // 通过切换locale的值来实现语言切换
+    //获取系统语言，根据系统语言来切换语言
+    locale: sysLocale,
+    messages: {
+        // 语言包路径
+        'zh-CN': require('./common/lang/zh'),
+        'en-US': require('./common/lang/en')
+    }
+})
+
 new Vue({
-  components: { App },
-  router,
-  store,
-  template: '<App/>'
+    i18n,
+    router,
+    store,
+    render: h => h(App)
 }).$mount('#app')
-
-// if (process.env.NODE_ENV === 'development') {
-//     devtools.connect('localhost', '9080')
-// }

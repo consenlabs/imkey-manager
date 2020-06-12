@@ -1,310 +1,240 @@
-// https://blog.csdn.net/spiritring/article/details/61975299
-// function getseid() {
-//
-//     let basepb = require('../proto/base_pb');
-//     // console.log(basepb);
-//
-//     let message = new basepb.SearchRequest();
-//     console.log(message);
-//
-//     message.setName("TS");
-//     message.setPassword("123456");
-//
-//     let bytes = message.serializeBinary();
-//     console.log(bytes);
-//
-//     let message2 = basepb.SearchRequest.deserializeBinary(bytes);
-//     console.log(message2);
 let api_pb = require('../proto/api_pb');
 let _ = require('lodash');
 let device_pb = require('../proto/device_pb');
-let GoToRust = require('./gotorust');
-let Constants = require('../common/Constants');
+let callImKeyCore = require('./callimkeycore');
+let constants = require('../common/constants');
 
-function getDevice_manage_fuc(action_) {
-    // console.log(" process.versions.node:"+process.versions.node);
-    //deviceParam
-    let deviceParam = new api_pb.DeviceParam();
+function connect(deviceModelName) {
 
-    deviceParam.setAction(action_);
-    deviceParam.setParam(null);
-    let deviceParamBytes = deviceParam.serializeBinary();
-    //any
+    let request = new device_pb.DeviceConnectReq();
+    request.setDeviceModelName(deviceModelName);
+    let requestBytes = request.serializeBinary();
     let any = new proto.google.protobuf.Any();
-    any.setValue(deviceParamBytes);
-    // let anyBytes = any.serializeBinary();
-    //TcxAction
-    let TcxAction = new api_pb.TcxAction();
-    TcxAction.setMethod("device_manage");
-    TcxAction.setParam(any);
-    let TcxActionBytes = TcxAction.serializeBinary();
-
-    //调用rust库
-    let ResBuffer = GoToRust.call_tcx_api(Bytes2HexStr(TcxActionBytes));
-    let Error = GoToRust.get_last_err_message();
-    if (Error == "" || Error == null) {
-        if (action_ === "get_sn") {
-            let Response = new device_pb.GetSnResponse.deserializeBinary(HexStr2Bytes(ResBuffer));
-            //获取解析后的值
-            let Result = Response.getSn();
-            return Result;
-        } else if (action_ === "get_sdk_info") {
-            let Response = new device_pb.SdkInfoResponse.deserializeBinary(HexStr2Bytes(ResBuffer));
-            //获取解析后的值
-            let Result = Response.getSdkVersion();
-            return Result;
-        } else {
-            //rust库返回的数据解析
-            let Response = new device_pb.ApduResponse.deserializeBinary(HexStr2Bytes(ResBuffer));
-            // //获取解析后的值
-            let Result = Response.getResult();
-            // console.log("Result:"+Result)
-            return Result;
-        }
+    any.setValue(requestBytes);
+    let imKeyAction = new api_pb.ImkeyAction();
+    imKeyAction.setMethod("device_connect");
+    imKeyAction.setParam(any);
+    let imKeyActionBytes = imKeyAction.serializeBinary();
+    let resBuffer = callImKeyCore.call_imkey_api(bytes2HexStr(imKeyActionBytes));
+    let error = callImKeyCore.get_last_err_message();
+    if (error == "" || error == null) {
+        let response = new api_pb.CommonResponse.deserializeBinary(hexStr2Bytes(resBuffer));
+        return response.getResult();
     } else {
-        let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
-        console.log(" ErrorResponse.getError():" + ErrorResponse.getError())
-        return ErrorResponse.getError();
+        let errorResponse = new api_pb.ErrorResponse.deserializeBinary(hexStr2Bytes(error));
+        return errorResponse.getError();
     }
 }
 
-function getDevice_manage_device(action_) {
+function getDeviceManageFunction(method_) {
+    let imKeyAction = new api_pb.ImkeyAction();
+    imKeyAction.setMethod(method_);
+    let imKeyActionBytes = imKeyAction.serializeBinary();
+    let resBuffer = callImKeyCore.call_imkey_api(bytes2HexStr(imKeyActionBytes));
+    let error = callImKeyCore.get_last_err_message();
+    let result;
+    if (error == "" || error == null) {
+        if (method_ === "get_seid") {
+            let response = new device_pb.GetSeidRes.deserializeBinary(hexStr2Bytes(resBuffer));
+            result = response.getSeid();
 
-    //deviceParam
-    let deviceParam = new api_pb.DeviceParam();
-    deviceParam.setAction(action_);
-    let deviceParambytes = deviceParam.serializeBinary();
-    //any
-    let any1 = new proto.google.protobuf.Any();
-    any1.setValue(deviceParambytes);
-    // let anyBytes = any.serializeBinary();
-    //TcxAction
-    let TcxAction = new api_pb.TcxAction();
-    TcxAction.setMethod("device_manage");
-    TcxAction.setParam(any1);
-    let TcxActionBytes = TcxAction.serializeBinary();
-    //调用rust库
-    let ResBuffer = GoToRust.call_tcx_api(Bytes2HexStr(TcxActionBytes));
-    let Error = GoToRust.get_last_err_message();
-    if (Error == "" || Error == null) {
-        if (action_ == "check_update") {
-            //rust库返回的数据解析
-            let CheckUpdateResponse = new device_pb.CheckUpdateResponse.deserializeBinary(HexStr2Bytes(ResBuffer));
-            return CheckUpdateResponse.toObject();
-        } else {
-            //rust库返回的数据解析
-            let Response = new api_pb.Response.deserializeBinary(HexStr2Bytes(ResBuffer));
-            let Result = Response.getError();
-            //获取解析后的值
-            if (Result == null || Result == '' || Result == "") {
-                Result = 'true';
-            } else {
-                Result = 'false';
-            }
-            return Result;
+        } else if (method_ === "get_sn") {
+            let response = new device_pb.GetSnRes.deserializeBinary(hexStr2Bytes(resBuffer));
+            result = response.getSn();
+        } else if (method_ === "get_ram_size") {
+            let response = new device_pb.GetRamSizeRes.deserializeBinary(hexStr2Bytes(resBuffer));
+            result = response.getRamSize();
+        } else if (method_ === "get_firmware_version") {
+            let response = new device_pb.GetFirmwareVersionRes.deserializeBinary(hexStr2Bytes(resBuffer));
+            result = response.getFirmwareVersion();
+        } else if (method_ === "get_sdk_info") {
+            let response = new device_pb.GetSdkInfoRes.deserializeBinary(hexStr2Bytes(resBuffer));
+            result = response.getSdkVersion();
+        } else if (method_ === "check_update") {
+            let response = new device_pb.CheckUpdateRes.deserializeBinary(hexStr2Bytes(resBuffer));
+            result = response.toObject();
+        } else if (method_ === "cos_check_update") {
+            let response = new device_pb.CosCheckUpdateRes.deserializeBinary(hexStr2Bytes(resBuffer));
+            result = response.toObject();
+        } else if (method_ === "is_bl_status") {
+            let response = new device_pb.IsBlStatusRes.deserializeBinary(hexStr2Bytes(resBuffer));
+            result = response.getCheckResult();
+        } else {//method_ === "device_activate"||"device_secure_check"||"bind_display_code"
+            let response = new api_pb.CommonResponse.deserializeBinary(hexStr2Bytes(resBuffer));
+            result = response.getResult();
         }
+        return result;
     } else {
-        let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
-        console.log(" ErrorResponse.getError():" + ErrorResponse.getError())
-        return ErrorResponse.getError();
+        let errorResponse = new api_pb.ErrorResponse.deserializeBinary(hexStr2Bytes(error));
+        return errorResponse.getError();
     }
 }
 
-function getDevice_manage_Applet(action, AppName) {
-
-    //AppAction
-    let AppAction = new device_pb.AppAction();
-    AppAction.setAppName(AppName);
-    let AppActionBytes = AppAction.serializeBinary();
-    //any
+function AppletManage(method_, appName) {
+    let request;
+    if (method_ == "app_download") {
+        request = new device_pb.AppDownloadReq();
+        request.setAppName(appName);
+    }
+    if (method_ == "app_update") {
+        request = new device_pb.AppUpdateReq();
+        request.setAppName(appName);
+    }
+    if (method_ == "app_delete") {
+        request = new device_pb.AppDeleteReq();
+        request.setAppName(appName);
+    }
+    let requestBytes = request.serializeBinary();
     let any = new proto.google.protobuf.Any();
-    any.setValue(AppActionBytes);
-    //deviceParam
-    let deviceParam = new api_pb.DeviceParam();
-    deviceParam.setAction(action);
-    deviceParam.setParam(any);
-    let deviceParambytes = deviceParam.serializeBinary();
-    //any
-    let any1 = new proto.google.protobuf.Any();
-    any1.setValue(deviceParambytes);
-    // let anyBytes = any.serializeBinary();
-    //TcxAction
-    let TcxAction = new api_pb.TcxAction();
-    TcxAction.setMethod("device_manage");
-    TcxAction.setParam(any1);
-    let TcxActionBytes = TcxAction.serializeBinary();
-    //调用rust库
-    let ResBuffer = GoToRust.call_tcx_api(Bytes2HexStr(TcxActionBytes));
-    //rust库返回的数据解析
-    //rust库返回的数据解析
-    let Error = GoToRust.get_last_err_message();
-    if (Error == "" || Error == null) {
-        //rust库返回的数据解析
-        let Response = new api_pb.Response.deserializeBinary(HexStr2Bytes(ResBuffer));
-        let Result = Response.getError();
-        //获取解析后的值
-        if (Result == null || Result == '' || Result == "") {
-            Result = 'true';
-        } else {
-            Result = 'false';
-        }
-        return Result;
+    any.setValue(requestBytes);
+
+    let imKeyAction = new api_pb.ImkeyAction();
+    imKeyAction.setMethod(method_);
+    imKeyAction.setParam(any);
+    let imKeyActionBytes = imKeyAction.serializeBinary();
+
+    let resBuffer = callImKeyCore.call_imkey_api(bytes2HexStr(imKeyActionBytes));
+    let error = callImKeyCore.get_last_err_message();
+    if (error == "" || error == null) {
+        let response = new api_pb.CommonResponse.deserializeBinary(hexStr2Bytes(resBuffer));
+        return response.getResult();
     } else {
-        let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
-        console.log(" ErrorResponse.getError():" + ErrorResponse.getError())
-        return ErrorResponse.getError();
+        let errorResponse = new api_pb.ErrorResponse.deserializeBinary(hexStr2Bytes(error));
+        return errorResponse.getError();
     }
+
 }
 
-function getDevice_manage_bind_check(FilePath) {
-    //BindCheck
-    let BindCheck = new device_pb.BindCheck();
-    BindCheck.setFilePath(FilePath);
-    let BindCheckBytes = BindCheck.serializeBinary();
-    //any
+function bindCheck(filePath) {
+    let bindCheckReq = new device_pb.BindCheckReq();
+    bindCheckReq.setFilePath(filePath);
+    let bindCheckReqBytes = bindCheckReq.serializeBinary();
+
     let any = new proto.google.protobuf.Any();
-    any.setValue(BindCheckBytes);
-    //deviceParam
-    let deviceParam = new api_pb.DeviceParam();
-    deviceParam.setAction("bind_check");
-    deviceParam.setParam(any);
-    let deviceParambytes = deviceParam.serializeBinary();
-    //any
-    let any1 = new proto.google.protobuf.Any();
-    any1.setValue(deviceParambytes);
-    // let anyBytes = any.serializeBinary();
-    //TcxAction
-    let TcxAction = new api_pb.TcxAction();
-    TcxAction.setMethod("device_manage");
-    TcxAction.setParam(any1);
-    let TcxActionBytes = TcxAction.serializeBinary();
-    //调用rust库
-    let ResBuffer = GoToRust.call_tcx_api(Bytes2HexStr(TcxActionBytes));
-    //rust库返回的数据解析
-    let Error = GoToRust.get_last_err_message();
-    if (Error == "" || Error == null) {
-        let Response = new device_pb.BindCheckResponse.deserializeBinary(HexStr2Bytes(ResBuffer));
-        console.log(" Response.getBindStatus():" + Response.getBindStatus())
-        return Response.getBindStatus();
+    any.setValue(bindCheckReqBytes);
+
+
+    let imKeyAction = new api_pb.ImkeyAction();
+    imKeyAction.setMethod("bind_check");
+    imKeyAction.setParam(any);
+    let imKeyActionBytes = imKeyAction.serializeBinary();
+
+    let resBuffer = callImKeyCore.call_imkey_api(bytes2HexStr(imKeyActionBytes));
+
+    let error = callImKeyCore.get_last_err_message();
+    if (error == "" || error == null) {
+        let response = new device_pb.BindCheckRes.deserializeBinary(hexStr2Bytes(resBuffer));
+        return response.getBindStatus();
     } else {
-        let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
-        console.log(" ErrorResponse.getError():" + ErrorResponse.getError())
-        return ErrorResponse.getError();
+        let errorResponse = new api_pb.ErrorResponse.deserializeBinary(hexStr2Bytes(error));
+        return errorResponse.getError();
     }
 }
 
-function getDevice_manage_bind_acquire(bindCode) {
-    console.log("bindCode:" + bindCode)
-    //BindAcquire
-    let BindAcquire = new device_pb.BindAcquire();
-    BindAcquire.setBindCode(bindCode.toString().toLocaleUpperCase());
-    let BindAcquireBytes = BindAcquire.serializeBinary();
-    //any
+function bindAcquire(bindCode) {
+    let bindAcquireReq = new device_pb.BindAcquireReq();
+    bindAcquireReq.setBindCode(bindCode);
+    let bindAcquireReqBytes = bindAcquireReq.serializeBinary();
+
     let any = new proto.google.protobuf.Any();
-    any.setValue(BindAcquireBytes);
-    //deviceParam
-    let deviceParam = new api_pb.DeviceParam();
-    deviceParam.setAction("bind_acquire");
-    deviceParam.setParam(any);
-    let deviceParambytes = deviceParam.serializeBinary();
-    //any
-    let any1 = new proto.google.protobuf.Any();
-    any1.setValue(deviceParambytes);
-    // let anyBytes = any.serializeBinary();
-    //TcxAction
-    let TcxAction = new api_pb.TcxAction();
-    TcxAction.setMethod("device_manage");
-    TcxAction.setParam(any1);
-    let TcxActionBytes = TcxAction.serializeBinary();
-    //调用rust库
-    let ResBuffer = GoToRust.call_tcx_api(Bytes2HexStr(TcxActionBytes));
-    //rust库返回的数据解析
-    let Error = GoToRust.get_last_err_message();
-    if (Error == "" || Error == null) {
-        let Response = new device_pb.BindAcquireResponse.deserializeBinary(HexStr2Bytes(ResBuffer));
-        console.log(" Response.getBindResult():" + Response.getBindResult())
-        if (Response.getBindResult().substring(0, 2) == "5A") {
-            return 'true';
-        } else if (Response.getBindResult().substring(0, 2) == "A5") {
-            return 'false';
-        } else {
-            return 'false';
-        }
+    any.setValue(bindAcquireReqBytes);
 
+
+    let imKeyAction = new api_pb.ImkeyAction();
+    imKeyAction.setMethod("bind_acquire");
+    imKeyAction.setParam(any);
+    let imKeyActionBytes = imKeyAction.serializeBinary();
+
+    let resBuffer = callImKeyCore.call_imkey_api(bytes2HexStr(imKeyActionBytes));
+
+    let error = callImKeyCore.get_last_err_message();
+    if (error == "" || error == null) {
+        let response = new device_pb.BindAcquireRes.deserializeBinary(hexStr2Bytes(resBuffer));
+        return response.getBindResult();
     } else {
-        let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
-        console.log("ErrorResponse.getError()：" + ErrorResponse.getError())
-        return ErrorResponse.getError();
+        let errorResponse = new api_pb.ErrorResponse.deserializeBinary(hexStr2Bytes(error));
+        return errorResponse.getError();
     }
 }
 
-function getDevice_manage_bind_display() {
-    //
-    let BindDisplay = new device_pb.BindDisplay();
-    let BindDisplayBytes = BindDisplay.serializeBinary();
-    //any
-    let any = new proto.google.protobuf.Any();
-    any.setValue(BindDisplayBytes);
-    //deviceParam
-    let deviceParam = new api_pb.DeviceParam();
-    deviceParam.setAction("bind_display");
-    deviceParam.setParam(any);
-    let deviceParambytes = deviceParam.serializeBinary();
-    //any
-    let any1 = new proto.google.protobuf.Any();
-    any1.setValue(deviceParambytes);
-    // let anyBytes = any.serializeBinary();
-    //TcxAction
-    let TcxAction = new api_pb.TcxAction();
-    TcxAction.setMethod("device_manage");
-    TcxAction.setParam(any1);
-    let TcxActionBytes = TcxAction.serializeBinary();
-    //调用rust库
-    let ResBuffer = GoToRust.call_tcx_api(Bytes2HexStr(TcxActionBytes));
-    //rust库返回的数据解析
-    let Error = GoToRust.get_last_err_message();
-    if (Error == "" || Error == null) {
-        let Response = new device_pb.BindDisplayResponse.deserializeBinary(HexStr2Bytes(ResBuffer));
-        console.log(" Response.getBindDisplayResult():" + Response.getBindDisplayResult())
-        if (Response.getBindDisplayResult() == null || Response.getBindDisplayResult() == "") {
-            return 'true'
-        } else {
-            return 'false'
-        }
-    } else {
-        let ErrorResponse = new api_pb.Response.deserializeBinary(HexStr2Bytes(Error));
-        console.log(" ErrorResponse.getError():" + ErrorResponse.getError())
-        return ErrorResponse.getError();
-    }
-}
-
-export function getAppList() {
+export function checkUpdate() {
     return new Promise((resolve, reject) => {
         try {
-            // console.log("checkUpdate():"+getDevice_manage_device("check_update"))
-            let collections = getDevice_manage_device("check_update").availableAppListList;
+            let response = getDeviceManageFunction("check_update");
+            let collections = response.availableAppListList;
             let list = [];
-            // console.log("collections:"+JSON.stringify(collections))
+            let installLoading;
+            let installDis;
+            let deleteDis;
+            let deleteLoading;
+            let buttonTexts;
+            let version;
             for (let i = 0; i < collections.length; i++) {
+
+                if (collections[i].installedVersion === "none" || collections[i].installedVersion === null) {
+                    installLoading = false;
+                    installDis = false;
+                    deleteDis = true;
+                    deleteLoading = false;
+                } else {
+                    installLoading = false;
+                    installDis = true;
+                    deleteDis = false;
+                    deleteLoading = false;
+                }
+                if (collections[i].latestVersion === collections[i].installedVersion) {
+                    buttonTexts = "install";
+                    version = "version " + collections[i].installedVersion;
+                } else {
+                    if (collections[i].installedVersion === "none" || collections[i].installedVersion === null) {
+                        buttonTexts = "install";
+                        version = "";
+                    } else {
+                        buttonTexts = "update";
+                        version = "version " + collections[i].installedVersion
+                    }
+                }
+                //过滤imkey Applet BTC Applet 不能删除
+                if (collections[i].appName == "IMK" || collections[i].appName == "BTC") {
+                    deleteDis = true;
+                }
                 let collection = {
                     name: collections[i].appName,
-                    version: collections[i].installedVersion
+                    desc: version,
+                    lastVersion: "version " + collections[i].latestVersion,
+                    id: i,
+                    installLoading: installLoading,
+                    installDis: installDis,
+                    deleteDis: deleteDis,
+                    deleteLoading: deleteLoading,
+                    icon: collections[i].appLogo,
+                    buttonTexts: buttonTexts,
                 };
                 list.push(collection);
+
             }
             let total = list.length;
-            console.log("result.data.list:" + list)
-            console.log("total:" + total)
-            // let list = collection
-            //     .filter(filterFun)
-            //     .orderBy(pagination.sortBy, pagination.descending ? 'desc' : 'asc')
-            //     .chunk(pagination.rowsPerPage === -1 ? total : pagination.rowsPerPage)
-            //     .take(pagination.page)
-            //     .last() // 因为上面用了chunk，是个二维数组，所以这里取最后一个
-            //     .value()
+            let status = response.status;
             resolve({
                 code: 200,
-                data: _.cloneDeep({total: total, list: list})
+                data: _.cloneDeep({status: status, total: total, list: list})
+            })
+        } catch (err) {
+            return reject({
+                code: 400,
+                message: err.message
+            })
+        }
+    })
+}
+
+export function connectDevice() {
+    return new Promise((resolve, reject) => {
+        try {
+
+            resolve({
+                code: 200,
+                data: connect(constants.DEVICE_NAME_IMKEY_PRO)
             })
         } catch (err) {
             return reject({
@@ -316,12 +246,13 @@ export function getAppList() {
 }
 
 export function getSeid() {
+
     return new Promise((resolve, reject) => {
         try {
 
             resolve({
                 code: 200,
-                data: getDevice_manage_fuc("get_seid")
+                data: getDeviceManageFunction("get_seid")
             })
         } catch (err) {
             return reject({
@@ -333,12 +264,13 @@ export function getSeid() {
 }
 
 export function getSn() {
+
     return new Promise((resolve, reject) => {
         try {
 
             resolve({
                 code: 200,
-                data: getDevice_manage_fuc("get_sn")
+                data: getDeviceManageFunction("get_sn")
             })
         } catch (err) {
             return reject({
@@ -350,12 +282,13 @@ export function getSn() {
 }
 
 export function getRamSize() {
+
     return new Promise((resolve, reject) => {
         try {
 
             resolve({
                 code: 200,
-                data: parseInt(getDevice_manage_fuc("get_ram_size").substring(4, 8), 16)
+                data: parseInt(getDeviceManageFunction("get_ram_size").substring(4, 8), 16)
             })
         } catch (err) {
             return reject({
@@ -367,9 +300,10 @@ export function getRamSize() {
 }
 
 export function getFirmwareVersion() {
+
     return new Promise((resolve, reject) => {
         try {
-            let FirmwareVersion = getDevice_manage_fuc("get_firmware_version");
+            let FirmwareVersion = getDeviceManageFunction("get_firmware_version");
             resolve({
                 code: 200,
                 data: FirmwareVersion.substring(0, 1) + "." + FirmwareVersion.substring(1, 2) + "." + FirmwareVersion.substring(2)
@@ -383,108 +317,13 @@ export function getFirmwareVersion() {
     })
 }
 
-export function getBatteryPower() {
+export function isBLStatus() {
+
     return new Promise((resolve, reject) => {
         try {
-            let batteryPower = getDevice_manage_fuc("get_battery_power");
-            if (batteryPower != Constants.BATTERY_CHARGING_SIGN) {
-                batteryPower = parseInt(batteryPower, 16).toString();
-            } else {
-                return reject({
-                    code: 400,
-                    message: 'error'
-                })
-            }
             resolve({
                 code: 200,
-                data: batteryPower
-            })
-        } catch (err) {
-            return reject({
-                code: 400,
-                message: err.message
-            })
-        }
-    })
-}
-
-export function getLifeTime() {
-    return new Promise((resolve, reject) => {
-        try {
-            let res = getDevice_manage_fuc("get_life_time");
-            let res_ = "";
-            switch (res) {
-                case "80":
-                    res_ = Constants.LIFE_TIME_DEVICE_INITED;
-                case "89":
-                    res_ = Constants.LIFE_TIME_DEVICE_ACTIVATED;
-                case "81":
-                    res_ = Constants.LIFE_TIME_UNSET_PIN;
-                case "83":
-                    res_ = Constants.LIFE_TIME_WALLET_UNREADY;
-                case "84":
-                    res_ = Constants.LIFE_TIME_WALLET_CREATTING;
-                case "85":
-                    res_ = Constants.LIFE_TIME_WALLET_RECOVERING;
-                case "86":
-                    res_ = Constants.LIFE_TIME_WALLET_READY;
-                default:
-                    res_ = Constants.LIFE_TIME_UNKNOWN;
-            }
-            resolve({
-                code: 200,
-                data: res_
-            })
-        } catch (err) {
-            return reject({
-                code: 400,
-                message: err.message
-            })
-        }
-    })
-}
-
-export function getBleName() {
-    return new Promise((resolve, reject) => {
-        try {
-
-            resolve({
-                code: 200,
-                data: Bytes2Str(HexStr2Bytes(getDevice_manage_fuc("get_ble_name").substring(4)))
-            })
-        } catch (err) {
-            return reject({
-                code: 400,
-                message: err.message
-            })
-        }
-    })
-}
-
-export function setBleName() {
-    return new Promise((resolve, reject) => {
-        try {
-
-            resolve({
-                code: 200,
-                data: getDevice_manage_fuc("set_ble_name")
-            })
-        } catch (err) {
-            return reject({
-                code: 400,
-                message: err.message
-            })
-        }
-    })
-}
-
-export function getBleVersion() {
-    return new Promise((resolve, reject) => {
-        try {
-            let bleVersion = getDevice_manage_fuc("get_ble_version").substring(0, 4);
-            resolve({
-                code: 200,
-                data: bleVersion.substring(0, 1) + "." + bleVersion.substring(1, 2) + "." + bleVersion.substring(2)
+                data: getDeviceManageFunction("is_bl_status")
             })
         } catch (err) {
             return reject({
@@ -500,7 +339,7 @@ export function getSdkInfo() {
         try {
             resolve({
                 code: 200,
-                data: getDevice_manage_fuc("get_sdk_info")
+                data: getDeviceManageFunction("get_sdk_info")
             })
         } catch (err) {
             return reject({
@@ -516,7 +355,7 @@ export function activeDevice() {
         try {
             resolve({
                 code: 200,
-                data: getDevice_manage_device("se_activate")
+                data: getDeviceManageFunction("device_activate")
             })
         } catch (err) {
             return reject({
@@ -527,12 +366,28 @@ export function activeDevice() {
     })
 }
 
-export function cosUpgrade() {
+export function cosCheckUpdate() {
     return new Promise((resolve, reject) => {
         try {
             resolve({
                 code: 200,
-                data: getDevice_manage_device("cos_upgrade")
+                data: getDeviceManageFunction("cos_check_update")
+            })
+        } catch (err) {
+            return reject({
+                code: 400,
+                message: err.message
+            })
+        }
+    })
+}
+
+export function cosUpdate() {
+    return new Promise((resolve, reject) => {
+        try {
+            resolve({
+                code: 200,
+                data: getDeviceManageFunction("cos_update")
             })
         } catch (err) {
             return reject({
@@ -548,7 +403,7 @@ export function checkDevice() {
         try {
             resolve({
                 code: 200,
-                data: getDevice_manage_device("se_secure_check")
+                data: getDeviceManageFunction("device_secure_check")
             })
         } catch (err) {
             return reject({
@@ -559,28 +414,28 @@ export function checkDevice() {
     })
 }
 
-export function checkUpdate() {
-    return new Promise((resolve, reject) => {
-        try {
-            resolve({
-                code: 200,
-                data: getDevice_manage_device("check_update")
-            })
-        } catch (err) {
-            return reject({
-                code: 400,
-                message: err.message
-            })
-        }
-    })
-}
+// export function checkUpdate() {
+//     return new Promise((resolve, reject) => {
+//         try {
+//             resolve({
+//                 code: 200,
+//                 data: getDeviceManageFunction("check_update")
+//             })
+//         } catch (err) {
+//             return reject({
+//                 code: 400,
+//                 message: err.message
+//             })
+//         }
+//     })
+// }
 
 export function downloadApplet(AppName) {
     return new Promise((resolve, reject) => {
         try {
             resolve({
                 code: 200,
-                data: getDevice_manage_Applet("app_download", AppName)
+                data: AppletManage("app_download", AppName)
             })
         } catch (err) {
             return reject({
@@ -596,7 +451,7 @@ export function updateApplet(AppName) {
         try {
             resolve({
                 code: 200,
-                data: getDevice_manage_Applet("app_update", AppName)
+                data: AppletManage("app_update", AppName)
             })
         } catch (err) {
             return reject({
@@ -612,7 +467,7 @@ export function deleteApplet(AppName) {
         try {
             resolve({
                 code: 200,
-                data: getDevice_manage_Applet("app_delete", AppName)
+                data: AppletManage("app_delete", AppName)
             })
         } catch (err) {
             return reject({
@@ -623,13 +478,12 @@ export function deleteApplet(AppName) {
     })
 }
 
-export function deviceBindCheck(FilePath) {
-    console.log("FilePath:" + FilePath)
+export function deviceBindCheck(filePath) {
     return new Promise((resolve, reject) => {
         try {
             resolve({
                 code: 200,
-                data: getDevice_manage_bind_check("bind_check", FilePath)
+                data: bindCheck(filePath)
             })
         } catch (err) {
             return reject({
@@ -645,7 +499,7 @@ export function deviceBindAcquire(bindCode) {
         try {
             resolve({
                 code: 200,
-                data: getDevice_manage_bind_acquire(bindCode)
+                data: bindAcquire(bindCode.toUpperCase())
             })
         } catch (err) {
             return reject({
@@ -661,7 +515,7 @@ export function deviceBindDisplay() {
         try {
             resolve({
                 code: 200,
-                data: getDevice_manage_bind_display()
+                data: getDeviceManageFunction("bind_display_code")
             })
         } catch (err) {
             return reject({
@@ -689,42 +543,6 @@ export function getUserPath() {
     })
 }
 
-// console.log( "getSeid:"+getSeid());
-// console.log( "getSn:"+getSn());
-// console.log( "getRamSize:"+getRamSize());
-// console.log( "getFirmwareVersion:"+getFirmwareVersion());
-// console.log( "getBatteryPower:"+getBatteryPower());
-// console.log( "getLifeTime:"+getLifeTime());
-// console.log( "getBleName:"+getBleName());
-// console.log( "setBleName:"+setBleName());
-// console.log( "getBleVersion:"+getBleVersion());
-
-
-// console.log( "activeDevice:"+activeDevice());
-// console.log( "checkDevice:"+checkDevice());
-// console.log( "checkUpdate:"+checkUpdate());
-// console.log( "downloadApplet:"+downloadApplet());
-// console.log( "updateApplet:"+updateApplet());
-// console.log( "deleteApplet:"+deleteApplet());
-
-// module.exports = {
-//     getSeid1,
-//     getSeid,
-//     getSn,
-//     getRamSize,
-//     getFirmwareVersion,
-//     getBatteryPower,
-//     getLifeTime,
-//     getBleName,
-//     setBleName,
-//     getBleVersion,
-//     activeDevice,
-//     checkDevice,
-//     checkUpdate,
-//     downloadApplet,
-//     updateApplet,
-//     deleteApplet,
-// }
 /**
  * @desc 二进制数组转字符串
  */
@@ -743,7 +561,7 @@ function Bytes2Str(arr) {
 /**
  * @desc 二进制数组转十六进制字符串
  */
-function Bytes2HexStr(arr) {
+function bytes2HexStr(arr) {
     let str = "";
     for (let i = 0; i < arr.length; i++) {
         let tmp = arr[i].toString(16);
@@ -758,7 +576,7 @@ function Bytes2HexStr(arr) {
 /*
 * @desc 十六进制字符串转二进制数组
 */
-function HexStr2Bytes(str) {
+function hexStr2Bytes(str) {
     let pos = 0;
     let len = str.length;
     if (len % 2 != 0) {
