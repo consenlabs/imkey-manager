@@ -230,28 +230,7 @@ function ICOSMOSTransaction_sign_TX(json) {
         stdFee.addAmount(coin)
     }
     stdFee.setGas(json.fee.gas)
-    let msgList = json.msg
-    for (let i = 0; i < msgList.length; i++) {
-        let msg = new cosmos_pb.Msg()
-        msg.setType(msgList[i].type)
-        let msgValue = new cosmos_pb.MsgValue()
-        let amountArray = msgList[i].value.amount;
-        for (let i = 0; i < amountArray.length; i++) {
-            let coin = new cosmos_pb.Coin()
-            coin.setAmount(amountArray[i].amount)
-            coin.setDenom(amountArray[i].denom)
-            msgValue.addAmount(coin)
-        }
-        if (msgList[i].value.hasOwnProperty("to_address")) {
-            msgValue.getAddressesMap().set("to_address", msgList[i].value.toAddress)
-            msgValue.getAddressesMap().set("from_address", msgList[i].value.fromAddress)
-        } else if (msgList[i].value.hasOwnProperty("delegator_address")) {
-            msgValue.getAddressesMap.set("delegator_address", msgList[i].value.delegatorAddress)
-            msgValue.getAddressesMap.set("validator_address", msgList[i].value.validatorAddress)
-        }
-        msg.setValue(msgValue)
-        signData.addMsgs(msg)
-    }
+    signData.setMsgs(JSON.stringify(json.msg))
     signData.setFee(stdFee)
     signData.setAccountNumber(json.accountNumber)
     signData.setChainId(json.chainId)
@@ -260,10 +239,10 @@ function ICOSMOSTransaction_sign_TX(json) {
     let cosmosTxReq = new cosmos_pb.CosmosTxReq();
     cosmosTxReq.setPath(json.path)
     cosmosTxReq.setSigndata(signData)
-    cosmosTxReq.setPaymentDis(json.preview.paymentDisplay)
-    cosmosTxReq.setToDis(json.preview.receiverDisplay)
-    cosmosTxReq.setFromDis(json.preview.senderDisplay)
-    cosmosTxReq.setFeeDis(json.preview.feeDisplay)
+    cosmosTxReq.setPaymentDis(json.preview.paymentDis)
+    cosmosTxReq.setToDis(json.preview.toDis)
+    cosmosTxReq.setFromDis(json.preview.fromDis)
+    cosmosTxReq.setFeeDis(json.preview.feeDis)
     let cosmosTxReqBytes = cosmosTxReq.serializeBinary();
     let any = new proto.google.protobuf.Any();
     any.setValue(cosmosTxReqBytes);
@@ -327,7 +306,7 @@ function BtcAddress(path, netWork, method_) {
     }
 }
 
-function ethAddress(path) {
+function ethAddress(path, method_) {
     let ethAddressReq = new eth_pb.EthAddressReq();
     ethAddressReq.setPath(path)
     let ethAddressReqBytes = ethAddressReq.serializeBinary();
@@ -372,7 +351,6 @@ function eosPubkey(path, method_) {
 }
 
 function cosmosAddress(path, method_) {
-    console.log("path:"+path)
     let cosmosAddressReq = new cosmos_pb.CosmosAddressReq();
     cosmosAddressReq.setPath(path)
     let cosmosAddressReqBytes = cosmosAddressReq.serializeBinary();
@@ -447,11 +425,11 @@ export function getEOS_RegisterPubKey(json) {
 }
 
 export function getETH_Address(json) {
-    return ethAddress(json.path);
+    return ethAddress(json.path,"eth_get_address");
 }
 
 export function getETH_RegisterAddress(json) {
-    return ethAddress(json.path);
+    return ethAddress(json.path,"eth_register_address");
 }
 
 export function BitcoinTransaction_BTC(json) {

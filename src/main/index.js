@@ -5,10 +5,6 @@ import {autoUpdater} from 'electron-updater'
 import * as Sentry from '@sentry/electron'
 // package.json
 import pkg from '../../package.json'
-//http
-import http from 'http'
-// api模块
-let apiRouter = require('../api/apirouter')
 /**
  * Set `__static` path to static files in production
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
@@ -164,58 +160,103 @@ function createTray() {
  * 启动 http server
  */
 function startHttpServer() {
-    http.createServer((request, response) => {
-        request.on('error', (err) => {
-            console.error(err);
-            response.statusCode = 400;
-            response.end();
+    let express = require('express');
+    let app = express();
+    let bodyParser = require('body-parser');
+    let apiRouter = require('../api/apirouter')
+    // 给app配置bodyParser中间件
+    // 通过如下配置再路由种处理request时，可以直接获得post请求的body部分
+    app.use(bodyParser.urlencoded({extended: true}));
+    app.use(bodyParser.json());
+    // let router = express.Router();
+    // 获得express router对象
+    // 用post动词访问 http://localhost:8081/api/imKey
+    app.post("/api/imKey", function (req, res) {
+        let body = '', jsonStr,reqJson;
+        req.on('data', function (chunk) {
+            body += chunk; //读取参数流转化为字符串
         });
-        response.on('error', (err) => {
-            console.error(err);
+        req.on('end', function () {
+            //读取参数流结束后将转化的body字符串解析成 JSON 格式
+            reqJson = JSON.parse(body)
+            try {
+                jsonStr = apiRouter.api(reqJson);
+            } catch (err) {
+                jsonStr =  {
+                    "jsonrpc:": reqJson.jsonrpc,
+                    error: {
+                        code: -32604,
+                        message: err
+                    },
+                    "id:": reqJson.id
+                };
+            }
+            res.json(jsonStr);
         });
-        if (request.method === 'POST' && request.url.match('/imKey')) {
-            let {headers, method, url} = request;
-            let body = [];
-            request.on('error', (err) => {
-                console.error(err);
-            }).on('data', (chunk) => {
-                body.push(chunk);
-            }).on('end', () => {
-                body = Buffer.concat(body).toString();
-                // BEGINNING OF NEW STUFF
+    });
+    // 注册路由
+    // 所有的路由会加上“／api”前缀
+    // pp.use('/api/imKey/', router);
+    let server = app.listen(8081, function () {
+        let host = server.address().address
+        let port = server.address().port
+        console.log("应用实例，访问地址为 http://%s:%s", host, port)
+    })
 
-                response.on('error', (err) => {
-                    console.error(err);
-                });
 
-                // response.statusCode = 200;
-                // response.setHeader('Content-Type', 'application/json');
-                // Note: the 2 lines above could be replaced with this next one:
-                // response.writeHead(200, {'Content-Type': 'application/json'})
-                // {"ReturnCode":"000000","ReturnData":{"nextStepKey":"05","seid":"18080000000000860001010000000015"},"ReturnMsg":"操作成功"}
-                let requestJson = JSON.parse(body);//获取到request请求中的json对象
-                //处理request请求的数据
-                //调用rust库把需要的数据发给rust库处理
-                // console.log(" process.versions.node:" + process.versions.node);
-                // console.log("request.url.split(\"/imkey/\")[1]" + request.url.split("/imkey/")[1])
-                let responseJson = apiRouter.api(requestJson);
-                responseJson = JSON.stringify(responseJson);
-                //返回response的json对象
-                // let resjson = {"ReturnCode": "000000", "ReturnMsg": "操作成功", "ReturnData": {responseJson}};
-                // let responseBody = {headers, method, url, resjson};
 
-                response.write(JSON.stringify(responseJson));
-                response.end();
-                // Note: the 2 lines above could be replaced with this next one:
-                // response.end(JSON.stringify(responseBody))
-                // END OF NEW STUFF
-            });
-            // request.pipe(response);
-        } else {
-            response.statusCode = 404;
-            response.end();
-        }
-    }).listen(8080, '127.0.0.1');
+    // http.createServer((request, response) => {
+    //     request.on('error', (err) => {
+    //         console.error(err);
+    //         response.statusCode = 400;
+    //         response.end();
+    //     });
+    //     response.on('error', (err) => {
+    //         console.error(err);
+    //     });
+    //     if (request.method === 'POST' && request.url.match('/imKey')) {
+    //         let {headers, method, url} = request;
+    //         let body = [];
+    //         request.on('error', (err) => {
+    //             console.error(err);
+    //         }).on('data', (chunk) => {
+    //             body.push(chunk);
+    //         }).on('end', () => {
+    //             body = Buffer.concat(body).toString();
+    //             // BEGINNING OF NEW STUFF
+    //
+    //             response.on('error', (err) => {
+    //                 console.error(err);
+    //             });
+    //
+    //             // response.statusCode = 200;
+    //             // response.setHeader('Content-Type', 'application/json');
+    //             // Note: the 2 lines above could be replaced with this next one:
+    //             // response.writeHead(200, {'Content-Type': 'application/json'})
+    //             // {"ReturnCode":"000000","ReturnData":{"nextStepKey":"05","seid":"18080000000000860001010000000015"},"ReturnMsg":"操作成功"}
+    //             let requestJson = JSON.parse(body);//获取到request请求中的json对象
+    //             //处理request请求的数据
+    //             //调用rust库把需要的数据发给rust库处理
+    //             // console.log(" process.versions.node:" + process.versions.node);
+    //             // console.log("request.url.split(\"/imkey/\")[1]" + request.url.split("/imkey/")[1])
+    //             let responseJson = apiRouter.api(requestJson);
+    //             responseJson = JSON.stringify(responseJson);
+    //             //返回response的json对象
+    //             // let resjson = {"ReturnCode": "000000", "ReturnMsg": "操作成功", "ReturnData": {responseJson}};
+    //             // let responseBody = {headers, method, url, resjson};
+    //
+    //             response.write(JSON.stringify(responseJson));
+    //             response.end();
+    //             // Note: the 2 lines above could be replaced with this next one:
+    //             // response.end(JSON.stringify(responseBody))
+    //             // END OF NEW STUFF
+    //         });
+    //         // request.pipe(response);
+    //     } else {
+    //         response.statusCode = 404;
+    //         response.end();
+    //     }
+    // }).listen(8080, '127.0.0.1');
 }
 
 /**
