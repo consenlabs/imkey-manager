@@ -36,64 +36,62 @@
 </template>
 
 <script>
-    import deviceImage from "../../components/deviceImage";
-    import constants from "../../../common/constants";
+    import deviceImage from '../../components/deviceImage'
+    import constants from '../../../common/constants'
     import {
-        connectDevice,
+      connectDevice
     } from '../../../api/devicemanager'
-    import NoticeBox from "@/components/noticeDialog";
+    import NoticeBox from '@/components/noticeDialog'
 
     export default {
-        name: "connect",
-        data() {
-            return {
-                connectLoading: false,
-                activeOne: false,
-                activeTwo: false,
-                activeThree: false,
-                noticeVisible: false
-            };
-        },
-        components: {
-            deviceImage,
-            NoticeBox
-        },
-        mounted() {
-        },
-        methods: {
-            connect() {
-                this.connectLoading = true;
-                setTimeout(() => {
-                    connectDevice().then(result => {
-
-                        if (result.code === 200) {
-                            const res = result.data
-                            if (res == constants.RESULT_STATUS_SUCCESS) {
-                                console.log("success res " + res)
-                                this.router.replace("/manager/device");
-                            } else {
-                                this.openErrorView(res);
-                            }
-                        } else {
-                            this.openErrorView(result.message);
-                        }
-                    }).catch(err => {
-                        this.openErrorView(err);
-                    })
-                }, 200);
-            },
-            openErrorView(msg) {
-                this.connectLoading = false;
-                this.$store.state.message = msg
-                this.noticeVisible = true;
-
-            },
-            closeErrorView(msg) {
-                this.noticeVisible = false;
-            }
-
+      name: 'connect',
+      data () {
+        return {
+          connectLoading: false,
+          activeOne: false,
+          activeTwo: false,
+          activeThree: false,
+          noticeVisible: false
         }
-    };
+      },
+      components: {
+        deviceImage,
+        NoticeBox
+      },
+      mounted () {
+      },
+      methods: {
+        connect () {
+          this.connectLoading = true
+          setTimeout(() => {
+            connectDevice().then(result => {
+              if (result.code === 200) {
+                const res = result.data
+                if (res === constants.RESULT_STATUS_SUCCESS) {
+                  console.log('success res ' + res)
+                  this.router.replace('/manager/device')
+                } else {
+                  this.openErrorView(res)
+                }
+              } else {
+                this.openErrorView(result.message)
+              }
+            }).catch(err => {
+              this.openErrorView(err)
+            })
+          }, 200)
+        },
+        openErrorView (msg) {
+          this.connectLoading = false
+          this.$store.state.message = msg
+          this.noticeVisible = true
+        },
+        closeErrorView (msg) {
+          this.noticeVisible = false
+        }
+
+      }
+    }
 </script>
 
 <style lang="less" scoped>

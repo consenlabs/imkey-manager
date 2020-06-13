@@ -35,59 +35,59 @@
 </template>
 
 <script>
-    import CheckBox from "./stepTwoDialog";
-    import NoticeBox from "@/components/noticeDialog";
+    import CheckBox from './stepTwoDialog'
+    import NoticeBox from '@/components/noticeDialog'
 
     export default {
-        name: "Home",
-        data() {
-            return {
-                yesOneType: "primary",
-                yesTowType: "primary",
-                noOneType: "",
-                noTowType: "",
-                boxVisible: false,
-                noticeVisible: false
-            };
-        },
-        components: {
-            CheckBox,
-            NoticeBox
-        },
-        mounted() {
-            //禁止主页面滑动
-            this.noScroll();
-            this.check();
-        },
-        methods: {
-            check() {
-                this.boxVisible = true;
-            },
-            closeCheckBox(msg) {
-                //取消显示进度的窗口，弹出错误窗口
-                this.boxVisible = false;
-                setTimeout(() => {
-                    this.openErrorView(msg)
-                }, 10)
-            },
-            toShowThree(val) {
-                if (val) {
-                    this.$emit("showThree", true);
-                } else {
-                    this.$emit("finishStatusTwo", "error");
-                }
-            },
-            openErrorView(msg) {
-                if (msg != "function () { [native code] }") {
-                    this.$store.state.message = msg
-                    this.noticeVisible = true;
-                }
-            },
-            closeErrorView(msg) {
-                this.noticeVisible = false;
-            }
+      name: 'Home',
+      data () {
+        return {
+          yesOneType: 'primary',
+          yesTowType: 'primary',
+          noOneType: '',
+          noTowType: '',
+          boxVisible: false,
+          noticeVisible: false
         }
-    };
+      },
+      components: {
+        CheckBox,
+        NoticeBox
+      },
+      mounted () {
+        // 禁止主页面滑动
+        this.noScroll()
+        this.check()
+      },
+      methods: {
+        check () {
+          this.boxVisible = true
+        },
+        closeCheckBox (msg) {
+          // 取消显示进度的窗口，弹出错误窗口
+          this.boxVisible = false
+          setTimeout(() => {
+            this.openErrorView(msg)
+          }, 10)
+        },
+        toShowThree (val) {
+          if (val) {
+            this.$emit('showThree', true)
+          } else {
+            this.$emit('finishStatusTwo', 'error')
+          }
+        },
+        openErrorView (msg) {
+          if (msg !== 'function () { [native code] }') {
+            this.$store.state.message = msg
+            this.noticeVisible = true
+          }
+        },
+        closeErrorView (msg) {
+          this.noticeVisible = false
+        }
+      }
+    }
 </script>
 <style lang="less" scoped>
     .stepTwo {

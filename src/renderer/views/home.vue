@@ -11,11 +11,11 @@
                 </p>
                 <div :class="{btnBox,active:isActive1}" align="center">
                     <h2>{{$t('m.home.use_imToken_to_buy')}}</h2>
-                    <img src="../assets/erweima2.png" alt/>
+                    <img src="src/renderer/assets/erweimaAliWecat.png" alt/>
                 </div>
                 <div :class="{btnBox,active:isActive2}" align="center">
                     <h2>{{$t('m.home.use_WeChat_AliPay_to_buy')}}</h2>
-                    <img src="../assets/erweima1.png" alt/>
+                    <img src="src/renderer/assets/erweimaImtoken.png" alt/>
                 </div>
                 <div class="btnBar">
                     <div :class="{active:isActive1}" @click="btn_wechat_alipay()">{{$t('m.home.WeChat_AliPay')}}</div>
@@ -28,37 +28,35 @@
 </template>
 
 <script>
-
     export default {
-        name: "home",
-        data() {
-            return {
-                isShow: "none",
-                isActive1: true,
-                isActive2: false,
-                btnBox: "btnBox"
-            };
-        },
-
-
-        methods: {
-
-            close() {
-                this.isShow = "none";
-            },
-            buy() {
-                this.isShow = "block";
-            },
-            btn_wechat_alipay() {
-                this.isActive1 = false;
-                this.isActive2 = true;
-            },
-            btn_imtoken() {
-                this.isActive1 = true;
-                this.isActive2 = false;
-            }
+      name: 'home',
+      data () {
+        return {
+          isShow: 'none',
+          isActive1: true,
+          isActive2: false,
+          btnBox: 'btnBox'
         }
-    };
+      },
+
+      methods: {
+
+        close () {
+          this.isShow = 'none'
+        },
+        buy () {
+          this.isShow = 'block'
+        },
+        btn_wechat_alipay () {
+          this.isActive1 = false
+          this.isActive2 = true
+        },
+        btn_imtoken () {
+          this.isActive1 = true
+          this.isActive2 = false
+        }
+      }
+    }
 </script>
 
 <style lang="less" scoped>

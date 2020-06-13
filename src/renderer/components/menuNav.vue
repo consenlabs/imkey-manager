@@ -18,24 +18,24 @@
 
 <script>
     export default {
-        name: "menuNav",
+        name: 'menuNav',
         data() {
             return {
-                activePath: ""
-            };
+                activePath: ''
+            }
         },
         mounted() {
             this.activePath = this.$route.meta.activePath
                 ? this.$route.meta.activePath
-                : this.$route.path;
+                : this.$route.path
         },
         watch: {
             $route(from, to) {
-                console.log(from, to);
-                this.activePath = from.meta.activePath ? from.meta.activePath : from.path;
+                console.log(from, to)
+                this.activePath = from.meta.activePath ? from.meta.activePath : from.path
             }
         }
-    };
+    }
 </script>
 
 <style lang="less" scoped>

@@ -48,18 +48,18 @@
 
 <script>
     export default {
-        name: "checkBox",
-        data() {
-            return {};
-        },
-        props: {optionOneVisible: Boolean},
-        methods: {
+      name: 'checkBox',
+      data () {
+        return {}
+      },
+      props: {optionOneVisible: Boolean},
+      methods: {
 
-            handleClose() {
-                this.$emit("closeOneBox", false);
-            },
+        handleClose () {
+          this.$emit('closeOneBox', false)
         }
-    };
+      }
+    }
 </script>
 
 <style lang="less" scoped>

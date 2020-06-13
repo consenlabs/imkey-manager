@@ -54,7 +54,7 @@
 </template>
 
 <script>
-    import constants from "../../../../common/constants";
+    import constants from '../../../../common/constants'
     import {
         connectDevice,
         activeDevice,
@@ -62,16 +62,16 @@
         deviceBindCheck,
         deviceBindDisplay,
         getUserPath
-    } from "../../../../api/devicemanager";
+    } from '../../../../api/devicemanager'
 
     export default {
-        name: "checkBox",
+        name: 'checkBox',
         data() {
             return {
-                userPath: "",
+                userPath: '',
                 bindShow: false,
                 status1: false,
-                BindCode: "",
+                BindCode: '',
                 status3: false,
                 isCorrect: false,
                 loading: false,
@@ -80,221 +80,215 @@
                 showTwo: false,
                 showThree: false,
                 isError: false,
-                noticeText: ""
+                noticeText: ''
 
-            };
+            }
         },
         props: {boxVisible: Boolean},
         watch: {
             boxVisible() {
                 if (this.boxVisible) {
-                    this.checkActiveAndBind();
+                    this.checkActiveAndBind()
                 }
             }
         },
         mounted() {
-            this.connect();
+            this.connect()
         },
         methods: {
             handleBlur() {
-                const reg = /^[a-hj-np-zA-HJ-NP-Z2-9]{8}$/;
+                const reg = /^[a-hj-np-zA-HJ-NP-Z2-9]{8}$/
                 if (!reg.test(this.BindCode)) {
-                    this.isError = true;
-                    this.noticeText = "";
+                    this.isError = true
+                    this.noticeText = ''
                 } else {
-                    this.isError = false;
+                    this.isError = false
                 }
             },
             getUserPath() {
                 getUserPath().then(result => {
                     if (result.code === 200) {
-                        const electron = require('electron');
-                        const dataPath = (electron.app || electron.remote.app).getPath('userData') + "/";
-                        this.userPath = dataPath;
+                        const electron = require('electron')
+                        const dataPath = (electron.app || electron.remote.app).getPath('userData') + '/'
+                        this.userPath = dataPath
                     }
                 }).catch(err => {
-                    this.openErrorView(err);
+                    this.openErrorView(err)
                 })
             },
             connect() {
                 connectDevice().then(result => {
                     if (result.code === 200) {
                         const res = result.data
-                        if (res == constants.RESULT_STATUS_SUCCESS) {
-                            this.getUserPath();
+                        if (res === constants.RESULT_STATUS_SUCCESS) {
+                            this.getUserPath()
                         } else {
-                            this.openErrorView(res);
+                            this.openErrorView(res)
                         }
                     } else {
-                        this.openErrorView(result.message);
+                        this.openErrorView(result.message)
                     }
                 }).catch(err => {
-                    this.openErrorView(err);
+                    this.openErrorView(err)
                 })
             },
             activeDevice() {
                 setTimeout(() => {
                     activeDevice().then(result => {
                         if (result.code === 200) {
-
-                            if (result.data == constants.RESULT_STATUS_SUCCESS) {
-                                //激活成功
-                                this.loading1 = false;
-                                this.status1 = true;
-                                this.showTwo = true;
-                                //开始判断是否绑定
-                                this.bindDevice();
+                            if (result.data === constants.RESULT_STATUS_SUCCESS) {
+                                // 激活成功
+                                this.loading1 = false
+                                this.status1 = true
+                                this.showTwo = true
+                                // 开始判断是否绑定
+                                this.bindDevice()
                             } else {
-                                //激活失败
-                                this.openErrorView(result.data);
+                                // 激活失败
+                                this.openErrorView(result.data)
                             }
                         } else {
-                            this.openErrorView(result.message);
+                            this.openErrorView(result.message)
                         }
                     }).catch(err => {
-                        //激活失败
-                        this.openErrorView(err);
+                        // 激活失败
+                        this.openErrorView(err)
                     })
-
                 }, 200)
-
             },
             bindDevice() {
                 deviceBindCheck(this.userPath).then(result => {
                     if (result.code === 200) {
-                        if (result.data == "" || result.data == null) {
-                            //失败的话
-                            this.openErrorView("bind fail: null ");
+                        if (result.data === '' || result.data === null) {
+                            // 失败的话
+                            this.openErrorView('bind fail: null ')
                         } else {
-                            if (result.data == constants.BIND_STATUS_STRING_BOUND_OTHER) {
-                                //弹出输入框
-                                this.bindShow = true;
-
-                            } else if (result.data == constants.BIND_STATUS_STRING_UNBOUND) {
-                                //弹出输入框
-                                this.bindShow = true;
-                                //显示绑定码
-                                this.bindDisplay();
-                            } else if (result.data == constants.BIND_STATUS_STRING_BOUND_THIS) {
-                                this.isCorrect = true;
-                                this.showThree = true;
-                                this.status3 = true;
-                                this.loading3 = true;
+                            if (result.data === constants.BIND_STATUS_STRING_BOUND_OTHER) {
+                                // 弹出输入框
+                                this.bindShow = true
+                            } else if (result.data === constants.BIND_STATUS_STRING_UNBOUND) {
+                                // 弹出输入框
+                                this.bindShow = true
+                                // 显示绑定码
+                                this.bindDisplay()
+                            } else if (result.data === constants.BIND_STATUS_STRING_BOUND_THIS) {
+                                this.isCorrect = true
+                                this.showThree = true
+                                this.status3 = true
+                                this.loading3 = true
                                 setTimeout(() => {
-                                    //已经绑定
-                                    this.loading3 = false;
-                                }, 500);
+                                    // 已经绑定
+                                    this.loading3 = false
+                                }, 500)
                                 setTimeout(() => {
-                                    //第三部成功的话
-                                    this.$emit("showThree", true);
-                                    this.handleClose();
-                                }, 1000);
+                                    // 第三部成功的话
+                                    this.$emit('showThree', true)
+                                    this.handleClose()
+                                }, 1000)
                             } else {
-                                //如果其他错误，弹出提示框
-                                this.openErrorView(result.data);
+                                // 如果其他错误，弹出提示框
+                                this.openErrorView(result.data)
                             }
                         }
                     } else {
-                        this.openErrorView(result.message);
+                        this.openErrorView(result.message)
                     }
                 }).catch(err => {
-                    //失败的话
-                    this.openErrorView(err);
+                    // 失败的话
+                    this.openErrorView(err)
                 })
-
             },
             bindAcquire() {
-                this.loading3 = true;
+                this.loading3 = true
                 deviceBindAcquire(this.BindCode).then(result => {
                     if (result.code === 200) {
-                        if (result.data == constants.RESULT_STATUS_SUCCESS) {
+                        if (result.data === constants.RESULT_STATUS_SUCCESS) {
                             setTimeout(() => {
-                                //已经绑定
-                                this.loading3 = false;
-                            }, 1000);
+                                // 已经绑定
+                                this.loading3 = false
+                            }, 1000)
                             setTimeout(() => {
-                                //第三部成功的话
-                                this.$emit("showThree", true);
-                                this.handleClose();
-                            }, 2000);
-
+                                // 第三部成功的话
+                                this.$emit('showThree', true)
+                                this.handleClose()
+                            }, 2000)
                         } else {
-                            this.openErrorView(result.data);
+                            this.openErrorView(result.data)
                         }
                     } else {
-                        this.openErrorView(result.message);
+                        this.openErrorView(result.message)
                     }
                 }).catch(err => {
-                    this.openErrorView(err);
+                    this.openErrorView(err)
                 })
             },
             bindDisplay() {
                 deviceBindDisplay().then(result => {
                     if (result.code === 200) {
-                        if (result.data == constants.RESULT_STATUS_SUCCESS) {
+                        if (result.data === constants.RESULT_STATUS_SUCCESS) {
 
                         } else {
-                            this.openErrorView(result.data);
+                            this.openErrorView(result.data)
                         }
                     } else {
-                        this.openErrorView(result.message);
+                        this.openErrorView(result.message)
                     }
                 }).catch(err => {
-                    this.openErrorView(err);
+                    this.openErrorView(err)
                 })
             },
             checkActiveAndBind() {
-                this.connect();
-                this.loading1 = true;
+                this.connect()
+                this.loading1 = true
                 setTimeout(() => {
-                    //判断是否已激活
-                    if (this.$store.state.activeStatus == "latest") {
-                        //激活成功
-                        this.loading1 = false;
-                        this.status1 = true;
-                        this.showTwo = true;
-                        //开始判断是否绑定
-                        this.bindDevice();
+                    // 判断是否已激活
+                    if (this.$store.state.activeStatus === 'latest') {
+                        // 激活成功
+                        this.loading1 = false
+                        this.status1 = true
+                        this.showTwo = true
+                        // 开始判断是否绑定
+                        this.bindDevice()
                     } else {
-                        this.activeDevice();
+                        this.activeDevice()
                     }
-                }, 200);
+                }, 200)
             },
             handleClose(msg) {
-                this.status1 = false;
-                this.BindCode = "";
-                this.status3 = false;
-                this.isCorrect = false;
-                this.loading = false;
-                this.loading1 = true;
-                this.loading3 = false;
-                this.showTwo = false;
-                this.showThree = false;
-                this.isError = false;
-                this.$emit("closeCheckBox", msg);
+                this.status1 = false
+                this.BindCode = ''
+                this.status3 = false
+                this.isCorrect = false
+                this.loading = false
+                this.loading1 = true
+                this.loading3 = false
+                this.showTwo = false
+                this.showThree = false
+                this.isError = false
+                this.$emit('closeCheckBox', msg)
             },
             bind() {
                 if (this.isError || !this.BindCode) {
-                    this.isError = true;
-                    this.noticeText = !this.BindCode ? this.$t('m.stepTwo.bind_code_is_null') : this.$t('m.stepTwo.bind_code_is_correct');
-                    return;
+                    this.isError = true
+                    this.noticeText = !this.BindCode ? this.$t('m.stepTwo.bind_code_is_null') : this.$t('m.stepTwo.bind_code_is_correct')
+                    return
                 }
 
-                this.connect();
-                this.loading = true;
-                this.isCorrect = true;
-                this.showThree = true;
-                this.status3 = true;
-                this.loading3 = true;
+                this.connect()
+                this.loading = true
+                this.isCorrect = true
+                this.showThree = true
+                this.status3 = true
+                this.loading3 = true
                 setTimeout(() => {
-                    this.bindAcquire();
-                }, 200);
+                    this.bindAcquire()
+                }, 200)
             },
             openErrorView(msg) {
-                this.handleClose(msg);
-            },
+                this.handleClose(msg)
+            }
         }
-    };
+    }
 </script>
 
 <style lang="less" scoped>

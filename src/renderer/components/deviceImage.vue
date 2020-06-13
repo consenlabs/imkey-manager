@@ -20,8 +20,8 @@
 
 <script>
     export default {
-        props: {mini: Boolean, small: Boolean, middle: Boolean, large: Boolean}
-    };
+      props: {mini: Boolean, small: Boolean, middle: Boolean, large: Boolean}
+    }
 </script>
 
 <style lang="less" scoped>

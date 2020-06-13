@@ -17,31 +17,31 @@
 
 <script>
     export default {
-        name: "notice",
-        props: {noticeVisible: Boolean},
-        data() {
-            return {
-                Message: "",
-            };
-        },
-
-        watch: {
-            noticeVisible() {
-                if (this.noticeVisible) {
-                    this.Message = this.$store.state.message;
-                }
-            }
-        },
-
-        methods: {
-            handleClose() {
-                this.$emit("closeNotice", false);
-            },
-            sure() {
-                this.handleClose();
-            }
+      name: 'notice',
+      props: {noticeVisible: Boolean},
+      data () {
+        return {
+          Message: ''
         }
-    };
+  },
+
+      watch: {
+        noticeVisible () {
+          if (this.noticeVisible) {
+            this.Message = this.$store.state.message
+          }
+        }
+      },
+
+      methods: {
+        handleClose () {
+          this.$emit('closeNotice', false)
+        },
+        sure () {
+          this.handleClose()
+        }
+      }
+    }
 </script>
 
 <style lang="less" scoped>

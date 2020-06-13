@@ -16,90 +16,86 @@
 </template>
 
 <script>
-    import deviceImage from "../../../components/deviceImage";
-    import constants from "../../../../common/constants";
+    import deviceImage from '../../../components/deviceImage'
+    import constants from '../../../../common/constants'
     import {
-        connectDevice,
+      connectDevice
     } from '../../../../api/devicemanager'
-    import NoticeBox from "@/components/noticeDialog";
+    import NoticeBox from '@/components/noticeDialog'
 
     export default {
-        name: "Home",
-        data() {
-            return {
-                connectLoading: false,
-                isConnect: false,
-                isOneChoose: false,
-                isTwoChoose: false,
-                isTreeChoose: false,
-                noticeVisible: false
-            };
-        },
-        components: {
-            deviceImage,
-            NoticeBox
-        },
-        mounted() {
-            //禁止主页面滑动
-            this.noScroll();
-            this.choose(2);
-        },
-        methods: {
-            connect() {
-                connectDevice().then(result => {
-
-                    if (result.code === 200) {
-                        const res = result.data
-                        if (res == constants.RESULT_STATUS_SUCCESS) {
-                            this.$emit("showTwo");
-                        } else {
-                            this.openErrorView(res);
-                        }
-                    } else {
-
-                        this.openErrorView(result.message);
-                    }
-                }).catch(err => {
-                    this.openErrorView(err);
-                })
-            },
-            choose(index) {
-                switch (index) {
-                    case 1:
-                        this.isOneChoose = true;
-                        this.isTwoChoose = false;
-                        this.isThreeChoose = false;
-                        break;
-                    case 2:
-                        this.isTwoChoose = true;
-                        this.isOneChoose = false;
-                        this.isThreeChoose = false;
-                        break;
-                    case 3:
-                        this.isTwoChoose = false;
-                        this.isOneChoose = false;
-                        this.isThreeChoose = true;
-                        break;
-                }
-                this.connectLoading = true;
-                setTimeout(() => {
-
-                    this.connect();
-                }, 500);
-            },
-            openErrorView(msg) {
-                this.isOneChoose = false;
-                this.isTwoChoose = false;
-                this.connectLoading = false;
-                this.$store.state.message = msg
-                this.noticeVisible = true;
-
-            },
-            closeErrorView(msg) {
-                this.noticeVisible = false;
-            }
+      name: 'Home',
+      data () {
+        return {
+          connectLoading: false,
+          isConnect: false,
+          isOneChoose: false,
+          isTwoChoose: false,
+          isTreeChoose: false,
+          noticeVisible: false
         }
-    };
+      },
+      components: {
+        deviceImage,
+        NoticeBox
+      },
+      mounted () {
+        // 禁止主页面滑动
+        this.noScroll()
+        this.choose(2)
+      },
+      methods: {
+        connect () {
+          connectDevice().then(result => {
+            if (result.code === 200) {
+              const res = result.data
+              if (res === constants.RESULT_STATUS_SUCCESS) {
+                this.$emit('showTwo')
+              } else {
+                this.openErrorView(res)
+              }
+            } else {
+              this.openErrorView(result.message)
+            }
+          }).catch(err => {
+            this.openErrorView(err)
+          })
+        },
+        choose (index) {
+          switch (index) {
+            case 1:
+              this.isOneChoose = true
+              this.isTwoChoose = false
+              this.isThreeChoose = false
+              break
+            case 2:
+              this.isTwoChoose = true
+              this.isOneChoose = false
+              this.isThreeChoose = false
+              break
+            case 3:
+              this.isTwoChoose = false
+              this.isOneChoose = false
+              this.isThreeChoose = true
+              break
+          }
+          this.connectLoading = true
+          setTimeout(() => {
+            this.connect()
+          }, 500)
+        },
+        openErrorView (msg) {
+          this.isOneChoose = false
+          this.isTwoChoose = false
+          this.connectLoading = false
+          this.$store.state.message = msg
+          this.noticeVisible = true
+        },
+        closeErrorView (msg) {
+          this.noticeVisible = false
+        }
+      }
+    }
 </script>
 <style lang="less" scoped>
     .stepOne {
