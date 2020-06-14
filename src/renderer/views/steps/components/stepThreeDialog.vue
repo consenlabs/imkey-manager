@@ -1,11 +1,14 @@
 <template>
     <el-dialog
-            :title="$t('m.stepThree.operation_guide')"
+            title="info"
             :visible.sync="optionOneVisible"
             width="600px"
             @close="handleClose"
             top="10vh"
     >
+        <div slot="title" class="header-title">
+            <span v-show="name" class="title-name">{{ name }}</span>
+        </div>
         <div class="contentBox">
             <h3>{{$t('m.stepThree.how_to_set_pin')}}</h3>
             <div class="text">
@@ -47,19 +50,21 @@
 </template>
 
 <script>
-    export default {
-      name: 'checkBox',
-      data () {
-        return {}
-      },
-      props: {optionOneVisible: Boolean},
-      methods: {
-
-        handleClose () {
-          this.$emit('closeOneBox', false)
-        }
-      }
+export default {
+  name: 'checkBox',
+  data () {
+    return {
+      name: this.$t('m.stepThree.operation_guide')
     }
+  },
+  props: { optionOneVisible: Boolean },
+  methods: {
+
+    handleClose () {
+      this.$emit('closeOneBox', false)
+    }
+  }
+}
 </script>
 
 <style lang="less" scoped>

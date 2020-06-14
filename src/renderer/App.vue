@@ -3,8 +3,7 @@
         <router-view></router-view>
     </div>
 </template>
-
-
+<script></script>
 <style type="text/css" lang="scss">
     #app {
         font-family: '微软雅黑 Bold', '微软雅黑 Regular', '微软雅黑';
@@ -46,4 +45,5 @@
         /*-webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, .3);*/
         /*background-color: green;  !*滚动条的背景颜色*!*/
     }
+
 </style>

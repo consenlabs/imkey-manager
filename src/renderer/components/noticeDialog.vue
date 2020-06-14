@@ -6,6 +6,9 @@
             :show-close="false"
             center
     >
+        <div slot="title" class="header-title">
+            <span v-show="name" class="title-name">{{ name }}</span>
+        </div>
         <div class="body">
             <p>{{Message}}</p>
         </div>
@@ -16,32 +19,33 @@
 </template>
 
 <script>
-    export default {
-      name: 'notice',
-      props: {noticeVisible: Boolean},
-      data () {
-        return {
-          Message: ''
-        }
+export default {
+  name: 'notice',
+  props: { noticeVisible: Boolean },
+  data () {
+    return {
+      name: this.$t('m.noticeDialog.info'),
+      Message: ''
+    }
   },
 
-      watch: {
-        noticeVisible () {
-          if (this.noticeVisible) {
-            this.Message = this.$store.state.message
-          }
-        }
-      },
-
-      methods: {
-        handleClose () {
-          this.$emit('closeNotice', false)
-        },
-        sure () {
-          this.handleClose()
-        }
+  watch: {
+    noticeVisible () {
+      if (this.noticeVisible) {
+        this.Message = this.$store.state.message
       }
     }
+  },
+
+  methods: {
+    handleClose () {
+      this.$emit('closeNotice', false)
+    },
+    sure () {
+      this.handleClose()
+    }
+  }
+}
 </script>
 
 <style lang="less" scoped>

@@ -28,35 +28,35 @@
 </template>
 
 <script>
-    export default {
-      name: 'home',
-      data () {
-        return {
-          isShow: 'none',
-          isActive1: true,
-          isActive2: false,
-          btnBox: 'btnBox'
-        }
-      },
-
-      methods: {
-
-        close () {
-          this.isShow = 'none'
-        },
-        buy () {
-          this.isShow = 'block'
-        },
-        btn_wechat_alipay () {
-          this.isActive1 = false
-          this.isActive2 = true
-        },
-        btn_imtoken () {
-          this.isActive1 = true
-          this.isActive2 = false
-        }
-      }
+export default {
+  name: 'home',
+  data () {
+    return {
+      isShow: 'none',
+      isActive1: true,
+      isActive2: false,
+      btnBox: 'btnBox'
     }
+  },
+
+  methods: {
+
+    close () {
+      this.isShow = 'none'
+    },
+    buy () {
+      this.isShow = 'block'
+    },
+    btn_wechat_alipay () {
+      this.isActive1 = false
+      this.isActive2 = true
+    },
+    btn_imtoken () {
+      this.isActive1 = true
+      this.isActive2 = false
+    }
+  }
+}
 </script>
 
 <style lang="less" scoped>

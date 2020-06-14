@@ -17,21 +17,21 @@ Vue.prototype.noScroll = function () {
     e.preventDefault()
   }
   document.body.style.overflow = 'hidden'
-  //禁止页面滑动
+  // 禁止页面滑动
   document.addEventListener('touchmove', mo, false)
 }
 
-//弹出框可以滑动
+// 弹出框可以滑动
 Vue.prototype.canScroll = function () {
   var mo = function (e) {
     e.preventDefault()
   }
-  //出现滚动条
+  // 出现滚动条
   document.body.style.overflow = ''
   document.removeEventListener('touchmove', mo, false)
 }
 // 获取系统语言，根据系统语言来切换语言
-let app = require('electron').remote.app
+const app = require('electron').remote.app
 let sysLocale = app.getLocale()
 if (sysLocale !== 'zh-CN') {
   sysLocale = 'en-US'

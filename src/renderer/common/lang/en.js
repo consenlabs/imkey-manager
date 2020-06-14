@@ -118,5 +118,9 @@ export const m = {
     home: 'Home',
     manager: 'Manager',
     setting: 'Setting'
+  },
+  noticeDialog: {
+    info: 'info'
   }
+
 }

@@ -1,11 +1,14 @@
 <template>
     <el-dialog
-            :title="$t('m.stepThree.operation_guide')"
+            title="info"
             :visible.sync="optionTwoVisible"
             width="600px"
             @close="handleClose"
             top="10vh"
     >
+        <div slot="title" class="header-title">
+            <span v-show="name" class="title-name">{{ name }}</span>
+        </div>
         <div class="contentBox">
             <h3>{{$t('m.stepThree.create_a_wallet')}}</h3>
             <div class="text">
@@ -81,19 +84,21 @@
 </template>
 
 <script>
-    export default {
-      name: 'checkBox',
-      data () {
-        return {}
-      },
-      props: {optionTwoVisible: Boolean},
-      methods: {
-
-        handleClose () {
-          this.$emit('closeTwoBox', false)
-        }
-      }
+export default {
+  name: 'checkBox',
+  data () {
+    return {
+      name: this.$t('m.stepThree.operation_guide')
     }
+  },
+  props: { optionTwoVisible: Boolean },
+  methods: {
+
+    handleClose () {
+      this.$emit('closeTwoBox', false)
+    }
+  }
+}
 </script>
 
 <style lang="less" scoped>

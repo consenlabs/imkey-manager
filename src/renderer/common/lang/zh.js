@@ -119,5 +119,8 @@ export const m = {
     home: '主页',
     manager: '管理',
     setting: '设置'
+  },
+  noticeDialog: {
+    info: '提示'
   }
 }

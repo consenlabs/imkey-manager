@@ -1,14 +1,15 @@
-let walletApi = require('./walletapi')
-let constants = require('../common/constants')
-let deviceManger = require('./devicemanagerapi')
+const walletApi = require('./walletapi')
+const constants = require('../common/constants')
+const deviceManger = require('./devicemanagerapi')
 const electron = require('electron')
 const filePath = (electron.app || electron.remote.app).getPath('userData') + '/'
 
 export function api (reqJson) {
-  let jsonrpc = reqJson.jsonrpc
-  let id = reqJson.id
-  let method = reqJson.method
-  let params = reqJson.params
+  const jsonrpc = reqJson.jsonrpc
+  const id = reqJson.id
+  const method = reqJson.method
+  const params = reqJson.params
+  let result
   if (params === null || params === '' || params === undefined) {
     result = {
       'jsonrpc:': jsonrpc,
@@ -31,9 +32,8 @@ export function api (reqJson) {
     }
     return result
   }
-  let result
-  let connectRes = deviceManger.connect(constants.DEVICE_NAME_IMKEY_PRO)
-  if (connectRes != constants.RESULT_STATUS_SUCCESS) {
+  const connectRes = deviceManger.connect(constants.DEVICE_NAME_IMKEY_PRO)
+  if (connectRes !== constants.RESULT_STATUS_SUCCESS) {
     result = {
       'jsonrpc:': jsonrpc,
       error: {
@@ -45,7 +45,7 @@ export function api (reqJson) {
     return result
   } else {
     // 检查是否绑定
-    let bindCheckRes = deviceManger.deviceBindCheck(filePath)
+    const bindCheckRes = deviceManger.deviceBindCheck(filePath)
     if (bindCheckRes !== constants.BIND_STATUS_STRING_BOUND_THIS) {
       if (bindCheckRes === constants.BIND_STATUS_STRING_BOUND_OTHER || bindCheckRes === constants.BIND_STATUS_STRING_UNBOUND) {
         result = {
@@ -83,7 +83,7 @@ export function api (reqJson) {
   // else if(method ==="deleteApplet"){ return deviceManger.deleteApplet()}
   // else if(method ==="deviceBindCheck"){return deviceManger.deviceBindCheck()}
   if (method === constants.API_NAME_TRANSACTION_BTC) {
-    let response = walletApi.BitcoinTransaction_BTC(params)
+    const response = walletApi.btcSignTransaction(params)
     if (response.getTxHash() === '' || response.getTxHash() === null || response.getTxHash() === undefined) {
       result = {
         'jsonrpc:': jsonrpc,
@@ -105,7 +105,7 @@ export function api (reqJson) {
     }
     return result
   } else if (method === constants.API_NAME_TRANSACTION_BTC_SEGWIT) {
-    let response = walletApi.BitcoinTransaction_BTC_SEGWIT(params)
+    const response = walletApi.btcSegWitSignTransaction(params)
     if (response.getTxHash() === '' || response.getTxHash() === null || response.getTxHash() === undefined) {
       result = {
         'jsonrpc:': jsonrpc,
@@ -128,7 +128,7 @@ export function api (reqJson) {
     }
     return result
   } else if (method === constants.API_NAME_TRANSACTION_BTC_USDT) {
-    let response = walletApi.BitcoinTransaction_BTC_USDT(params)
+    const response = walletApi.btcUsdtSignTransaction(params)
     if (response.getTxHash() === '' || response.getTxHash() === null || response.getTxHash() === undefined) {
       result = {
         'jsonrpc:': jsonrpc,
@@ -150,7 +150,7 @@ export function api (reqJson) {
     }
     return result
   } else if (method === constants.API_NAME_TRANSACTION_BTC_USDT_SEGWIT) {
-    let response = walletApi.BitcoinTransaction_BTC_USDT_SEGWIT(params)
+    const response = walletApi.btcUsdtSegWitSignTransaction(params)
     if (response.getTxHash() === '' || response.getTxHash() === null || response.getTxHash() === undefined) {
       result = {
         'jsonrpc:': jsonrpc,
@@ -173,7 +173,7 @@ export function api (reqJson) {
     }
     return result
   } else if (method === constants.API_NAME_TRANSACTION_SIGNTX_ETH) {
-    let response = walletApi.ETHTransaction_sign_TX(params)
+    const response = walletApi.ethSignTransaction(params)
     if (response.getTxHash() === '' || response.getTxHash() === null || response.getTxHash() === undefined) {
       result = {
         'jsonrpc:': jsonrpc,
@@ -195,7 +195,7 @@ export function api (reqJson) {
     }
     return result
   } else if (method === constants.API_NAME_TRANSACTION_SIGNMSG_ETH) {
-    let response = walletApi.ETHTransaction_sign_MSG(params)
+    const response = walletApi.ethSignMessage(params)
     if (response.getSignature() === '' || response.getSignature() === null || response.getSignature() === undefined) {
       result = {
         'jsonrpc:': jsonrpc,
@@ -216,7 +216,7 @@ export function api (reqJson) {
     }
     return result
   } else if (method === constants.API_NAME_TRANSACTION_SIGNTX_EOS) {
-    let response = walletApi.EOSTransaction_sign_TX(params)
+    const response = walletApi.eosSignTransaction(params)
     if (response === '' || response === null || response === undefined) {
       result = {
         'jsonrpc:': jsonrpc,
@@ -228,20 +228,20 @@ export function api (reqJson) {
       }
       return result
     } else {
-      let list = []
+      const list = []
       for (let i = 0; i < response.length; i++) {
-        let hash = response[i].getHash()
-        let signs = response[i].getSignsList()
+        const hash = response[i].getHash()
+        const signs = response[i].getSignsList()
         result = {
           hash: hash,
           signs: signs
         }
         list.push(result)
       }
-      return {'jsonrpc:': jsonrpc, result: {list}, 'id:': id}
+      return { 'jsonrpc:': jsonrpc, result: { list }, 'id:': id }
     }
   } else if (method === constants.API_NAME_TRANSACTION_SIGNMSG_EOS) {
-    let response = walletApi.EOSTransaction_sign_MSG(params)
+    const response = walletApi.eosSignMessage(params)
     if (response.getSignature() === '' || response.getSignature() === null || response.getSignature() === undefined) {
       result = {
         'jsonrpc:': jsonrpc,
@@ -262,7 +262,7 @@ export function api (reqJson) {
     }
     return result
   } else if (method === constants.API_NAME_TRANSACTION_SIGNTX_COSMOS) {
-    let response = walletApi.COSMOSTransaction_sign_TX(params)
+    const response = walletApi.cosmosSignTransaction(params)
     if (response.getTxData() === '' || response.getTxData() === null || response.getTxData() === undefined) {
       result = {
         'jsonrpc:': jsonrpc,
@@ -284,7 +284,7 @@ export function api (reqJson) {
     }
     return result
   } else if (method === constants.API_NAME_GET_BTC_XPUB) {
-    let response = walletApi.getBTC_Xpub(params)
+    const response = walletApi.getBTCXpubApi(params)
     if (response === '' || response === null || response === undefined) {
       result = {
         'jsonrpc:': jsonrpc,
@@ -305,7 +305,7 @@ export function api (reqJson) {
     }
     return result
   } else if (method === constants.API_NAME_GET_ADDRESS_BTC) {
-    let response = walletApi.getBTC_Address(params)
+    const response = walletApi.getBTCAddress(params)
     if (response === '' || response === null || response === undefined) {
       result = {
         'jsonrpc:': jsonrpc,
@@ -326,7 +326,7 @@ export function api (reqJson) {
     }
     return result
   } else if (method === constants.API_NAME_GET_ADDRESS_BTC_SEGWIT) {
-    let response = walletApi.getBTC_SegWitAddress(params)
+    const response = walletApi.getBTCSegWitAddress(params)
     if (response === '' || response === null || response === undefined) {
       result = {
         'jsonrpc:': jsonrpc,
@@ -347,7 +347,7 @@ export function api (reqJson) {
     }
     return result
   } else if (method === constants.API_NAME_REGISTER_ADDRESS_BTC) {
-    let response = walletApi.getBTC_RegisterAddress(params)
+    const response = walletApi.registerBTCAddress(params)
     if (response === '' || response === null || response === undefined) {
       result = {
         'jsonrpc:': jsonrpc,
@@ -368,7 +368,7 @@ export function api (reqJson) {
     }
     return result
   } else if (method === constants.API_NAME_REGISTER_ADDRESS_BTC_SEGWIT) {
-    let response = walletApi.getBTC_RegisterSegWitAddress(params)
+    const response = walletApi.registerBTCSegWitAddress(params)
     if (response === '' || response === null || response === undefined) {
       result = {
         'jsonrpc:': jsonrpc,
@@ -389,7 +389,7 @@ export function api (reqJson) {
     }
     return result
   } else if (method === constants.API_NAME_GET_ADDRESS_ETH) {
-    let response = walletApi.getETH_Address(params)
+    const response = walletApi.getETHAddress(params)
     if (response === '' || response === null || response === undefined) {
       result = {
         'jsonrpc:': jsonrpc,
@@ -410,7 +410,7 @@ export function api (reqJson) {
     }
     return result
   } else if (method === constants.API_NAME_REGISTER_ADDRESS_ETH) {
-    let response = walletApi.getETH_RegisterAddress(params)
+    const response = walletApi.registerETHAddress(params)
     if (response === '' || response === null || response === undefined) {
       result = {
         'jsonrpc:': jsonrpc,
@@ -431,7 +431,7 @@ export function api (reqJson) {
     }
     return result
   } else if (method === constants.API_NAME_GET_PUBKEY_EOS) {
-    let response = walletApi.getEOS_PubKey(params)
+    const response = walletApi.getEOSPubKey(params)
     if (response === '' || response === null || response === undefined) {
       result = {
         'jsonrpc:': jsonrpc,
@@ -452,7 +452,7 @@ export function api (reqJson) {
     }
     return result
   } else if (method === constants.API_NAME_REGISTER_PUBKEY_EOS) {
-    let response = walletApi.getEOS_RegisterPubKey(params)
+    const response = walletApi.registerEOSPubKey(params)
     if (response === '' || response === null || response === undefined) {
       result = {
         'jsonrpc:': jsonrpc,
@@ -473,7 +473,7 @@ export function api (reqJson) {
     }
     return result
   } else if (method === constants.API_NAME_GET_ADDRESS_COSMOS) {
-    let response = walletApi.getCOSMOS_Address(params)
+    const response = walletApi.getCOSMOSAddress(params)
     if (response === '' || response === null || response === undefined) {
       result = {
         'jsonrpc:': jsonrpc,
@@ -494,7 +494,7 @@ export function api (reqJson) {
     }
     return result
   } else if (method === constants.API_NAME_REGISTER_ADDRESS_COSMOS) {
-    let response = walletApi.getCOSMOS_RegisterAddress(params)
+    const response = walletApi.registerCOSMOSAddress(params)
     if (response === '' || response === null || response === undefined) {
       result = {
         'jsonrpc:': jsonrpc,

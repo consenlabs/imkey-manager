@@ -19,32 +19,32 @@
     </div>
 </template>
 <script>
-    import MenuNav from '@/components/menuNav'
-    import NoticeBox from '@/components/noticeDialog'
+import MenuNav from '@/components/menuNav'
+import NoticeBox from '@/components/noticeDialog'
 
-    export default {
-      name: 'index',
+export default {
+  name: 'index',
 
-      components: {
-        MenuNav,
-        NoticeBox
-      },
-      data () {
-        return {
-          noticeVisible: false
-        }
-      },
-      mounted () {
-        this.closeNotice()
-      },
-      methods: {
-        closeNotice () {
-          this.noticeVisible = false
-          this.$store.state.agree = false
-          this.router.replace('/home')
-        }
-      }
+  components: {
+    MenuNav,
+    NoticeBox
+  },
+  data () {
+    return {
+      noticeVisible: false
     }
+  },
+  mounted () {
+    this.closeNotice()
+  },
+  methods: {
+    closeNotice () {
+      this.noticeVisible = false
+      this.$store.state.agree = false
+      this.router.replace('/home')
+    }
+  }
+}
 </script>
 <style lang="less" scoped>
     .index {

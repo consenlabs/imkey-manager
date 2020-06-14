@@ -5,7 +5,7 @@
         >
             <span class="circle"></span>
             <div class="menu">
-                <ul>
+                <ul style="list-style-type: none">
                     <li></li>
                     <li></li>
                     <li></li>
@@ -19,9 +19,9 @@
 </template>
 
 <script>
-    export default {
-      props: {mini: Boolean, small: Boolean, middle: Boolean, large: Boolean}
-    }
+export default {
+  props: { mini: Boolean, small: Boolean, middle: Boolean, large: Boolean }
+}
 </script>
 
 <style lang="less" scoped>

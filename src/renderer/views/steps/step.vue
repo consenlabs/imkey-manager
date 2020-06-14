@@ -20,71 +20,71 @@
     </div>
 </template>
 <script>
-    import One from './components/stepOne'
-    import Two from './components/stepTwo'
-    import Three from './components/stepThree'
+import One from './components/stepOne'
+import Two from './components/stepTwo'
+import Three from './components/stepThree'
 
-    export default {
-      name: 'step',
-      data () {
-        return {
-          activeIndex: 0,
-          showOne: true,
-          showTwo: false,
-          showThree: false,
-          finishStatus: 'success'
-        }
-      },
-      mounted () {
-        this.showStep()
-      },
-      components: {
-        One,
-        Two,
-        Three
-      },
-      methods: {
-        showStep () {
-          let index = this.$route.query.index
-          switch (index) {
-            case 1:
-              this.showOne = true
-              break
-            case 2:
-              this.showOne = false
-              this.showTwo = true
-              this.activeIndex = 1
-              break
-            case 3:
-              this.showOne = false
-              this.showTwo = false
-              this.showThree = true
-              this.activeIndex = 2
-              break
-          }
-        },
-
-        finishStatusTwo (val) {
-          this.finishStatus = val
-        },
-        toShowTwos () {
+export default {
+  name: 'step',
+  data () {
+    return {
+      activeIndex: 0,
+      showOne: true,
+      showTwo: false,
+      showThree: false,
+      finishStatus: 'success'
+    }
+  },
+  mounted () {
+    this.showStep()
+  },
+  components: {
+    One,
+    Two,
+    Three
+  },
+  methods: {
+    showStep () {
+      const index = this.$route.query.index
+      switch (index) {
+        case 1:
+          this.showOne = true
+          break
+        case 2:
           this.showOne = false
           this.showTwo = true
           this.activeIndex = 1
-        },
-        toShowThree () {
+          break
+        case 3:
           this.showOne = false
           this.showTwo = false
           this.showThree = true
           this.activeIndex = 2
-        },
-        finish () {
-          setTimeout(() => {
-            this.router.replace('/index')
-          }, 1000)
-        }
+          break
       }
+    },
+
+    finishStatusTwo (val) {
+      this.finishStatus = val
+    },
+    toShowTwos () {
+      this.showOne = false
+      this.showTwo = true
+      this.activeIndex = 1
+    },
+    toShowThree () {
+      this.showOne = false
+      this.showTwo = false
+      this.showThree = true
+      this.activeIndex = 2
+    },
+    finish () {
+      setTimeout(() => {
+        this.router.replace('/index')
+      }, 1000)
     }
+  }
+}
 </script>
 <style lang="less" scoped>
     .steps {

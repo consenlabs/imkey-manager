@@ -1,61 +1,61 @@
 // sdk version
-let version = '1.2.00'
+const version = '1.2.00'
 
 // Battery is charging sign
-let BATTERY_CHARGING_SIGN = 'FF'
+const BATTERY_CHARGING_SIGN = 'FF'
 
 // 设备初始化 80
-let LIFE_TIME_DEVICE_INITED = 'life_time_device_inited'
+const LIFE_TIME_DEVICE_INITED = 'life_time_device_inited'
 // 已激活 89
-let LIFE_TIME_DEVICE_ACTIVATED = 'life_time_device_activated'
+const LIFE_TIME_DEVICE_ACTIVATED = 'life_time_device_activated'
 // pin未设置 81
-let LIFE_TIME_UNSET_PIN = 'life_time_unset_pin'
+const LIFE_TIME_UNSET_PIN = 'life_time_unset_pin'
 // 钱包unready 83
-let LIFE_TIME_WALLET_UNREADY = 'life_time_wallet_unready'
+const LIFE_TIME_WALLET_UNREADY = 'life_time_wallet_unready'
 // 钱包创建中 84
-let LIFE_TIME_WALLET_CREATTING = 'life_time_wallet_creatting'
+const LIFE_TIME_WALLET_CREATTING = 'life_time_wallet_creatting'
 // 钱包恢复中 85
-let LIFE_TIME_WALLET_RECOVERING = 'life_time_wallet_recovering'
+const LIFE_TIME_WALLET_RECOVERING = 'life_time_wallet_recovering'
 // 钱包创建完成 86
-let LIFE_TIME_WALLET_READY = 'life_time_wallet_ready'
+const LIFE_TIME_WALLET_READY = 'life_time_wallet_ready'
 // 未知
-let LIFE_TIME_UNKNOWN = 'life_time_unknown'
+const LIFE_TIME_UNKNOWN = 'life_time_unknown'
 
 // 设备绑定状态
-let BIND_STATUS_UNBOUND = '00'
-let BIND_STATUS_BOUND_THIS = '55'
-let BIND_STATUS_BOUND_OTHER = 'AA'
-let BIND_STATUS_STRING_UNBOUND = 'unbound'
-let BIND_STATUS_STRING_BOUND_THIS = 'bound_this'
-let BIND_STATUS_STRING_BOUND_OTHER = 'bound_other'
+const BIND_STATUS_UNBOUND = '00'
+const BIND_STATUS_BOUND_THIS = '55'
+const BIND_STATUS_BOUND_OTHER = 'AA'
+const BIND_STATUS_STRING_UNBOUND = 'unbound'
+const BIND_STATUS_STRING_BOUND_THIS = 'bound_this'
+const BIND_STATUS_STRING_BOUND_OTHER = 'bound_other'
 //  network
-let MAINNET = 'MAINNET'
-let TESTNET = 'TESTNET'
+const MAINNET = 'MAINNET'
+const TESTNET = 'TESTNET'
 // imKey device name
-let DEVICE_NAME_IMKEY_PRO = 'imKey Pro'
+const DEVICE_NAME_IMKEY_PRO = 'imKey Pro'
 // 成功状态
-let RESULT_STATUS_SUCCESS = 'success'
+const RESULT_STATUS_SUCCESS = 'success'
 // apiName
-let API_NAME_TRANSACTION_BTC = 'btc.signTransaction'
-let API_NAME_TRANSACTION_BTC_SEGWIT = 'btc.signSegWitTransaction'
-let API_NAME_TRANSACTION_BTC_USDT = 'btc.signUsdtTransaction'
-let API_NAME_TRANSACTION_BTC_USDT_SEGWIT = 'btc.signUsdtSegWitTransaction'
-let API_NAME_TRANSACTION_SIGNTX_ETH = 'eth.signTransaction'
-let API_NAME_TRANSACTION_SIGNMSG_ETH = 'eth.signMessage'
-let API_NAME_TRANSACTION_SIGNTX_EOS = 'eos.signTransaction'
-let API_NAME_TRANSACTION_SIGNMSG_EOS = 'eos.signMessage'
-let API_NAME_TRANSACTION_SIGNTX_COSMOS = 'cosmos.signTransaction'
-let API_NAME_GET_BTC_XPUB = 'btc.getXpub'
-let API_NAME_GET_ADDRESS_BTC = 'btc.getAddress'
-let API_NAME_GET_ADDRESS_BTC_SEGWIT = 'btc.getSegWitAddress'
-let API_NAME_REGISTER_ADDRESS_BTC = 'btc.registerAddress'
-let API_NAME_REGISTER_ADDRESS_BTC_SEGWIT = 'btc.registerSegWitAddress'
-let API_NAME_GET_ADDRESS_ETH = 'eth.getAddress'
-let API_NAME_REGISTER_ADDRESS_ETH = 'eth.registerAddress'
-let API_NAME_GET_PUBKEY_EOS = 'eos.getPubKey'
-let API_NAME_REGISTER_PUBKEY_EOS = 'eos.registerPubKey'
-let API_NAME_GET_ADDRESS_COSMOS = 'cosmos.getAddress'
-let API_NAME_REGISTER_ADDRESS_COSMOS = 'cosmos.registerAddress'
+const API_NAME_TRANSACTION_BTC = 'btc.signTransaction'
+const API_NAME_TRANSACTION_BTC_SEGWIT = 'btc.signSegWitTransaction'
+const API_NAME_TRANSACTION_BTC_USDT = 'btc.signUsdtTransaction'
+const API_NAME_TRANSACTION_BTC_USDT_SEGWIT = 'btc.signUsdtSegWitTransaction'
+const API_NAME_TRANSACTION_SIGNTX_ETH = 'eth.signTransaction'
+const API_NAME_TRANSACTION_SIGNMSG_ETH = 'eth.signMessage'
+const API_NAME_TRANSACTION_SIGNTX_EOS = 'eos.signTransaction'
+const API_NAME_TRANSACTION_SIGNMSG_EOS = 'eos.signMessage'
+const API_NAME_TRANSACTION_SIGNTX_COSMOS = 'cosmos.signTransaction'
+const API_NAME_GET_BTC_XPUB = 'btc.getXpub'
+const API_NAME_GET_ADDRESS_BTC = 'btc.getAddress'
+const API_NAME_GET_ADDRESS_BTC_SEGWIT = 'btc.getSegWitAddress'
+const API_NAME_REGISTER_ADDRESS_BTC = 'btc.registerAddress'
+const API_NAME_REGISTER_ADDRESS_BTC_SEGWIT = 'btc.registerSegWitAddress'
+const API_NAME_GET_ADDRESS_ETH = 'eth.getAddress'
+const API_NAME_REGISTER_ADDRESS_ETH = 'eth.registerAddress'
+const API_NAME_GET_PUBKEY_EOS = 'eos.getPubKey'
+const API_NAME_REGISTER_PUBKEY_EOS = 'eos.registerPubKey'
+const API_NAME_GET_ADDRESS_COSMOS = 'cosmos.getAddress'
+const API_NAME_REGISTER_ADDRESS_COSMOS = 'cosmos.registerAddress'
 module.exports = {
   version,
   BATTERY_CHARGING_SIGN,

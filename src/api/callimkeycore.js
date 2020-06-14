@@ -32,11 +32,11 @@ const lib = ffi.Library(libraryName, {
   get_last_err_message: ['String', [ref.types.void]]
 })
 
-export function call_imkey_api (protobufStr) {
+export function callImKeyApi (protobufStr) {
   lib.clear_err('')// 清空之前的error
   return lib.call_imkey_api(protobufStr)
 }
 
-export function get_last_err_message () {
+export function getLastErrorMessage () {
   return lib.get_last_err_message('')// 获取错误的信息
 }

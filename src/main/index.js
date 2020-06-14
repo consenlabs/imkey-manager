@@ -1,6 +1,6 @@
-import {app, BrowserWindow, ipcMain, Menu, shell, Tray, Notification, dialog, crashReporter} from 'electron'
+import { app, BrowserWindow, ipcMain, Menu, shell, Tray, dialog, crashReporter } from 'electron'
 // 自动更新相关
-import {autoUpdater} from 'electron-updater'
+import { autoUpdater } from 'electron-updater'
 // 崩溃报告
 import * as Sentry from '@sentry/electron'
 // package.json
@@ -15,7 +15,7 @@ if (process.env.NODE_ENV !== 'development') {
 
 let mainWindow
 const winURL = process.env.NODE_ENV === 'development'
-  ? `http://localhost:9080`
+  ? 'http://localhost:9080'
   : `file://${__dirname}/index.html`
 
 const path = require('path')
@@ -102,15 +102,15 @@ function createTray () {
 
   // 系统托盘图标
   iconPath = `${__static}/logoNotWin.png`
-  let iconMessagePath = `${__static}/iconMessageNotWin.png`
-  let iconTransparentPath = `${__static}/iconTransparentNotWin.png`
-  // 通知图标
-  const iconNoticePath = `${__static}/logo.png`
+  // let iconMessagePath = `${__static}/iconMessageNotWin.png`
+  // let iconTransparentPath = `${__static}/iconTransparentNotWin.png`
+  // // 通知图标
+  // const iconNoticePath = `${__static}/logo.png`
 
   if (process.platform === 'win32') {
     iconPath = `${__static}\\logo.ico`
-    iconMessagePath = `${__static}\\iconMessage.ico`
-    iconTransparentPath = `${__static}\\iconTransparent.ico`
+    // iconMessagePath = `${__static}\\iconMessage.ico`
+    // iconTransparentPath = `${__static}\\iconTransparent.ico`
   }
 
   // 系统托盘右键菜单
@@ -158,22 +158,22 @@ function createTray () {
  * 启动 http server
  */
 function startHttpServer () {
-  let express = require('express')
-  let app = express()
-  let bodyParser = require('body-parser')
-  let apiRouter = require('../api/apirouter')
+  const express = require('express')
+  const app = express()
+  const bodyParser = require('body-parser')
+  const apiRouter = require('../api/apirouter')
   // 给app配置bodyParser中间件
   // 通过如下配置再路由种处理request时，可以直接获得post请求的body部分
-  app.use(bodyParser.urlencoded({extended: true}))
+  app.use(bodyParser.urlencoded({ extended: true }))
   app.use(bodyParser.json())
   // let router = express.Router();
   // 获得express router对象
   // 用post动词访问 http://localhost:8081/api/imKey
   app.post('/api/imKey', function (req, res) {
-    console.log("jinlaile11:"+req.body.method)
-    let body = '', jsonStr, reqJson
-    if(req.body.method !== undefined){
-      reqJson = req.body;
+    console.log('jinlaile11:' + req.body.method)
+    let body = ''; let jsonStr; let reqJson
+    if (req.body.method !== undefined) {
+      reqJson = req.body
       // 读取参数流结束后将转化的body字符串解析成 JSON 格式
       try {
         jsonStr = apiRouter.api(reqJson)
@@ -188,37 +188,37 @@ function startHttpServer () {
         }
       }
       res.json(jsonStr)
-    }else{
-
-    req.on('data', function (chunk) {
-      body += chunk // 读取参数流转化为字符串
-    })
-    req.on('end', function () {
+    } else {
+      req.on('data', function (chunk) {
+        body += chunk // 读取参数流转化为字符串
+      })
+      req.on('end', function () {
       // 读取参数流结束后将转化的body字符串解析成 JSON 格式
-      console.log("jinlaile22:"+body)
-      reqJson = JSON.parse(body)
-      console.log("jinlaile333"+reqJson.method)
-      try {
-        jsonStr = apiRouter.api(reqJson)
-      } catch (err) {
-        jsonStr = {
-          'jsonrpc:': reqJson.jsonrpc,
-          error: {
-            code: -32604,
-            message: err
-          },
-          'id:': reqJson.id
+        console.log('jinlaile22:' + body)
+        reqJson = JSON.parse(body)
+        console.log('jinlaile333' + reqJson.method)
+        try {
+          jsonStr = apiRouter.api(reqJson)
+        } catch (err) {
+          jsonStr = {
+            'jsonrpc:': reqJson.jsonrpc,
+            error: {
+              code: -32604,
+              message: err
+            },
+            'id:': reqJson.id
+          }
         }
-      }
-      res.json(jsonStr)
-    })
-  }})
+        res.json(jsonStr)
+      })
+    }
+  })
   // 注册路由
   // 所有的路由会加上“／api”前缀
   // pp.use('/api/imKey/', router);
-  let server = app.listen(8081, function () {
-    let host = server.address().address
-    let port = server.address().port
+  const server = app.listen(8081, function () {
+    const host = server.address().address
+    const port = server.address().port
     console.log('应用实例，访问地址为 http://%s:%s', host, port)
   })
 
@@ -286,36 +286,36 @@ function autoUpdate () {
   }
 
   // 监测更新，在你想要检查更新的时候执行，renderer事件触发后的操作自行编写
-  const message = {
-    error: '检查更新出错',
-    checking: '正在检查更新......',
-    updateAva: '监测到新版本，正在下载......',
-    updateNotAva: '现在使用的就是最新版本，不用下载'
-  }
+  // const message = {
+  //   error: '检查更新出错',
+  //   checking: '正在检查更新......',
+  //   updateAva: '监测到新版本，正在下载......',
+  //   updateNotAva: '现在使用的就是最新版本，不用下载'
+  // }
 
   // 当更新出现错误时触发
   autoUpdater.on('error', (err) => {
     // sendUpdateMessage('error')
-    sendUpdateMessage({action: 'error', errorInfo: err})
+    sendUpdateMessage({ action: 'error', errorInfo: err })
   })
 
   // 当开始检查更新的时候触发
   autoUpdater.on('checking-for-update', () => {
     // sendUpdateMessage('checking')
-    sendUpdateMessage({action: 'checking'})
+    sendUpdateMessage({ action: 'checking' })
   })
 
   // 当发现一个可用更新的时候触发，更新下载包会自动开始
   autoUpdater.autoDownload = false
   autoUpdater.on('update-available', (info) => {
     // sendUpdateMessage('updateAva')
-    sendUpdateMessage({action: 'updateAva', updateInfo: info})
+    sendUpdateMessage({ action: 'updateAva', updateInfo: info })
   })
 
   // 当没有可用更新的时候触发
   autoUpdater.on('update-not-available', (info) => {
     // sendUpdateMessage('updateNotAva')
-    sendUpdateMessage({action: 'updateNotAva', updateInfo: info})
+    sendUpdateMessage({ action: 'updateNotAva', updateInfo: info })
   })
 
   // 更新下载进度事件
@@ -332,7 +332,7 @@ function autoUpdate () {
      */
   autoUpdater.on('update-downloaded', (info) => {
     // 下载太快可能无法触发downloadProgress事件，所以手动通知一下
-    mainWindow.webContents.send('downloadProgress', {percent: 100})
+    mainWindow.webContents.send('downloadProgress', { percent: 100 })
     // 可以手动选择是否立即退出并更新
     ipcMain.on('isUpdateNow', (e, arg) => {
       // some code here to handle event
@@ -459,7 +459,7 @@ function protocalHandler () {
     console.log('urlStr:' + urlStr)
     // myapp:?a=1&b=2
     const urlObj = new URL(urlStr)
-    const {searchParams} = urlObj
+    const { searchParams } = urlObj
     console.log(urlObj.query) // -> a=1&b=2
     console.log(searchParams.get('a')) // -> 1
     console.log(searchParams.get('b')) // -> 2

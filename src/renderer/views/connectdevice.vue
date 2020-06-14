@@ -11,7 +11,7 @@
                 <deviceImage :middle="true" :line="true"></deviceImage>
             </div>
             <div class="textBox">
-                <ul>
+                <ul style="list-style-type: none">
                     <li>1. {{$t('m.connectDevice.info_connect_imKey')}}</li>
                     <li>2. {{$t('m.connectDevice.info_click_button')}}</li>
                     <li>3. {{$t('m.connectDevice.info_enter_pin')}}</li>
@@ -77,7 +77,7 @@
                     // 通过getSeid来判断是否处于BL状态
                     isBLStatus().then(result => {
                         if (result.code === 200) {
-                            let res = result.data
+                            const res = result.data
                             if (res) {
                                 // 处于BL状态
                                 // 更新COS
@@ -100,36 +100,36 @@
                 setTimeout(() => {
                     checkUpdate().then(result => {
                         if (result.code === 200) {
-                            let activeStatus = result.data.status
-                            // 缓存激活状态
-                            this.$store.state.activeStatus = result.data.status
-                            // 缓存应用数据
-                            let appList = []
-                            let tempAppList = result.data.list
-                            for (let i = 0; i < tempAppList.length; i++) {
-                                let buttonTexts
-                                if (tempAppList[i].buttonTexts === 'update') {
-                                    buttonTexts = this.$t('m.manager.update')
-                                } else {
-                                    buttonTexts = this.$t('m.manager.install')
-                                }
-
-                                let collection = {
-                                    name: tempAppList[i].name,
-                                    desc: tempAppList[i].desc,
-                                    lastVersion: tempAppList[i].lastVersion,
-                                    id: i,
-                                    installLoading: tempAppList[i].installLoading,
-                                    installDis: tempAppList[i].installDis,
-                                    deleteDis: tempAppList[i].deleteDis,
-                                    deleteLoading: tempAppList[i].deleteLoading,
-                                    icon: tempAppList[i].icon,
-                                    buttonTexts: buttonTexts
-                                }
-                                appList.push(collection)
-                            }
-                            this.$store.state.apps = appList
+                            const activeStatus = result.data.status
                             if (activeStatus === 'latest') {
+                                // 缓存激活状态
+                                this.$store.state.activeStatus = result.data.status
+                                // 缓存应用数据
+                                const appList = []
+                                const tempAppList = result.data.list
+                                for (let i = 0; i < tempAppList.length; i++) {
+                                    let buttonTexts
+                                    if (tempAppList[i].buttonTexts === 'update') {
+                                        buttonTexts = this.$t('m.manager.update')
+                                    } else {
+                                        buttonTexts = this.$t('m.manager.install')
+                                    }
+
+                                    const collection = {
+                                        name: tempAppList[i].name,
+                                        desc: tempAppList[i].desc,
+                                        lastVersion: tempAppList[i].lastVersion,
+                                        id: i,
+                                        installLoading: tempAppList[i].installLoading,
+                                        installDis: tempAppList[i].installDis,
+                                        deleteDis: tempAppList[i].deleteDis,
+                                        deleteLoading: tempAppList[i].deleteLoading,
+                                        icon: tempAppList[i].icon,
+                                        buttonTexts: buttonTexts
+                                    }
+                                    appList.push(collection)
+                                }
+                                this.$store.state.apps = appList
                                 this.connectText = this.$t('m.connectDevice.active_success')
                                 this.checkIsBind()
                             } else {

@@ -1,6 +1,7 @@
 module.exports = {
   root: true,
   parser: 'babel-eslint',
+  parser: 'vue-eslint-parser',
   parserOptions: {
     sourceType: 'module'
   },
