@@ -35,106 +35,106 @@
 </template>
 
 <script>
-    import OptionOne from './stepThreeDialog'
-    import OptionTwo from './stepThree2Dialog'
-    import constants from '../../../../common/constants'
-    import {
-        getBTCXpub
-    } from '../../../../api/walletapi'
-    import {connectDevice} from '../../../../api/devicemanager'
-    import NoticeBox from '@/components/noticeDialog'
+import OptionOne from './stepThreeDialog'
+import OptionTwo from './stepThree2Dialog'
+import constants from '../../../../common/constants'
+import {
+  getBTCXpub
+} from '../../../../api/walletapi'
+import { connectDevice } from '../../../../api/devicemanager'
+import NoticeBox from '@/components/noticeDialog'
 
-    export default {
-        name: 'Home',
-        data() {
-            return {
-                optionOneVisible: false,
-                optionTwoVisible: false,
-                isSeeOne: true,
-                isSeeTwos: true,
-                nextLoading: false,
-                noticeVisible: false
-            }
-        },
-        components: {
-            OptionOne,
-            OptionTwo,
-            NoticeBox
-        },
-        mounted() {
-            // 禁止主页面滑动
-            this.noScroll()
-            this.connect()
-        },
-        methods: {
-            connect() {
-                connectDevice().then(result => {
-                    if (result.code === 200) {
-                        const res = result.data
-                        if (res === constants.RESULT_STATUS_SUCCESS) {
-                            this.checkWalletExist()
-                        } else {
-                            this.openErrorView(res)
-                        }
-                    } else {
-                        this.openErrorView(result.message)
-                    }
-                }).catch(err => {
-                    this.openErrorView(err)
-                })
-            },
-            seeOne() {
-                this.optionOneVisible = true
-            },
-            seeTwo() {
-                this.optionTwoVisible = true
-            },
-            checkWalletExist() {
-                if (this.isSeeOne && this.isSeeTwos) {
-                    this.nextLoading = true
-                    // 判断是否创建钱包
-                    setTimeout(() => {
-                        getBTCXpub().then(result => {
-                            if (result.code === 200) {
-                                if (result.data !== '' || result.data != null) {
-                                    if (result.data.match('xpu')) {
-                                        this.$emit('finish')
-                                    } else {
-                                        this.openErrorView('please create wallet')
-                                    }
-                                } else {
-                                    this.openErrorView('please create wallet')
-                                }
-                            }
-                        }).catch(err => {
-                            this.openErrorView(err)
-                        })
-                    }, 300)
-                } else {
-                    this.openErrorView('please click option')
-                }
-            },
-            closeOneBox() {
-                this.optionOneVisible = false
-            },
-            closeTwoBox() {
-                this.optionTwoVisible = false
-            },
-            toShowThree() {
-                this.$emit('showThree', true)
-            },
-            openErrorView(msg) {
-                this.nextLoading = false
-                this.$store.state.message = msg
-                this.noticeVisible = true
-                this.isSeeOne = false
-                this.isSeeTwos = false
-            },
-            closeErrorView(msg) {
-                this.noticeVisible = false
-            }
-        }
+export default {
+  name: 'Home',
+  data () {
+    return {
+      optionOneVisible: false,
+      optionTwoVisible: false,
+      isSeeOne: true,
+      isSeeTwos: true,
+      nextLoading: false,
+      noticeVisible: false
     }
+  },
+  components: {
+    OptionOne,
+    OptionTwo,
+    NoticeBox
+  },
+  mounted () {
+    // 禁止主页面滑动
+    this.noScroll()
+    this.connect()
+  },
+  methods: {
+    connect () {
+      connectDevice().then(result => {
+        if (result.code === 200) {
+          const res = result.data
+          if (res === constants.RESULT_STATUS_SUCCESS) {
+            this.checkWalletExist()
+          } else {
+            this.openErrorView(res)
+          }
+        } else {
+          this.openErrorView(result.message)
+        }
+      }).catch(err => {
+        this.openErrorView(err)
+      })
+    },
+    seeOne () {
+      this.optionOneVisible = true
+    },
+    seeTwo () {
+      this.optionTwoVisible = true
+    },
+    checkWalletExist () {
+      if (this.isSeeOne && this.isSeeTwos) {
+        this.nextLoading = true
+        // 判断是否创建钱包
+        setTimeout(() => {
+          getBTCXpub().then(result => {
+            if (result.code === 200) {
+              if (result.data !== '' || result.data != null) {
+                if (result.data.match('xpu')) {
+                  this.$emit('finish')
+                } else {
+                  this.openErrorView('please create wallet')
+                }
+              } else {
+                this.openErrorView('please create wallet')
+              }
+            }
+          }).catch(err => {
+            this.openErrorView(err)
+          })
+        }, 300)
+      } else {
+        this.openErrorView('please click option')
+      }
+    },
+    closeOneBox () {
+      this.optionOneVisible = false
+    },
+    closeTwoBox () {
+      this.optionTwoVisible = false
+    },
+    toShowThree () {
+      this.$emit('showThree', true)
+    },
+    openErrorView (msg) {
+      this.nextLoading = false
+      this.$store.state.message = msg
+      this.noticeVisible = true
+      this.isSeeOne = false
+      this.isSeeTwos = false
+    },
+    closeErrorView (msg) {
+      this.noticeVisible = false
+    }
+  }
+}
 </script>
 <style lang="less" scoped>
     .stepThree {
