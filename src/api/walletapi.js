@@ -285,7 +285,7 @@ function btcXpub (path, netWork) {
 }
 
 function btcAddress (path, netWork, method_) {
-  const btcAddressReq = new btcPb.btcAddressReq()
+  const btcAddressReq = new btcPb.BtcAddressReq()
   btcAddressReq.setPath(path)
   btcAddressReq.setNetwork(netWork)
   const btcAddressReqBytes = btcAddressReq.serializeBinary()
@@ -298,7 +298,7 @@ function btcAddress (path, netWork, method_) {
   const resBuffer = callImKeyCore.callImKeyApi(bytes2HexStr(imKeyActionBytes))
   const error = callImKeyCore.getLastErrorMessage()
   if (error === '' || error === null) {
-    const response = new btcPb.btcAddressRes.deserializeBinary(hexStr2Bytes(resBuffer))
+    const response = new btcPb.BtcAddressRes.deserializeBinary(hexStr2Bytes(resBuffer))
     return response.getAddress()
   } else {
     const errorResponse = new apiPb.ErrorResponse.deserializeBinary(hexStr2Bytes(error))
@@ -393,6 +393,7 @@ export function getBTCXpubApi (json) {
 }
 
 export function getBTCAddress (json) {
+  console.log("json:"+json.path)
   return btcAddress(json.path, json.network, 'btc_get_address')
 }
 
