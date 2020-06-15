@@ -3,7 +3,7 @@ import { app, BrowserWindow, ipcMain, Menu, shell, Tray, dialog, crashReporter }
 import { autoUpdater } from 'electron-updater'
 // 崩溃报告
 import * as Sentry from '@sentry/electron'
-// package.json
+// test.json
 import pkg from '../../package.json'
 /**
  * Set `__static` path to static files in production
@@ -170,9 +170,29 @@ function startHttpServer () {
   // 获得express router对象
   // 用post动词访问 http://localhost:8081/api/imKey
   app.post('/api/imKey', function (req, res) {
-    console.log('jinlaile11:' + req.body.method)
     let body = ''; let jsonStr; let reqJson
-    if (req.body.method !== undefined) {
+    if (typeof (req.body.method) === 'undefined') {
+      req.on('data', function (chunk) {
+        body += chunk // 读取参数流转化为字符串
+      })
+      req.on('end', function () {
+        // 读取参数流结束后将转化的body字符串解析成 JSON 格式
+        reqJson = JSON.parse(body)
+        try {
+          jsonStr = apiRouter.api(reqJson)
+        } catch (err) {
+          jsonStr = {
+            'jsonrpc:': reqJson.jsonrpc,
+            error: {
+              code: -32604,
+              message: err
+            },
+            'id:': reqJson.id
+          }
+        }
+        res.json(jsonStr)
+      })
+    } else {
       reqJson = req.body
       // 读取参数流结束后将转化的body字符串解析成 JSON 格式
       try {
@@ -188,29 +208,6 @@ function startHttpServer () {
         }
       }
       res.json(jsonStr)
-    } else {
-      req.on('data', function (chunk) {
-        body += chunk // 读取参数流转化为字符串
-      })
-      req.on('end', function () {
-      // 读取参数流结束后将转化的body字符串解析成 JSON 格式
-        console.log('jinlaile22:' + body)
-        reqJson = JSON.parse(body)
-        console.log('jinlaile333' + reqJson.method)
-        try {
-          jsonStr = apiRouter.api(reqJson)
-        } catch (err) {
-          jsonStr = {
-            'jsonrpc:': reqJson.jsonrpc,
-            error: {
-              code: -32604,
-              message: err
-            },
-            'id:': reqJson.id
-          }
-        }
-        res.json(jsonStr)
-      })
     }
   })
   // 注册路由

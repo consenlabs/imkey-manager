@@ -20,7 +20,7 @@ const sentryCli = new SentryCli('./sentry.properties');
 async function main() {
     let version = getElectronVersion();
     if (!version) {
-        console.error('Cannot detect electron version, check package.json');
+        console.error('Cannot detect electron version, check test.json');
         return;
     }
 
