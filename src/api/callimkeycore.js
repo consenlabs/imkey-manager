@@ -4,8 +4,8 @@
  * @returns {*}
  */
 
-const ref = require('ref')
-const ffi = require('ffi')
+const ref = require('ref-napi')
+const ffi = require('ffi-napi')
 const path = require('path')
 
 let libraryName
