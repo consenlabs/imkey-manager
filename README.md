@@ -1,4 +1,4 @@
-# ImKey manager tool
+# imKey Manager Tool
 
 Desktop management tools for imKey wallet
 
