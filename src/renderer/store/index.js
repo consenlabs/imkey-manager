@@ -12,7 +12,8 @@ export default new Vuex.Store({
     updateSuccess: false,
     oldVersionData: '',
     newVersionData: '',
-    buttonTexts: ''
+    buttonTexts: '',
+    userPath: ''
   },
   mutations: {},
   actions: {},

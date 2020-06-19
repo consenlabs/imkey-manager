@@ -34,12 +34,8 @@
 <script>
 import deviceImage from '../components/deviceImage'
 import constants from '../../common/constants'
-import {
-  checkUpdate,
-  connectDevice, cosUpdate, deviceBindCheck, getUserPath, isBLStatus
-} from '../../api/devicemanager'
-import { getBTCXpub } from '../../api/walletapi'
 import NoticeBox from '@/components/noticeDialog'
+import { ipcRenderer } from 'electron'
 
 export default {
   name: 'connectDevice',
@@ -56,6 +52,15 @@ export default {
       createWalletStatus: false,
       noticeVisible: false
     }
+  },
+  destroyed () {
+    // 移除事件监听
+    ipcRenderer.removeAllListeners('connectDeviceResult')
+    ipcRenderer.removeAllListeners('isBLStatusResult')
+    ipcRenderer.removeAllListeners('checkUpdateResult')
+    ipcRenderer.removeAllListeners('deviceBindCheckResult')
+    ipcRenderer.removeAllListeners('getBTCXpubResult')
+    ipcRenderer.removeAllListeners('cosUpdateResult')
   },
   components: {
     deviceImage,
@@ -75,12 +80,13 @@ export default {
       this.connectText = this.$t('m.connectDevice.check_BL')
       setTimeout(() => {
         // 通过getSeid来判断是否处于BL状态
-        isBLStatus().then(result => {
-          if (result.code === 200) {
-            const res = result.data
-            if (res) {
-              // 处于BL状态
-              // 更新COS
+        ipcRenderer.send('isBLStatus')
+        ipcRenderer.on('isBLStatusResult', (event, result) => {
+          event.sender.removeAllListeners('isBLStatusResult')
+          const response = result.result
+          if (result.isSuccess) {
+            if (response) {
+              // 处于BL状态,更新COS
               this.toCosUpdate()
             } else {
               // 无需更新COS
@@ -88,25 +94,26 @@ export default {
               this.checkIsActive()
             }
           } else {
-            this.openErrorView(result.message)
+            this.openErrorView(response)
           }
-        }).catch(err => {
-          this.openErrorView(err)
         })
       }, 100)
     },
     checkIsActive () {
       this.connectText = this.$t('m.connectDevice.check_active')
       setTimeout(() => {
-        checkUpdate().then(result => {
-          if (result.code === 200) {
-            const activeStatus = result.data.status
+        ipcRenderer.send('checkUpdate')
+        ipcRenderer.on('checkUpdateResult', (event, result) => {
+          event.sender.removeAllListeners('checkUpdateResult')
+          const response = result.result
+          if (result.isSuccess) {
+            const activeStatus = response.status
             if (activeStatus === 'latest') {
               // 缓存激活状态
-              this.$store.state.activeStatus = result.data.status
+              this.$store.state.activeStatus = response.status
               // 缓存应用数据
               const appList = []
-              const tempAppList = result.data.list
+              const tempAppList = response.list
               for (let i = 0; i < tempAppList.length; i++) {
                 let buttonTexts
                 if (tempAppList[i].buttonTexts === 'update') {
@@ -137,29 +144,30 @@ export default {
               this.goStep(2)
             }
           } else {
-            this.openErrorView(result.message)
+            this.openErrorView(response)
           }
-        }).catch(err => {
-          this.openErrorView(err)
         })
       }, 200)
     },
     checkIsBind () {
       this.connectText = this.$t('m.connectDevice.check_bind')
       setTimeout(() => {
-        deviceBindCheck(this.userPath).then(result => {
-          if (result.code === 200) {
-            if (result.data === '' || result.data === null) {
+        ipcRenderer.send('deviceBindCheck', this.userPath)
+        ipcRenderer.on('deviceBindCheckResult', (event, result) => {
+          event.sender.removeAllListeners('deviceBindCheckResult')
+          const response = result.result
+          if (result.isSuccess) {
+            if (response === '' || response === null) {
               // 失败的话
               this.openErrorView('bind error: null')
             } else {
-              if (result.data === constants.BIND_STATUS_STRING_BOUND_OTHER) {
+              if (response === constants.BIND_STATUS_STRING_BOUND_OTHER) {
                 // 跳转到绑定界面
                 this.goStep(2)
-              } else if (result.data === constants.BIND_STATUS_STRING_UNBOUND) {
+              } else if (response === constants.BIND_STATUS_STRING_UNBOUND) {
                 // 跳转到绑定界面
                 this.goStep(2)
-              } else if (result.data === constants.BIND_STATUS_STRING_BOUND_THIS) {
+              } else if (response === constants.BIND_STATUS_STRING_BOUND_THIS) {
                 // 成功绑定 继续
                 this.bindStatus = true
                 this.checkIsCreateWallet()
@@ -168,21 +176,21 @@ export default {
               }
             }
           } else {
-            this.openErrorView(result.message)
+            this.openErrorView(response)
           }
-        }).catch(err => {
-          // 失败的话
-          this.openErrorView(err)
         })
       }, 200)
     },
     checkIsCreateWallet () {
       this.connectText = this.$t('m.connectDevice.check_create_wallet')
       setTimeout(() => {
-        getBTCXpub().then(result => {
-          if (result.code === 200) {
-            if (result.data !== '' || result.data !== null) {
-              if (result.data.match('xpu')) {
+        ipcRenderer.send('getBTCXpub')
+        ipcRenderer.on('getBTCXpubResult', (event, result) => {
+          event.sender.removeAllListeners('getBTCXpubResult')
+          const response = result.result
+          if (result.isSuccess) {
+            if (response !== '' || response !== null) {
+              if (response.match('xpu')) {
                 // 成功 继续
                 this.createWalletStatus = true
                 this.router.replace('/index')
@@ -195,11 +203,8 @@ export default {
               this.goStep(3)
             }
           } else {
-            this.openErrorView(result.message)
+            this.openErrorView(response)
           }
-        }).catch(err => {
-          // 失败
-          this.openErrorView(err)
         })
       }, 200)
     },
@@ -207,49 +212,56 @@ export default {
       this.connectLoading = true
       this.connectText = this.$t('m.connectDevice.connecting')
       setTimeout(() => {
-        connectDevice().then(result => {
-          const res = result.data
-          if (res === constants.RESULT_STATUS_SUCCESS) {
-            this.connectText = this.$t('m.connectDevice.connect_success')
-            this.connectStatus = true
-            this.checkIsBL()
+        ipcRenderer.send('connectDevice')
+        ipcRenderer.on('connectDeviceResult', (event, result) => {
+          event.sender.removeAllListeners('connectDeviceResult')
+          const response = result.result
+          if (result.isSuccess) {
+            if (response === constants.RESULT_STATUS_SUCCESS) {
+              this.connectText = this.$t('m.connectDevice.connect_success')
+              this.connectStatus = true
+              this.checkIsBL()
+            } else {
+              this.openErrorView(response)
+            }
           } else {
-            this.openErrorView('connect:' + res)
+            this.openErrorView(response)
           }
-        }).catch(err => {
-          this.openErrorView(err)
         })
       }, 200)
     },
     toCosUpdate () {
       this.connectText = this.$t('m.connectDevice.upgrading_firmware')
       setTimeout(() => {
-        cosUpdate().then(result => {
-          if (result.code === 200) {
-            if (result.data === constants.RESULT_STATUS_SUCCESS) {
+        ipcRenderer.send('cosUpdate')
+        ipcRenderer.on('cosUpdateResult', (event, result) => {
+          event.sender.removeAllListeners('cosUpdateResult')
+          const response = result.result
+          if (result.isSuccess) {
+            if (response === constants.RESULT_STATUS_SUCCESS) {
               // cos更新成功检查是否激活
               this.BLStatus = true
               this.checkIsActive()
             } else {
-              this.openErrorView(result.data)
+              this.openErrorView(response)
             }
           } else {
-            this.openErrorView(result.message)
+            this.openErrorView(response)
           }
-        }).catch(err => {
-          this.openErrorView(err)
         })
       }, 200)
     },
     getUserPath () {
-      getUserPath().then(result => {
-        if (result.code === 200) {
-          const electron = require('electron')
-          const dataPath = (electron.app || electron.remote.app).getPath('userData') + '/'
-          this.userPath = dataPath
+      ipcRenderer.send('getUserPath')
+      ipcRenderer.on('getUserPathResult', (event, result) => {
+        event.sender.removeAllListeners('getUserPathResult')
+        const response = result.result
+        if (result.isSuccess) {
+          this.userPath = response
+          this.$store.state.userPath = response
+        } else {
+          this.openErrorView(response)
         }
-      }).catch(err => {
-        this.openErrorView(err)
       })
     },
     goStep (index) {
@@ -285,12 +297,9 @@ export default {
       this.$store.state.message = msg
       this.noticeVisible = true
     },
-    closeErrorView (msg) {
+    closeErrorView () {
       this.connectText = this.$t('m.connectDevice.connect')
       this.noticeVisible = false
-      if (msg.toString().indexOf('connect:') !== -1) {
-        this.connect()
-      }
     }
   }
 }

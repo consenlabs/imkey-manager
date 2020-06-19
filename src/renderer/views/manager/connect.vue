@@ -38,10 +38,8 @@
 <script>
 import deviceImage from '../../components/deviceImage'
 import constants from '../../../common/constants'
-import {
-  connectDevice
-} from '../../../api/devicemanager'
 import NoticeBox from '@/components/noticeDialog'
+import { ipcRenderer } from 'electron'
 
 export default {
   name: 'connect',
@@ -54,6 +52,10 @@ export default {
       noticeVisible: false
     }
   },
+  destroyed () {
+    // 移除事件监听
+    ipcRenderer.removeAllListeners('connectDeviceResult')
+  },
   components: {
     deviceImage,
     NoticeBox
@@ -64,20 +66,19 @@ export default {
     connect () {
       this.connectLoading = true
       setTimeout(() => {
-        connectDevice().then(result => {
-          if (result.code === 200) {
-            const res = result.data
-            if (res === constants.RESULT_STATUS_SUCCESS) {
-              console.log('success res ' + res)
-              this.router.replace('/manager/device')
+        ipcRenderer.send('connectDevice')
+        ipcRenderer.on('connectDeviceResult', (event, result) => {
+          event.sender.removeAllListeners('connectDeviceResult')
+          const response = result.result
+          if (result.isSuccess) {
+            if (response === constants.RESULT_STATUS_SUCCESS) {
+              this.router.replace('/manager/manager')
             } else {
-              this.openErrorView(res)
+              this.openErrorView(response)
             }
           } else {
-            this.openErrorView(result.message)
+            this.openErrorView(response)
           }
-        }).catch(err => {
-          this.openErrorView(err)
         })
       }, 200)
     },

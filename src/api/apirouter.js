@@ -33,42 +33,65 @@ export function api (reqJson) {
     return result
   }
   const connectRes = deviceManger.connect(constants.DEVICE_NAME_IMKEY_PRO)
-  if (connectRes !== constants.RESULT_STATUS_SUCCESS) {
-    result = {
-      'jsonrpc:': jsonrpc,
-      error: {
-        code: -32602,
-        message: connectRes
-      },
-      'id:': id
-    }
-    return result
-  } else {
-    // 检查是否绑定
-    const bindCheckRes = deviceManger.deviceBindCheck(filePath)
-    if (bindCheckRes !== constants.BIND_STATUS_STRING_BOUND_THIS) {
-      if (bindCheckRes === constants.BIND_STATUS_STRING_BOUND_OTHER || bindCheckRes === constants.BIND_STATUS_STRING_UNBOUND) {
-        result = {
-          'jsonrpc:': jsonrpc,
-          error: {
-            code: -32603,
-            message: 'your imKey bind status is ' + bindCheckRes + ' ,please bind your imKey.'
-          },
-          'id:': id
+  if (connectRes.isSuccess) {
+    if (connectRes.result !== constants.RESULT_STATUS_SUCCESS) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32602,
+          message: connectRes.result
+        },
+        'id:': id
+      }
+      return result
+    } else {
+      // 检查是否绑定
+      const bindCheckRes = deviceManger.deviceBindCheck(filePath)
+      if (bindCheckRes.isSuccess) {
+        if (bindCheckRes.result !== constants.BIND_STATUS_STRING_BOUND_THIS) {
+          if (bindCheckRes.result === constants.BIND_STATUS_STRING_BOUND_OTHER || bindCheckRes.result === constants.BIND_STATUS_STRING_UNBOUND) {
+            result = {
+              'jsonrpc:': jsonrpc,
+              error: {
+                code: -32603,
+                message: 'your imKey bind status is ' + bindCheckRes.result + ' ,please bind your imKey.'
+              },
+              'id:': id
+            }
+          } else {
+            result = {
+              'jsonrpc:': jsonrpc,
+              error: {
+                code: -32603,
+                message: bindCheckRes.result
+              },
+              'id:': id
+            }
+          }
+          return result
         }
       } else {
         result = {
           'jsonrpc:': jsonrpc,
           error: {
             code: -32603,
-            message: bindCheckRes
+            message: bindCheckRes.result
           },
           'id:': id
         }
+        return result
       }
-
-      return result
     }
+  } else {
+    result = {
+      'jsonrpc:': jsonrpc,
+      error: {
+        code: -32602,
+        message: connectRes.result
+      },
+      'id:': id
+    }
+    return result
   }
 
   // else if(method ==="getSeid"){return deviceManger.getSeid()}
@@ -84,12 +107,12 @@ export function api (reqJson) {
   // else if(method ==="deviceBindCheck"){return deviceManger.deviceBindCheck()}
   if (method === constants.API_NAME_TRANSACTION_BTC) {
     const response = walletApi.btcSignTransaction(params)
-    if (response.getTxHash() === '' || response.getTxHash() === null || response.getTxHash() === undefined) {
+    if (!response.isSuccess) {
       result = {
         'jsonrpc:': jsonrpc,
         error: {
           code: -32604,
-          message: response
+          message: response.result
         },
         'id:': id
       }
@@ -97,8 +120,8 @@ export function api (reqJson) {
       result = {
         'jsonrpc:': jsonrpc,
         result: {
-          txHash: response.getTxHash(),
-          txData: response.getTxData()
+          txHash: response.result.getTxHash(),
+          txData: response.result.getTxData()
         },
         'id:': id
       }
@@ -106,12 +129,12 @@ export function api (reqJson) {
     return result
   } else if (method === constants.API_NAME_TRANSACTION_BTC_SEGWIT) {
     const response = walletApi.btcSegWitSignTransaction(params)
-    if (response.getTxHash() === '' || response.getTxHash() === null || response.getTxHash() === undefined) {
+    if (!response.isSuccess) {
       result = {
         'jsonrpc:': jsonrpc,
         error: {
           code: -32604,
-          message: response
+          message: response.result
         },
         'id:': id
       }
@@ -119,9 +142,9 @@ export function api (reqJson) {
       result = {
         'jsonrpc:': jsonrpc,
         result: {
-          txHash: response.getTxHash(),
-          witnessTxData: response.getWitnessTxData(),
-          wtxHash: response.getWtxHash()
+          txHash: response.result.getTxHash(),
+          witnessTxData: response.result.getWitnessTxData(),
+          wtxHash: response.result.getWtxHash()
         },
         'id:': id
       }
@@ -129,12 +152,12 @@ export function api (reqJson) {
     return result
   } else if (method === constants.API_NAME_TRANSACTION_BTC_USDT) {
     const response = walletApi.btcUsdtSignTransaction(params)
-    if (response.getTxHash() === '' || response.getTxHash() === null || response.getTxHash() === undefined) {
+    if (!response.isSuccess) {
       result = {
         'jsonrpc:': jsonrpc,
         error: {
           code: -32604,
-          message: response
+          message: response.result
         },
         'id:': id
       }
@@ -142,8 +165,8 @@ export function api (reqJson) {
       result = {
         'jsonrpc:': jsonrpc,
         result: {
-          txHash: response.getTxHash(),
-          txData: response.getTxData()
+          txHash: response.result.getTxHash(),
+          txData: response.result.getTxData()
         },
         'id:': id
       }
@@ -151,12 +174,12 @@ export function api (reqJson) {
     return result
   } else if (method === constants.API_NAME_TRANSACTION_BTC_USDT_SEGWIT) {
     const response = walletApi.btcUsdtSegWitSignTransaction(params)
-    if (response.getTxHash() === '' || response.getTxHash() === null || response.getTxHash() === undefined) {
+    if (!response.isSuccess) {
       result = {
         'jsonrpc:': jsonrpc,
         error: {
           code: -32604,
-          message: response
+          message: response.result
         },
         'id:': id
       }
@@ -164,9 +187,9 @@ export function api (reqJson) {
       result = {
         'jsonrpc:': jsonrpc,
         result: {
-          txHash: response.getTxHash(),
-          witnessTxData: response.getWitnessTxData(),
-          wtxHash: response.getWtxHash()
+          txHash: response.result.getTxHash(),
+          witnessTxData: response.result.getWitnessTxData(),
+          wtxHash: response.result.getWtxHash()
         },
         'id:': id
       }
@@ -174,12 +197,12 @@ export function api (reqJson) {
     return result
   } else if (method === constants.API_NAME_TRANSACTION_SIGNTX_ETH) {
     const response = walletApi.ethSignTransaction(params)
-    if (response.getTxHash() === '' || response.getTxHash() === null || response.getTxHash() === undefined) {
+    if (!response.isSuccess) {
       result = {
         'jsonrpc:': jsonrpc,
         error: {
           code: -32604,
-          message: response
+          message: response.result
         },
         'id:': id
       }
@@ -187,8 +210,8 @@ export function api (reqJson) {
       result = {
         'jsonrpc:': jsonrpc,
         result: {
-          txHash: response.getTxHash(),
-          txData: response.getTxData()
+          txHash: response.result.getTxHash(),
+          txData: response.result.getTxData()
         },
         'id:': id
       }
@@ -196,12 +219,12 @@ export function api (reqJson) {
     return result
   } else if (method === constants.API_NAME_TRANSACTION_SIGNMSG_ETH) {
     const response = walletApi.ethSignMessage(params)
-    if (response.getSignature() === '' || response.getSignature() === null || response.getSignature() === undefined) {
+    if (!response.isSuccess) {
       result = {
         'jsonrpc:': jsonrpc,
         error: {
           code: -32604,
-          message: response
+          message: response.result
         },
         'id:': id
       }
@@ -209,7 +232,7 @@ export function api (reqJson) {
       result = {
         'jsonrpc:': jsonrpc,
         result: {
-          signature: response.getSignature()
+          signature: response.result.getSignature()
         },
         'id:': id
       }
@@ -217,21 +240,21 @@ export function api (reqJson) {
     return result
   } else if (method === constants.API_NAME_TRANSACTION_SIGNTX_EOS) {
     const response = walletApi.eosSignTransaction(params)
-    if (response === '' || response === null || response === undefined) {
+    if (!response.isSuccess) {
       result = {
         'jsonrpc:': jsonrpc,
         error: {
           code: -32604,
-          message: response
+          message: response.result
         },
         'id:': id
       }
       return result
     } else {
       const list = []
-      for (let i = 0; i < response.length; i++) {
-        const hash = response[i].getHash()
-        const signs = response[i].getSignsList()
+      for (let i = 0; i < response.result.length; i++) {
+        const hash = response.result[i].getHash()
+        const signs = response.result[i].getSignsList()
         result = {
           hash: hash,
           signs: signs
@@ -242,12 +265,12 @@ export function api (reqJson) {
     }
   } else if (method === constants.API_NAME_TRANSACTION_SIGNMSG_EOS) {
     const response = walletApi.eosSignMessage(params)
-    if (response.getSignature() === '' || response.getSignature() === null || response.getSignature() === undefined) {
+    if (!response.isSuccess) {
       result = {
         'jsonrpc:': jsonrpc,
         error: {
           code: -32604,
-          message: response
+          message: response.result
         },
         'id:': id
       }
@@ -255,7 +278,7 @@ export function api (reqJson) {
       result = {
         'jsonrpc:': jsonrpc,
         result: {
-          signature: response.getSignature()
+          signature: response.result.getSignature()
         },
         'id:': id
       }
@@ -263,12 +286,12 @@ export function api (reqJson) {
     return result
   } else if (method === constants.API_NAME_TRANSACTION_SIGNTX_COSMOS) {
     const response = walletApi.cosmosSignTransaction(params)
-    if (response.getTxData() === '' || response.getTxData() === null || response.getTxData() === undefined) {
+    if (!response.isSuccess) {
       result = {
         'jsonrpc:': jsonrpc,
         error: {
           code: -32604,
-          message: response
+          message: response.result
         },
         'id:': id
       }
@@ -276,8 +299,8 @@ export function api (reqJson) {
       result = {
         'jsonrpc:': jsonrpc,
         result: {
-          txHash: response.getTxHash(),
-          txData: response.getTxData()
+          txHash: response.result.getTxHash(),
+          txData: response.result.getTxData()
         },
         'id:': id
       }
@@ -285,12 +308,12 @@ export function api (reqJson) {
     return result
   } else if (method === constants.API_NAME_GET_BTC_XPUB) {
     const response = walletApi.getBTCXpubApi(params)
-    if (response === '' || response === null || response === undefined) {
+    if (!response.isSuccess) {
       result = {
         'jsonrpc:': jsonrpc,
         error: {
           code: -32604,
-          message: response
+          message: response.result
         },
         'id:': id
       }
@@ -298,7 +321,7 @@ export function api (reqJson) {
       result = {
         'jsonrpc:': jsonrpc,
         result: {
-          xpub: response
+          xpub: response.result
         },
         'id:': id
       }
@@ -306,12 +329,12 @@ export function api (reqJson) {
     return result
   } else if (method === constants.API_NAME_GET_ADDRESS_BTC) {
     const response = walletApi.getBTCAddress(params)
-    if (response === '' || response === null || response === undefined) {
+    if (!response.isSuccess) {
       result = {
         'jsonrpc:': jsonrpc,
         error: {
           code: -32604,
-          message: response
+          message: response.result
         },
         'id:': id
       }
@@ -319,7 +342,7 @@ export function api (reqJson) {
       result = {
         'jsonrpc:': jsonrpc,
         result: {
-          address: response
+          address: response.result
         },
         'id:': id
       }
@@ -327,12 +350,12 @@ export function api (reqJson) {
     return result
   } else if (method === constants.API_NAME_GET_ADDRESS_BTC_SEGWIT) {
     const response = walletApi.getBTCSegWitAddress(params)
-    if (response === '' || response === null || response === undefined) {
+    if (!response.isSuccess) {
       result = {
         'jsonrpc:': jsonrpc,
         error: {
           code: -32604,
-          message: response
+          message: response.result
         },
         'id:': id
       }
@@ -340,7 +363,7 @@ export function api (reqJson) {
       result = {
         'jsonrpc:': jsonrpc,
         result: {
-          address: response
+          address: response.result
         },
         'id:': id
       }
@@ -348,12 +371,12 @@ export function api (reqJson) {
     return result
   } else if (method === constants.API_NAME_REGISTER_ADDRESS_BTC) {
     const response = walletApi.registerBTCAddress(params)
-    if (response === '' || response === null || response === undefined) {
+    if (!response.isSuccess) {
       result = {
         'jsonrpc:': jsonrpc,
         error: {
           code: -32604,
-          message: response
+          message: response.result
         },
         'id:': id
       }
@@ -361,7 +384,7 @@ export function api (reqJson) {
       result = {
         'jsonrpc:': jsonrpc,
         result: {
-          address: response
+          address: response.result
         },
         'id:': id
       }
@@ -369,12 +392,12 @@ export function api (reqJson) {
     return result
   } else if (method === constants.API_NAME_REGISTER_ADDRESS_BTC_SEGWIT) {
     const response = walletApi.registerBTCSegWitAddress(params)
-    if (response === '' || response === null || response === undefined) {
+    if (!response.isSuccess) {
       result = {
         'jsonrpc:': jsonrpc,
         error: {
           code: -32604,
-          message: response
+          message: response.result
         },
         'id:': id
       }
@@ -382,7 +405,7 @@ export function api (reqJson) {
       result = {
         'jsonrpc:': jsonrpc,
         result: {
-          address: response
+          address: response.result
         },
         'id:': id
       }
@@ -390,12 +413,12 @@ export function api (reqJson) {
     return result
   } else if (method === constants.API_NAME_GET_ADDRESS_ETH) {
     const response = walletApi.getETHAddress(params)
-    if (response === '' || response === null || response === undefined) {
+    if (!response.isSuccess) {
       result = {
         'jsonrpc:': jsonrpc,
         error: {
           code: -32604,
-          message: response
+          message: response.result
         },
         'id:': id
       }
@@ -403,7 +426,7 @@ export function api (reqJson) {
       result = {
         'jsonrpc:': jsonrpc,
         result: {
-          address: response
+          address: response.result
         },
         'id:': id
       }
@@ -411,12 +434,12 @@ export function api (reqJson) {
     return result
   } else if (method === constants.API_NAME_REGISTER_ADDRESS_ETH) {
     const response = walletApi.registerETHAddress(params)
-    if (response === '' || response === null || response === undefined) {
+    if (!response.isSuccess) {
       result = {
         'jsonrpc:': jsonrpc,
         error: {
           code: -32604,
-          message: response
+          message: response.result
         },
         'id:': id
       }
@@ -424,7 +447,7 @@ export function api (reqJson) {
       result = {
         'jsonrpc:': jsonrpc,
         result: {
-          address: response
+          address: response.result
         },
         'id:': id
       }
@@ -432,12 +455,12 @@ export function api (reqJson) {
     return result
   } else if (method === constants.API_NAME_GET_PUBKEY_EOS) {
     const response = walletApi.getEOSPubKey(params)
-    if (response === '' || response === null || response === undefined) {
+    if (!response.isSuccess) {
       result = {
         'jsonrpc:': jsonrpc,
         error: {
           code: -32604,
-          message: response
+          message: response.result
         },
         'id:': id
       }
@@ -445,7 +468,7 @@ export function api (reqJson) {
       result = {
         'jsonrpc:': jsonrpc,
         result: {
-          pubkey: response
+          pubkey: response.result
         },
         'id:': id
       }
@@ -453,12 +476,12 @@ export function api (reqJson) {
     return result
   } else if (method === constants.API_NAME_REGISTER_PUBKEY_EOS) {
     const response = walletApi.registerEOSPubKey(params)
-    if (response === '' || response === null || response === undefined) {
+    if (!response.isSuccess) {
       result = {
         'jsonrpc:': jsonrpc,
         error: {
           code: -32604,
-          message: response
+          message: response.result
         },
         'id:': id
       }
@@ -466,7 +489,7 @@ export function api (reqJson) {
       result = {
         'jsonrpc:': jsonrpc,
         result: {
-          pubkey: response
+          pubkey: response.result
         },
         'id:': id
       }
@@ -474,12 +497,12 @@ export function api (reqJson) {
     return result
   } else if (method === constants.API_NAME_GET_ADDRESS_COSMOS) {
     const response = walletApi.getCOSMOSAddress(params)
-    if (response === '' || response === null || response === undefined) {
+    if (!response.isSuccess) {
       result = {
         'jsonrpc:': jsonrpc,
         error: {
           code: -32604,
-          message: response
+          message: response.result
         },
         'id:': id
       }
@@ -487,7 +510,7 @@ export function api (reqJson) {
       result = {
         'jsonrpc:': jsonrpc,
         result: {
-          address: response
+          address: response.result
         },
         'id:': id
       }
@@ -495,12 +518,12 @@ export function api (reqJson) {
     return result
   } else if (method === constants.API_NAME_REGISTER_ADDRESS_COSMOS) {
     const response = walletApi.registerCOSMOSAddress(params)
-    if (response === '' || response === null || response === undefined) {
+    if (!response.isSuccess) {
       result = {
         'jsonrpc:': jsonrpc,
         error: {
           code: -32604,
-          message: response
+          message: response.result
         },
         'id:': id
       }
@@ -508,7 +531,7 @@ export function api (reqJson) {
       result = {
         'jsonrpc:': jsonrpc,
         result: {
-          address: response
+          address: response.result
         },
         'id:': id
       }

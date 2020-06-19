@@ -36,7 +36,7 @@
         </div>
         <div class="deviceBox">
             <div class="contentBox">
-                <img src="src/renderer/assets/logoSetting.png" style="width:60px;height:70px" alt="">
+                <img src="@/assets/logo.png" style="width:60px;height:70px" alt/>
                 <div class="deviceName">
                     <h3>imKey-manager</h3>
                     <p>{{$t('m.setting.imKey_manager_version')}} {{oldVersionData}}</p>
@@ -85,7 +85,7 @@ export default {
     // 移除事件监听
     ipcRenderer.removeAllListeners('updateMessage')
     ipcRenderer.removeAllListeners('downloadProgress')
-    ipcRenderer.removeAllListeners('isUpdateNow')
+    // ipcRenderer.removeAllListeners('isUpdateNow')
   },
   mounted () {
     if (process.env.NODE_ENV === 'production') {
@@ -127,6 +127,7 @@ export default {
       ipcRenderer.send('checkForUpdate')
       // 添加自动更新事件的监听
       ipcRenderer.on('updateMessage', (event, obj) => {
+        event.sender.removeAllListeners('updateMessage')
         if (obj.action === 'updateAva') {
           this.newVersionData = obj.updateInfo.version
           this.description = obj.updateInfo.releaseNotes

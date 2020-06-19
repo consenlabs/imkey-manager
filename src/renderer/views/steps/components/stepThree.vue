@@ -38,11 +38,8 @@
 import OptionOne from './stepThreeDialog'
 import OptionTwo from './stepThree2Dialog'
 import constants from '../../../../common/constants'
-import {
-  getBTCXpub
-} from '../../../../api/walletapi'
-import { connectDevice } from '../../../../api/devicemanager'
 import NoticeBox from '@/components/noticeDialog'
+import { ipcRenderer } from 'electron'
 
 export default {
   name: 'Home',
@@ -56,6 +53,11 @@ export default {
       noticeVisible: false
     }
   },
+  destroyed () {
+    // 移除事件监听
+    ipcRenderer.removeAllListeners('connectDeviceResult')
+    ipcRenderer.removeAllListeners('getBTCXpubResult')
+  },
   components: {
     OptionOne,
     OptionTwo,
@@ -68,19 +70,19 @@ export default {
   },
   methods: {
     connect () {
-      connectDevice().then(result => {
-        if (result.code === 200) {
-          const res = result.data
-          if (res === constants.RESULT_STATUS_SUCCESS) {
+      ipcRenderer.send('connectDevice')
+      ipcRenderer.on('connectDeviceResult', (event, result) => {
+        event.sender.removeAllListeners('connectDeviceResult')
+        const response = result.result
+        if (result.isSuccess) {
+          if (response === constants.RESULT_STATUS_SUCCESS) {
             this.checkWalletExist()
           } else {
-            this.openErrorView(res)
+            this.openErrorView(response)
           }
         } else {
-          this.openErrorView(result.message)
+          this.openErrorView(response)
         }
-      }).catch(err => {
-        this.openErrorView(err)
       })
     },
     seeOne () {
@@ -94,10 +96,13 @@ export default {
         this.nextLoading = true
         // 判断是否创建钱包
         setTimeout(() => {
-          getBTCXpub().then(result => {
-            if (result.code === 200) {
-              if (result.data !== '' || result.data != null) {
-                if (result.data.match('xpu')) {
+          ipcRenderer.send('getBTCXpub')
+          ipcRenderer.on('getBTCXpubResult', (event, result) => {
+            event.sender.removeAllListeners('getBTCXpubResult')
+            const response = result.result
+            if (result.isSuccess) {
+              if (response !== '' || response != null) {
+                if (response.match('xpu')) {
                   this.$emit('finish')
                 } else {
                   this.openErrorView('please create wallet')
@@ -105,9 +110,9 @@ export default {
               } else {
                 this.openErrorView('please create wallet')
               }
+            } else {
+              this.openErrorView(response)
             }
-          }).catch(err => {
-            this.openErrorView(err)
           })
         }, 300)
       } else {

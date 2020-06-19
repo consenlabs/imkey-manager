@@ -5,6 +5,10 @@ import { autoUpdater } from 'electron-updater'
 import * as Sentry from '@sentry/electron'
 // test.json
 import pkg from '../../package.json'
+
+const deviceManger = require('../api/devicemanagerapi')
+const walletApi = require('../api/walletapi')
+
 /**
  * Set `__static` path to static files in production
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
@@ -170,7 +174,9 @@ function startHttpServer () {
   // 获得express router对象
   // 用post动词访问 http://localhost:8081/api/imKey
   app.post('/api/imKey', function (req, res) {
-    let body = ''; let jsonStr; let reqJson
+    let body = ''
+    let jsonStr
+    let reqJson
     if (typeof (req.body.method) === 'undefined') {
       req.on('data', function (chunk) {
         body += chunk // 读取参数流转化为字符串
@@ -184,7 +190,7 @@ function startHttpServer () {
           jsonStr = {
             'jsonrpc:': reqJson.jsonrpc,
             error: {
-              code: -32604,
+              code: -32606,
               message: err
             },
             'id:': reqJson.id
@@ -213,64 +219,7 @@ function startHttpServer () {
   // 注册路由
   // 所有的路由会加上“／api”前缀
   // pp.use('/api/imKey/', router);
-  const server = app.listen(8081, function () {
-    const host = server.address().address
-    const port = server.address().port
-    console.log('应用实例，访问地址为 http://%s:%s', host, port)
-  })
-
-  // http.createServer((request, response) => {
-  //     request.on('error', (err) => {
-  //         console.error(err);
-  //         response.statusCode = 400;
-  //         response.end();
-  //     });
-  //     response.on('error', (err) => {
-  //         console.error(err);
-  //     });
-  //     if (request.method === 'POST' && request.url.match('/imKey')) {
-  //         let {headers, method, url} = request;
-  //         let body = [];
-  //         request.on('error', (err) => {
-  //             console.error(err);
-  //         }).on('data', (chunk) => {
-  //             body.push(chunk);
-  //         }).on('end', () => {
-  //             body = Buffer.concat(body).toString();
-  //             // BEGINNING OF NEW STUFF
-  //
-  //             response.on('error', (err) => {
-  //                 console.error(err);
-  //             });
-  //
-  //             // response.statusCode = 200;
-  //             // response.setHeader('Content-Type', 'application/json');
-  //             // Note: the 2 lines above could be replaced with this next one:
-  //             // response.writeHead(200, {'Content-Type': 'application/json'})
-  //             // {"ReturnCode":"000000","ReturnData":{"nextStepKey":"05","seid":"18080000000000860001010000000015"},"ReturnMsg":"操作成功"}
-  //             let requestJson = JSON.parse(body);//获取到request请求中的json对象
-  //             //处理request请求的数据
-  //             //调用rust库把需要的数据发给rust库处理
-  //             // console.log(" process.versions.node:" + process.versions.node);
-  //             // console.log("request.url.split(\"/imkey/\")[1]" + request.url.split("/imkey/")[1])
-  //             let responseJson = apiRouter.api(requestJson);
-  //             responseJson = JSON.stringify(responseJson);
-  //             //返回response的json对象
-  //             // let resjson = {"ReturnCode": "000000", "ReturnMsg": "操作成功", "ReturnData": {responseJson}};
-  //             // let responseBody = {headers, method, url, resjson};
-  //
-  //             response.write(JSON.stringify(responseJson));
-  //             response.end();
-  //             // Note: the 2 lines above could be replaced with this next one:
-  //             // response.end(JSON.stringify(responseBody))
-  //             // END OF NEW STUFF
-  //         });
-  //         // request.pipe(response);
-  //     } else {
-  //         response.statusCode = 404;
-  //         response.end();
-  //     }
-  // }).listen(8080, '127.0.0.1');
+  app.listen(8081)
 }
 
 /**
@@ -464,6 +413,95 @@ function protocalHandler () {
   }
 }
 
+function renderDeviceManagerHandler () {
+  ipcMain.on('connectDevice', () => {
+    const response = deviceManger.connect()
+    mainWindow.webContents.send('connectDeviceResult', response)
+  })
+  ipcMain.on('getSeid', () => {
+    const response = deviceManger.getSeid()
+    mainWindow.webContents.send('getSeidResult', response)
+  })
+  ipcMain.on('getSn', () => {
+    const response = deviceManger.getSn()
+    mainWindow.webContents.send('getSnResult', response)
+  })
+  ipcMain.on('getRamSize', () => {
+    const response = deviceManger.getRamSize()
+    mainWindow.webContents.send('getRamSizeResult', response)
+  })
+  ipcMain.on('getFirmwareVersion', () => {
+    const response = deviceManger.getFirmwareVersion()
+    mainWindow.webContents.send('getFirmwareVersionResult', response)
+  })
+  ipcMain.on('getSdkInfo', () => {
+    const response = deviceManger.getSdkInfo()
+    mainWindow.webContents.send('getSdkInfoResult', response)
+  })
+  ipcMain.on('activeDevice', () => {
+    const response = deviceManger.activeDevice()
+    mainWindow.webContents.send('activeDeviceResult', response)
+  })
+  ipcMain.on('cosUpdate', () => {
+    const response = deviceManger.cosUpdate()
+    mainWindow.webContents.send('cosUpdateResult', response)
+  })
+  ipcMain.on('cosCheckUpdate', () => {
+    const response = deviceManger.cosCheckUpdate()
+    mainWindow.webContents.send('cosCheckUpdateResult', response)
+  })
+  ipcMain.on('isBLStatus', () => {
+    const response = deviceManger.isBLStatus()
+    mainWindow.webContents.send('isBLStatusResult', response)
+  })
+  ipcMain.on('checkDevice', () => {
+    const response = deviceManger.checkDevice()
+    mainWindow.webContents.send('checkDeviceResult', response)
+  })
+  ipcMain.on('checkUpdate', () => {
+    const response = deviceManger.checkUpdateAppList()
+    mainWindow.webContents.send('checkUpdateResult', response)
+  })
+  ipcMain.on('downloadApplet', (event, appletName) => {
+    const response = deviceManger.downloadApplet(appletName)
+    console.log('downloadApplet response:' + response)
+    console.log(response)
+    mainWindow.webContents.send('downloadAppletResult', response)
+  })
+  ipcMain.on('updateApplet', (event, appletName) => {
+    const response = deviceManger.updateApplet(appletName)
+    console.log('updateApplet response:' + response)
+    console.log(response)
+    mainWindow.webContents.send('updateAppletResult', response)
+  })
+  ipcMain.on('deleteApplet', (event, appletName) => {
+    const response = deviceManger.deleteApplet(appletName)
+    console.log('deleteApplet response:' + response)
+    console.log(response)
+    mainWindow.webContents.send('deleteAppletResult', response)
+  })
+  ipcMain.on('deviceBindCheck', (event, filePath) => {
+    const response = deviceManger.deviceBindCheck(filePath)
+    mainWindow.webContents.send('deviceBindCheckResult', response)
+  })
+  ipcMain.once('deviceBindAcquire', (event, bindCode) => {
+    const response = deviceManger.deviceBindAcquire(bindCode)
+    mainWindow.webContents.send('deviceBindAcquireResult', response)
+  })
+  ipcMain.once('deviceBindDisplay', () => {
+    const response = deviceManger.deviceBindDisplay()
+    mainWindow.webContents.send('deviceBindDisplayResult', response)
+  })
+  ipcMain.on('getBTCXpub', () => {
+    const response = walletApi.getBTCXpub()
+    mainWindow.webContents.send('getBTCXpubResult', response)
+  })
+  ipcMain.on('getUserPath', () => {
+    const response = deviceManger.getUserPath()
+    mainWindow.webContents.send('getUserPathResult', response)
+  })
+}
+
 /**
  * 单一实例
  */
@@ -485,6 +523,7 @@ if (!gotTheLock) {
     autoUpdate()
     crashReport()
     protocalHandler()
+    renderDeviceManagerHandler()
     startHttpServer()
   })
 }
