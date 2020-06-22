@@ -164,8 +164,11 @@ function createTray () {
 function startHttpServer () {
   const express = require('express')
   const app = express()
+  const cors = require('cors')
   const bodyParser = require('body-parser')
   const apiRouter = require('../api/apirouter')
+  // 配置cors解决跨域请求的问题
+  app.use(cors())
   // 给app配置bodyParser中间件
   // 通过如下配置再路由种处理request时，可以直接获得post请求的body部分
   app.use(bodyParser.urlencoded({ extended: true }))
