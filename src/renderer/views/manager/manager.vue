@@ -67,17 +67,8 @@
 <script>
 import deviceImage from '../../components/deviceImage'
 import constants from '../../../common/constants'
-import {
-  connectDevice,
-  cosUpdate,
-  cosCheckUpdate,
-  checkUpdate,
-  downloadApplet,
-  updateApplet,
-  deleteApplet,
-  getFirmwareVersion
-} from '../../../api/devicemanager'
 import NoticeBox from '@/components/noticeDialog'
+import { ipcRenderer } from 'electron'
 
 export default {
   name: 'manager',
@@ -101,6 +92,17 @@ export default {
       description: ''
     }
   },
+  destroyed () {
+    // 移除事件监听
+    ipcRenderer.removeAllListeners('connectDeviceResult')
+    ipcRenderer.removeAllListeners('cosCheckUpdateResult')
+    ipcRenderer.removeAllListeners('getFirmwareVersionResult')
+    ipcRenderer.removeAllListeners('cosUpdateResult')
+    ipcRenderer.removeAllListeners('checkUpdateResult')
+    ipcRenderer.removeAllListeners('downloadAppletResult')
+    ipcRenderer.removeAllListeners('updateAppletResult')
+    ipcRenderer.removeAllListeners('deleteAppletResult')
+  },
   components: {
     deviceImage,
     NoticeBox
@@ -123,11 +125,20 @@ export default {
   },
   methods: {
     init () {
-      connectDevice().then(result => {
-        if (result.code === 200) {
-          const res = result.data
-          if (res === constants.RESULT_STATUS_SUCCESS) {
+      ipcRenderer.send('connectDevice')
+      ipcRenderer.on('connectDeviceResult', (event, result) => {
+        event.sender.removeAllListeners('connectDeviceResult')
+        const response = result.result
+        if (result.isSuccess) {
+          if (response === constants.RESULT_STATUS_SUCCESS) {
             if (this.$store.state.updateSuccess === false) {
+              if (this.$store.state.apps === '' || this.$store.state.apps === null || this.$store.state.apps === []) {
+                // 加载应用
+                this.getAppsList()
+              } else {
+                this.apps = this.$store.state.apps
+                this.isSuccess = true
+              }
               this.firmwareVersion()
             } else {
               this.updateSuccess = this.$store.state.updateSuccess
@@ -147,8 +158,6 @@ export default {
         } else {
           this.router.replace('/manager/connect')
         }
-      }).catch(err => {
-        this.openErrorView(err)
       })
     },
     compareByFirmwareVersion () {
@@ -185,41 +194,46 @@ export default {
       })
     },
     firmwareVersion () {
-      getFirmwareVersion().then(result => {
-        if (result.code === 200) {
-          this.oldVersionData = result.data
-          this.$store.state.oldVersionData = result.data
+      ipcRenderer.send('getFirmwareVersion')
+      ipcRenderer.on('getFirmwareVersionResult', (event, result) => {
+        event.sender.removeAllListeners('getFirmwareVersionResult')
+        const response = result.result
+        if (result.isSuccess) {
+          this.oldVersionData = response
+          this.$store.state.oldVersionData = response
           this.toCosCheckUpdate()
         } else {
-          this.openErrorView(result.message)
+          this.openErrorView(response)
         }
-      }).catch(err => {
-        this.openErrorView(err)
       })
     },
     toCosCheckUpdate () {
-      cosCheckUpdate().then(result => {
-        if (result.code === 200) {
-          this.newVersionData = result.data.latestCosVersion
-          this.isLatest = result.data.isLatest
-          this.updateType = result.data.updateType
-          this.description = result.data.description
+      ipcRenderer.send('cosCheckUpdate')
+      ipcRenderer.on('cosCheckUpdateResult', (event, result) => {
+        event.sender.removeAllListeners('cosCheckUpdateResult')
+        const response = result.result
+        if (result.isSuccess) {
+          this.newVersionData = response.latestCosVersion
+          this.isLatest = response.isLatest
+          this.updateType = response.updateType
+          this.description = response.description
           // 对比COS版本，提示用户是否升级
           this.compareByFirmwareVersion()
         } else {
-          this.openErrorView(result.message)
+          this.openErrorView(response)
         }
-      }).catch(err => {
-        this.openErrorView(err)
       })
     },
     updateFirmware () {
       this.loading = true
       setTimeout(() => {
         this.connect()
-        cosUpdate().then(result => {
-          if (result.code === 200) {
-            if (result.data === constants.RESULT_STATUS_SUCCESS) {
+        ipcRenderer.send('cosUpdate')
+        ipcRenderer.on('cosUpdateResult', (event, result) => {
+          event.sender.removeAllListeners('cosUpdateResult')
+          const response = result.result
+          if (result.isSuccess) {
+            if (response === constants.RESULT_STATUS_SUCCESS) {
               this.loading = false
               this.updateSuccess = false
               this.oldVersionData = this.newVersionData
@@ -234,38 +248,38 @@ export default {
             } else {
               this.updateSuccess = true
               this.loading = false
-              this.openErrorView(result.data)
+              this.openErrorView(response)
             }
           } else {
             this.loading = false
-            this.openErrorView(result.message)
+            this.openErrorView(response)
           }
-        }).catch(err => {
-          this.loading = false
-          this.openErrorView(err)
         })
       }, 200)
     },
     connect () {
-      connectDevice().then(result => {
-        if (result.code === 200) {
-          const res = result.data
-          if (res === constants.RESULT_STATUS_SUCCESS) {
+      ipcRenderer.send('connectDevice')
+      ipcRenderer.on('connectDeviceResult', (event, result) => {
+        event.sender.removeAllListeners('connectDeviceResult')
+        const response = result.result
+        if (result.isSuccess) {
+          if (response === constants.RESULT_STATUS_SUCCESS) {
           } else {
             this.router.replace('/manager/connect')
           }
         } else {
           this.router.replace('/manager/connect')
         }
-      }).catch(err => {
-        this.openErrorView(err)
       })
     },
     getAppsList () {
-      checkUpdate().then(result => {
-        if (result.code === 200) {
+      ipcRenderer.send('checkUpdate')
+      ipcRenderer.on('checkUpdateResult', (event, result) => {
+        event.sender.removeAllListeners('checkUpdateResult')
+        const response = result.result
+        if (result.isSuccess) {
           const appList = []
-          const tempAppList = result.data.list
+          const tempAppList = response.list
           for (let i = 0; i < tempAppList.length; i++) {
             let buttonTexts
             if (tempAppList[i].buttonTexts === 'update') {
@@ -292,10 +306,8 @@ export default {
           this.$store.state.apps = appList
           this.isSuccess = true
         } else {
-          this.openErrorView(result.message)
+          this.openErrorView(response)
         }
-      }).catch(err => {
-        this.openErrorView(err)
       })
     },
 
@@ -307,24 +319,24 @@ export default {
         this.apps[index].deleteLoading = false
         setTimeout(() => {
           this.connect()
-          downloadApplet(item.name).then(result => {
-            if (result.code === 200) {
-              if (result.data === constants.RESULT_STATUS_SUCCESS) {
+          ipcRenderer.send('downloadApplet', item.name)
+          ipcRenderer.on('downloadAppletResult', (event, result) => {
+            event.sender.removeAllListeners('downloadAppletResult')
+            const response = result.result
+            if (result.isSuccess) {
+              if (response === constants.RESULT_STATUS_SUCCESS) {
                 this.apps[index].deleteDis = false
                 this.apps[index].installDis = true
                 this.apps[index].installLoading = false
                 this.apps[index].desc = this.apps[index].lastVersion
               } else {
                 this.apps[index].installLoading = false
-                this.openErrorView(result.data)
+                this.openErrorView(response)
               }
             } else {
               this.apps[index].installLoading = false
-              this.openErrorView(result.message)
+              this.openErrorView(response)
             }
-          }).catch(err => {
-            this.apps[index].installLoading = false
-            this.openErrorView(err)
           })
         }, 200)
       }
@@ -335,24 +347,24 @@ export default {
       this.apps[index].deleteLoading = false
       setTimeout(() => {
         this.connect()
-        updateApplet(item.name).then(result => {
-          if (result.code === 200) {
-            if (result.data === constants.RESULT_STATUS_SUCCESS) {
+        ipcRenderer.send('updateApplet', item.name)
+        ipcRenderer.on('updateAppletResult', (event, result) => {
+          event.sender.removeAllListeners('updateAppletResult')
+          const response = result.result
+          if (result.isSuccess) {
+            if (response === constants.RESULT_STATUS_SUCCESS) {
               this.apps[index].deleteDis = false
               this.apps[index].installDis = true
               this.apps[index].installLoading = false
               this.apps[index].desc = this.apps[index].lastVersion
             } else {
               this.apps[index].installLoading = false
-              this.openErrorView(result.data)
+              this.openErrorView(response)
             }
           } else {
             this.apps[index].installLoading = false
-            this.openErrorView(result.message)
+            this.openErrorView(response)
           }
-        }).catch(err => {
-          this.apps[index].installLoading = false
-          this.openErrorView(err)
         })
       }, 200)
     },
@@ -362,23 +374,24 @@ export default {
       this.apps[index].installLoading = false
       setTimeout(() => {
         this.connect()
-        deleteApplet(item.name).then(result => {
-          if (result.code === 200) {
-            if (result.data === constants.RESULT_STATUS_SUCCESS) {
+        ipcRenderer.send('deleteApplet', item.name)
+        ipcRenderer.on('deleteAppletResult', (event, result) => {
+          event.sender.removeAllListeners('deleteAppletResult')
+          const response = result.result
+          if (result.isSuccess) {
+            if (response === constants.RESULT_STATUS_SUCCESS) {
               this.apps[index].deleteDis = true
               this.apps[index].installDis = false
               this.apps[index].deleteLoading = false
               this.apps[index].desc = ''
             } else {
               this.apps[index].deleteLoading = false
-              this.openErrorView(result.data)
+              this.openErrorView(response)
             }
           } else {
-            this.openErrorView(result.message)
+            this.apps[index].deleteLoading = false
+            this.openErrorView(response)
           }
-        }).catch(err => {
-          this.apps[index].deleteLoading = false
-          this.openErrorView(err)
         })
       }, 200)
     },

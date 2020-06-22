@@ -1,7 +1,7 @@
 <template>
     <div>
         <div class="bannerBox">
-            <img src="../assets/banner.png" alt/>
+            <img src="@/assets/banner.png" alt/>
             <button class="bayBtn" @click="buy()">{{$t('m.home.buy_now')}}</button>
         </div>
         <div id="box" :style="{display:isShow}" align="center">
@@ -11,11 +11,11 @@
                 </p>
                 <div :class="{btnBox,active:isActive1}" align="center">
                     <h2>{{$t('m.home.use_imToken_to_buy')}}</h2>
-                    <img src="src/renderer/assets/erweimaAliWecat.png" alt/>
+                    <img src="@/assets/imm.png" alt/>
                 </div>
                 <div :class="{btnBox,active:isActive2}" align="center">
                     <h2>{{$t('m.home.use_WeChat_AliPay_to_buy')}}</h2>
-                    <img src="src/renderer/assets/erweimaImtoken.png" alt/>
+                    <img src="@/assets/aww.png" alt/>
                 </div>
                 <div class="btnBar">
                     <div :class="{active:isActive1}" @click="btn_wechat_alipay()">{{$t('m.home.WeChat_AliPay')}}</div>

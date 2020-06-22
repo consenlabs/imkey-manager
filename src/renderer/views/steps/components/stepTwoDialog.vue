@@ -58,14 +58,7 @@
 
 <script>
 import constants from '../../../../common/constants'
-import {
-  connectDevice,
-  activeDevice,
-  deviceBindAcquire,
-  deviceBindCheck,
-  deviceBindDisplay,
-  getUserPath
-} from '../../../../api/devicemanager'
+import { ipcRenderer } from 'electron'
 
 export default {
   name: 'checkBox',
@@ -88,16 +81,24 @@ export default {
 
     }
   },
+  destroyed () {
+    // 移除事件监听
+    ipcRenderer.removeAllListeners('connectDeviceResult')
+    ipcRenderer.removeAllListeners('activeDeviceResult')
+    ipcRenderer.removeAllListeners('deviceBindCheckResult')
+    ipcRenderer.removeAllListeners('deviceBindAcquireResult')
+    ipcRenderer.removeAllListeners('deviceBindDisplayResult')
+  },
   props: { boxVisible: Boolean },
   watch: {
     boxVisible () {
       if (this.boxVisible) {
-        this.checkActiveAndBind()
+        // this.checkActiveAndBind()
       }
     }
   },
   mounted () {
-    this.connect()
+    this.checkActiveAndBind()
   },
   methods: {
     handleBlur () {
@@ -109,38 +110,44 @@ export default {
         this.isError = false
       }
     },
-    getUserPath () {
-      getUserPath().then(result => {
-        if (result.code === 200) {
-          const electron = require('electron')
-          const dataPath = (electron.app || electron.remote.app).getPath('userData') + '/'
-          this.userPath = dataPath
-        }
-      }).catch(err => {
-        this.openErrorView(err)
-      })
-    },
+
     connect () {
-      connectDevice().then(result => {
-        if (result.code === 200) {
-          const res = result.data
-          if (res === constants.RESULT_STATUS_SUCCESS) {
-            this.getUserPath()
+      ipcRenderer.send('connectDevice')
+      ipcRenderer.on('connectDeviceResult', (event, result) => {
+        event.sender.removeAllListeners('connectDeviceResult')
+        const response = result.result
+        if (result.isSuccess) {
+          if (response === constants.RESULT_STATUS_SUCCESS) {
+            this.loading1 = true
+            setTimeout(() => {
+              // 判断是否已激活
+              if (this.$store.state.activeStatus === 'latest') {
+                // 激活成功
+                this.loading1 = false
+                this.status1 = true
+                this.showTwo = true
+                // 开始判断是否绑定
+                this.bindDevice()
+              } else {
+                this.activeDevice()
+              }
+            }, 10)
           } else {
-            this.openErrorView(res)
+            this.openErrorView(response)
           }
         } else {
-          this.openErrorView(result.message)
+          this.openErrorView(response)
         }
-      }).catch(err => {
-        this.openErrorView(err)
       })
     },
     activeDevice () {
       setTimeout(() => {
-        activeDevice().then(result => {
-          if (result.code === 200) {
-            if (result.data === constants.RESULT_STATUS_SUCCESS) {
+        ipcRenderer.send('activeDevice')
+        ipcRenderer.on('activeDeviceResult', (event, result) => {
+          event.sender.removeAllListeners('activeDeviceResult')
+          const response = result.result
+          if (result.isSuccess) {
+            if (response === constants.RESULT_STATUS_SUCCESS) {
               // 激活成功
               this.loading1 = false
               this.status1 = true
@@ -148,38 +155,37 @@ export default {
               // 开始判断是否绑定
               this.bindDevice()
             } else {
-              // 激活失败
-              this.openErrorView(result.data)
+              this.openErrorView(response)
             }
           } else {
-            this.openErrorView(result.message)
+            this.openErrorView(response)
           }
-        }).catch(err => {
-          // 激活失败
-          this.openErrorView(err)
         })
       }, 200)
     },
     bindDevice () {
-      deviceBindCheck(this.userPath).then(result => {
-        if (result.code === 200) {
-          if (result.data === '' || result.data === null) {
+      ipcRenderer.send('deviceBindCheck', this.$store.state.userPath)
+      ipcRenderer.on('deviceBindCheckResult', (event, result) => {
+        event.sender.removeAllListeners('deviceBindCheckResult')
+        const response = result.result
+        if (result.isSuccess) {
+          if (response === '' || response === null) {
             // 失败的话
             this.openErrorView('bind fail: null ')
           } else {
-            if (result.data === constants.BIND_STATUS_STRING_BOUND_OTHER) {
+            if (response === constants.BIND_STATUS_STRING_BOUND_OTHER) {
               // 弹出输入框
               this.bindShow = true
-            } else if (result.data === constants.BIND_STATUS_STRING_UNBOUND) {
+            } else if (response === constants.BIND_STATUS_STRING_UNBOUND) {
               // 弹出输入框
               this.bindShow = true
               // 显示绑定码
               this.bindDisplay()
-            } else if (result.data === constants.BIND_STATUS_STRING_BOUND_THIS) {
+            } else if (response === constants.BIND_STATUS_STRING_BOUND_THIS) {
               this.isCorrect = true
               this.showThree = true
               this.status3 = true
-              this.loading3 = true
+              // this.loading3 = true
               setTimeout(() => {
                 // 已经绑定
                 this.loading3 = false
@@ -191,22 +197,22 @@ export default {
               }, 1000)
             } else {
               // 如果其他错误，弹出提示框
-              this.openErrorView(result.data)
+              this.openErrorView(response)
             }
           }
         } else {
-          this.openErrorView(result.message)
+          this.openErrorView(response)
         }
-      }).catch(err => {
-        // 失败的话
-        this.openErrorView(err)
       })
     },
     bindAcquire () {
       this.loading3 = true
-      deviceBindAcquire(this.BindCode).then(result => {
-        if (result.code === 200) {
-          if (result.data === constants.RESULT_STATUS_SUCCESS) {
+      ipcRenderer.send('deviceBindAcquire', this.BindCode)
+      ipcRenderer.on('deviceBindAcquireResult', (event, result) => {
+        event.sender.removeAllListeners('deviceBindAcquireResult')
+        const response = result.result
+        if (result.isSuccess) {
+          if (response === constants.RESULT_STATUS_SUCCESS) {
             setTimeout(() => {
               // 已经绑定
               this.loading3 = false
@@ -217,46 +223,30 @@ export default {
               this.handleClose()
             }, 2000)
           } else {
-            this.openErrorView(result.data)
+            this.openErrorView(response)
           }
         } else {
-          this.openErrorView(result.message)
+          this.openErrorView(response)
         }
-      }).catch(err => {
-        this.openErrorView(err)
       })
     },
     bindDisplay () {
-      deviceBindDisplay().then(result => {
-        if (result.code === 200) {
-          if (result.data === constants.RESULT_STATUS_SUCCESS) {
-
+      ipcRenderer.send('deviceBindDisplay')
+      ipcRenderer.on('deviceBindDisplayResult', (event, result) => {
+        event.sender.removeAllListeners('deviceBindDisplayResult')
+        const response = result.result
+        if (result.isSuccess) {
+          if (response === constants.RESULT_STATUS_SUCCESS) {
           } else {
-            this.openErrorView(result.data)
+            this.openErrorView(response)
           }
         } else {
-          this.openErrorView(result.message)
+          this.openErrorView(response)
         }
-      }).catch(err => {
-        this.openErrorView(err)
       })
     },
     checkActiveAndBind () {
       this.connect()
-      this.loading1 = true
-      setTimeout(() => {
-        // 判断是否已激活
-        if (this.$store.state.activeStatus === 'latest') {
-          // 激活成功
-          this.loading1 = false
-          this.status1 = true
-          this.showTwo = true
-          // 开始判断是否绑定
-          this.bindDevice()
-        } else {
-          this.activeDevice()
-        }
-      }, 200)
     },
     handleClose (msg) {
       this.status1 = false

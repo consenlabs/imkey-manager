@@ -2,8 +2,9 @@ const apiPb = require('../proto/api_pb')
 const devicePb = require('../proto/device_pb')
 const callImKeyCore = require('./callimkeycore')
 const constants = require('../common/constants')
+const _ = require('lodash')
 
-function connect (deviceModelName) {
+export function connect (deviceModelName) {
   const request = new devicePb.DeviceConnectReq()
   request.setDeviceModelName(deviceModelName)
   const requestBytes = request.serializeBinary()
@@ -15,13 +16,18 @@ function connect (deviceModelName) {
   const imKeyActionBytes = imKeyAction.serializeBinary()
   const resBuffer = callImKeyCore.callImKeyApi(bytes2HexStr(imKeyActionBytes))
   const error = callImKeyCore.getLastErrorMessage()
-  let result
   if (error === '' || error === null) {
     const response = new apiPb.CommonResponse.deserializeBinary(hexStr2Bytes(resBuffer))
-    return response.getResult()
+    return {
+      isSuccess: true,
+      result: response.getResult()
+    }
   } else {
     const errorResponse = new apiPb.ErrorResponse.deserializeBinary(hexStr2Bytes(error))
-    return errorResponse.getError()
+    return {
+      isSuccess: false,
+      result: errorResponse.getError()
+    }
   }
 }
 
@@ -51,6 +57,9 @@ function getDeviceManageFunction (method_) {
     } else if (method_ === 'check_update') {
       const response = new devicePb.CheckUpdateRes.deserializeBinary(hexStr2Bytes(resBuffer))
       result = response.toObject()
+    } else if (method_ === 'cos_check_update') {
+      const response = new devicePb.CosCheckUpdateRes.deserializeBinary(hexStr2Bytes(resBuffer))
+      result = response.toObject()
     } else if (method_ === 'is_bl_status') {
       const response = new devicePb.IsBlStatusRes.deserializeBinary(hexStr2Bytes(resBuffer))
       result = response.getCheckResult()
@@ -58,10 +67,16 @@ function getDeviceManageFunction (method_) {
       const response = new apiPb.CommonResponse.deserializeBinary(hexStr2Bytes(resBuffer))
       result = response.getResult()
     }
-    return result
+    return {
+      isSuccess: true,
+      result: result
+    }
   } else {
     const errorResponse = new apiPb.ErrorResponse.deserializeBinary(hexStr2Bytes(error))
-    return errorResponse.getError()
+    return {
+      isSuccess: false,
+      result: errorResponse.getError()
+    }
   }
 }
 
@@ -90,10 +105,16 @@ function appletManage (method_, appName) {
   const error = callImKeyCore.getLastErrorMessage()
   if (error === '' || error === null) {
     const response = new apiPb.CommonResponse.deserializeBinary(hexStr2Bytes(resBuffer))
-    return response.getResult()
+    return {
+      isSuccess: true,
+      result: response.getResult()
+    }
   } else {
     const errorResponse = new apiPb.ErrorResponse.deserializeBinary(hexStr2Bytes(error))
-    return errorResponse.getError()
+    return {
+      isSuccess: false,
+      result: errorResponse.getError()
+    }
   }
 }
 
@@ -111,10 +132,16 @@ function bindCheck (filePath) {
   const error = callImKeyCore.getLastErrorMessage()
   if (error === '' || error === null) {
     const response = new devicePb.BindCheckRes.deserializeBinary(hexStr2Bytes(resBuffer))
-    return response.getBindStatus()
+    return {
+      isSuccess: true,
+      result: response.getBindStatus()
+    }
   } else {
     const errorResponse = new apiPb.ErrorResponse.deserializeBinary(hexStr2Bytes(error))
-    return errorResponse.getError()
+    return {
+      isSuccess: false,
+      result: errorResponse.getError()
+    }
   }
 }
 
@@ -132,97 +159,204 @@ function bindAcquire (bindCode) {
   const error = callImKeyCore.getLastErrorMessage()
   if (error === '' || error === null) {
     const response = new devicePb.BindAcquireRes.deserializeBinary(hexStr2Bytes(resBuffer))
-    return response.getBindResult()
+    return {
+      isSuccess: true,
+      result: response.getBindResult()
+    }
   } else {
     const errorResponse = new apiPb.ErrorResponse.deserializeBinary(hexStr2Bytes(error))
-    return errorResponse.getError()
+    return {
+      isSuccess: false,
+      result: errorResponse.getError()
+    }
   }
 }
 
-function getSeid () {
+export function checkUpdateAppList () {
+  try {
+    const response = getDeviceManageFunction('check_update')
+    const collections = response.result.availableAppListList
+    const list = []
+    let installLoading
+    let installDis
+    let deleteDis
+    let deleteLoading
+    let buttonTexts
+    let version
+    for (let i = 0; i < collections.length; i++) {
+      if (collections[i].installedVersion === 'none' || collections[i].installedVersion === null) {
+        installLoading = false
+        installDis = false
+        deleteDis = true
+        deleteLoading = false
+      } else {
+        installLoading = false
+        installDis = true
+        deleteDis = false
+        deleteLoading = false
+      }
+      if (collections[i].latestVersion === collections[i].installedVersion) {
+        buttonTexts = 'install'
+        version = 'version ' + collections[i].installedVersion
+      } else {
+        if (collections[i].installedVersion === 'none' || collections[i].installedVersion === null) {
+          buttonTexts = 'install'
+          version = ''
+        } else {
+          buttonTexts = 'update'
+          version = 'version ' + collections[i].installedVersion
+        }
+      }
+      // 过滤imkey Applet BTC Applet 不能删除
+      if (collections[i].appName === 'IMK' || collections[i].appName === 'BTC') {
+        deleteDis = true
+      }
+      const collection = {
+        name: collections[i].appName,
+        desc: version,
+        lastVersion: 'version ' + collections[i].latestVersion,
+        id: i,
+        installLoading: installLoading,
+        installDis: installDis,
+        deleteDis: deleteDis,
+        deleteLoading: deleteLoading,
+        icon: collections[i].appLogo,
+        buttonTexts: buttonTexts
+      }
+      list.push(collection)
+    }
+    const total = list.length
+    const status = response.result.status
+    return {
+      isSuccess: true,
+      result: _.cloneDeep({ status: status, total: total, list: list })
+    }
+  } catch (err) {
+    return {
+      isSuccess: false,
+      result: err
+    }
+  }
+}
+
+export function getSeid () {
   return getDeviceManageFunction('get_seid')
 }
 
-function getSn () {
+export function getSn () {
   return getDeviceManageFunction('get_sn')
 }
 
-function getRamSize () {
-  return parseInt(getDeviceManageFunction('get_ram_size').substring(4, 8), 16)
+export function getRamSize () {
+  const  response = getDeviceManageFunction('get_ram_size')
+  if (response.isSuccess) {
+    return {
+      isSuccess: true,
+      result: parseInt(response.result.substring(4, 8), 16)
+    }
+  } else {
+    return {
+      isSuccess: false,
+      result: response.result
+    }
+  }
 }
 
-function getFirmwareVersion () {
-  const FirmwareVersion = getDeviceManageFunction('get_firmware_version')
-  return FirmwareVersion.substring(0, 1) + '.' + FirmwareVersion.substring(1, 2) + '.' + FirmwareVersion.substring(2)
+export function getFirmwareVersion () {
+  const response = getDeviceManageFunction('get_firmware_version')
+  if (response.isSuccess) {
+    return {
+      isSuccess: true,
+      result: response.result.substring(0, 1) + '.' + response.result.substring(1, 2) + '.' + response.result.substring(2)
+    }
+  } else {
+    return {
+      isSuccess: false,
+      result: response.result
+    }
+  }
 }
 
-function getSdkInfo () {
+export function getSdkInfo () {
   return getDeviceManageFunction('get_sdk_info')
 }
 
-function activeDevice () {
+export function activeDevice () {
   return getDeviceManageFunction('device_activate')
 }
 
-function cosUpdate () {
+export function cosUpdate () {
   return getDeviceManageFunction('cos_update')
 }
-
-function isBLStatus () {
+export function cosCheckUpdate () {
+  return getDeviceManageFunction('cos_check_update')
+}
+export function isBLStatus () {
   return getDeviceManageFunction('is_bl_status')
 }
 
-function checkDevice () {
+export function checkDevice () {
   return getDeviceManageFunction('device_secure_check')
 }
 
-function checkUpdate () {
+export function checkUpdate () {
   return getDeviceManageFunction('check_update')
 }
 
-function downloadApplet (AppName) {
+export function downloadApplet (AppName) {
   return appletManage('app_download', AppName)
 }
 
-function updateApplet (AppName) {
+export function updateApplet (AppName) {
   return appletManage('app_update', AppName)
 }
 
-function deleteApplet (AppName) {
+export function deleteApplet (AppName) {
   return appletManage('app_delete', AppName)
 }
 
-function deviceBindCheck (filePath) {
+export function deviceBindCheck (filePath) {
   return bindCheck(filePath)
 }
 
-function deviceBindAcquire (bindCode) {
+export function deviceBindAcquire (bindCode) {
   return bindAcquire(bindCode)
 }
 
-function deviceBindDisplay () {
+export function deviceBindDisplay () {
   return getDeviceManageFunction('bind_display_code')
 }
 
-module.exports = {
-  connect,
-  getSeid,
-  getSn,
-  getRamSize,
-  getFirmwareVersion,
-  getSdkInfo,
-  activeDevice,
-  cosUpdate,
-  isBLStatus,
-  checkDevice,
-  checkUpdate,
-  downloadApplet,
-  updateApplet,
-  deleteApplet,
-  deviceBindCheck,
-  deviceBindAcquire,
-  deviceBindDisplay
+export function getUserPath () {
+  const electron = require('electron')
+  const dataPath = (electron.app || electron.remote.app).getPath('userData') + '/'
+  return {
+    isSuccess: true,
+    result: dataPath
+  }
+
 }
+
+// module.exports = {
+//     connect,
+//     getSeid,
+//     getSn,
+//     getRamSize,
+//     getFirmwareVersion,
+//     getSdkInfo,
+//     activeDevice,
+//     cosUpdate,
+//     isBLStatus,
+//     checkDevice,
+//     checkUpdate,
+//     downloadApplet,
+//     updateApplet,
+//     deleteApplet,
+//     deviceBindCheck,
+//     deviceBindAcquire,
+//     deviceBindDisplay,
+//     checkUpdateAppList
+// }
 
 /**
  * @desc 二进制数组转十六进制字符串
@@ -249,7 +383,7 @@ function bytes2HexStr (arr) {
 function hexStr2Bytes (str) {
   let pos = 0
   let len = str.length
-  if (len % 2 != 0) {
+  if (len % 2 !== 0) {
     return null
   }
   len /= 2
