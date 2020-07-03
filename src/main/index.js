@@ -8,7 +8,8 @@ import pkg from '../../package.json'
 
 const deviceManger = require('../api/devicemanagerapi')
 const walletApi = require('../api/walletapi')
-
+// 默认读取项目根目录下的.env文件
+require('dotenv').config()
 /**
  * Set `__static` path to static files in production
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html

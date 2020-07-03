@@ -347,7 +347,7 @@ export function importBindCode(bindCode) {
         const bindCodePath = response.result + "bindCode.json"
         //加密绑定码
         const enBindCode ={
-            bindCode:crypto.encryptData(bindCode, "8c5fab512604d93f836afd5071ac0688")
+            bindCode:crypto.encryptData(bindCode, process.env.bindCode_encryptionKey)
         }
         // fs.writeFile  写入文件（会覆盖之前的内容）（文件不存在就创建）  utf8参数可以省略
         try {
@@ -376,7 +376,7 @@ export function exportBindCode() {
             return {
                 isSuccess: true,
                 //解密绑定码
-                result: crypto.decryptData(jsonObj.bindCode, "8c5fab512604d93f836afd5071ac0688")
+                result: crypto.decryptData(jsonObj.bindCode, process.env.bindCode_encryptionKey)
             }
         } catch (error) {
             return {
