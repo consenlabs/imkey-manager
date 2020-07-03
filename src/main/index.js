@@ -503,6 +503,14 @@ function renderDeviceManagerHandler () {
     const response = deviceManger.getUserPath()
     mainWindow.webContents.send('getUserPathResult', response)
   })
+  ipcMain.on('importBindCode', (event, bindCode) => {
+    const response = deviceManger.importBindCode(bindCode)
+    mainWindow.webContents.send('importBindCodeResult', response)
+  })
+  ipcMain.on('exportBindCode', () => {
+    const response = deviceManger.exportBindCode()
+    mainWindow.webContents.send('exportBindCodeResult', response)
+  })
 }
 
 /**
