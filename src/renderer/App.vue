@@ -5,27 +5,22 @@
 </template>
 <script></script>
 <style type="text/css" lang="scss">
-    #app {
-        font-family: '微软雅黑 Bold', '微软雅黑 Regular', '微软雅黑';
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        color: #2c3e50;
-        /*height: 100%;*/
-    }
-
-    html {
-        /*    !* 禁用html的滚动条，因为用的无框架窗口，默认就会有一个滚动条，所以去掉 *!*/
-        overflow-y: hidden;
-        /*overflow-scrolling: auto;*/
-    }
-
-    li {
-        margin: 0;
+    *{
         padding: 0;
-        list-style: none;
-        height: 100%;
+        margin: 0;
     }
-
+    html{
+        font-family: PingFang SC;
+    }
+    html,body,#app{
+        height: 100%;
+        overflow: hidden;
+    }
+    button{
+        outline: none;
+        border: none;
+        cursor: pointer;
+    }
     /*定义滚动条高宽及背景 高宽分别对应横竖滚动条的尺寸*/
     ::-webkit-scrollbar {
         width: 2px; /*滚动条宽度*/

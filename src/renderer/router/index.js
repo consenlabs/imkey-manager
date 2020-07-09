@@ -7,13 +7,24 @@ const routes = [
   {
     path: '/',
     name: '/',
-    component: require('@/views/connectdevice').default
+    component: require('@/views/appStart').default
+  },
+  {
+    path: '/appStart',
+    name: 'appStart',
+    component: require('@/views/appStart').default
   },
   {
     path: '/connectDevice',
     name: 'connectDevice',
-    component: require('@/views/connectdevice').default
+    component: require('@/views/connectDevice').default
   },
+  {
+    path: '/imKeySetting',
+    name: 'imKeySetting',
+    component: require('@/views/imKeySetting').default
+  },
+
   {
     path: '/deviceStep',
     name: 'deviceStep',

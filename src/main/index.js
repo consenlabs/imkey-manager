@@ -418,99 +418,96 @@ function protocalHandler () {
 }
 
 function renderDeviceManagerHandler () {
-  ipcMain.on('connectDevice', () => {
+  ipcMain.on('connectDevice', (event) => {
     const response = deviceManger.connect()
-    mainWindow.webContents.send('connectDeviceResult', response)
-  })
-  ipcMain.on('getSeid', () => {
+    event.returnValue = response
+  });
+  ipcMain.on('getSeid', (event) => {
     const response = deviceManger.getSeid()
-    mainWindow.webContents.send('getSeidResult', response)
+    event.returnValue = response
   })
-  ipcMain.on('getSn', () => {
+  ipcMain.on('getSn', (event) => {
     const response = deviceManger.getSn()
-    mainWindow.webContents.send('getSnResult', response)
+    event.returnValue = response
   })
-  ipcMain.on('getRamSize', () => {
+  ipcMain.on('getRamSize', (event) => {
     const response = deviceManger.getRamSize()
-    mainWindow.webContents.send('getRamSizeResult', response)
+    event.returnValue = response
   })
-  ipcMain.on('getFirmwareVersion', () => {
+  ipcMain.on('getFirmwareVersion', (event) => {
     const response = deviceManger.getFirmwareVersion()
-    mainWindow.webContents.send('getFirmwareVersionResult', response)
+    event.returnValue = response
   })
-  ipcMain.on('getSdkInfo', () => {
+  ipcMain.on('getSdkInfo', (event) => {
     const response = deviceManger.getSdkInfo()
-    mainWindow.webContents.send('getSdkInfoResult', response)
+    event.returnValue = response
   })
-  ipcMain.on('activeDevice', () => {
+  ipcMain.on('activeDevice', (event) => {
     const response = deviceManger.activeDevice()
-    mainWindow.webContents.send('activeDeviceResult', response)
+    event.returnValue = response
   })
-  ipcMain.on('cosUpdate', () => {
+  ipcMain.on('cosUpdate', (event) => {
     const response = deviceManger.cosUpdate()
-    mainWindow.webContents.send('cosUpdateResult', response)
+    event.returnValue = response
   })
-  ipcMain.on('cosCheckUpdate', () => {
+  ipcMain.on('cosCheckUpdate', (event) => {
     const response = deviceManger.cosCheckUpdate()
-    mainWindow.webContents.send('cosCheckUpdateResult', response)
+    event.returnValue = response
   })
-  ipcMain.on('isBLStatus', () => {
+  ipcMain.on('isBLStatus', (event) => {
     const response = deviceManger.isBLStatus()
-    mainWindow.webContents.send('isBLStatusResult', response)
+    event.returnValue = response
   })
-  ipcMain.on('checkDevice', () => {
+  ipcMain.on('checkDevice', (event) => {
     const response = deviceManger.checkDevice()
-    mainWindow.webContents.send('checkDeviceResult', response)
+    event.returnValue = response
   })
-  ipcMain.on('checkUpdate', () => {
+  ipcMain.on('checkUpdate', (event) => {
     const response = deviceManger.checkUpdateAppList()
-    mainWindow.webContents.send('checkUpdateResult', response)
+    event.returnValue = response
   })
   ipcMain.on('downloadApplet', (event, appletName) => {
     const response = deviceManger.downloadApplet(appletName)
-    console.log('downloadApplet response:' + response)
-    console.log(response)
-    mainWindow.webContents.send('downloadAppletResult', response)
+    event.returnValue = response
   })
   ipcMain.on('updateApplet', (event, appletName) => {
     const response = deviceManger.updateApplet(appletName)
-    console.log('updateApplet response:' + response)
-    console.log(response)
-    mainWindow.webContents.send('updateAppletResult', response)
+    event.returnValue = response
   })
   ipcMain.on('deleteApplet', (event, appletName) => {
     const response = deviceManger.deleteApplet(appletName)
-    console.log('deleteApplet response:' + response)
-    console.log(response)
-    mainWindow.webContents.send('deleteAppletResult', response)
+    event.returnValue = response
   })
   ipcMain.on('deviceBindCheck', (event, filePath) => {
     const response = deviceManger.deviceBindCheck(filePath)
-    mainWindow.webContents.send('deviceBindCheckResult', response)
+    event.returnValue = response
   })
-  ipcMain.once('deviceBindAcquire', (event, bindCode) => {
+  ipcMain.on('deviceBindAcquire', (event, bindCode) => {
     const response = deviceManger.deviceBindAcquire(bindCode)
-    mainWindow.webContents.send('deviceBindAcquireResult', response)
+    event.returnValue = response
   })
-  ipcMain.once('deviceBindDisplay', () => {
+  ipcMain.on('deviceBindDisplay', (event) => {
     const response = deviceManger.deviceBindDisplay()
-    mainWindow.webContents.send('deviceBindDisplayResult', response)
+    event.returnValue = response
   })
-  ipcMain.on('getBTCXpub', () => {
+  ipcMain.on('getBTCXpub', (event) => {
     const response = walletApi.getBTCXpub()
-    mainWindow.webContents.send('getBTCXpubResult', response)
+    event.returnValue = response
   })
-  ipcMain.on('getUserPath', () => {
+  ipcMain.on('getUserPath', (event) => {
     const response = deviceManger.getUserPath()
-    mainWindow.webContents.send('getUserPathResult', response)
+    event.returnValue = response
   })
   ipcMain.on('importBindCode', (event, bindCode) => {
     const response = deviceManger.importBindCode(bindCode)
-    mainWindow.webContents.send('importBindCodeResult', response)
+    event.returnValue = response
   })
-  ipcMain.on('exportBindCode', () => {
+  ipcMain.on('exportBindCode', (event) => {
     const response = deviceManger.exportBindCode()
-    mainWindow.webContents.send('exportBindCodeResult', response)
+    event.returnValue = response
+  })
+  ipcMain.on('openUrl', (event,url) => {
+   shell.openExternal(url)
   })
 }
 
