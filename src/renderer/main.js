@@ -5,6 +5,7 @@ import store from './store'
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 import VueI18n from 'vue-i18n'
+import '@fortawesome/fontawesome-free/css/all.css' // Ensure you are using css-loader
 
 Vue.config.productionTip = false
 Vue.prototype.$store = store

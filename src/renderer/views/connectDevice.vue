@@ -2,12 +2,18 @@
     <div>
         <div class="connectDevice">
             <h1>
-                <svg width="18" height="30" viewBox="0 0 18 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M17.1173 21.6788C17.1173 26.4596 12.9857 30.237 8.08692 29.7058C4.48659 29.2926 1.5355 26.4596 1.0043 22.8592C0.473108 19.1409 2.3618 16.0717 5.19485 14.5962C5.37191 14.5372 5.54898 14.5962 5.608 14.7733C5.96213 15.6586 6.55235 16.3078 7.14257 17.0161C7.26061 17.1341 7.20159 17.3702 7.02453 17.4883C5.43094 18.2555 4.36854 19.8491 4.36854 21.7378C4.36854 24.5119 6.78844 26.7547 9.62148 26.4005C11.7463 26.1645 13.4579 24.4528 13.694 22.3871C13.9891 20.1442 12.6906 18.1965 10.8609 17.4292C10.8019 17.3702 10.0346 17.0161 9.50344 16.721C7.61474 15.6586 6.37529 13.5928 6.37529 11.409V1.13922C6.37529 1.0802 6.37529 1.0802 6.43431 1.02118C6.43431 1.02118 6.49333 0.962158 6.55235 0.962158H9.97562C10.0937 0.962158 10.2117 1.0802 10.2117 1.19825V4.8576V11.291C10.2117 12.4714 10.8609 13.5338 11.9233 14.065L12.5726 14.4191L12.7496 14.5372C15.2876 15.7766 17.1173 18.4916 17.1173 21.6788Z"
-                          fill="white"/>
-                    <path d="M14.6384 1.19831V6.3332C14.6384 6.45125 14.5794 6.51027 14.4613 6.51027H11.6873C11.5693 6.51027 11.5103 6.45125 11.5103 6.3332V1.19831C11.5103 1.08026 11.5693 1.02124 11.6873 1.02124H14.4613C14.5204 1.02124 14.6384 1.08026 14.6384 1.19831Z"
-                          fill="white"/>
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="48" height="48" rx="10.8723" fill="#181818"/>
+                    <g clip-path="url(#clip1)">
+                        <path d="M30.4788 31.9974C30.4788 35.7838 27.4225 38.8571 23.653 38.8571C19.8836 38.8571 16.8272 35.7838 16.8272 31.9974C16.8272 30.4352 17.3366 29.0089 18.2026 27.8713C18.2026 27.8713 18.2026 27.8713 18.2026 27.8543C18.2535 27.7864 18.3045 27.7185 18.3554 27.6676C18.661 27.328 19.0685 26.8186 19.1025 26.8356C19.1365 26.8525 19.9685 27.311 20.2911 27.5147C20.7835 27.8374 21.8192 28.5505 21.8192 28.5675C21.2929 29.2127 21.1231 29.5353 20.9023 29.807C20.6986 30.0787 20.5288 30.3673 20.3929 30.6899C20.2571 31.0635 20.1722 31.454 20.1552 31.8785C20.1043 33.7123 21.4796 35.3254 23.2965 35.4951C25.3849 35.6989 27.1338 34.0519 27.1338 31.9974C27.1338 30.7918 26.5226 29.7221 25.6057 29.0938H25.5887L25.1812 28.8561L23.0587 27.5996L23.0418 27.5827L20.325 25.9866L19.2383 25.3414C19.1874 25.3074 19.1534 25.2904 19.1025 25.2565C18.9497 25.1716 18.7969 25.0697 18.661 24.9678C16.4197 23.3887 14.9595 20.7908 14.9595 17.8364C14.9595 13.0311 18.8308 9.14282 23.6191 9.14282C28.4073 9.14282 32.2787 13.0311 32.2787 17.8364C32.2787 20.604 30.9882 23.0661 28.9846 24.6622C28.5092 25.0357 27.847 25.1036 27.3036 24.781L24.5869 23.2189C24.3662 23.1 24.2473 22.8623 24.2473 22.6076V19.3306C24.2473 19.2627 24.2982 19.2117 24.3662 19.2117H25.6566V15.7139H24.3662C24.2982 15.7139 24.2473 15.663 24.2473 15.5951V13.8631C24.2473 13.7613 24.1624 13.6594 24.0436 13.6594C23.5851 13.6594 22.5324 13.6594 22.0909 13.6594C21.989 13.6594 21.8871 13.7443 21.8871 13.8631V22.5227C21.8871 22.8793 22.0739 23.2019 22.3796 23.3717L24.2303 24.4414L26.7942 25.9356C26.8282 25.9526 26.8622 25.9696 26.9131 26.0036L27.032 26.0715C27.0999 26.1054 27.1508 26.1394 27.2187 26.1734C29.1884 27.3619 30.4788 29.5183 30.4788 31.9974Z" fill="white"/>
+                    </g>
+                    <defs>
+                        <clipPath id="clip1">
+                            <rect width="17.3192" height="29.7143" fill="white" transform="translate(14.9595 9.14282)"/>
+                        </clipPath>
+                    </defs>
                 </svg>
+
             </h1>
             <p>使用 imKey Pro 完成连接</p>
             <div class="msgBox">
@@ -34,7 +40,6 @@
                         <path d="M17 158.5V138" stroke="black"/>
                         <path d="M22 158.5V138" stroke="black"/>
 
-
                         <defs>
                             <clipPath id="clip0">
                                 <rect width="128" height="77" fill="white" transform="translate(77.5 0.5) rotate(90)"/>
@@ -42,6 +47,7 @@
                         </defs>
                     </svg>
                 </div>
+
                 <div class="msg">
                     <p>1. 使用 USB 将 imkey Pro 连接至电脑</p>
                     <p>2. 点击「连接」按钮</p>
@@ -56,22 +62,36 @@
 
         <!--tip 连接中-->
         <div class="tip2 tip" v-if="status==3">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <mask id="path-1-inside-1" fill="white">
+                    <path d="M12 6C12 4.92009 11.7085 3.86021 11.1564 2.93214C10.6042 2.00407 9.8118 1.24223 8.86274 0.726983C7.91368 0.211734 6.84315 -0.0378218 5.76408 0.00463995C4.68501 0.0471017 3.6374 0.380007 2.73176 0.968238C1.82612 1.55647 1.09603 2.37822 0.618498 3.34681C0.140965 4.31539 -0.0663052 5.39491 0.0185526 6.47147C0.10341 7.54804 0.47725 8.58175 1.10064 9.46356C1.72402 10.3454 2.57384 11.0426 3.56046 11.4817L4.08834 10.2955C3.31522 9.95144 2.64928 9.40509 2.16079 8.71409C1.6723 8.0231 1.37935 7.21307 1.31285 6.36945C1.24636 5.52584 1.40878 4.67992 1.78298 3.92092C2.15718 3.16192 2.72929 2.51799 3.43896 2.05704C4.14863 1.59609 4.96956 1.33523 5.81513 1.30195C6.66071 1.26868 7.49959 1.46423 8.24328 1.86799C8.98698 2.27175 9.60792 2.86873 10.0406 3.59598C10.4733 4.32323 10.7017 5.15377 10.7017 6H12Z"/>
+                </mask>
+                <path d="M12 6C12 4.92009 11.7085 3.86021 11.1564 2.93214C10.6042 2.00407 9.8118 1.24223 8.86274 0.726983C7.91368 0.211734 6.84315 -0.0378218 5.76408 0.00463995C4.68501 0.0471017 3.6374 0.380007 2.73176 0.968238C1.82612 1.55647 1.09603 2.37822 0.618498 3.34681C0.140965 4.31539 -0.0663052 5.39491 0.0185526 6.47147C0.10341 7.54804 0.47725 8.58175 1.10064 9.46356C1.72402 10.3454 2.57384 11.0426 3.56046 11.4817L4.08834 10.2955C3.31522 9.95144 2.64928 9.40509 2.16079 8.71409C1.6723 8.0231 1.37935 7.21307 1.31285 6.36945C1.24636 5.52584 1.40878 4.67992 1.78298 3.92092C2.15718 3.16192 2.72929 2.51799 3.43896 2.05704C4.14863 1.59609 4.96956 1.33523 5.81513 1.30195C6.66071 1.26868 7.49959 1.46423 8.24328 1.86799C8.98698 2.27175 9.60792 2.86873 10.0406 3.59598C10.4733 4.32323 10.7017 5.15377 10.7017 6H12Z" stroke="#43454F" stroke-width="4" stroke-linecap="round" mask="url(#path-1-inside-1)"/>
+            </svg>
+
             <div class="tipBox">
                 <h3>imKey 连接中，请耐心等待</h3>
                 <p>
-                    <span :class="[checkFirmwareUpgrade==1?'el-icon-success':checkFirmwareUpgrade==2?'el-icon-loading':'el-icon-success done']"></span>检查固件版本升级
+                    <span :class="[checkFirmwareUpgrade==1?'el-icon-success':checkFirmwareUpgrade==2?'fas fa-circle-notch fa-spin':'el-icon-success done']"></span>检查固件版本升级
                 </p>
                 <p>
-                    <span :class="[checkDeviceBindingCode==1?'el-icon-success':checkDeviceBindingCode==2?'el-icon-loading':'el-icon-success done']"></span>检查设备绑定码
+                    <span :class="[checkDeviceBindingCode==1?'el-icon-success':checkDeviceBindingCode==2?'fas fa-circle-notch fa-spin':'el-icon-success done']"></span>检查设备绑定码
                 </p>
                 <p>
-                    <span :class="[checkPinAndWallet==1?'el-icon-success':checkPinAndWallet==2?'el-icon-loading':'el-icon-success done']"></span>检查 PIN 码及钱包检查安全测试
+                    <span :class="[checkPinAndWallet==1?'el-icon-success':checkPinAndWallet==2?'fas fa-circle-notch fa-spin':'el-icon-success done']"></span>检查 PIN 码及钱包检查安全测试
                 </p>
                 <p>
-                    <span :class="[checkSafetyTest==1?'el-icon-success':checkSafetyTest==2?'el-icon-loading':'el-icon-success done']"></span>检查安全测试
+                    <span :class="[checkSafetyTest==1?'el-icon-success':checkSafetyTest==2?'fas fa-circle-notch fa-spin':'el-icon-success done']"></span>检查安全测试
                 </p>
             </div>
         </div>
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <mask id="path-1-inside-1" fill="white">
+                <path d="M12 6C12 4.92009 11.7085 3.86021 11.1564 2.93214C10.6042 2.00407 9.8118 1.24223 8.86274 0.726983C7.91368 0.211734 6.84315 -0.0378218 5.76408 0.00463995C4.68501 0.0471017 3.6374 0.380007 2.73176 0.968238C1.82612 1.55647 1.09603 2.37822 0.618498 3.34681C0.140965 4.31539 -0.0663052 5.39491 0.0185526 6.47147C0.10341 7.54804 0.47725 8.58175 1.10064 9.46356C1.72402 10.3454 2.57384 11.0426 3.56046 11.4817L4.08834 10.2955C3.31522 9.95144 2.64928 9.40509 2.16079 8.71409C1.6723 8.0231 1.37935 7.21307 1.31285 6.36945C1.24636 5.52584 1.40878 4.67992 1.78298 3.92092C2.15718 3.16192 2.72929 2.51799 3.43896 2.05704C4.14863 1.59609 4.96956 1.33523 5.81513 1.30195C6.66071 1.26868 7.49959 1.46423 8.24328 1.86799C8.98698 2.27175 9.60792 2.86873 10.0406 3.59598C10.4733 4.32323 10.7017 5.15377 10.7017 6H12Z"/>
+            </mask>
+            <path d="M12 6C12 4.92009 11.7085 3.86021 11.1564 2.93214C10.6042 2.00407 9.8118 1.24223 8.86274 0.726983C7.91368 0.211734 6.84315 -0.0378218 5.76408 0.00463995C4.68501 0.0471017 3.6374 0.380007 2.73176 0.968238C1.82612 1.55647 1.09603 2.37822 0.618498 3.34681C0.140965 4.31539 -0.0663052 5.39491 0.0185526 6.47147C0.10341 7.54804 0.47725 8.58175 1.10064 9.46356C1.72402 10.3454 2.57384 11.0426 3.56046 11.4817L4.08834 10.2955C3.31522 9.95144 2.64928 9.40509 2.16079 8.71409C1.6723 8.0231 1.37935 7.21307 1.31285 6.36945C1.24636 5.52584 1.40878 4.67992 1.78298 3.92092C2.15718 3.16192 2.72929 2.51799 3.43896 2.05704C4.14863 1.59609 4.96956 1.33523 5.81513 1.30195C6.66071 1.26868 7.49959 1.46423 8.24328 1.86799C8.98698 2.27175 9.60792 2.86873 10.0406 3.59598C10.4733 4.32323 10.7017 5.15377 10.7017 6H12Z" stroke="#43454F" stroke-width="4" stroke-linecap="round" mask="url(#path-1-inside-1)"/>
+        </svg>
+
         <!--tip usb连接异常-->
         <div class="tip1 tip" v-if="status==4">
             <div class="tipBox">
@@ -144,7 +164,7 @@ export default {
     return {
       userPath: '',
       connectText: this.$t('m.connectDevice.connect'),
-        codeIsTrue: true,
+      codeIsTrue: true,
       status: 1, // 1开始界面  2连接页面 3检测x`页面  4 检测异常页面  5固件未升级完成页面 6固件升级中 7请输入设备绑定码 8验证码错误
       checkFirmwareUpgrade: 1, // 检测固件版本升级  1 还没检测  2正在检测  3检测成功
       checkDeviceBindingCode: 1, // 检查设备绑定码
@@ -170,7 +190,7 @@ export default {
       this.status = index
     },
     inpCode (code, event) {
-        this.codeIsTrue=true
+      this.codeIsTrue = true
       if (code === 8) {
         // 完成输入  写完成后的跳转
         const bindCode = this.code1 + this.code2 + this.code3 + this.code4 + this.code5 + this.code6 + this.code7 + this.code8
@@ -179,7 +199,7 @@ export default {
         if (reg.test(bindCode)) {
           this.bindAcquire(bindCode)
         } else {
-          this.codeIsTrue=false
+          this.codeIsTrue = false
         }
       }
       if (event.srcElement.value.length === 1) {
@@ -188,205 +208,203 @@ export default {
       if (event.keyCode === 8) {
         event.srcElement.previousElementSibling.focus()
       }
-      return;
     },
     inpFocus () {
       event.srcElement.value = ''
     },
 
     check () {
-      // //连接设备
+      this.changeState(3)
+      this.checkFirmwareUpgrade = 1
+      this.checkDeviceBindingCode = 1
+      this.checkPinAndWallet = 1
+      this.checkSafetyTest = 1
+      // 连接设备
       this.connect()
     },
     checkIsBL () {
       this.checkFirmwareUpgrade = 2
       setTimeout(() => {
         const result = ipcRenderer.sendSync('isBLStatus')
-          const response = result.result
-          if (result.isSuccess) {
-            if (response) {
-              // 处于BL状态,更新COS
-              this.toCosUpdate()
-            } else {
-              // 无需更新COS
-              this.checkFirmwareUpgrade = 3
-              this.checkIsActive()
-            }
+        const response = result.result
+        if (result.isSuccess) {
+          if (response) {
+            // 处于BL状态,更新COS
+            this.toCosUpdate()
           } else {
-            this.changeState(4)
+            // 无需更新COS
+            this.checkFirmwareUpgrade = 3
+            this.checkIsActive()
           }
+        } else {
+          this.changeState(4)
+        }
       }, 100)
     },
     checkIsActive () {
       // 绑定之前检查激活
       this.checkDeviceBindingCode = 2
       setTimeout(() => {
-          const result = ipcRenderer.sendSync('checkUpdate')
-          const response = result.result
-          if (result.isSuccess) {
-            const activeStatus = response.status
-            if (activeStatus === 'latest') {
-              // 缓存激活状态
-              this.$store.state.activeStatus = response.status
-              // 缓存应用数据
-              const appList = []
-              const tempAppList = response.list
-              for (let i = 0; i < tempAppList.length; i++) {
-                let buttonTexts
-                if (tempAppList[i].buttonTexts === 'update') {
-                  buttonTexts = this.$t('m.manager.update')
-                } else {
-                  buttonTexts = this.$t('m.manager.install')
-                }
-
-                const collection = {
-                  name: tempAppList[i].name,
-                  desc: tempAppList[i].desc,
-                  lastVersion: tempAppList[i].lastVersion,
-                  id: i,
-                  installLoading: tempAppList[i].installLoading,
-                  installDis: tempAppList[i].installDis,
-                  deleteDis: tempAppList[i].deleteDis,
-                  deleteLoading: tempAppList[i].deleteLoading,
-                  icon: tempAppList[i].icon,
-                  buttonTexts: buttonTexts
-                }
-                appList.push(collection)
+        const result = ipcRenderer.sendSync('checkUpdate')
+        const response = result.result
+        if (result.isSuccess) {
+          const activeStatus = response.status
+          if (activeStatus === 'latest') {
+            // 缓存激活状态
+            this.$store.state.activeStatus = response.status
+            // 缓存应用数据
+            const appList = []
+            const tempAppList = response.list
+            for (let i = 0; i < tempAppList.length; i++) {
+              const collection = {
+                name: tempAppList[i].name,
+                desc: tempAppList[i].desc,
+                lastVersion: tempAppList[i].lastVersion,
+                id: i,
+                installLoading: tempAppList[i].installLoading,
+                installDis: tempAppList[i].installDis,
+                deleteDis: tempAppList[i].deleteDis,
+                installed: tempAppList[i].installed,
+                updateLoading: tempAppList[i].updateLoading,
+                updateDis: tempAppList[i].updateDis,
+                deleteLoading: tempAppList[i].deleteLoading,
+                icon: tempAppList[i].icon
               }
-              this.$store.state.apps = appList
-              this.connectText = this.$t('m.connectDevice.active_success')
-              this.checkIsBind()
-            } else {
-              // 还没有激活，跳转到激活界面
-                this.$router.push('imKeySetting');
+              appList.push(collection)
             }
+            this.$store.state.apps = appList
+            this.connectText = this.$t('m.connectDevice.active_success')
+            this.checkIsBind()
           } else {
-            this.changeState(4)
+            // 还没有激活，跳转到激活界面
+            this.$router.push('imKeySetting')
           }
+        } else {
+          this.changeState(4)
+        }
       }, 200)
     },
     checkIsBind () {
       setTimeout(() => {
-          const result = ipcRenderer.sendSync('deviceBindCheck', this.userPath)
-
-          const response = result.result
-          if (result.isSuccess) {
-            if (response === '' || response === null) {
-              // 失败的话
-              this.openErrorView('bind error: null')
-            } else {
-              if (response === constants.BIND_STATUS_STRING_BOUND_OTHER) {
-                // 弹出绑定码输入框，输入绑定码，输入完成后，检查是否创建钱包
-                this.changeState(7)
-              } else if (response === constants.BIND_STATUS_STRING_UNBOUND) {
-                // 跳转到绑定界面
-                  this.$router.push('imKeySetting');
-              } else if (response === constants.BIND_STATUS_STRING_BOUND_THIS) {
-                // 成功绑定 继续
-                this.checkDeviceBindingCode = 3
-                this.checkIsCreateWallet()
-              } else {
-                this.changeState(4)
-              }
-            }
-          } else {
+        const result = ipcRenderer.sendSync('deviceBindCheck', this.userPath)
+        const response = result.result
+        if (result.isSuccess) {
+          if (response === '' || response === null) {
+            // 失败的话
             this.changeState(4)
+          } else {
+            if (response === constants.BIND_STATUS_STRING_BOUND_OTHER) {
+              // 弹出绑定码输入框，输入绑定码，输入完成后，检查是否创建钱包
+              this.changeState(7)
+            } else if (response === constants.BIND_STATUS_STRING_UNBOUND) {
+              // 跳转到绑定界面
+              this.$router.push('imKeySetting')
+            } else if (response === constants.BIND_STATUS_STRING_BOUND_THIS) {
+              // 成功绑定 继续
+              this.checkDeviceBindingCode = 3
+              this.checkIsCreateWallet()
+            } else {
+              this.changeState(4)
+            }
           }
-
+        } else {
+          this.changeState(4)
+        }
       }, 200)
     },
     checkIsCreateWallet () {
       this.checkPinAndWallet = 2
       setTimeout(() => {
-          const result = ipcRenderer.sendSync('getBTCXpub')
-          const response = result.result
-          if (result.isSuccess) {
-            if (response !== '' || response !== null) {
-              if (response.match('xpu')) {
-                this.checkPinAndWallet = 3
-                this.checkSafetyTest = 2
-                setTimeout(() => {
-                  this.checkSafetyTest = 3
-                }, 1000)
-                setTimeout(() => {
-                    //跳转到主页
-                    // this.router.replace('/index')
-                    this.$router.push('imKeySetting');
-                }, 2000)
-
-              } else {
-                // 跳转到创建钱包界面
-                  this.$router.push('imKeySetting');
-              }
+        const result = ipcRenderer.sendSync('getBTCXpub')
+        const response = result.result
+        if (result.isSuccess) {
+          if (response !== '' || response !== null) {
+            if (response.match('xpu')) {
+              this.checkPinAndWallet = 3
+              this.checkSafetyTest = 2
+              setTimeout(() => {
+                this.checkSafetyTest = 3
+              }, 1000)
+              setTimeout(() => {
+                // 跳转到主页
+                this.$router.push('/home/welcomeHome')
+                // this.$router.push('imKeySetting')
+              }, 2000)
             } else {
               // 跳转到创建钱包界面
-                this.$router.push('imKeySetting');
+              this.$router.push('imKeySetting')
             }
           } else {
-            // 错误界面
-            this.changeState(4)
+            // 跳转到创建钱包界面
+            this.$router.push('imKeySetting')
           }
-      }, 200)
+        } else {
+          // 错误界面
+          this.changeState(4)
+        }
+      }, 100)
     },
     connect () {
-      this.changeState(3)
-      setTimeout(() => {
-          const result = ipcRenderer.sendSync('connectDevice')
-
-          const response = result.result
-          if (result.isSuccess) {
-            if (response === constants.RESULT_STATUS_SUCCESS) {
-              this.checkIsBL()
-            } else {
-                //连接失败
-              this.changeState(4)
-            }
-          } else {
-              //连接失败
-            this.changeState(4)
-          }
-      }, 200)
+      const result = ipcRenderer.sendSync('connectDevice')
+      const response = result.result
+      if (result.isSuccess) {
+        if (response === constants.RESULT_STATUS_SUCCESS) {
+          this.checkIsBL()
+        } else {
+          // 连接失败
+          this.changeState(4)
+        }
+      } else {
+        // 连接失败
+        this.changeState(4)
+      }
     },
     toCosUpdate () {
       this.changeState(6)
       setTimeout(() => {
-          const result = ipcRenderer.sendSync('cosUpdate')
-          const response = result.result
-          if (result.isSuccess) {
-            if (response === constants.RESULT_STATUS_SUCCESS) {
-              // cos更新成功检查是否激活
-              this.check()
-            } else {
-                //固件升级失败
-              this.changeState(5)
-            }
-          } else {
-              //固件升级失败
-            this.changeState(5)
-          }
-      }, 200)
-    },
-    bindAcquire (bindCode) {
-        const result = ipcRenderer.sendSync('deviceBindAcquire', bindCode)
+        const result = ipcRenderer.sendSync('cosUpdate')
         const response = result.result
         if (result.isSuccess) {
           if (response === constants.RESULT_STATUS_SUCCESS) {
-            this.checkIsCreateWallet()
+            // cos更新成功检查是否激活
+            this.check()
           } else {
-            this.codeIsTrue=false
+            // 固件升级失败
+            this.changeState(5)
           }
         } else {
-            this.codeIsTrue=false
+          // 固件升级失败
+          this.changeState(5)
         }
+      }, 200)
+    },
+    bindAcquire (bindCode) {
+      const result = ipcRenderer.sendSync('deviceBindAcquire', bindCode)
+      const response = result.result
+      if (result.isSuccess) {
+        if (response === constants.RESULT_STATUS_SUCCESS) {
+          // 绑定成功后存储绑定码
+          const result = ipcRenderer.sendSync('importBindCode', bindCode)
+          if (result.isSuccess) {
+            this.checkIsCreateWallet()
+          } else {
+            this.changeState(4)
+          }
+        } else {
+          this.codeIsTrue = false
+        }
+      } else {
+        this.codeIsTrue = false
+      }
     },
     getUserPath () {
-        const result = ipcRenderer.sendSync('getUserPath')
-        const response = result.result
-        if (result.isSuccess) {
-          this.userPath = response
-          this.$store.state.userPath = response
-        } else {
-        }
+      const result = ipcRenderer.sendSync('getUserPath')
+      const response = result.result
+      if (result.isSuccess) {
+        this.userPath = response
+        this.$store.state.userPath = response
+      } else {
+      }
     },
     goStep (index) {
       switch (index) {
@@ -422,10 +440,10 @@ export default {
 </script>
 <style scoped>
     .connectDevice h1 {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        background: #000;
+        /*width: 48px;*/
+        /*height: 48px;*/
+        /*border-radius: 50%;*/
+        /*background: #000;*/
         text-align: center;
         margin: 6% auto 0;
     }
@@ -624,5 +642,13 @@ export default {
 
     .tip6 h3 {
         margin-top: 74px;
+    }
+
+    .tipBox .el-icon-success{
+        color: #E0E0E0;
+
+    }
+    .el-icon-success.done{
+        color: #000;
     }
 </style>

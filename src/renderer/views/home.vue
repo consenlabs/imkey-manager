@@ -1,177 +1,105 @@
 <template>
-    <div>
-        <div class="bannerBox">
-            <img src="@/assets/banner.png" alt/>
-            <button class="bayBtn" @click="buy()">{{$t('m.home.buy_now')}}</button>
-        </div>
-        <div id="box" :style="{display:isShow}" align="center">
-            <div id="box1">
-                <p>
-                    <a href="javascript:;" @click="close()" class="close">X</a>
-                </p>
-                <div :class="{btnBox,active:isActive1}" align="center">
-                    <h2>{{$t('m.home.use_imToken_to_buy')}}</h2>
-                    <img src="@/assets/imm.png" alt/>
-                </div>
-                <div :class="{btnBox,active:isActive2}" align="center">
-                    <h2>{{$t('m.home.use_WeChat_AliPay_to_buy')}}</h2>
-                    <img src="@/assets/aww.png" alt/>
-                </div>
-                <div class="btnBar">
-                    <div :class="{active:isActive1}" @click="btn_wechat_alipay()">{{$t('m.home.WeChat_AliPay')}}</div>
-                    <div :class="{active:isActive2}" @click="btn_imtoken()">imToken</div>
-                </div>
-            </div>
-        </div>
+    <div class="homeBox">
+        <div class="routerBar">
+            <h1>
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="36" height="36" rx="8.15422" fill="#181818"/>
+                    <g clip-path="url(#clip0)">
+                        <path d="M22.8592 23.998C22.8592 26.8379 20.567 29.1428 17.7399 29.1428C14.9128 29.1428 12.6205 26.8379 12.6205 23.998C12.6205 22.8264 13.0026 21.7567 13.6521 20.9035C13.6521 20.9035 13.6521 20.9035 13.6521 20.8907C13.6903 20.8398 13.7285 20.7889 13.7667 20.7507C13.9959 20.496 14.3015 20.1139 14.327 20.1267C14.3525 20.1394 14.9765 20.4832 15.2184 20.6361C15.5877 20.878 16.3645 21.4129 16.3645 21.4256C15.9698 21.9095 15.8424 22.1515 15.6769 22.3552C15.5241 22.559 15.3967 22.7755 15.2948 23.0174C15.193 23.2976 15.1293 23.5905 15.1165 23.9089C15.0783 25.2842 16.1098 26.494 17.4725 26.6214C19.0388 26.7742 20.3505 25.5389 20.3505 23.998C20.3505 23.0939 19.8921 22.2916 19.2044 21.8204H19.1916L18.886 21.6421L17.2942 20.6997L17.2814 20.687L15.2439 19.4899L14.4289 19.006C14.3907 18.9805 14.3652 18.9678 14.327 18.9423C14.2124 18.8787 14.0978 18.8023 13.9959 18.7259C12.3149 17.5415 11.2197 15.5931 11.2197 13.3773C11.2197 9.77336 14.1232 6.85712 17.7144 6.85712C21.3056 6.85712 24.2091 9.77336 24.2091 13.3773C24.2091 15.453 23.2413 17.2996 21.7386 18.4966C21.382 18.7768 20.8854 18.8277 20.4778 18.5858L18.4403 17.4142C18.2747 17.325 18.1856 17.1468 18.1856 16.9557V14.4979C18.1856 14.447 18.2238 14.4088 18.2747 14.4088H19.2426V11.7854H18.2747C18.2238 11.7854 18.1856 11.7472 18.1856 11.6963V10.3974C18.1856 10.321 18.1219 10.2445 18.0328 10.2445C17.689 10.2445 16.8994 10.2445 16.5683 10.2445C16.4919 10.2445 16.4155 10.3082 16.4155 10.3974V16.8921C16.4155 17.1595 16.5556 17.4014 16.7848 17.5288L18.1729 18.3311L20.0958 19.4517C20.1213 19.4645 20.1467 19.4772 20.185 19.5027L20.2741 19.5536C20.325 19.5791 20.3632 19.6045 20.4142 19.63C21.8914 20.5214 22.8592 22.1388 22.8592 23.998Z" fill="white"/>
+                    </g>
+                    <defs>
+                        <clipPath id="clip0">
+                            <rect width="12.9894" height="22.2857" fill="white" transform="translate(11.2197 6.85712)"/>
+                        </clipPath>
+                    </defs>
+                </svg>
 
+                imKey Manager
+            </h1>
+            <ul>
+                <router-link to="/home/welcomeHome" tag="li">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13.3602 15.3758L13.3667 15.3685L13.3729 15.361C13.9635 14.6408 14.3219 13.7195 14.3219 12.7076C14.3219 10.2814 12.2384 8.3275 9.76134 8.49502C7.65507 8.63274 5.94694 10.296 5.77566 12.3831C5.68212 13.5203 6.05727 14.5652 6.70913 15.3608L6.70911 15.3608L6.71216 15.3644C6.82402 15.4983 6.88356 15.6665 6.88356 15.8542V19.2708C6.88356 19.393 6.78541 19.5 6.64384 19.5H1.6888C1.02129 19.4886 0.5 18.9586 0.5 18.3255V9.07495C0.5 8.6449 0.675992 8.24252 0.990035 7.96289L0.990121 7.96298L0.998449 7.95522L8.2842 1.16431C8.75366 0.73614 9.35876 0.5 10 0.5C10.3098 0.5 10.6172 0.556658 10.8988 0.667708L11.0822 0.202566L10.8988 0.667708C11.1897 0.782434 11.4492 0.939627 11.6719 1.1482L11.6719 1.14822L11.6757 1.15168L18.9898 7.86249C18.9899 7.86259 18.99 7.86269 18.9901 7.86279C19.3173 8.16472 19.5 8.57371 19.5 8.99392V18.3255C19.5 18.9609 18.9772 19.4865 18.3151 19.4865H13.4384C13.2968 19.4865 13.1986 19.3795 13.1986 19.2573V15.8406C13.1986 15.6499 13.2597 15.4891 13.3602 15.3758Z" stroke="black"/>
+                    </svg>
+                    主页
+                </router-link>
+                <router-link to="/home/manager" tag="li">
+                    <svg width="21" height="20" viewBox="0 0 21 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8.1742 7.67325H8.17415L8.17425 7.68033C8.18393 8.36426 7.62085 8.93572 6.89094 8.93572H2.06646C1.35191 8.93572 0.783203 8.36412 0.783203 7.6868V2.95523C0.783203 2.26186 1.35445 1.69275 2.06646 1.69275H6.89094C7.60549 1.69275 8.1742 2.26435 8.1742 2.94167V7.67325Z" stroke="black"/>
+                        <path d="M14.3879 9.53971L14.3872 9.539L10.9735 6.20456C10.9734 6.20446 10.9733 6.20437 10.9732 6.20427C10.4846 5.72482 10.4791 4.93375 10.9754 4.43561L14.3879 1.08877C14.8822 0.603977 15.7059 0.598592 16.2194 1.09064L19.6319 4.43748C20.1208 4.9169 20.1264 5.70819 19.63 6.20643L16.2175 9.55327C15.7232 10.038 14.901 10.0429 14.3879 9.53971Z" stroke="black"/>
+                        <path d="M8.1742 18.0176H8.17415L8.17425 18.0248C8.18384 18.6925 7.62348 19.2665 6.89094 19.2665H2.06646C1.35191 19.2665 0.783203 18.6949 0.783203 18.0176V13.286C0.783203 12.6087 1.35191 12.0371 2.06646 12.0371H6.89094C7.60549 12.0371 8.1742 12.6087 8.1742 13.286V18.0176Z" stroke="black"/>
+                        <path d="M18.9979 18.0176H18.9979L18.998 18.0248C19.0076 18.6925 18.4472 19.2665 17.7147 19.2665H12.8902C12.1756 19.2665 11.6069 18.6949 11.6069 18.0176V13.286C11.6069 12.6087 12.1756 12.0371 12.8902 12.0371H17.7147C18.4292 12.0371 18.9979 12.6087 18.9979 13.286V18.0176Z" stroke="black"/>
+                    </svg>
+                    管理
+                </router-link>
+                <router-link to="/home/setting" tag="li">
+                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M11 13.5C12.3807 13.5 13.5 12.3807 13.5 11C13.5 9.61929 12.3807 8.5 11 8.5C9.61929 8.5 8.5 9.61929 8.5 11C8.5 12.3807 9.61929 13.5 11 13.5Z" stroke="black"/>
+                        <path d="M3.41 14.14C3.27108 13.782 3.05217 13.4605 2.77 13.2C2.56518 13.0065 2.33261 12.8448 2.08 12.72C1.64586 12.5187 1.19809 12.3483 0.74 12.21L0.5 12.13V9.87L0.75 9.79C1.2067 9.65303 1.6515 9.47912 2.08 9.27C2.6885 8.989 3.16498 8.48386 3.41 7.86C3.68088 7.24615 3.70594 6.55177 3.48 5.92C3.31413 5.46687 3.11699 5.02581 2.89 4.6L2.78 4.37L4.37 2.78L4.6 2.89C5.02379 3.1211 5.46516 3.31838 5.92 3.48C6.55177 3.70594 7.24615 3.68088 7.86 3.41C8.48386 3.16498 8.989 2.6885 9.27 2.08C9.47912 1.6515 9.65303 1.2067 9.79 0.75C9.82119 0.668182 9.84789 0.584725 9.87 0.5H12.13C12.1521 0.581437 12.1789 0.661564 12.21 0.74C12.3454 1.20372 12.5193 1.65529 12.73 2.09C13.0147 2.69351 13.519 3.16562 14.14 3.41C14.7585 3.67825 15.4562 3.69971 16.09 3.47C16.5405 3.30956 16.9784 3.11569 17.4 2.89L17.63 2.78L19.22 4.37L19.11 4.6C18.883 5.02581 18.6859 5.46687 18.52 5.92C18.2941 6.55177 18.3191 7.24615 18.59 7.86C18.8308 8.48318 19.304 8.98864 19.91 9.27C20.3438 9.47478 20.7916 9.64855 21.25 9.79L21.5 9.87V12.13L21.26 12.21C20.7995 12.3453 20.3512 12.5193 19.92 12.73C19.4598 12.957 19.0713 13.307 18.7978 13.7412C18.5242 14.1754 18.3761 14.6768 18.37 15.19C18.371 15.4961 18.4217 15.8001 18.52 16.09C18.6841 16.5406 18.8813 16.9785 19.11 17.4C19.1426 17.4786 19.1793 17.5553 19.22 17.63L17.63 19.22L17.39 19.1C16.9684 18.8743 16.5305 18.6804 16.08 18.52C15.4522 18.2956 14.7627 18.317 14.15 18.58C13.5245 18.8314 13.0172 19.3101 12.73 19.92C12.5209 20.352 12.347 20.8001 12.21 21.26C12.1789 21.3384 12.1521 21.4186 12.13 21.5H9.87C9.84786 21.4186 9.82115 21.3384 9.79 21.26C9.65289 20.7969 9.479 20.3454 9.27 19.91C8.98525 19.3065 8.48095 18.8344 7.86 18.59C7.24145 18.3244 6.546 18.2994 5.91 18.52C5.46112 18.6884 5.02355 18.8854 4.6 19.11L4.37 19.22L2.78 17.63C2.82072 17.5553 2.85743 17.4786 2.89 17.4C3.1137 16.9809 3.30751 16.5464 3.47 16.1C3.71 15.4508 3.68849 14.7337 3.41 14.1M3.41 14.14L2.77 13.2L3.41 14.14Z" stroke="black"/>
+                    </svg>
+                    设置
+                </router-link>
+            </ul>
+        </div>
+        <div class="routerView">
+            <router-view></router-view>
+        </div>
     </div>
 </template>
 
 <script>
 export default {
-  name: 'home',
-  data () {
-    return {
-      isShow: 'none',
-      isActive1: true,
-      isActive2: false,
-      btnBox: 'btnBox'
-    }
-  },
-
-  methods: {
-
-    close () {
-      this.isShow = 'none'
-    },
-    buy () {
-      this.isShow = 'block'
-    },
-    btn_wechat_alipay () {
-      this.isActive1 = false
-      this.isActive2 = true
-    },
-    btn_imtoken () {
-      this.isActive1 = true
-      this.isActive2 = false
-    }
-  }
+  name: 'home'
 }
 </script>
 
-<style lang="less" scoped>
-    .bannerBox {
-        position: relative;
-        overflow: hidden;
+<style scoped>
+    .homeBox{
         height: 100%;
-        width: 100%;
-    }
-
-    .bayBtn {
         display: flex;
-        justify-content: center;
-        align-items: center;
-        position: absolute;
-        top: 57%;
-        left: 6%;
-        border-radius: 30px;
-        background: #000;
-        color: #fff;
-        text-align: center;
-        width: 145px;
-        height: 48px;
-        line-height: 48px;
-        border: none;
-        outline: none;
-        cursor: pointer;
     }
-
-    #box {
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.3);
-        position: fixed;
-        top: 0;
-        left: 0;
+    .homeBox .routerBar{
+        width: 300px;
     }
-
-    #box1 {
-        width: 400px;
-        height: 480px;
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        margin-left: -200px;
-        margin-top: -240px;
-        background: #fff;
-        border-radius: 10px;
-    }
-
-    .btnBox {
-        display: none;
-    }
-
-    .btnBox.active {
-        display: block;
-    }
-
-    .close {
-        text-decoration: none;
-        float: right;
-        font-size: 30px;
-        color: #e1e1e1;
-        margin-right: 16px;
-    }
-
-    #box1 > p {
-        height: 40px;
-    }
-
-    #box1 h2 {
-        text-align: center;
-        font-size: 18px;
-        margin-top: -22px;
-        font-weight: normal;
-    }
-
-    #box1 img {
-        width: 260px;
-        height: 260px;
-        margin: 20px 0 0 8px;
-    }
-
-    .btnBar {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        display: flex;
-        height: 60px;
-        position: absolute;
-        left: 0;
-        bottom: 0;
-        width: 100%;
-    }
-
-    .btnBar div {
-        display: flex;
-        justify-content: center;
-        align-items: center;
+    .homeBox .routerView{
         flex: 1;
-        color: #262f2e;
-        height: 60px;
-        line-height: 60px;
-        cursor: pointer;
+        box-shadow: 3px 0px 20px rgba(0, 0, 0, 0.06);
+    }
+    .homeBox .routerBar h1{
+        font-family: SF Pro Text;
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 19px;
+        margin-top: 64px;
+    }
+    .homeBox .routerBar h1 svg{
+        width: 36px;
+        height: 36px;
+        margin-left: 44px;
+        margin-right: 12px;
+        vertical-align: middle;
+    }
+    .homeBox .routerBar ul{
+        margin-top: 57px;
+    }
+    .homeBox .routerBar ul li{
+        height: 48px;
+        font-family: PingFang SC;
+        font-style: normal;
+        font-weight: normal;
+        font-size: 16px;
+        list-style: none;
+        line-height: 48px;
+
+    }
+    .homeBox .routerBar ul li svg{
+        margin-right: 16px;
+        vertical-align: middle;
+        margin-left: 46px;
+
+    }
+    .router-link-exact-active,.router-link-active{
+        background: rgba(0, 0, 0, 0.03);
     }
 
-    .btnBar div:first-child {
-        border-radius: 0 0 0 10px;
-    }
-
-    .btnBar div:last-child {
-        border-radius: 0 0 10px 0;
-    }
-
-    .btnBar .active {
-        background: #ebebeb;
-    }
 </style>

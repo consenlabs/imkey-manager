@@ -185,17 +185,26 @@ export function checkUpdateAppList() {
         let deleteLoading
         let buttonTexts
         let version
+        let installed
+        let updateLoading
+        let updateDis
         for (let i = 0; i < collections.length; i++) {
             if (collections[i].installedVersion === 'none' || collections[i].installedVersion === null) {
                 installLoading = false
                 installDis = false
+                installed = false
                 deleteDis = true
                 deleteLoading = false
+                updateLoading = false
+                updateDis = true
             } else {
                 installLoading = false
                 installDis = true
+                installed = true
                 deleteDis = false
                 deleteLoading = false
+                updateLoading = false
+                updateDis = true
             }
             if (collections[i].latestVersion === collections[i].installedVersion) {
                 buttonTexts = 'install'
@@ -207,6 +216,12 @@ export function checkUpdateAppList() {
                 } else {
                     buttonTexts = 'update'
                     version = 'version ' + collections[i].installedVersion
+                    updateLoading = false
+                    updateDis = false
+                    installLoading = false
+                    installDis = true
+                    deleteDis = true
+                    deleteLoading = false
                 }
             }
             // 过滤imkey Applet BTC Applet 不能删除
@@ -220,6 +235,9 @@ export function checkUpdateAppList() {
                 id: i,
                 installLoading: installLoading,
                 installDis: installDis,
+                installed:installed,
+                updateLoading: updateLoading,
+                updateDis: updateDis,
                 deleteDis: deleteDis,
                 deleteLoading: deleteLoading,
                 icon: collections[i].appLogo,

@@ -24,51 +24,29 @@ const routes = [
     name: 'imKeySetting',
     component: require('@/views/imKeySetting').default
   },
-
   {
-    path: '/deviceStep',
-    name: 'deviceStep',
-    component: require('@/views/steps/step').default
-  },
-
-  {
-    path: '/index',
-    name: 'index',
-    component: require('@/views/index').default,
+    path: '/home',
+    name: 'home',
+    component: require('@/views/home').default,
     children: [
       {
-        path: '/home',
-        name: 'home',
-        component: require('@/views/home').default
+        path: 'welcomeHome',
+        name: 'welcomeHome',
+        component: require('@/views/welcomeHome').default
       },
       {
-        path: '/manager/connect',
+        path: 'manager',
         name: 'manager',
-        meta: {
-          activePath: '/manager/connect'
-        },
-        component: require('@/views/manager/connect').default
+        component: require('@/views/manager').default
       },
       {
-        path: '/manager/manager',
-        name: 'manager',
-        meta: {
-          activePath: '/manager/manager'
-        },
-        component: require('@/views/manager/manager').default
-      },
-      {
-        path: '/setting',
+        path: 'setting',
         name: 'setting',
-        component: require('@/views/setting/setting').default
+        component: require('@/views/setting').default
       }
     ]
   }
 ]
-const originalPush = VueRouter.prototype.push
-VueRouter.prototype.push = function push (location) {
-  return originalPush.call(this, location).catch(err => err)
-}
 const router = new VueRouter({
   routes
 })

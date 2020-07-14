@@ -8,6 +8,7 @@ import pkg from '../../package.json'
 
 const deviceManger = require('../api/devicemanagerapi')
 const walletApi = require('../api/walletapi')
+
 // 默认读取项目根目录下的.env文件
 require('dotenv').config()
 /**
@@ -421,7 +422,7 @@ function renderDeviceManagerHandler () {
   ipcMain.on('connectDevice', (event) => {
     const response = deviceManger.connect()
     event.returnValue = response
-  });
+  })
   ipcMain.on('getSeid', (event) => {
     const response = deviceManger.getSeid()
     event.returnValue = response
@@ -506,8 +507,8 @@ function renderDeviceManagerHandler () {
     const response = deviceManger.exportBindCode()
     event.returnValue = response
   })
-  ipcMain.on('openUrl', (event,url) => {
-   shell.openExternal(url)
+  ipcMain.on('openUrl', (event, url) => {
+    shell.openExternal(url)
   })
 }
 

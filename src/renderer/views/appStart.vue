@@ -1,25 +1,30 @@
 <template>
     <div class="appStart">
         <h1>
-            <svg width="26" height="45" viewBox="0 0 26 45" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M25.5015 32.2491C25.5015 39.612 19.1385 45.4297 11.5938 44.6115C6.04883 43.9752 1.50381 39.612 0.685706 34.0671C-0.132398 28.3404 2.77642 23.6135 7.13964 21.341C7.41234 21.2501 7.68504 21.341 7.77594 21.6137C8.32135 22.9772 9.23035 23.9771 10.1394 25.0679C10.3212 25.2497 10.2303 25.6134 9.95755 25.7952C7.50324 26.9769 5.86703 29.4312 5.86703 32.34C5.86703 36.6123 9.59395 40.0665 13.9572 39.5211C17.2296 39.1575 19.8657 36.5214 20.2293 33.3399C20.6838 29.8857 18.684 26.886 15.8661 25.7043C15.7752 25.6134 14.5935 25.0679 13.7754 24.6134C10.8666 22.9772 8.95765 19.7957 8.95765 16.4324V0.615719C8.95765 0.524819 8.95765 0.524819 9.04855 0.433918C9.04855 0.433918 9.13945 0.343018 9.23035 0.343018H14.5026C14.6844 0.343018 14.8662 0.524819 14.8662 0.70662V6.34245V16.2506C14.8662 18.0686 15.8661 19.7048 17.5023 20.5229L18.5022 21.0683L18.7749 21.2501C22.6836 23.159 25.5015 27.3405 25.5015 32.2491Z"
-                      fill="white"/>
-                <path d="M21.6839 0.70654V8.61488C21.6839 8.79668 21.593 8.88758 21.4112 8.88758H17.1389C16.9571 8.88758 16.8662 8.79668 16.8662 8.61488V0.70654C16.8662 0.524739 16.9571 0.433838 17.1389 0.433838H21.4112C21.5021 0.433838 21.6839 0.524739 21.6839 0.70654Z"
-                      fill="white"/>
+            <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="64" height="64" rx="14.4964" fill="#181818"/>
+                <g clip-path="url(#clip0)">
+                    <path d="M40.6383 42.6631C40.6383 47.7117 36.5632 51.8095 31.5372 51.8095C26.5112 51.8095 22.4361 47.7117 22.4361 42.6631C22.4361 40.5803 23.1153 38.6786 24.2699 37.1618C24.2699 37.1618 24.2699 37.1617 24.2699 37.1391C24.3379 37.0486 24.4058 36.958 24.4737 36.8901C24.8812 36.4373 25.4245 35.7581 25.4698 35.7807C25.5151 35.8034 26.6244 36.4146 27.0546 36.6863C27.7111 37.1165 29.0921 38.0673 29.0921 38.09C28.3903 38.9503 28.1639 39.3804 27.8696 39.7426C27.5979 40.1049 27.3715 40.4897 27.1904 40.9199C27.0093 41.418 26.8961 41.9387 26.8735 42.5047C26.8056 44.9497 28.6394 47.1005 31.0618 47.3269C33.8464 47.5985 36.1783 45.4025 36.1783 42.6631C36.1783 41.0557 35.3633 39.6295 34.1407 38.7918H34.1181L33.5748 38.4748L30.7448 36.7995L30.7222 36.7769L27.0999 34.6488L25.6509 33.7885C25.583 33.7432 25.5377 33.7206 25.4698 33.6753C25.2661 33.5621 25.0623 33.4262 24.8812 33.2904C21.8928 31.1849 19.9458 27.7211 19.9458 23.7818C19.9458 17.3749 25.1076 12.1904 31.4919 12.1904C37.8763 12.1904 43.038 17.3749 43.038 23.7818C43.038 27.4721 41.3174 30.7548 38.646 32.8829C38.0121 33.381 37.1291 33.4715 36.4047 33.0414L32.7824 30.9585C32.4881 30.8001 32.3296 30.4831 32.3296 30.1435V25.7741C32.3296 25.6835 32.3975 25.6156 32.4881 25.6156H34.2087V20.9519H32.4881C32.3975 20.9519 32.3296 20.884 32.3296 20.7934V18.4842C32.3296 18.3484 32.2164 18.2125 32.0579 18.2125C31.4466 18.2125 30.043 18.2125 29.4544 18.2125C29.3185 18.2125 29.1827 18.3257 29.1827 18.4842V30.0303C29.1827 30.5058 29.4317 30.9359 29.8392 31.1623L32.3069 32.5886L35.7255 34.5809C35.7708 34.6035 35.8161 34.6261 35.884 34.6714L36.0425 34.762C36.133 34.8072 36.2009 34.8525 36.2915 34.8978C38.9177 36.4826 40.6383 39.3578 40.6383 42.6631Z" fill="white"/>
+                </g>
+                <defs>
+                    <clipPath id="clip0">
+                        <rect width="23.0922" height="39.619" fill="white" transform="translate(19.9458 12.1904)"/>
+                    </clipPath>
+                </defs>
             </svg>
 
         </h1>
-        <h2>imKey Manager</h2>
-        <p>你的imKey Pro桌面管理工具</p>
+        <h2>{{$t('m.imKeyManager.imKey_manager')}}</h2>
+        <p>{{$t('m.imKeyManager.your_imKey_manager')}}</p>
         <p>
-            <button @click="next()">立刻使用</button>
+            <button @click="next()">{{$t('m.imKeyManager.use_now')}}</button>
         </p>
-        <p><i></i><span @click="openUrl">还未拥有imKey Pro?</span></p>
+        <p><i></i><span @click="openUrl">{{$t('m.imKeyManager.no_have_imKey_pro')}}</span></p>
     </div>
 </template>
 
 <script>
-    import { ipcRenderer } from 'electron'
+import { ipcRenderer } from 'electron'
 
 export default {
   name: 'appStart',
@@ -33,36 +38,11 @@ export default {
     this.noScroll()
   },
   methods: {
-    // next() {
-    //     ipcRenderer.send('importBindCode', 'T52MKBA3')
-    //     ipcRenderer.on('importBindCodeResult', (event, result) => {
-    //         event.sender.removeAllListeners('importBindCodeResult')
-    //         if (result.isSuccess) {
-    //             ipcRenderer.send('exportBindCode')
-    //             ipcRenderer.on('exportBindCodeResult', (event, result) => {
-    //                 event.sender.removeAllListeners('exportBindCodeResult')
-    //                 const response = result.result
-    //                 if (result.isSuccess) {
-    //                     console.log('bindCode:' + response)
-    //                 }
-    //             })
-    //         }
-    //     })
-    //     //
-    //     // //跳转到下一个连接界面
-    //     // const response = deviceManager.importBindCode("T52MKBA3")
-    //     // if (response.isSuccess) {
-    //     //     const response = deviceManager.exportBindCode()
-    //     //     if (response.isSuccess) {
-    //     //         console.log("bindCode:"+response.result)
-    //     //     }
-    //     // }
-    // },
     next () {
       this.router.replace('/connectDevice')
     },
     openUrl () {
-        ipcRenderer.send('openUrl', 'https://imkey.im/')
+      ipcRenderer.send('openUrl', 'https://imkey.im/')
     }
 
   }
@@ -74,10 +54,10 @@ export default {
         text-align: center;
     }
     .appStart h1{
-        width: 74px;
-        height: 74px;
-        background: #000;
-        border-radius: 50%;
+        /*width: 74px;*/
+        /*height: 74px;*/
+        /*background: #000;*/
+        /*border-radius: 50%;*/
         text-align: center;
         margin: 10% auto 0;
     }
