@@ -287,7 +287,7 @@ export default {
           this.$store.state.cosNewVersionData = this.cosNewVersionData
 
           // 检查完成
-          this.status = 6
+          this.status = 1
           // 提示更新信息
           // this.openErrorView(this.description)
         }
@@ -338,7 +338,7 @@ export default {
         this.$store.state.cosNewVersionData = this.cosNewVersionData
 
         // 检查完成
-        // this.status = 6
+        this.status = 1
       } else {
         // 获取固件版本失败
         this.changeCode(5)
@@ -436,15 +436,15 @@ export default {
       // 添加自动更新事件的监听
       ipcRenderer.on('updateMessage', (event, obj) => {
           // 显示更新
-          this.status = 6
         if (obj.action === 'updateAva') {
+            // 显示更新
+          this.status = 6
           this.softNewVersionData = obj.updateInfo.version
           this.softUpdateInfo = obj.updateInfo.releaseNotes
-          // 显示更新
-          this.status = 6
         } else if (obj.action === 'error') {
           this.errorInfo = obj.errorInfo
         } else if (obj.action === 'updateNotAva') {
+            this.status = 1
         } else {
         }
       })
