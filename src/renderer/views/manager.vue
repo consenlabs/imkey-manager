@@ -1,10 +1,10 @@
 <template>
     <div class="container">
-        <h2>管理</h2>
-        <p class="msg">imKey Pro 安装 / 卸载 / 删除 Apps</p>
-        <h3>App 列表</h3>
+        <h2>{{$t('m.imKeyManager.manager')}}</h2>
+        <p class="msg">{{$t('m.imKeyManager.imKey_pro_install_uninstall_delete_Apps')}}</p>
+        <h3>{{$t('m.imKeyManager.App_list')}}</h3>
         <div class="searchBox">
-            <input type="text" placeholder="搜索" v-model="appName">
+            <input type="text" :placeholder="$t('m.imKeyManager.search')" v-model="appName">
             <i class="el-icon-search"></i>
         </div>
 
@@ -19,20 +19,20 @@
                         <p>{{item.desc}}</p>
                     </div>
                     <div>
-                        <a v-if="item.installDis===false" href="javascript:;" @click="installApp(item,index)">安装</a>
-                        <a v-if="item.updateDis===false" href="javascript:;" @click="updateApp(item,index)">升级</a>
-                        <a class="col" v-if="item.installed===true" href="javascript:;">已安装</a>
-                        <a v-if="item.deleteDis===false" href="javascript:;" @click="deleteApp(item,index)">删除</a>
+                        <a v-if="item.installDis===false" href="javascript:;" @click="installApp(item,index)">{{$t('m.imKeyManager.install')}}</a>
+                        <a v-if="item.updateDis===false" href="javascript:;" @click="updateApp(item,index)">{{$t('m.imKeyManager.upgrade')}}</a>
+                        <a class="col" v-if="item.installed===true" href="javascript:;">{{$t('m.imKeyManager.installed')}}</a>
+                        <a v-if="item.deleteDis===false" href="javascript:;" @click="deleteApp(item,index)">{{$t('m.imKeyManager.delete')}}</a>
                         <el-tooltip class="item" effect="dark" placement="right">
-                            <div slot="content">App 安装中，请勿断开 USB 连接，并中止 imKey 操作</div>
+                            <div slot="content">{{$t('m.imKeyManager.APP_installing_do_not_disconnect_usb')}}</div>
                             <span v-if="item.installLoading===true" class="fas fa-circle-notch fa-spin"></span>
                         </el-tooltip>
                         <el-tooltip  class="item" effect="dark" placement="right">
-                            <div slot="content">App 删除中，请勿断开 USB 连接，并中止 imKey 操作</div>
+                            <div slot="content">{{$t('m.imKeyManager.APP_deleting_do_not_disconnect_usb')}}</div>
                             <span v-if="item.updateLoading===true" class="fas fa-circle-notch fa-spin"></span>
                         </el-tooltip>
                         <el-tooltip class="item" effect="dark" placement="right">
-                            <div slot="content">App 升级中，请勿断开 USB 连接，并中止 imKey 操作</div>
+                            <div slot="content">{{$t('m.imKeyManager.APP_upgrading_do_not_disconnect_usb')}}</div>
                             <span v-if="item.deleteLoading===true" class="fas fa-circle-notch fa-spin"></span>
                         </el-tooltip>
                     </div>
@@ -47,9 +47,9 @@
                     <path d="M15 9L9 15" stroke="#43454F" stroke-linecap="round" stroke-linejoin="round"/>
                     <path d="M9 9L15 15" stroke="#43454F" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                <h4>App 安装/升级/删除失败</h4>
-                <p>请检查 USB 连接或网络连接情况，确认无误后重试</p>
-                <button @click="ok">确定</button>
+                <h4>{{$t('m.imKeyManager.install_uninstall_upgrade_delete_Apps_fail')}}</h4>
+                <p>{{$t('m.imKeyManager.check_usb_or_internet_connect')}}</p>
+                <button @click="ok">{{$t('m.imKeyManager.ok')}}</button>
             </div>
         </div>
     </div>

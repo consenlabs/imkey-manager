@@ -1,6 +1,6 @@
 {
   "name": "imKey-manager",
-  "version": "1.0.0-alpha4",
+  "version": "1.0.0-alpha8",
   "author": "imkey <weiqiang@imkey.im>",
   "description": "imKey-manager @2020",
   "license": "MIT",
@@ -32,7 +32,7 @@
     "publish": {
       "provider": "github",
       "repo": "imkey-manager",
-      "owner": "fengweiqiang-coder",
+      "owner": "consenlabs",
       "releaseType": "release"
     },
     "releaseInfo": {
@@ -61,7 +61,11 @@
       "extraResources": [
         {
           "from": "./connector.dylib",
-          "to": "../"
+          "to": "./"
+        },
+        {
+          "from": "./.env",
+          "to": "./"
         }
       ]
     },
@@ -72,6 +76,10 @@
       "extraResources": [
         {
           "from": "./connector.dll",
+          "to": "../"
+        },
+        {
+          "from": "./.env",
           "to": "../"
         }
       ]
@@ -109,7 +117,8 @@
     "vue-i18n": "^8.17.7",
     "vue-router": "^3.2.0",
     "vuex": "^3.4.0",
-    "vuex-electron": "^1.0.3"
+    "vuex-electron": "^1.0.3",
+    "write-file-atomic": "^3.0.3"
   },
   "devDependencies": {
     "@babel/core": "^7.10.2",

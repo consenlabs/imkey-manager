@@ -15,7 +15,7 @@
                 </svg>
 
             </h1>
-            <p>使用 imKey Pro 完成连接</p>
+            <p>{{$t('m.imKeyManager.use_imKey_connected')}}</p>
             <div class="msgBox">
                 <div class="msgImg">
                     <svg width="78" height="159" viewBox="0 0 78 159" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -49,14 +49,14 @@
                 </div>
 
                 <div class="msg">
-                    <p>1. 使用 USB 将 imkey Pro 连接至电脑</p>
-                    <p>2. 点击「连接」按钮</p>
-                    <p>3. 在 imKey Pro 中输入 PIN 码</p>
-                    <p class="last">* 如果你尚未在 imKey Pro 中设置 PIN 码，可以跳过第 3 步</p>
+                    <p>{{$t('m.imKeyManager.use_imKey_connect_computer')}}</p>
+                    <p>{{$t('m.imKeyManager.click_connect_button')}}</p>
+                    <p>{{$t('m.imKeyManager.enter_pin_on_imKey')}}</p>
+                    <p class="last">{{$t('m.imKeyManager.if_no_set_pin_can_jump_step3')}}</p>
                 </div>
             </div>
             <p>
-                <button @click="check()">连接</button>
+                <button @click="check()">{{$t('m.imKeyManager.connect')}}</button>
             </p>
         </div>
 
@@ -70,18 +70,18 @@
             </svg>
 
             <div class="tipBox">
-                <h3>imKey 连接中，请耐心等待</h3>
+                <h3>{{$t('m.imKeyManager.imKey_connecting_wait')}}</h3>
                 <p>
-                    <span :class="[checkFirmwareUpgrade==1?'el-icon-success':checkFirmwareUpgrade==2?'fas fa-circle-notch fa-spin':'el-icon-success done']"></span>检查固件版本升级
+                    <span :class="[checkFirmwareUpgrade==1?'el-icon-success':checkFirmwareUpgrade==2?'fas fa-circle-notch fa-spin':'el-icon-success done']"></span>{{$t('m.imKeyManager.check_firmware_version_update')}}
                 </p>
                 <p>
-                    <span :class="[checkDeviceBindingCode==1?'el-icon-success':checkDeviceBindingCode==2?'fas fa-circle-notch fa-spin':'el-icon-success done']"></span>检查设备绑定码
+                    <span :class="[checkDeviceBindingCode==1?'el-icon-success':checkDeviceBindingCode==2?'fas fa-circle-notch fa-spin':'el-icon-success done']"></span>{{$t('m.imKeyManager.check_device_bind_code')}}
                 </p>
                 <p>
-                    <span :class="[checkPinAndWallet==1?'el-icon-success':checkPinAndWallet==2?'fas fa-circle-notch fa-spin':'el-icon-success done']"></span>检查 PIN 码及钱包检查安全测试
+                    <span :class="[checkPinAndWallet==1?'el-icon-success':checkPinAndWallet==2?'fas fa-circle-notch fa-spin':'el-icon-success done']"></span>{{$t('m.imKeyManager.check_pin_wallet')}}
                 </p>
                 <p>
-                    <span :class="[checkSafetyTest==1?'el-icon-success':checkSafetyTest==2?'fas fa-circle-notch fa-spin':'el-icon-success done']"></span>检查安全测试
+                    <span :class="[checkSafetyTest==1?'el-icon-success':checkSafetyTest==2?'fas fa-circle-notch fa-spin':'el-icon-success done']"></span>{{$t('m.imKeyManager.check_secure_test')}}
                 </p>
             </div>
         </div>
@@ -95,34 +95,33 @@
         <!--tip usb连接异常-->
         <div class="tip1 tip" v-if="status==4">
             <div class="tipBox">
-                <h3>USB 连接异常</h3>
-                <p>请拔出 USB 重试或检查 USB 接口是否松动，确认无误后再次点击「连接」</p>
-                <button @click="changeState(1)">确定</button>
+                <h3>{{$t('m.imKeyManager.usb_connect_error')}}</h3>
+                <p>{{$t('m.imKeyManager.check_usb_connect')}}</p>
+                <button @click="changeState(1)">{{$t('m.imKeyManager.ok')}}</button>
             </div>
         </div>
         <!--tip 固件未升级完毕-->
         <div class="tip3 tip" v-if="status==5">
             <div class="tipBox">
                 <p><span class="el-icon-warning-outline"></span></p>
-                <h3>固件升级未完成</h3>
-                <p>检测到因应用异常退出导致固件升级未完成，请继续升级，完成后可正常使用 imKey Manager</p>
-                <button @click="changeState(7)">确定</button>
+                <h3>{{$t('m.imKeyManager.firmware_update_fail')}}</h3>
+                <p>{{$t('m.imKeyManager.find_firmware_update_fail_continue')}}</p>
+                <button @click="changeState(7)">{{$t('m.imKeyManager.ok')}}</button>
             </div>
         </div>
         <!--tip 固件升级中-->
         <div class="tip4 tip" v-if="status==6">
             <div class="tipBox">
                 <p><span class="el-icon-loading"></span></p>
-                <h3>imKey Pro 固件版本升级中，请耐心等待</h3>
-                <p>注意：升级完成后 imKey Pro 将自动重启
-                    升级过程中请勿断开 USB 连接，同时中止 imKey 操作
+                <h3>{{$t('m.imKeyManager.imKey_pro_firmware_update_wait')}}</h3>
+                <p>{{$t('m.imKeyManager.imKey_pro_firmware_update_no_disconnect')}}
                 </p>
             </div>
         </div>
         <!--tip 请输入设备绑定码-->
         <div class="tip5 tip" v-if="status==7">
             <div class="tipBox">
-                <h3>请输入设备绑定码</h3>
+                <h3>{{$t('m.imKeyManager.enter_bind_code')}}</h3>
                 <div>
                     <input type="text" maxlength="1" v-model="code1" @focus="inpFocus($event)"
                            @keyup="inpCode(1,$event)">
@@ -141,14 +140,14 @@
                     <input type="text" maxlength="1" v-model="code8" @focus="inpFocus($event)"
                            @keyup="inpCode(8,$event)">
                 </div>
-                <p v-if="!codeIsTrue"><span class="el-icon-warning"></span>绑定码错误，请仔细核对，或通过导入助记词 重置 imKey 找回</p>
+                <p v-if="!codeIsTrue"><span class="el-icon-warning"></span>{{$t('m.imKeyManager.bind_code_error_please_check')}}</p>
             </div>
         </div>
         <!--tip PIN码输入错误-->
         <div class="tip6 tip" v-if="status==8">
             <div class="tipBox">
-                <h3>请在 imKey Pro 中输入 PIN 码</h3>
-                <p>PIN 码错误 / 遗忘可以通过 重置 imKey 找回</p>
+                <h3>{{$t('m.imKeyManager.enter_pin_imKey_pro')}}</h3>
+                <p>{{$t('m.imKeyManager.pin_code_error_please_check')}}</p>
             </div>
         </div>
     </div>
@@ -344,6 +343,27 @@ export default {
         }
       }, 100)
     },
+    bindOtherCheckIsCreateWallet () {
+      const result = ipcRenderer.sendSync('getBTCXpub')
+      const response = result.result
+      if (result.isSuccess) {
+        if (response !== '' || response !== null) {
+          if (response.match('xpu')) {
+            // 跳转到主页
+            this.$router.push('/home/welcomeHome')
+          } else {
+            // 跳转到创建钱包界面
+            this.$router.push('imKeySetting')
+          }
+        } else {
+          // 跳转到创建钱包界面
+          this.$router.push('imKeySetting')
+        }
+      } else {
+        // 错误界面
+        this.changeState(4)
+      }
+    },
     connect () {
       const result = ipcRenderer.sendSync('connectDevice')
       const response = result.result
@@ -379,14 +399,14 @@ export default {
       }, 200)
     },
     bindAcquire (bindCode) {
-      const result = ipcRenderer.sendSync('deviceBindAcquire', bindCode)
-      const response = result.result
-      if (result.isSuccess) {
+      const deviceBindResult = ipcRenderer.sendSync('deviceBindAcquire', bindCode)
+      const response = deviceBindResult.result
+      if (deviceBindResult.isSuccess) {
         if (response === constants.RESULT_STATUS_SUCCESS) {
           // 绑定成功后存储绑定码
           const result = ipcRenderer.sendSync('importBindCode', bindCode)
           if (result.isSuccess) {
-            this.checkIsCreateWallet()
+            this.bindOtherCheckIsCreateWallet()
           } else {
             this.changeState(4)
           }
@@ -518,7 +538,7 @@ export default {
         top: 45%;
         left: 50%;
         margin-left: -240px;
-        margin-top: -150px;
+        margin-top: -140px;
         text-align: center;
         padding: 0 44px;
     }
@@ -618,9 +638,9 @@ export default {
 
     }
 
-    .tip5 .tipBox {
-        padding: 0 20px;
-    }
+    /*.tip5 .tipBox {*/
+    /*    padding: 0 20px;*/
+    /*}*/
 
     .tip5 .tipBox div {
         padding: 0;

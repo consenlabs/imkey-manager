@@ -1,28 +1,28 @@
 <template>
     <div class="container">
-        <h2>欢迎使用 imKey Manager :)</h2>
-        <p class="msg">imKey Manager 是一款硬件钱包桌面管理程序，在这里你可以实现：</p>
+        <h2>{{$t('m.imKeyManager.welcome_used_imkKey_manager')}}</h2>
+        <p class="msg">{{$t('m.imKeyManager.imKey_manager_is_desktop_manager')}}</p>
         <div class="msgList">
             <p>
                 <svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <circle cx="3" cy="3" r="2.5" stroke="#8189A7"/>
                 </svg>
-                <span>imKey 硬件钱包版本管理</span>
+                <span>{{$t('m.imKeyManager.imKey_wallet_version_manager')}}</span>
             </p>
             <p>
                 <svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <circle cx="3" cy="3" r="2.5" stroke="#8189A7"/>
                 </svg>
-                <span>imKey App 版本管理</span>
+                <span>{{$t('m.imKeyManager.imKey_APP_version_manager')}}</span>
             </p>
             <p>
                 <svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <circle cx="3" cy="3" r="2.5" stroke="#8189A7"/>
                 </svg>
-                <span>快速连接桌面端应用</span>
+                <span>{{$t('m.imKeyManager.fast_connect_desktop_APP')}}</span>
             </p>
         </div>
-        <h4>尝试使用这些桌面端应用吧</h4>
+        <h4>{{$t('m.imKeyManager.used_this_desktop_APP')}}</h4>
         <div class="appBox">
             <div>
                 <a href="javascript:;" @click="openUrl('TokenLon')">

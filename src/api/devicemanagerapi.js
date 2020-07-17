@@ -5,6 +5,7 @@ const constants = require('../common/constants')
 const _ = require('lodash')
 const crypto = require('./crypto')
 const fs = require('fs')
+const writeFileAtomic = require("write-file-atomic");
 
 export function connect(deviceModelName) {
     const request = new devicePb.DeviceConnectReq()
@@ -369,11 +370,12 @@ export function importBindCode(bindCode) {
         }
         // fs.writeFile  写入文件（会覆盖之前的内容）（文件不存在就创建）  utf8参数可以省略
         try {
-            fs.writeFileSync(bindCodePath, JSON.stringify(enBindCode), 'utf8')
-            return {
-                isSuccess: true,
-            }
+            writeFileAtomic(bindCodePath, JSON.stringify(enBindCode))
+                return {
+                    isSuccess: true,
+                }
         } catch (error) {
+            console.log(error)
             return {
                 isSuccess: false,
                 result: error
@@ -397,6 +399,7 @@ export function exportBindCode() {
                 result: crypto.decryptData(jsonObj.bindCode, process.env.bindCode_encryptionKey)
             }
         } catch (error) {
+            console.log(error)
             return {
                 isSuccess: false,
                 result: error
@@ -405,7 +408,6 @@ export function exportBindCode() {
     }
 
 }
-
 // module.exports = {
 //     connect,
 //     getSeid,

@@ -1,69 +1,69 @@
 <template>
     <div class="setKeyPage">
         <div class="routerBar">
-            <h2>imKey 设置</h2>
-            <p>请在 imKey 上完成以下操作：</p>
+            <h2>{{$t('m.imKeyManager.imKey_setting')}}</h2>
+            <p>{{$t('m.imKeyManager.following_operations_on_imKey')}}</p>
             <div>
                 <el-steps direction="vertical" :active="active">
-                    <el-step title="绑定码"></el-step>
-                    <el-step title="创建 / 恢复钱包"></el-step>
-                    <el-step title="完成设置"></el-step>
+                    <el-step :title="$t('m.imKeyManager.bin_code')"></el-step>
+                    <el-step :title="$t('m.imKeyManager.create_restore_Wallet')"></el-step>
+                    <el-step :title="$t('m.imKeyManager.complete_setup')"></el-step>
                 </el-steps>
             </div>
         </div>
         <div class="routerView">
             <div class="set1" v-if="page==1">
-                <h3>生成设备绑定码</h3>
+                <h3>{{$t('m.imKeyManager.generate_bind_code')}}</h3>
                 <div class="nav">
-                    <p class="msg">初次绑定将生成设备绑定码，请在 imKey Pro 中查看并妥善备份</p>
+                    <p class="msg">{{$t('m.imKeyManager.first_bind_device_see_to_imKey')}}</p>
                     <p class="course" @click="openUrl">
                         <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M1.8335 2.75H7.3335C8.30596 2.75 9.23859 3.13631 9.92622 3.82394C10.6139 4.51158 11.0002 5.44421 11.0002 6.41667V19.25C11.0002 18.5207 10.7104 17.8212 10.1947 17.3055C9.67898 16.7897 8.97951 16.5 8.25016 16.5H1.8335V2.75Z" stroke="#B8AC95" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                             <path d="M20.1667 2.75H14.6667C13.6942 2.75 12.7616 3.13631 12.0739 3.82394C11.3863 4.51158 11 5.44421 11 6.41667V19.25C11 18.5207 11.2897 17.8212 11.8055 17.3055C12.3212 16.7897 13.0207 16.5 13.75 16.5H20.1667V2.75Z" stroke="#B8AC95" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
-                        <span>新手教程</span>
+                        <span>{{$t('m.imKeyManager.operating_tutorial')}}</span>
                         <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <circle cx="7.5" cy="7.5" r="7.5" fill="#B8AC95"/>
                             <path d="M6.5 10.5L9.5 7.5L6.5 4.5" stroke="#FAF8F5"/>
                         </svg>
                     </p>
                 </div>
-                <p class="careful">注意事项：</p>
+                <p class="careful">{{$t('m.imKeyManager.precautions')}}</p>
                 <div class="mattersNeedingAttention">
                     <p>
                         <svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <circle cx="3" cy="3" r="2.5" stroke="#8189A7"/>
                         </svg>
-                        绑定码用于核实设备与 PC 端的关联关系，请仔细抄写并保管
+                        {{$t('m.imKeyManager.bind_code_used_check_device_please_save')}}
                     </p>
                     <p>
                         <svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <circle cx="3" cy="3" r="2.5" stroke="#8189A7"/>
                         </svg>
-                        绑定码在「设置」页面可导出，或通过导入助记词重置 imKey 找回
+                        {{$t('m.imKeyManager.bind_code_export_on_setting_or_rest_imKey')}}
                     </p>
                     <p>
                         <svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <circle cx="3" cy="3" r="2.5" stroke="#8189A7"/>
                         </svg>
-                        同一台 imKey Pro 若在不同 PC 端绑定，将使用相同的绑定码
+                        {{$t('m.imKeyManager.same_imKey_bind_different_PC_used_same_bind_code')}}
                     </p>
                 </div>
                 <div class="btnBox">
-                    <button class="nextBtn" @click="send({page:2,active:0,isNext:true})">下一步</button>
+                    <button class="nextBtn" @click="send({page:2,active:0,isNext:true})">{{$t('m.imKeyManager.next')}}</button>
                 </div>
             </div>
             <div class="set2" v-if="page==2">
-                <h3>输入设备绑定码</h3>
+                <h3>{{$t('m.imKeyManager.enter_bind_code')}}</h3>
                 <div class="nav">
-                    <p class="msg">请输入设备绑定码，以便在当前设备上使用
+                    <p class="msg">{{$t('m.imKeyManager.enter_bind_code_for_use_on_the_current_device')}}
                     </p>
                     <p class="course" @click="openUrl">
                         <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M1.8335 2.75H7.3335C8.30596 2.75 9.23859 3.13631 9.92622 3.82394C10.6139 4.51158 11.0002 5.44421 11.0002 6.41667V19.25C11.0002 18.5207 10.7104 17.8212 10.1947 17.3055C9.67898 16.7897 8.97951 16.5 8.25016 16.5H1.8335V2.75Z" stroke="#B8AC95" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                             <path d="M20.1667 2.75H14.6667C13.6942 2.75 12.7616 3.13631 12.0739 3.82394C11.3863 4.51158 11 5.44421 11 6.41667V19.25C11 18.5207 11.2897 17.8212 11.8055 17.3055C12.3212 16.7897 13.0207 16.5 13.75 16.5H20.1667V2.75Z" stroke="#B8AC95" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
-                        <span>新手教程</span>
+                        <span>{{$t('m.imKeyManager.operating_tutorial')}</span>
                         <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <circle cx="7.5" cy="7.5" r="7.5" fill="#B8AC95"/>
                             <path d="M6.5 10.5L9.5 7.5L6.5 4.5" stroke="#FAF8F5"/>
@@ -86,37 +86,37 @@
                         <path d="M6 4V6" stroke="#ED766C" stroke-linecap="round" stroke-linejoin="round"/>
                         <path d="M6 8H6.005" stroke="#ED766C" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
-                    绑定码错误，请仔细核对，或通过导入助记词重置 imKey 找回
+                    {{$t('m.imKeyManager.bind_code_error_please_check')}}
                 </p>
-                <p class="careful">注意事项：</p>
+                <p class="careful">{{$t('m.imKeyManager.precautions')}}</p>
                 <div class="mattersNeedingAttention">
                     <p>
                         <svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <circle cx="3" cy="3" r="2.5" stroke="#8189A7"/>
                         </svg>
-                        绑定码在「设置」页面可导出，或通过导入助记词重置 imKey 找回
+                        {{$t('m.imKeyManager.bind_code_export_on_setting_or_rest_imKey')}}
                     </p>
                     <p>
                         <svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <circle cx="3" cy="3" r="2.5" stroke="#8189A7"/>
                         </svg>
-                        同一台 imKey Pro 若在不同 PC 端绑定，将使用相同的绑定码
+                        {{$t('m.imKeyManager.same_imKey_bind_different_PC_used_same_bind_code')}}
                     </p>
                 </div>
                 <div class="btnBox">
-                    <button class="nextBtn" @click="send({page:3,active:1,isNext:true})">下一步</button>
+                    <button class="nextBtn" @click="send({page:3,active:1,isNext:true})">{{$t('m.imKeyManager.next')}}</button>
                 </div>
             </div>
             <div class="set3" v-if="page==3">
-                <h3>设置 PIN 码</h3>
+                <h3>{{$t('m.imKeyManager.setting_pin')}}</h3>
                 <div class="nav">
-                    <p class="msg">请断开 USB 连接，使用 imKey 进行设置</p>
+                    <p class="msg">{{$t('m.imKeyManager.disconnect_usb_use_imKey_setting')}}</p>
                     <p class="course" @click="openUrl">
                         <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M1.8335 2.75H7.3335C8.30596 2.75 9.23859 3.13631 9.92622 3.82394C10.6139 4.51158 11.0002 5.44421 11.0002 6.41667V19.25C11.0002 18.5207 10.7104 17.8212 10.1947 17.3055C9.67898 16.7897 8.97951 16.5 8.25016 16.5H1.8335V2.75Z" stroke="#B8AC95" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                             <path d="M20.1667 2.75H14.6667C13.6942 2.75 12.7616 3.13631 12.0739 3.82394C11.3863 4.51158 11 5.44421 11 6.41667V19.25C11 18.5207 11.2897 17.8212 11.8055 17.3055C12.3212 16.7897 13.0207 16.5 13.75 16.5H20.1667V2.75Z" stroke="#B8AC95" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
-                        <span>新手教程</span>
+                        <span>{{$t('m.imKeyManager.operating_tutorial')}}</span>
                         <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <circle cx="7.5" cy="7.5" r="7.5" fill="#B8AC95"/>
                             <path d="M6.5 10.5L9.5 7.5L6.5 4.5" stroke="#FAF8F5"/>
@@ -128,49 +128,49 @@
                         <svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <circle cx="3" cy="3" r="2.5" stroke="#8189A7"/>
                         </svg>
-                        PIN 码用于解锁 imKey
+                        {{$t('m.imKeyManager.use_pin_unlock_imKey')}}
                     </p>
                     <p>
                         <svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <circle cx="3" cy="3" r="2.5" stroke="#8189A7"/>
                         </svg>
-                        设置 6-8 位 PIN 码
+                        {{$t('m.imKeyManager.setting_6_8_bit_pin')}}
                     </p>
                     <p>
                         <svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <circle cx="3" cy="3" r="2.5" stroke="#8189A7"/>
                         </svg>
-                        请勿输入相同或连续数字的 PIN 码
+                        {{$t('m.imKeyManager.do_not_enter_the_same_or_consecutive_pin')}}
                     </p>
                 </div>
-                <h3>创建 / 恢复钱包</h3>
+                <h3>{{$t('m.imKeyManager.create_restore_Wallet')}}</h3>
                 <div class="step">
                     <p>
                         <svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <circle cx="3" cy="3" r="2.5" stroke="#8189A7"/>
                         </svg>
-                        助记词掌控资产所有权，请妥善私密保管
+                        {{$t('m.imKeyManager.Mnemonic_control_ownership_please_private')}}
                     </p>
                     <p>
                         <svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <circle cx="3" cy="3" r="2.5" stroke="#8189A7"/>
                         </svg>
-                        更换或重置设备，可以使用助记词恢复钱包资产
+                        {{$t('m.imKeyManager.Replace_reset_device_use_mnemonic_restore_wallet')}}
                     </p>
                     <p>
                         <svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <circle cx="3" cy="3" r="2.5" stroke="#8189A7"/>
                         </svg>
-                        创建 / 恢复钱包约 2 分钟，请耐心等待
+                        {{$t('m.imKeyManager.Create_restore_wallet_2_minutes_wait')}}
                     </p>
                 </div>
-                <p class="careful">注意事项：</p>
+                <p class="careful">{{$t('m.imKeyManager.precautions')}}</p>
                 <div class="mattersNeedingAttention">
                     <p>
                         <svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <circle cx="3" cy="3" r="2.5" stroke="#8189A7"/>
                         </svg>
-                        建议选择创建钱包，保障助记词永不联网
+                        {{$t('m.imKeyManager.choose_create_wallet_mnemonic_never_be_online')}}
                     </p>
                 </div>
                 <div class="btnBox">
@@ -179,16 +179,16 @@
                 </div>
             </div>
             <div class="set4" v-if="page==4">
-                <h3>完成设置</h3>
+                <h3>{{$t('m.imKeyManager.complete_setup')}}</h3>
                 <div class="nav">
-                    <p class="msg">恭喜你已完成 imKey 设置，进行最后一步安全检查吧
+                    <p class="msg">{{$t('m.imKeyManager.congratulations_complete_setup_final_security_check')}}
                     </p>
                     <p class="course" @click="openUrl">
                         <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M1.8335 2.75H7.3335C8.30596 2.75 9.23859 3.13631 9.92622 3.82394C10.6139 4.51158 11.0002 5.44421 11.0002 6.41667V19.25C11.0002 18.5207 10.7104 17.8212 10.1947 17.3055C9.67898 16.7897 8.97951 16.5 8.25016 16.5H1.8335V2.75Z" stroke="#B8AC95" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                             <path d="M20.1667 2.75H14.6667C13.6942 2.75 12.7616 3.13631 12.0739 3.82394C11.3863 4.51158 11 5.44421 11 6.41667V19.25C11 18.5207 11.2897 17.8212 11.8055 17.3055C12.3212 16.7897 13.0207 16.5 13.75 16.5H20.1667V2.75Z" stroke="#B8AC95" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
-                        <span>新手教程</span>
+                        <span>{{$t('m.imKeyManager.operating_tutorial')}}</span>
                         <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <circle cx="7.5" cy="7.5" r="7.5" fill="#B8AC95"/>
                             <path d="M6.5 10.5L9.5 7.5L6.5 4.5" stroke="#FAF8F5"/>
@@ -205,7 +205,7 @@
                         <svg @click="changeStep('step1')" v-else width="20" height="20" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M11 21C16.5228 21 21 16.5228 21 11C21 5.47715 16.5228 1 11 1C5.47715 1 1 5.47715 1 11C1 16.5228 5.47715 21 11 21Z" stroke="#C4C9D9" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
-                        <span>确认为本人设置 PIN 码，并已完成备份</span>
+                        <span>{{$t('m.imKeyManager.confirm_pi_code_set_for_me_backup_completed')}}</span>
                     </p>
                     <p>
                         <svg @click="changeStep('step2')" v-if="step2" width="20" height="20" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -216,7 +216,7 @@
                         <svg  @click="changeStep('step2')" v-else width="20" height="20" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M11 21C16.5228 21 21 16.5228 21 11C21 5.47715 16.5228 1 11 1C5.47715 1 1 5.47715 1 11C1 16.5228 5.47715 21 11 21Z" stroke="#C4C9D9" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
-                        <span>已离线备份助记词，并知晓助记词的重要性</span>
+                        <span>{{$t('m.imKeyManager.mnemonics_backup_offline_importance_of_mnemonics')}}</span>
                     </p>
                     <p>
                         <svg @click="changeStep('step3')" v-if="step3" width="20" height="20" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -227,7 +227,7 @@
                         <svg @click="changeStep('step3')" v-else width="20" height="20" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M11 21C16.5228 21 21 16.5228 21 11C21 5.47715 16.5228 1 11 1C5.47715 1 1 5.47715 1 11C1 16.5228 5.47715 21 11 21Z" stroke="#C4C9D9" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
-                        <span>已备份设备绑定码，并知晓其作用</span>
+                        <span>{{$t('m.imKeyManager.binding_code_backup_known')}}</span>
                     </p>
                 </div>
                 <p class="codeTit" v-if="checkTip">
@@ -236,11 +236,11 @@
                         <path d="M6 4V6" stroke="#ED766C" stroke-linecap="round" stroke-linejoin="round"/>
                         <path d="M6 8H6.005" stroke="#ED766C" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
-                    为了你的资产安全，请完成所有安全检查项
+                    {{$t('m.imKeyManager.safety_your_assets_please_complete_all_security_checks')}}
                 </p>
                 <div class="btnBox">
-                    <button :class="[finish?'':'noFinish']" class="nextBtn" @click="send({page:0,active:0,isNext:false})">完成</button>
-                    <button class="prevBtn" @click="send({page:3,active:1,isNext:false})">上一步</button>
+                    <button :class="[finish?'':'noFinish']" class="nextBtn" @click="send({page:0,active:0,isNext:false})">{{$t('m.imKeyManager.done')}}</button>
+                    <button class="prevBtn" @click="send({page:3,active:1,isNext:false})">{{$t('m.imKeyManager.previous')}}</button>
                 </div>
             </div>
         </div>

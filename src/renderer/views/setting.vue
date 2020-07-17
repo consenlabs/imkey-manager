@@ -1,8 +1,8 @@
 <template>
     <div class="container" v-if="status==1 || status==6">
-        <h2>设置</h2>
-        <p class="msg">imKey Pro 基本设置及相关信息 </p>
-        <h3>设备</h3>
+        <h2>{{$t('m.imKeyManager.setting')}}</h2>
+        <p class="msg">{{$t('m.imKeyManager.imKey_pro_setting_and_info')}}</p>
+        <h3>{{$t('m.imKeyManager.device')}}</h3>
         <div class="equipmentBox">
             <div class="session1">
                 <div class="left">
@@ -11,23 +11,23 @@
                 </div>
                 <div class="rightNoUpdate" v-if="isCosUpdate==false">
                     <p>
-                        当前为最新版本
-                        <button @click="updateFirmware">升级</button>
+                        {{$t('m.imKeyManager.current_least_version')}}
+                        <button @click="updateFirmware">{{$t('m.imKeyManager.upgrade')}}</button>
                     </p>
                 </div>
                 <div class="rightUpdate"v-if="isCosUpdate==true">
                     <p>
-                        发现新版本
-                        <button @click="updateFirmware">升级</button>
+                        {{$t('m.imKeyManager.found_new_version')}}
+                        <button @click="updateFirmware">{{$t('m.imKeyManager.upgrade')}}</button>
                     </p>
                 </div>
             </div>
             <div class="session2">
-                <p>设备编号: SN:{{SN}}  <span class="el-icon-copy-document" @click="copyText"></span></p>
-                <p>设备绑定码：<span @click="exportBindCode">导出</span></p>
+                <p>{{$t('m.imKeyManager.device_SN')}}SN:{{SN}}  <span class="el-icon-copy-document" @click="copyText"></span></p>
+                <p>{{$t('m.imKeyManager.device_bind_code')}}<span @click="exportBindCode">{{$t('m.imKeyManager.export')}}</span></p>
             </div>
         </div>
-        <h3>了解更多</h3>
+        <h3>{{$t('m.imKeyManager.understand_more')}}</h3>
         <div class="moreBox">
             <a href="javascript:;" @click="openUrl('getStarted')">
                 <svg width="239" height="142" viewBox="0 0 239 142" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -89,10 +89,10 @@
         <div class="alert" v-if="supportCode==1">
             <div class="alertBox alert1" >
                 <span class="fas fa-circle-notch fa-spin"></span>
-                <h4>imKey Pro 固件版本升级中，请耐心等待</h4>
+                <h4>{{$t('m.imKeyManager.imKey_pro_firmware_update_wait')}}</h4>
                <line></line>
-                <p>注意：升级完成后 imKey Pro 将自动重启</p>
-                <p>升级过程中请勿断开 USB 连接，同时中止 imKey 操作</p>
+                <p>{{$t('m.imKeyManager.restart_automatically_after_upgrade')}}</p>
+                <p>{{$t('m.imKeyManager.upgrading_do_not_disconnect_usb_operating')}}</p>
             </div>
         </div>
         <div class="alert" v-if="supportCode==2">
@@ -100,9 +100,9 @@
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M7 22H4C3.46957 22 2.96086 21.7893 2.58579 21.4142C2.21071 21.0391 2 20.5304 2 20V13C2 12.4696 2.21071 11.9609 2.58579 11.5858C2.96086 11.2107 3.46957 11 4 11H7M14 9V5C14 4.20435 13.6839 3.44129 13.1213 2.87868C12.5587 2.31607 11.7956 2 11 2L7 11V22H18.28C18.7623 22.0055 19.2304 21.8364 19.5979 21.524C19.9654 21.2116 20.2077 20.7769 20.28 20.3L21.66 11.3C21.7035 11.0134 21.6842 10.7207 21.6033 10.4423C21.5225 10.1638 21.3821 9.90629 21.1919 9.68751C21.0016 9.46873 20.7661 9.29393 20.5016 9.17522C20.2371 9.0565 19.9499 8.99672 19.66 9H14Z" stroke="#43454F" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                <h5>升级完成</h5>
-                <p>当前可以正常使用 imKey Manager</p>
-                <button @click="changeCode(0)">确定</button>
+                <h5>{{$t('m.imKeyManager.upgrade_done')}}</h5>
+                <p>{{$t('m.imKeyManager.can_used_imKey_manager')}}</p>
+                <button @click="changeCode(0)">{{$t('m.imKeyManager.ok')}}</button>
             </div>
         </div>
         <div class="alert" v-if="supportCode==3">
@@ -113,18 +113,18 @@
                     <path d="M9 9L15 15" stroke="#43454F" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
 
-                <h5>升级失败</h5>
-                <p>请检查 USB 连接或网络连接情况，确认无误后点击升级重试</p>
-                <button @click="changeCode(0)">确定</button>
+                <h5>{{$t('m.imKeyManager.upgrade_fail')}}</h5>
+                <p>{{$t('m.imKeyManager.check_usb_internet_connect_click_upgrade_retry')}}</p>
+                <button @click="changeCode(0)">{{$t('m.imKeyManager.ok')}}</button>
             </div>
         </div>
         <div class="alert" v-if="supportCode==4">
             <div class="alertBox alert4">
                 <p class="codeBox">{{bindCode}}</p>
-                <h5>绑定码</h5>
-                <p>8 位绑定码，英文字母均为大写</p>
-                <p>绑定码用于核实设备与 PC 端的关联关系，请仔细抄写并保管</p>
-                <button @click="changeCode(0)">确定</button>
+                <h5>{{$t('m.imKeyManager.bin_code')}}</h5>
+                <p>{{$t('m.imKeyManager.bind_code_8_bit_world_uppercase')}}</p>
+                <p>{{$t('m.imKeyManager.bind_code_used_check_device_please_save')}}</p>
+                <button @click="changeCode(0)">{{$t('m.imKeyManager.ok')}}</button>
             </div>
         </div>
         <div class="alert" v-if="supportCode==5">
@@ -135,33 +135,33 @@
                     <path d="M9 9L15 15" stroke="#43454F" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
 
-                <h5>加载失败</h5>
-                <p>请检查 USB 连接或网络连接情况，确认无误后点击重试</p>
-                <button @click="changeCode(0)">确定</button>
+                <h5>{{$t('m.imKeyManager.loading_fail')}}</h5>
+                <p>{{$t('m.imKeyManager.check_usb_internet_connect_retry')}}</p>
+                <button @click="changeCode(0)">{{$t('m.imKeyManager.ok')}}</button>
             </div>
         </div>
         <div class="tip6" v-else-if="status==6">
-            <p>发现 imKey Manager 新版本！</p>
-            <button @click="updateNowTip">更新</button>
+            <p>{{$t('m.imKeyManager.found_imKey_manager_new_version')}}</p>
+            <button @click="updateNowTip">{{$t('m.imKeyManager.update')}}</button>
         </div>
     </div>
     <div class="statusBox status2" v-else-if="status==2">
         <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M52.68 42.72C53.52 40.65 54 38.385 54 36C54 26.055 45.945 18 36 18C33.615 18 31.35 18.48 29.265 19.32L34.14 24.195C34.755 24.09 35.37 24 36 24C42.63 24 48 29.37 48 36C48 36.645 47.94 37.275 47.835 37.875L52.68 42.72ZM36 12C49.26 12 60 22.74 60 36C60 40.065 58.95 43.86 57.165 47.205L61.575 51.615C64.365 47.07 66 41.73 66 36C66 19.425 52.56 6 36 6C30.27 6 24.93 7.635 20.385 10.425L24.765 14.805C28.11 13.02 31.935 12 36 12ZM9.81 7.5L6 11.325L12.315 17.64C8.37 22.71 6 29.07 6 36C6 47.085 12.03 56.745 20.985 61.935L23.985 56.745C16.83 52.605 12 44.865 12 36C12 30.735 13.71 25.875 16.59 21.915L20.895 26.22C19.065 29.04 18 32.385 18 36C18 42.66 21.615 48.45 26.985 51.57L30.015 46.35C26.43 44.265 24 40.44 24 36C24 34.065 24.51 32.265 25.32 30.645L30.06 35.385L30 36C30 39.315 32.685 42 36 42L36.615 41.94L36.645 41.97L59.175 64.5L63 60.675L12.81 10.5L9.81 7.5Z" fill="#111111"/>
         </svg>
-        <p>访问出错，请检查你的网络连接</p>
+        <p>{{$t('m.imKeyManager.access_error_please_check_your_network_connection')}}</p>
     </div>
     <div class="statusBox status3" v-else-if="status==3">
         <svg width="61" height="60" viewBox="0 0 61 60" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M5.457 12.7291C4.30497 14.4024 3.2742 16.1355 2.48597 17.988C0.9095 21.6932 0 25.6972 0 29.9402C0 34.6016 1.0914 39.0239 3.03167 42.9681L11.7629 37.9482C10.6715 35.498 10.0651 32.749 10.0651 29.9402C10.0651 27.5498 10.4896 25.2191 11.2778 23.0677C12.0054 21.1554 12.9755 19.3626 14.2488 17.749C17.4018 13.6255 22.1312 10.757 27.5882 9.98008V0C18.4325 0.836653 10.4896 5.67729 5.457 12.7291ZM58.5112 17.8685C57.7229 16.0757 56.7528 14.4024 55.6614 12.7888C50.6288 5.73705 42.6252 0.896414 33.4696 0V9.98008C38.9266 10.757 43.7166 13.6853 46.8696 17.8088C48.0216 19.3626 48.9917 21.0359 49.6587 22.8884C50.5076 25.0996 50.932 27.4303 50.932 29.8805C50.932 32.6892 50.3257 35.3785 49.2949 37.7689L58.0261 42.7888C59.9057 38.8446 60.9972 34.4821 60.9972 29.8805C61.0578 25.6375 60.1483 21.5737 58.5112 17.8685ZM33.4696 49.9004C32.4995 50.0199 31.5293 50.1394 30.5592 50.1394C29.5891 50.1394 28.6189 50.0797 27.6488 49.9004C22.5556 49.1833 18.0687 46.6135 14.9158 42.9084L6.06333 47.9283C11.0959 54.5618 18.7963 59.0438 27.5882 59.8805C28.5583 59.9402 29.5284 60 30.4986 60C31.4687 60 32.4388 59.9402 33.409 59.8805C42.1402 59.0438 49.8406 54.5618 54.8732 48.0478L46.0813 42.9681C42.9284 46.6135 38.5022 49.1833 33.4696 49.9004Z" fill="#111111"/>
         </svg>
-        <p>加载中，请耐心等待</p>
+        <p>{{$t('m.imKeyManager.loading_please_wait')}}</p>
     </div>
     <div class="statusBox status4" v-else-if="status==4">
         <div class="status4Alert">
             <div class="status4AlertBox">
-                <h4>发现新版本</h4>
-                <p>新版本为 V2.10，当前版本为 V1.50</p>
+                <h4>{{$t('m.imKeyManager.found_new_version')}}</h4>
+                <p>{{$t('m.imKeyManager.new_version_is')}}V{{softNewVersionData}}{{$t('m.imKeyManager.current_version_is')}}V{{softOldVersionData}}</p>
                 <p>
                     <svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <circle cx="3" cy="3" r="2.5" stroke="#8189A7"/>
@@ -175,8 +175,8 @@
                     新增暗黑模式
                 </p>
                 <p>
-                    <button class="later" @click="later">稍后更新</button>
-                    <button class="updateNow" @click="updateNow">立刻更新</button>
+                    <button class="later" @click="later">{{$t('m.imKeyManager.update_later')}}</button>
+                    <button class="updateNow" @click="updateNow">{{$t('m.imKeyManager.update_now')}}</button>
                 </p>
             </div>
         </div>
@@ -184,8 +184,8 @@
     <div class="statusBox status5" v-else-if="status==5">
         <div class="status5Alert">
             <div class="status5AlertBox">
-                <h4>发现新版本</h4>
-                <p>新版本为 V2.10，当前版本为 V1.50</p>
+                <h4>{{$t('m.imKeyManager.found_new_version')}}</h4>
+                <p>{{$t('m.imKeyManager.new_version_is')}}V{{softNewVersionData}}{{$t('m.imKeyManager.current_version_is')}}V{{softOldVersionData}}</p>
                 <p>
                     <svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <circle cx="3" cy="3" r="2.5" stroke="#8189A7"/>
@@ -200,7 +200,7 @@
                 </p>
                 <p>
                     <el-progress color="#000" :percentage="progress" ></el-progress>
-                    <a href="javascript:;" @click="later">取消</a>
+                    <a href="javascript:;" @click="later">{{$t('m.imKeyManager.cancel')}}</a>
                 </p>
             </div>
         </div>
@@ -232,7 +232,7 @@ export default {
       errorInfo: {},
       softUpdateInfo: '',
       softOldVersionData: packagejson.version,
-      softNewVersionData: ''
+      softNewVersionData: '2.1.0'
     }
   },
   destroyed () {
@@ -250,9 +250,9 @@ export default {
       if (online) {
         this.getSn()
         // TODO 软件升级检测
-        // if (process.env.NODE_ENV === 'production') {
-        //   this.checkSoftUpdate()
-        // }
+        if (process.env.NODE_ENV === 'production') {
+          this.checkSoftUpdate()
+        }
       } else {
         this.status = 2
       }
@@ -329,7 +329,16 @@ export default {
         this.cosOldVersionData = response
         this.$store.state.cosOldVersionData = response
         // this.toCosCheckUpdate()
+
         // TODO this.toCosCheckUpdate()
+        // 升级按钮变黑
+        this.cosNewVersionData = '1.6.0'
+        this.isCosUpdate = true
+        this.$store.state.isCosUpdate = true
+        this.$store.state.cosNewVersionData = this.cosNewVersionData
+
+        // 检查完成
+        // this.status = 6
       } else {
         // 获取固件版本失败
         this.changeCode(5)
@@ -401,32 +410,33 @@ export default {
     },
     updateNow () {
       // 更新显示进度
-      this.status = 5
-      setTimeout(() => {
-        this.progress = 20
-      }, 1000)
-      setTimeout(() => {
-        this.progress = 40
-      }, 2000)
-      setTimeout(() => {
-        this.progress = 60
-      }, 3000)
-      setTimeout(() => {
-        this.progress = 80
-      }, 4000)
-      setTimeout(() => {
-        this.progress = 100
-        this.status = 6
-      }, 5000)
+      // this.status = 5
+      // setTimeout(() => {
+      //   this.progress = 20
+      // }, 1000)
+      // setTimeout(() => {
+      //   this.progress = 40
+      // }, 2000)
+      // setTimeout(() => {
+      //   this.progress = 60
+      // }, 3000)
+      // setTimeout(() => {
+      //   this.progress = 80
+      // }, 4000)
+      // setTimeout(() => {
+      //   this.progress = 100
+      //   this.status = 6
+      // }, 5000)
       // 下载并更新
-      // this.downloadAndUpdate();
+      this.downloadAndUpdate();
     },
     checkSoftUpdate () {
       // 开始检查
       ipcRenderer.send('checkForUpdate')
       // 添加自动更新事件的监听
       ipcRenderer.on('updateMessage', (event, obj) => {
-        event.sender.removeAllListeners('updateMessage')
+          // 显示更新
+          this.status = 6
         if (obj.action === 'updateAva') {
           this.softNewVersionData = obj.updateInfo.version
           this.softUpdateInfo = obj.updateInfo.releaseNotes
@@ -515,6 +525,8 @@ export default {
         height: 32px;
         background: #E0E0E0;
         border-radius: 28px;
+        font-size: 13px;
+        line-height: 18px;
         color: #fff;
         margin-left: 17px;
     }
@@ -527,6 +539,8 @@ export default {
         height: 32px;
         background: #2E3035;
         border-radius: 28px;
+        font-size: 13px;
+        line-height: 18px;
         color: #fff;
         margin-left: 17px;
     }
