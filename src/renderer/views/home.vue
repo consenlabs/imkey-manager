@@ -60,6 +60,7 @@ export default {
     }
     .homeBox .routerBar{
         width: 300px;
+        min-width: 300px;
     }
     .homeBox .routerView{
         flex: 1;
@@ -81,6 +82,7 @@ export default {
     }
     .homeBox .routerBar ul{
         margin-top: 57px;
+        min-width: 12px;
     }
     .homeBox .routerBar ul li{
         height: 48px;
