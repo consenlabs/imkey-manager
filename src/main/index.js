@@ -11,7 +11,7 @@ const walletApi = require('../api/walletapi')
 let envPath
 if (process.platform === 'win32') {
   if (process.env.NODE_ENV === 'production') {
-    envPath = require('path').resolve(__dirname, '.env').replace('\\app.asar\\dist\\electron', '')
+    envPath = require('path').resolve(__dirname, '.env').replace('\\resources\\app.asar\\dist\\electron', '')
   } else {
     envPath = require('path').resolve('.env')
   }

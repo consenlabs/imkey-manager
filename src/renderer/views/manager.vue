@@ -108,8 +108,7 @@ export default {
       // const response = result.result
       // if (result.isSuccess) {
       //   if (response === constants.RESULT_STATUS_SUCCESS) {
-
-      if (this.$store.state.apps === '' || this.$store.state.apps === null || this.$store.state.apps === []) {
+      if (JSON.stringify(this.$store.state.apps)==="[]" ) {
         // 加载应用
         this.getAppsList()
       } else {

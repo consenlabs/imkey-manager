@@ -108,7 +108,7 @@
                 </div>
             </div>
             <div class="set3" v-if="page==3">
-                <h3>{{$t('m.imKeyManager.setting_pin')}}</h3>
+                <h3>{{$t('m.imKeyManager.disconnect_usb')}}</h3>
                 <div class="nav">
                     <p class="msg">{{$t('m.imKeyManager.disconnect_usb_use_imKey_setting')}}</p>
                     <p class="course" @click="openUrl">
@@ -123,6 +123,7 @@
                         </svg>
                     </p>
                 </div>
+                <h3>{{$t('m.imKeyManager.setting_pin')}}</h3>
                 <div class="step">
                     <p>
                         <svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -680,7 +681,7 @@ export default {
         padding-left: 38px;
         position: relative;
     }
-    .set1,.set2{
+    .set1,.set2,set3{
         height: 100%;
     }
     .setKeyPage  h3{
@@ -710,10 +711,13 @@ export default {
     }
     .setKeyPage .set3 .mattersNeedingAttention{
         height: 21px;
-        margin-top: 0;
+        margin-top: 15px;
     }
     .setKeyPage .set3 h3{
-        margin-top: 57px;
+        margin-top: 20px;
+    }
+    .setKeyPage .set3 .course {
+        margin-top: -30px;
     }
     .setKeyPage .mattersNeedingAttention p{
         font-size: 15px;
@@ -759,6 +763,10 @@ export default {
         font-size: 15px;
         line-height: 21px;
     }
+    .setKeyPage .set3 .msg{
+        margin-top: 0px;
+        color: #8189A7;
+    }
     .setKeyPage  .course{
         display: flex;
         justify-content: center;
@@ -766,6 +774,9 @@ export default {
     }
     .setKeyPage  .course span{
         padding: 0 11px;
+    }
+    .setKeyPage .set3 .careful{
+        margin-top: 20px;
     }
     .setKeyPage .careful{
         font-weight: 600;

@@ -46,9 +46,9 @@ export const m = {
     // bind_code_error_please_check:'绑定码错误，请仔细核对，或通过导入助记词重置 imKey 找回',
 
 
-
+    disconnect_usb:'断开USB连接',
     setting_pin:'设置 PIN 码',
-    disconnect_usb_use_imKey_setting:'请断开 USB 连接，使用 imKey 进行设置',
+    disconnect_usb_use_imKey_setting:'请断开 USB 连接，使用 imKey 进行设置，设置完成后重新连接并选择下一步',
     use_pin_unlock_imKey:'PIN 码用于解锁 imKey',
     setting_6_8_bit_pin:'设置 6-8 位 PIN 码',
     do_not_enter_the_same_or_consecutive_pin:'请勿输入相同或连续数字的 PIN 码',
