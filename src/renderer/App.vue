@@ -15,8 +15,8 @@
     html,body,#app{
         height: 100%;
         overflow: hidden;
-        min-width: 1218px;
-        min-height: 600px;
+        min-width: 1440px;
+        min-height: 862px;
     }
     button{
         outline: none;

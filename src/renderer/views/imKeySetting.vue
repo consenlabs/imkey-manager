@@ -711,10 +711,10 @@ export default {
     }
     .setKeyPage .set3 .mattersNeedingAttention{
         height: 21px;
-        margin-top: 15px;
+        margin-bottom: 15px;
     }
     .setKeyPage .set3 h3{
-        margin-top: 20px;
+        margin-top: 40px;
     }
     .setKeyPage .set3 .course {
         margin-top: -30px;

@@ -23,8 +23,13 @@
                 </div>
             </div>
             <div class="session2">
-                <p>{{$t('m.imKeyManager.device_SN')}}SN:{{SN}}  <span class="el-icon-copy-document" @click="copyText"></span></p>
-                <p>{{$t('m.imKeyManager.device_bind_code')}}<span @click="exportBindCode">{{$t('m.imKeyManager.export')}}</span></p>
+
+                <p>{{$t('m.imKeyManager.device_SN')}}SN:{{SN}}
+                    <el-tooltip :manual="true" v-model="copyTooltipDisabled" :content="$t('m.imKeyManager.copy_success')" placement="top">
+                        <span class="el-icon-copy-document" @click="copyText"></span>
+                    </el-tooltip>
+                </p>
+                <p>{{$t('m.imKeyManager.device_bind_code')}}<span class="exportBindCode" @click="exportBindCode">{{$t('m.imKeyManager.export')}}</span></p>
             </div>
         </div>
         <h3>{{$t('m.imKeyManager.understand_more')}}</h3>
@@ -232,7 +237,8 @@ export default {
       errorInfo: {},
       softUpdateInfo: '',
       softOldVersionData: packagejson.version,
-      softNewVersionData: '2.1.0'
+      softNewVersionData: '2.1.0',
+      copyTooltipDisabled:false
     }
   },
   destroyed () {
@@ -260,7 +266,14 @@ export default {
   },
   methods: {
     copyText () {
-      copy(this.SN)
+     const res =  copy(this.SN)
+        if(res){
+            this.copyTooltipDisabled=true
+            setTimeout(() => {
+                this.copyTooltipDisabled=false
+            }, 1000)
+        }
+
     },
     changeCode (code) {
       this.supportCode = code
@@ -467,6 +480,14 @@ export default {
 </script>
 
 <style>
+    .exportBindCode:hover,
+    hover {
+        cursor: pointer;
+    }
+    .el-icon-copy-document:hover,
+    hover {
+        cursor: pointer;
+    }
     .container{
         padding-left: 38px;
     }

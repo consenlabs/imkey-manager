@@ -19,7 +19,7 @@
         <p>
             <button @click="next()">{{$t('m.imKeyManager.use_now')}}</button>
         </p>
-        <p><i></i><span @click="openUrl">{{$t('m.imKeyManager.no_have_imKey_pro')}}</span></p>
+        <p><i></i><span class="link" @click="openUrl">{{$t('m.imKeyManager.no_have_imKey_pro')}}</span></p>
     </div>
 </template>
 
@@ -49,6 +49,10 @@ export default {
 }
 </script>
 <style scoped>
+    .link:hover,
+    hover {
+        cursor: pointer;
+    }
     .appStart{
         height: 100%;
         text-align: center;

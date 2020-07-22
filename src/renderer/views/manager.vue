@@ -19,22 +19,21 @@
                         <p>{{item.desc}}</p>
                     </div>
                     <div>
+                        <a class="col" v-if="item.installed===true" href="javascript:;">{{$t('m.imKeyManager.installed')}}</a>
                         <a v-if="item.installDis===false" href="javascript:;" @click="installApp(item,index)">{{$t('m.imKeyManager.install')}}</a>
                         <a v-if="item.updateDis===false" href="javascript:;" @click="updateApp(item,index)">{{$t('m.imKeyManager.upgrade')}}</a>
-                        <a class="col" v-if="item.installed===true" href="javascript:;">{{$t('m.imKeyManager.installed')}}</a>
                         <a v-if="item.deleteDis===false" href="javascript:;" @click="deleteApp(item,index)">{{$t('m.imKeyManager.delete')}}</a>
-                        <el-tooltip class="item" effect="dark" placement="right">
-                            <div slot="content">{{$t('m.imKeyManager.APP_installing_do_not_disconnect_usb')}}</div>
+
+                        <el-tooltip class="item" v-model="item.installLoading" :content="$t('m.imKeyManager.APP_installing_do_not_disconnect_usb')" effect="dark" placement="top end">
                             <span v-if="item.installLoading===true" class="fas fa-circle-notch fa-spin"></span>
                         </el-tooltip>
-                        <el-tooltip  class="item" effect="dark" placement="right">
-                            <div slot="content">{{$t('m.imKeyManager.APP_deleting_do_not_disconnect_usb')}}</div>
+                        <el-tooltip  class="item" v-model="item.updateLoading" :content="$t('m.imKeyManager.APP_upgrading_do_not_disconnect_usb')" effect="dark" placement="top end">
                             <span v-if="item.updateLoading===true" class="fas fa-circle-notch fa-spin"></span>
                         </el-tooltip>
-                        <el-tooltip class="item" effect="dark" placement="right">
-                            <div slot="content">{{$t('m.imKeyManager.APP_upgrading_do_not_disconnect_usb')}}</div>
+                        <el-tooltip class="item" :manual="true" v-model="item.deleteLoading" :content="$t('m.imKeyManager.APP_deleting_do_not_disconnect_usb')" effect="dark" placement="top end">
                             <span v-if="item.deleteLoading===true" class="fas fa-circle-notch fa-spin"></span>
                         </el-tooltip>
+
                     </div>
                 </li>
             </ul>
@@ -58,7 +57,7 @@
 <script>
 import constants from '../../common/constants'
 import { ipcRenderer } from 'electron'
-
+const getStyle = require('element-ui')
 export default {
   name: 'manager',
   data () {
@@ -76,9 +75,9 @@ export default {
   computed: {
     getApps () {
       let arr = []
-      arr = this.appName
+      arr = this.appName.toUpperCase()
         ? this.apps.filter(ele => {
-          if (ele.name.match(this.appName)) {
+          if (ele.name.match(this.appName.toUpperCase())) {
             return ele
           }
         })

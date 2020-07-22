@@ -112,6 +112,7 @@ export const m = {
     update_later:'稍后更新',
     update_now:'立刻更新',
     cancel:'取消',
+    copy_success:'复制成功',
   },
   appStart: {
     imKey_manager: 'imKey Manager',
