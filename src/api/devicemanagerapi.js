@@ -366,7 +366,7 @@ export function importBindCode(bindCode) {
         const bindCodePath = response.result + "bindCode.json"
         //加密绑定码
         const enBindCode ={
-            bindCode:crypto.encryptData(bindCode, process.env.bindCode_encryptionKey)
+            bindCode:crypto.encryptData(bindCode.toUpperCase(), process.env.bindCode_encryptionKey)
         }
         // fs.writeFile  写入文件（会覆盖之前的内容）（文件不存在就创建）  utf8参数可以省略
         try {

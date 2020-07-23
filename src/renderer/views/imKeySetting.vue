@@ -714,7 +714,7 @@ export default {
         margin-bottom: 15px;
     }
     .setKeyPage .set3 h3{
-        margin-top: 40px;
+        margin-top: 20px;
     }
     .setKeyPage .set3 .course {
         margin-top: -30px;
@@ -728,9 +728,9 @@ export default {
         width: 800px;
         height: 90px;
         border-top: 1px solid #F1F2FA;
-        position: absolute;
+        position: fixed;
+        margin-top: 10px;
         bottom: 0;
-        left: 38px;
         display: block;
         padding-top: 23px;
 
