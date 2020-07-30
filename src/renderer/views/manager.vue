@@ -1,7 +1,7 @@
 <template>
     <div class="container">
         <h2>{{$t('m.imKeyManager.manager')}}</h2>
-        <p class="msg">{{$t('m.imKeyManager.imKey_pro_install_uninstall_delete_Apps')}}</p>
+        <p class="msg">{{$t('m.imKeyManager.view_imKey_Pro_support_coin_list_install_update_Apps')}}</p>
         <h3>{{$t('m.imKeyManager.App_list')}}</h3>
         <div class="searchBox">
             <input type="text" :placeholder="$t('m.imKeyManager.search')" v-model="appName">
@@ -22,7 +22,7 @@
                         <a class="col" v-if="item.installed===true" href="javascript:;">{{$t('m.imKeyManager.installed')}}</a>
                         <a v-if="item.installDis===false" href="javascript:;" @click="installApp(item,index)">{{$t('m.imKeyManager.install')}}</a>
                         <a v-if="item.updateDis===false" href="javascript:;" @click="updateApp(item,index)">{{$t('m.imKeyManager.upgrade')}}</a>
-                        <a v-if="item.deleteDis===false" href="javascript:;" @click="deleteApp(item,index)">{{$t('m.imKeyManager.delete')}}</a>
+<!--                        <a v-if="item.deleteDis===false" href="javascript:;" @click="deleteApp(item,index)">{{$t('m.imKeyManager.delete')}}</a>-->
 
                         <el-tooltip class="item" v-model="item.installLoading" :content="$t('m.imKeyManager.APP_installing_do_not_disconnect_usb')" effect="dark" placement="top end">
                             <span v-if="item.installLoading===true" class="fas fa-circle-notch fa-spin"></span>
@@ -30,9 +30,9 @@
                         <el-tooltip  class="item" v-model="item.updateLoading" :content="$t('m.imKeyManager.APP_upgrading_do_not_disconnect_usb')" effect="dark" placement="top end">
                             <span v-if="item.updateLoading===true" class="fas fa-circle-notch fa-spin"></span>
                         </el-tooltip>
-                        <el-tooltip class="item" :manual="true" v-model="item.deleteLoading" :content="$t('m.imKeyManager.APP_deleting_do_not_disconnect_usb')" effect="dark" placement="top end">
-                            <span v-if="item.deleteLoading===true" class="fas fa-circle-notch fa-spin"></span>
-                        </el-tooltip>
+<!--                        <el-tooltip class="item" :manual="true" v-model="item.deleteLoading" :content="$t('m.imKeyManager.APP_deleting_do_not_disconnect_usb')" effect="dark" placement="top end">-->
+<!--                            <span v-if="item.deleteLoading===true" class="fas fa-circle-notch fa-spin"></span>-->
+<!--                        </el-tooltip>-->
 
                     </div>
                 </li>
@@ -57,7 +57,7 @@
 <script>
 import constants from '../../common/constants'
 import { ipcRenderer } from 'electron'
-const getStyle = require('element-ui')
+// const getStyle = require('element-ui')
 export default {
   name: 'manager',
   data () {
@@ -89,16 +89,6 @@ export default {
     this.init()
   },
   methods: {
-    changeStatus (name, code) {
-      this[name] = code
-      /* if(是否加载成功){
-                    成功
-                    this[name]=2;
-                }else{
-                    this[name]=1;
-                    this.tip=true;
-                } */
-    },
     ok () {
       this.tip = false
     },
@@ -107,7 +97,7 @@ export default {
       // const response = result.result
       // if (result.isSuccess) {
       //   if (response === constants.RESULT_STATUS_SUCCESS) {
-      if (JSON.stringify(this.$store.state.apps)==="[]" ) {
+      if (JSON.stringify(this.$store.state.apps) === '[]') {
         // 加载应用
         this.getAppsList()
       } else {
@@ -131,6 +121,9 @@ export default {
           const appList = []
           const tempAppList = response.list
           for (let i = 0; i < tempAppList.length; i++) {
+            if (tempAppList[i].name === 'IMK') {
+              tempAppList[i].name = this.$t('m.imKeyManager.imKey_soft')
+            }
             const collection = {
               name: tempAppList[i].name,
               desc: tempAppList[i].desc,
@@ -351,8 +344,13 @@ export default {
         box-shadow: 0px 0px 6px rgba(0, 0, 0, 0.1);
         border-radius: 147px;
         padding-left: 38px;
+        font-family: PingFang SC;
+        font-style: normal;
+        font-weight: normal;
         font-size: 13px;
         line-height: 18px;
+        display: flex;
+        align-items: center;
         color: #C8CAD0;
     }
 
@@ -397,6 +395,8 @@ export default {
     }
 
     .appItem ul li div p:nth-child(1) {
+        font-weight: 600;
+        font-size: 15px;
         color: #0E1019;
     }
 

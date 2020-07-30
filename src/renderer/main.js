@@ -6,7 +6,14 @@ import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 import VueI18n from 'vue-i18n'
 import '@fortawesome/fontawesome-free/css/all.css' // Ensure you are using css-loader
-
+const { remote, ipcRenderer } = require('electron') // Renderer process modules
+const { screen } = remote // Main process modules
+const devInnerHeight = 1080.0 // 开发时的InnerHeight
+const devDevicePixelRatio = 1.0// 开发时的devicepixelratio
+const devScaleFactor = 1.3 // 开发时的ScaleFactor
+const scaleFactor = screen.getPrimaryDisplay().scaleFactor
+const zoomFactor = (window.innerHeight / devInnerHeight) * (window.devicePixelRatio / devDevicePixelRatio) * (devScaleFactor / scaleFactor)
+ipcRenderer.send('zoomIn', zoomFactor)
 Vue.config.productionTip = false
 Vue.prototype.$store = store
 Vue.prototype.router = router

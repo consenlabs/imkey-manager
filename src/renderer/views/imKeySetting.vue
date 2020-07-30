@@ -3,7 +3,7 @@
         <div class="routerBar">
             <h2>{{$t('m.imKeyManager.imKey_setting')}}</h2>
             <p>{{$t('m.imKeyManager.following_operations_on_imKey')}}</p>
-            <div>
+            <div class="el-steps">
                 <el-steps direction="vertical" :active="active">
                     <el-step :title="$t('m.imKeyManager.bin_code')"></el-step>
                     <el-step :title="$t('m.imKeyManager.create_restore_Wallet')"></el-step>
@@ -50,7 +50,7 @@
                     </p>
                 </div>
                 <div class="btnBox">
-                    <button class="nextBtn" @click="send({page:2,active:0,isNext:true})">{{$t('m.imKeyManager.next')}}</button>
+                    <button :class="[bindViewFinish?'':'noFinish']" class="nextBtn" @click="send({page:2,active:0,isNext:true})">{{$t('m.imKeyManager.next')}}</button>
                 </div>
             </div>
             <div class="set2" v-if="page==2">
@@ -80,13 +80,9 @@
                     <input type="text" maxlength="1" v-model="code7" @focus="inpFocus($event)" @keyup="inpCode(7,$event)">
                     <input type="text" maxlength="1" v-model="code8" @focus="inpFocus($event)" @keyup="inpCode(8,$event)">
                 </div>
-                <p class="codeTit" v-if="!codeIsTrue">
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M6 11C8.76142 11 11 8.76142 11 6C11 3.23858 8.76142 1 6 1C3.23858 1 1 3.23858 1 6C1 8.76142 3.23858 11 6 11Z" stroke="#ED766C" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M6 4V6" stroke="#ED766C" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M6 8H6.005" stroke="#ED766C" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    {{$t('m.imKeyManager.bind_code_error_please_check')}}
+                <p1 v-if="bindingStatus==1"><span class="fas fa-circle-notch fa-spin"></span>{{$t('m.imKeyManager.verifying')}}</p1>
+                <p2 v-if="bindingStatus==2"><span class="el-icon-success"></span>{{$t('m.imKeyManager.verified_successfully')}}</p2>
+                <p class="codeTit" v-if="!codeIsTrue"><span class="el-icon-warning"></span>{{$t('m.imKeyManager.bind_code_error_please_check')}}
                 </p>
                 <p class="careful">{{$t('m.imKeyManager.precautions')}}</p>
                 <div class="mattersNeedingAttention">
@@ -104,7 +100,7 @@
                     </p>
                 </div>
                 <div class="btnBox">
-                    <button class="nextBtn" @click="send({page:3,active:1,isNext:true})">{{$t('m.imKeyManager.next')}}</button>
+                    <button :class="[bindFinish?'':'noFinish']" class="nextBtn" @click="send({page:3,active:1,isNext:true})">{{$t('m.imKeyManager.next')}}</button>
                 </div>
             </div>
             <div class="set3" v-if="page==3">
@@ -175,6 +171,7 @@
                     </p>
                 </div>
                 <div class="btnBox">
+                    <p class="codeTit" v-if="checkWalletTip" style="display:inline-block;float: left;"><span class="el-icon-warning"></span>{{$t('m.imKeyManager.done_setting_select_next')}}</p>
                     <button class="nextBtn" @click="send({page:4,active:2,isNext:true})">下一步</button>
                     <button class="prevBtn" @click="send({page:2,active:0,isNext:false})">上一步</button>
                 </div>
@@ -275,8 +272,69 @@ export default {
       step3: false,
       checkTip: true,
       finish: false,
-      isBindDisplay: false
+      bindFinish: false,
+      isBindDisplay: false,
+      bindingStatus: '', // 0不显示 1验证中 2验证成功
+      checkWalletTip: false,
+      bindViewFinish: false
     }
+  },
+  mounted () {
+    this.connect().then(result => {
+      if (result.isSuccess) {
+        // 判断是否已激活
+        if (this.$store.state.activeStatus === 'latest') {
+          // 开始判断是否绑定
+          this.bindDevice().then(result => {
+            if (result.isSuccess) {
+              if (result.bindStatus === constants.BIND_STATUS_STRING_BOUND_OTHER) {
+                this.bindViewFinish = true
+              } else if (result.bindStatus === constants.BIND_STATUS_STRING_UNBOUND) {
+                // 显示绑定码
+                this.bindDisplay().then(result => {
+                  if (result.isSuccess) {
+                    this.bindViewFinish = true
+                  } else {
+                  }
+                })
+              } else if (result.bindStatus === constants.BIND_STATUS_STRING_BOUND_THIS) {
+                console.log('result.bindStatus:' + result.bindStatus)
+                this.bindViewFinish = true
+              } else {
+              }
+            } else {
+
+            }
+          })
+        } else {
+          this.activeDevice().then(result => {
+            if (result.isSuccess) {
+              // 开始判断是否绑定
+              this.bindDevice().then(result => {
+                if (result.isSuccess) {
+                  if (result.bindStatus === constants.BIND_STATUS_STRING_BOUND_OTHER) {
+                    this.bindViewFinish = true
+                  } else if (result.bindStatus === constants.BIND_STATUS_STRING_UNBOUND) {
+                    // 显示绑定码
+                    this.bindDisplay().then(result => {
+                      if (result.isSuccess) {
+                        this.bindViewFinish = true
+                      } else {
+                      }
+                    })
+                  } else if (result.bindStatus === constants.BIND_STATUS_STRING_BOUND_THIS) {
+                    this.bindViewFinish = true
+                  } else {
+                  }
+                } else {
+                }
+              })
+            } else {
+            }
+          })
+        }
+      }
+    })
   },
   methods: {
     openUrl () {
@@ -285,8 +343,13 @@ export default {
     send ({ page, active, isNext }) {
       if (page === 0 && active === 0) {
         if (this.finish === true) {
-          // 去首页
-          this.$router.push('/home/welcomeHome')
+          this.connect().then(result => {
+            if (result.isSuccess) {
+              // 去首页
+              this.$router.push('/home/welcomeHome')
+            } else {
+            }
+          })
         }
       } else {
         if (page === 3 && active === 1 && isNext === false) {
@@ -310,93 +373,25 @@ export default {
           // 检查是否绑定，如果未绑定，就再imkey上显示绑定码
           this.connect().then(result => {
             if (result.isSuccess) {
-              // 判断是否已激活
-              if (this.$store.state.activeStatus === 'latest') {
-                // 开始判断是否绑定
-                this.bindDevice().then(result => {
-                  if (result.isSuccess) {
-                    if (result.bindStatus === constants.BIND_STATUS_STRING_BOUND_OTHER) {
-                      this.active = active
-                      this.page = page
-                    } else if (result.bindStatus === constants.BIND_STATUS_STRING_UNBOUND) {
-                      // 显示绑定码
-                      this.bindDisplay().then(result => {
-                        if (result.isSuccess) {
-                          this.active = active
-                          this.page = page
-                        } else {
-                        }
-                      })
-                    } else if (result.bindStatus === constants.BIND_STATUS_STRING_BOUND_THIS) {
-                      this.active = active
-                      this.page = page
-                    } else {
-
-                    }
-                  } else {
-
-                  }
-                })
-              } else {
-                this.activeDevice().then(result => {
-                  if (result.isSuccess) {
-                    // 开始判断是否绑定
-                    this.bindDevice().then(result => {
-                      if (result.isSuccess) {
-                        if (result.bindStatus === constants.BIND_STATUS_STRING_BOUND_OTHER) {
-                          this.active = active
-                          this.page = page
-                        } else if (result.bindStatus === constants.BIND_STATUS_STRING_UNBOUND) {
-                          // 显示绑定码
-                          this.bindDisplay().then(result => {
-                            if (result.isSuccess) {
-                              this.active = active
-                              this.page = page
-                            } else {
-                            }
-                          })
-                        } else if (result.bindStatus === constants.BIND_STATUS_STRING_BOUND_THIS) {
-                          this.active = active
-                          this.page = page
-                        } else {
-
-                        }
-                      } else {
-
-                      }
-                    })
-                  } else {
-                  }
-                })
-              }
-            }
-          })
-          this.firstCheck().then(result => {
-            if (result.isSuccess) {
               this.active = active
               this.page = page
             } else {
-
+              // 检查绑定失败
             }
           })
         }
         if (page === 3 && isNext === true) {
           // 连接设备，
           // 绑定设备，如果失败提示，成功到下一步
-          this.connect().then(result => {
-            if (result.isSuccess) {
-              this.bindAcquire().then(result => {
-                if (result.isSuccess) {
-                  this.active = active
-                  this.page = page
-                } else {
-                  this.codeIsTrue = false
-                }
-              })
-            } else {
-              // 检查绑定失败
-            }
-          })
+          if (this.bindingStatus === 2) {
+            this.connect().then(result => {
+              if (result.isSuccess) {
+                this.active = active
+                this.page = page
+              } else {
+              }
+            })
+          }
         }
         if (page === 4 && isNext === true) {
           // 连接设备，
@@ -408,9 +403,13 @@ export default {
                   this.active = active
                   this.page = page
                 } else {
+                  // 提示
+                  this.checkWalletTip = true
                 }
               })
             } else {
+              // 提示
+              this.checkWalletTip = true
             }
           })
         }
@@ -422,11 +421,40 @@ export default {
         const bindCode = this.code1 + this.code2 + this.code3 + this.code4 + this.code5 + this.code6 + this.code7 + this.code8
         const reg = /^[a-hj-np-zA-HJ-NP-Z2-9]{8}$/
         if (reg.test(bindCode)) {
-          this.bindCode = bindCode
+          if (bindCode.length === 8) {
+            this.bindCode = bindCode
+            // 开始绑定
+            this.bindingStatus = 1
+            setTimeout(() => {
+              this.connect().then(result => {
+                if (result.isSuccess) {
+                  this.bindAcquire().then(result => {
+                    if (result.isSuccess) {
+                      this.bindingStatus = 2
+                      // 下一步按钮变黑，可点击
+                      this.bindFinish = true
+                    } else {
+                      this.bindingStatus = 0
+                      this.codeIsTrue = false
+                      this.bindFinish = false
+                    }
+                  })
+                } else {
+                  // 检查绑定失败
+                  this.bindingStatus = 0
+                  this.codeIsTrue = false
+                  this.bindFinish = false
+                }
+              })
+            }, 100)
+          } else {
+            this.bindingStatus = 0
+            this.codeIsTrue = false
+          }
         } else {
+          this.bindingStatus = 0
           this.codeIsTrue = false
         }
-        return
       }
       if (event.srcElement.value.length === 1) {
         event.srcElement.nextElementSibling.focus()
@@ -467,37 +495,37 @@ export default {
         })
       })
     },
-    firstCheck () {
-      let isTrue
-      return new Promise((resolve) => {
-        this.connect().then(result => {
-          if (result.isSuccess) {
-            // 判断是否已激活
-            if (this.$store.state.activeStatus === 'latest') {
-              // 开始判断是否绑定
-              this.bindDevice().then(result => {
-                if (result.isSuccess) {
-                  isTrue = true
-                } else {
-                  isTrue = false
-                }
-              })
-            } else {
-              this.activeDevice().then(result => {
-                if (result.isSuccess) {
-                  isTrue = true
-                } else {
-                  isTrue = false
-                }
-              })
-            }
-          }
-        })
-        resolve({
-          isSuccess: isTrue
-        })
-      })
-    },
+    // firstCheck () {
+    //   let isTrue
+    //   return new Promise((resolve) => {
+    //     this.connect().then(result => {
+    //       if (result.isSuccess) {
+    //         // 判断是否已激活
+    //         if (this.$store.state.activeStatus === 'latest') {
+    //           // 开始判断是否绑定
+    //           this.bindDevice().then(result => {
+    //             if (result.isSuccess) {
+    //               isTrue = true
+    //             } else {
+    //               isTrue = false
+    //             }
+    //           })
+    //         } else {
+    //           this.activeDevice().then(result => {
+    //             if (result.isSuccess) {
+    //               isTrue = true
+    //             } else {
+    //               isTrue = false
+    //             }
+    //           })
+    //         }
+    //       }
+    //     })
+    //     resolve({
+    //       isSuccess: isTrue
+    //     })
+    //   })
+    // },
     activeDevice () {
       return new Promise((resolve) => {
         const result = ipcRenderer.sendSync('activeDevice')
@@ -612,6 +640,10 @@ export default {
 </script>
 
 <style>
+    .nav:hover,
+    hover {
+        cursor: pointer;
+    }
     .setKeyPage {
         height: 100%;
         display: flex;
@@ -660,6 +692,9 @@ export default {
     .setKeyPage .el-step__line {
         background-color: transparent;
     }
+    .setKeyPage .el-step.is-vertical .el-step__line {
+        border-left: 0.5px dashed #8189A7;
+    }
     .setKeyPage .el-step__head.is-finish {
         color:  #ACB1C6;
         border-color:  #ACB1C6;
@@ -698,7 +733,7 @@ export default {
     }
     .setKeyPage .mattersNeedingAttention{
         width: 730px;
-        height: 80px;
+        height: 90px;
         background: #FAFAFA;
         border-radius: 4px;
         padding: 30px 35px;
@@ -707,10 +742,10 @@ export default {
         overflow: hidden;
     }
     .setKeyPage .set2 .mattersNeedingAttention{
-        height: 49px;
+        height: 60px;
     }
     .setKeyPage .set3 .mattersNeedingAttention{
-        height: 21px;
+        height: 30px;
         margin-bottom: 15px;
     }
     .setKeyPage .set3 h3{
@@ -774,6 +809,7 @@ export default {
     }
     .setKeyPage  .course span{
         padding: 0 11px;
+        color: #B8AC95;
     }
     .setKeyPage .set3 .careful{
         margin-top: 20px;
@@ -785,6 +821,7 @@ export default {
         color: #0E1019;
         margin-top: 80px;
     }
+
     .set2 .codeBox{
         width: 388px;
         height: 47px;
@@ -803,7 +840,27 @@ export default {
         font-size: 24px;
         line-height: 29px;
     }
+    .set2 p1 {
+        font-style: normal;
+        font-weight: normal;
+        font-size: 12px;
+        line-height: 17px;
+        color: #000000;
+    }
+    .set2 p2 {
+        font-style: normal;
+        font-weight: normal;
+        font-size: 12px;
+        line-height: 17px;
+        color: #1BAD3B;
+    }
     .set2 .codeTit{
+        font-size: 12px;
+        line-height: 17px;
+        color: #EC6D62;
+        margin-top: 13px;
+    }
+    .set3 .btnBox .codeTit{
         font-size: 12px;
         line-height: 17px;
         color: #EC6D62;

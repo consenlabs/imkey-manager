@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, Menu, shell, Tray, dialog, crashReporter } from 'electron'
+import { app, BrowserWindow, ipcMain, Menu, shell, Tray, dialog, crashReporter, webFrame } from 'electron'
 // 自动更新相关
 import { autoUpdater } from 'electron-updater'
 // 崩溃报告
@@ -73,8 +73,8 @@ function createMainWindow () {
      */
   mainWindow = new BrowserWindow({
     show: false,
-    height: 1000,
-    width: 1440,
+    height: 820,
+    width: 1500,
     minWidth: 900,
     minHeight: 600,
     useContentSize: true,
@@ -122,7 +122,7 @@ function createTray () {
   trayClose = false
 
   // 系统托盘图标
-  iconPath = `${__static}/logoNotWin.png`
+  iconPath = `${__static}/icon_16x16@2x.png`
   // let iconMessagePath = `${__static}/iconMessageNotWin.png`
   // let iconTransparentPath = `${__static}/iconTransparentNotWin.png`
   // // 通知图标
@@ -524,6 +524,9 @@ function renderDeviceManagerHandler () {
   })
   ipcMain.on('openUrl', (event, url) => {
     shell.openExternal(url)
+  })
+  ipcMain.on('zoomIn', (event, zoomParam) => {
+    webFrame.setZoomFactor(zoomParam)
   })
 }
 

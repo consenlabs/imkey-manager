@@ -53,6 +53,7 @@
                     <p>{{$t('m.imKeyManager.click_connect_button')}}</p>
                     <p>{{$t('m.imKeyManager.enter_pin_on_imKey')}}</p>
                     <p class="last">{{$t('m.imKeyManager.if_no_set_pin_can_jump_step3')}}</p>
+                    <p class="last1">{{$t('m.imKeyManager.if_bind_device_disconnect_bluetooth')}}</p>
                 </div>
             </div>
             <p>
@@ -105,7 +106,7 @@
         <!--tip 固件升级中-->
         <div class="tip4 tip" v-if="status==6">
             <div class="tipBox">
-                <p><span class="el-icon-loading"></span></p>
+                <p><span class="fas fa-circle-notch fa-spin"></span></p>
                 <h3>{{$t('m.imKeyManager.imKey_pro_firmware_update_wait')}}</h3>
                 <p>{{$t('m.imKeyManager.imKey_pro_firmware_update_no_disconnect')}}
                 </p>
@@ -133,7 +134,11 @@
                     <input type="text" maxlength="1" v-model="code8" @focus="inpFocus($event)"
                            @keyup="inpCode(8,$event)">
                 </div>
+                <div class="bindTip">
+                <p1 v-if="bindingStatus==1"><span class="fas fa-circle-notch fa-spin"></span>{{$t('m.imKeyManager.verifying')}}</p1>
+                <p2 v-if="bindingStatus==2"><span class="el-icon-success"></span>{{$t('m.imKeyManager.verified_successfully')}}</p2>
                 <p v-if="!codeIsTrue"><span class="el-icon-warning"></span>{{$t('m.imKeyManager.bind_code_error_please_check')}}</p>
+                </div>
             </div>
         </div>
         <!--tip PIN码输入错误-->
@@ -157,6 +162,7 @@ export default {
       userPath: '',
       connectText: this.$t('m.connectDevice.connect'),
       codeIsTrue: true,
+      bindingStatus: '', // 0不显示 1验证中 2验证成功
       status: 1, // 1开始界面  2连接页面 3检测x`页面  4 检测异常页面  5固件未升级完成页面 6固件升级中 7请输入设备绑定码 8验证码错误
       checkFirmwareUpgrade: 1, // 检测固件版本升级  1 还没检测  2正在检测  3检测成功
       checkDeviceBindingCode: 1, // 检查设备绑定码
@@ -189,7 +195,13 @@ export default {
 
         const reg = /^[a-hj-np-zA-HJ-NP-Z2-9]{8}$/
         if (reg.test(bindCode)) {
-          this.bindAcquire(bindCode)
+          if (bindCode.length === 8) {
+            // 提示正在验证
+            this.bindingStatus = 1
+            setTimeout(() => {
+              this.bindAcquire(bindCode)
+            }, 100)
+          }
         } else {
           this.codeIsTrue = false
         }
@@ -206,7 +218,7 @@ export default {
     },
 
     check () {
-      this.changeState(3)
+      this.changeState(8)
       this.checkFirmwareUpgrade = 1
       this.checkDeviceBindingCode = 1
       this.checkPinAndWallet = 1
@@ -248,6 +260,9 @@ export default {
             const appList = []
             const tempAppList = response.list
             for (let i = 0; i < tempAppList.length; i++) {
+              if (tempAppList[i].name === 'IMK') {
+                tempAppList[i].name = this.$t('m.imKeyManager.imKey_soft')
+              }
               const collection = {
                 name: tempAppList[i].name,
                 desc: tempAppList[i].desc,
@@ -319,8 +334,8 @@ export default {
               }, 1000)
               setTimeout(() => {
                 // 跳转到主页
-                this.$router.push('/home/welcomeHome')
-                // this.$router.push('imKeySetting')
+                // this.$router.push('/home/welcomeHome')
+                this.$router.push('imKeySetting')
               }, 2000)
             } else {
               // 跳转到创建钱包界面
@@ -337,40 +352,45 @@ export default {
       }, 100)
     },
     bindOtherCheckIsCreateWallet () {
-      const result = ipcRenderer.sendSync('getBTCXpub')
-      const response = result.result
-      if (result.isSuccess) {
-        if (response !== '' || response !== null) {
-          if (response.match('xpu')) {
+      setTimeout(() => {
+        const result = ipcRenderer.sendSync('getBTCXpub')
+        const response = result.result
+        if (result.isSuccess) {
+          if (response !== '' || response !== null) {
+            if (response.match('xpu')) {
             // 跳转到主页
-            this.$router.push('/home/welcomeHome')
-          } else {
+              this.$router.push('/home/welcomeHome')
+            } else {
             // 跳转到创建钱包界面
+              this.$router.push('imKeySetting')
+            }
+          } else {
+          // 跳转到创建钱包界面
             this.$router.push('imKeySetting')
           }
         } else {
-          // 跳转到创建钱包界面
-          this.$router.push('imKeySetting')
-        }
-      } else {
         // 错误界面
-        this.changeState(4)
-      }
-    },
-    connect () {
-      const result = ipcRenderer.sendSync('connectDevice')
-      const response = result.result
-      if (result.isSuccess) {
-        if (response === constants.RESULT_STATUS_SUCCESS) {
-          this.checkIsBL()
-        } else {
-          // 连接失败
           this.changeState(4)
         }
-      } else {
+      }, 200)
+    },
+    connect () {
+      setTimeout(() => {
+        const result = ipcRenderer.sendSync('connectDevice')
+        const response = result.result
+        if (result.isSuccess) {
+          if (response === constants.RESULT_STATUS_SUCCESS) {
+            this.changeState(3)
+            this.checkIsBL()
+          } else {
+          // 连接失败
+            this.changeState(4)
+          }
+        } else {
         // 连接失败
-        this.changeState(4)
-      }
+          this.changeState(4)
+        }
+      }, 200)
     },
     toCosUpdate () {
       this.changeState(6)
@@ -399,15 +419,18 @@ export default {
           // 绑定成功后存储绑定码
           const result = ipcRenderer.sendSync('importBindCode', bindCode)
           if (result.isSuccess) {
+            this.bindingStatus = 2
             this.bindOtherCheckIsCreateWallet()
           } else {
             this.changeState(4)
           }
         } else {
           this.codeIsTrue = false
+          this.bindingStatus = 0
         }
       } else {
         this.codeIsTrue = false
+        this.bindingStatus = 0
       }
     },
     getUserPath () {
@@ -475,7 +498,7 @@ export default {
     }
 
     .connectDevice .msgBox {
-        margin-top: 3%;
+        margin-top: 4%;
         display: flex;
         justify-content: center;
     }
@@ -500,7 +523,10 @@ export default {
         font-size: 15px;
         font-weight: 300;
     }
-
+    .connectDevice .msgBox .msg .last1 {
+        font-size: 15px;
+        font-weight: 300;
+    }
     .connectDevice p button {
         width: 400px;
         height: 44px;
@@ -550,7 +576,7 @@ export default {
         font-style: normal;
         font-weight: 300;
         font-size: 13px;
-        ine-height: 20px;
+        line-height: 20px;
         color: #2C2842;
     }
 
@@ -641,16 +667,33 @@ export default {
     }
 
     .tip5 p {
-        font-family: PingFang SC;
         font-style: normal;
         font-weight: normal;
         font-size: 12px;
         line-height: 17px;
         color: #EC6D62;
     }
+    .tip5 p1 {
+        font-style: normal;
+        font-weight: normal;
+        font-size: 12px;
+        line-height: 17px;
+        color: #000000;
+    }
+    .tipBox .bindTip .el-icon-success{
+        color: #1BAD3B;
+
+    }
+    .tip5 p2 {
+        font-style: normal;
+        font-weight: normal;
+        font-size: 12px;
+        line-height: 17px;
+        color: #1BAD3B;
+    }
 
     .tip5 p span {
-        padding-right: 4px;
+        padding-right: 5px;
     }
 
     .tip6 h3 {

@@ -1,8 +1,8 @@
 {
   "name": "imKey-manager",
-  "version": "1.0.0-alpha9",
+  "version": "1.0.0-Beta",
   "author": "imkey <weiqiang@imkey.im>",
-  "description": "imKey-manager @2020",
+  "description": "imKey manager @2020",
   "license": "MIT",
   "main": "./dist/electron/main.js",
   "scripts": {
@@ -23,7 +23,7 @@
     "release": "node .electron-vue/build.js && electron-builder"
   },
   "build": {
-    "productName": "imkey-manager",
+    "productName": "imkey manager",
     "appId": "com.imkey.imkey-manager",
     "copyright": "Copyright © 2020 imkey",
     "directories": {
