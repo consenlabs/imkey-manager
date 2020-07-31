@@ -90,8 +90,7 @@
         <div class="tip1 tip" v-if="status==4">
             <div class="tipBox">
                 <h3>{{$t('m.imKeyManager.usb_connect_error')}}</h3>
-                <p>{{$t('m.imKeyManager.check_usb_connect')}}</p>
-                <p>{{errorInfo}}</p>
+                <p>{{$t('m.imKeyManager.check_usb_connect')}}，{{errorInfo}}</p>
                 <button @click="changeState(1)">{{$t('m.imKeyManager.ok')}}</button>
             </div>
         </div>
