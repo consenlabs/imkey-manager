@@ -91,6 +91,7 @@
             <div class="tipBox">
                 <h3>{{$t('m.imKeyManager.usb_connect_error')}}</h3>
                 <p>{{$t('m.imKeyManager.check_usb_connect')}}</p>
+                <p>{{errorInfo}}</p>
                 <button @click="changeState(1)">{{$t('m.imKeyManager.ok')}}</button>
             </div>
         </div>
@@ -159,6 +160,7 @@ export default {
   name: 'connectDevice',
   data () {
     return {
+      errorInfo:'',
       userPath: '',
       connectText: this.$t('m.connectDevice.connect'),
       codeIsTrue: true,
@@ -241,6 +243,7 @@ export default {
             this.checkIsActive()
           }
         } else {
+            this.errorInfo=response
           this.changeState(4)
         }
       }, 100)
@@ -287,6 +290,7 @@ export default {
             this.$router.push('imKeySetting')
           }
         } else {
+            this.errorInfo=response
           this.changeState(4)
         }
       }, 200)
@@ -298,6 +302,7 @@ export default {
         if (result.isSuccess) {
           if (response === '' || response === null) {
             // 失败的话
+              this.errorInfo=response
             this.changeState(4)
           } else {
             if (response === constants.BIND_STATUS_STRING_BOUND_OTHER) {
@@ -311,10 +316,12 @@ export default {
               this.checkDeviceBindingCode = 3
               this.checkIsCreateWallet()
             } else {
+                this.errorInfo=response
               this.changeState(4)
             }
           }
         } else {
+            this.errorInfo=response
           this.changeState(4)
         }
       }, 200)
@@ -334,8 +341,8 @@ export default {
               }, 1000)
               setTimeout(() => {
                 // 跳转到主页
-                this.$router.push('/home/welcomeHome')
-                // this.$router.push('imKeySetting')
+                // this.$router.push('/home/welcomeHome')
+                this.$router.push('imKeySetting')
               }, 2000)
             } else {
               // 跳转到创建钱包界面
@@ -347,6 +354,7 @@ export default {
           }
         } else {
           // 错误界面
+            this.errorInfo=response
           this.changeState(4)
         }
       }, 100)
@@ -370,6 +378,7 @@ export default {
           }
         } else {
         // 错误界面
+            this.errorInfo=response
           this.changeState(4)
         }
       }, 200)
@@ -384,10 +393,12 @@ export default {
             this.checkIsBL()
           } else {
           // 连接失败
+              this.errorInfo=response
             this.changeState(4)
           }
         } else {
         // 连接失败
+            this.errorInfo=response
           this.changeState(4)
         }
       }, 200)
@@ -422,6 +433,7 @@ export default {
             this.bindingStatus = 2
             this.bindOtherCheckIsCreateWallet()
           } else {
+            this.errorInfo=response
             this.changeState(4)
           }
         } else {

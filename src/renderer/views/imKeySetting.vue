@@ -726,7 +726,7 @@ export default {
         line-height: 34px;
     }
     .setKeyPage .nav{
-        margin-top: 33px;
+        margin-top: 10px;
         width: 800px;
         display: flex;
         justify-content: space-between;
@@ -752,7 +752,7 @@ export default {
         margin-top: 60px;
     }
     .setKeyPage .set3 h3{
-        margin-top: 20px;
+        margin-top: 10px;
     }
     .setKeyPage .set3 .course {
         margin-top: -30px;
@@ -815,7 +815,7 @@ export default {
         color: #B8AC95;
     }
     .setKeyPage .set3 .careful{
-        margin-top: 20px;
+        margin-top: 10px;
     }
     .setKeyPage .careful{
         font-weight: 600;

@@ -601,7 +601,7 @@ export default {
         left: 50%;
         top: 50%;
         left: 35.42%;
-        top: 30.56%;
+        top: 26%;
         bottom: 42.78%;
         width: 420px;
         height: 225px;
