@@ -334,8 +334,8 @@ export default {
               }, 1000)
               setTimeout(() => {
                 // 跳转到主页
-                // this.$router.push('/home/welcomeHome')
-                this.$router.push('imKeySetting')
+                this.$router.push('/home/welcomeHome')
+                // this.$router.push('imKeySetting')
               }, 2000)
             } else {
               // 跳转到创建钱包界面
