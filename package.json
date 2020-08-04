@@ -19,10 +19,11 @@
     "pack:renderer": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.renderer.config.js",
     "test": "npm run unit && npm run e2e",
     "unit": "karma start test/unit/karma.conf.js",
-    "postinstall": "npm run lint:fix",
+    "postinstall": "npm run lint:fix && electron-builder install-app-deps",
     "release": "node .electron-vue/build.js && electron-builder"
   },
   "build": {
+    "afterSign": "build/notarize.js",
     "productName": "imkey manager",
     "appId": "com.imkey.imkey-manager",
     "copyright": "Copyright © 2020 imkey",
@@ -42,6 +43,7 @@
       "dist/electron/**/*"
     ],
     "dmg": {
+      "sign": false,
       "contents": [
         {
           "x": 410,
@@ -57,6 +59,10 @@
       ]
     },
     "mac": {
+      "hardenedRuntime" : true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
       "icon": "build/icons/icon.icns",
       "extraResources": [
         {
@@ -121,6 +127,7 @@
     "write-file-atomic": "^3.0.3"
   },
   "devDependencies": {
+    "electron-notarize": "^1.0.0",
     "@babel/core": "^7.10.2",
     "@babel/plugin-transform-runtime": "^7.10.1",
     "@babel/preset-env": "^7.10.2",
@@ -148,7 +155,6 @@
     "electron-debug": "^3.1.0",
     "electron-devtools-installer": "^3.0.0",
     "electron-download": "^4.1.1",
-    "electron-rebuild": "^1.11.0",
     "eslint": "^7.2.0",
     "eslint-config-standard": "^14.1.1",
     "eslint-friendly-formatter": "^4.0.1",

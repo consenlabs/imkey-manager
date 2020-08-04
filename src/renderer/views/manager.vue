@@ -114,11 +114,11 @@ export default {
       isLatest: false,
       updateType: '',
       description: '',
-        supportCode: 0, // 0不显示  1升级中  2升级完成  3升级失败  4绑定码
-        isCosUpdate: false,
-        centerDialogVisible: false,
-        cosOldVersionData: '',
-        cosNewVersionData: '',
+      supportCode: 0, // 0不显示  1升级中  2升级完成  3升级失败  4绑定码
+      isCosUpdate: false,
+      centerDialogVisible: false,
+      cosOldVersionData: '',
+      cosNewVersionData: ''
     }
   },
 
@@ -139,87 +139,87 @@ export default {
     this.init()
   },
   methods: {
-      changeCode (code) {
-          this.supportCode = code
-      },
-      checkFirmwareVersion () {
-          //返回状态 0，无需更新COS，1，更新cos 2，更新错误
-          const result = ipcRenderer.sendSync('getFirmwareVersion')
+    changeCode (code) {
+      this.supportCode = code
+    },
+    checkFirmwareVersion () {
+      // 返回状态 0，无需更新COS，1，更新cos 2，更新错误
+      const result = ipcRenderer.sendSync('getFirmwareVersion')
+      const getFirmwareVersionResponse = result.result
+      if (result.isSuccess) {
+        this.cosOldVersionData = getFirmwareVersionResponse
+        this.$store.state.cosOldVersionData = getFirmwareVersionResponse
+        const result = ipcRenderer.sendSync('cosCheckUpdate')
+        const cosCheckUpdateResponse = result.result
+        if (result.isSuccess) {
+          this.cosNewVersionData = cosCheckUpdateResponse.latestCosVersion
+          this.isLatest = cosCheckUpdateResponse.isLatest
+          this.updateType = cosCheckUpdateResponse.updateType
+          this.description = cosCheckUpdateResponse.description
+          // 对比COS版本，提示用户是否升级
+          // 如果cos版本不一致，提示用户更新
+          if (this.cosNewVersionData === null || this.cosNewVersionData === '') {
+            this.isCosUpdate = false
+            return '0'
+          } else {
+            if (this.cosOldVersionData === this.cosNewVersionData) {
+              this.isCosUpdate = false
+              return '0'
+            } else {
+              // 开始升级
+              this.$store.state.isCosUpdate = true
+              this.$store.state.cosNewVersionData = this.cosNewVersionData
+              this.isCosUpdate = true
+              return '1'
+            }
+          }
+        } else {
+          this.isCosUpdate = false
+          // 检查COS更新失败
+          this.changeCode(5)
+          return '2'
+        }
+      } else {
+        this.isCosUpdate = false
+        // 获取固件版本失败
+        this.changeCode(5)
+        return '2'
+      }
+    },
+    updateFirmware () {
+      this.changeCode(1)
+      setTimeout(() => {
+        const connectResult = ipcRenderer.sendSync('connectDevice')
+        if (connectResult.isSuccess) {
+          const result = ipcRenderer.sendSync('cosUpdate')
           const response = result.result
           if (result.isSuccess) {
-              this.cosOldVersionData = response
-              this.$store.state.cosOldVersionData = response
-              const result = ipcRenderer.sendSync('cosCheckUpdate')
-              const response = result.result
-              if (result.isSuccess) {
-                  this.cosNewVersionData = response.latestCosVersion
-                  this.isLatest = response.isLatest
-                  this.updateType = response.updateType
-                  this.description = response.description
-                  // 对比COS版本，提示用户是否升级
-                  // 如果cos版本不一致，提示用户更新
-                  if (this.cosNewVersionData === null || this.cosNewVersionData === '') {
-                      this.isCosUpdate = false
-                      return '0'
-                  } else {
-                      if (this.cosOldVersionData === this.cosNewVersionData) {
-                          this.isCosUpdate = false
-                          return '0'
-                      } else {
-                          // 开始升级
-                          this.$store.state.isCosUpdate = true
-                          this.$store.state.cosNewVersionData = this.cosNewVersionData
-                          this.isCosUpdate = true
-                          return '1'
-                      }
-                  }
-              } else {
-                  this.isCosUpdate = false
-                  // 检查COS更新失败
-                  this.changeCode(5)
-                  return '2'
-              }
-          } else {
+            if (response === constants.RESULT_STATUS_SUCCESS) {
               this.isCosUpdate = false
-              // 获取固件版本失败
-              this.changeCode(5)
-              return '2'
-          }
-      },
-      updateFirmware () {
-          this.changeCode(1)
-          setTimeout(() => {
-              const connectResult = ipcRenderer.sendSync('connectDevice')
-              if (connectResult.isSuccess) {
-                  const result = ipcRenderer.sendSync('cosUpdate')
-                  const response = result.result
-                  if (result.isSuccess) {
-                      if (response === constants.RESULT_STATUS_SUCCESS) {
-                          this.isCosUpdate = false
-                          this.cosOldVersionData = this.cosNewVersionData
-                          this.$store.state.isCosUpdate = false
-                          this.$store.state.cosOldVersionData = this.cosNewVersionData
-                          this.$store.state.cosNewVersionData = this.cosNewVersionData
-                          this.changeCode(2)
-                          // 更新完cos之后需要清除缓存重新加载数据刷新页面
-                          // setTimeout(() => {
-                          //   this.init()
-                          //   this.changeCode(2)
-                          // }, 200)
-                      } else {
-                          this.isCosUpdate = true
-                          this.changeCode(3)
-                      }
-                  } else {
-                      this.isCosUpdate = true
-                      this.changeCode(3)
-                  }
-              } this.isCosUpdate = true
+              this.cosOldVersionData = this.cosNewVersionData
+              this.$store.state.isCosUpdate = false
+              this.$store.state.cosOldVersionData = this.cosNewVersionData
+              this.$store.state.cosNewVersionData = this.cosNewVersionData
+              this.changeCode(2)
+              // 更新完cos之后需要清除缓存重新加载数据刷新页面
+              // setTimeout(() => {
+              //   this.init()
+              //   this.changeCode(2)
+              // }, 200)
+            } else {
+              this.isCosUpdate = true
               this.changeCode(3)
-          }, 200)
-      },
+            }
+          } else {
+            this.isCosUpdate = true
+            this.changeCode(3)
+          }
+        } this.isCosUpdate = true
+        this.changeCode(3)
+      }, 200)
+    },
 
-      ok () {
+    ok () {
       this.tip = false
     },
     init () {
@@ -282,118 +282,117 @@ export default {
     },
 
     installApp (item, index) {
-      if(this.checkFirmwareVersion()==='1'){
-          this.updateFirmware()
-      }else if(this.checkFirmwareVersion()==='0'){
-          const connectResult = ipcRenderer.sendSync('connectDevice')
-          if (connectResult.isSuccess) {
-              this.apps[index].installLoading = true
-              this.apps[index].deleteLoading = false
-              this.apps[index].installDis = true
-              this.apps[index].installed = false
-              setTimeout(() => {
-                  const result = ipcRenderer.sendSync('downloadApplet', item.name)
-                  const response = result.result
-                  if (result.isSuccess) {
-                      if (response === constants.RESULT_STATUS_SUCCESS) {
-                          this.apps[index].installed = true
-                          this.apps[index].deleteDis = false
-                          this.apps[index].installLoading = false
-                          this.apps[index].desc = this.apps[index].lastVersion
-                      } else {
-                          this.apps[index].installLoading = false
-                          this.tip = true
-                          this.apps[index].installDis = false
-                      }
-                  } else {
-                      this.apps[index].installLoading = false
-                      this.apps[index].installDis = false
-                      this.tip = true
-                  }
-              }, 200)
-          } else {
+      if (this.checkFirmwareVersion() === '1') {
+        this.updateFirmware()
+      } else if (this.checkFirmwareVersion() === '0') {
+        const connectResult = ipcRenderer.sendSync('connectDevice')
+        if (connectResult.isSuccess) {
+          this.apps[index].installLoading = true
+          this.apps[index].deleteLoading = false
+          this.apps[index].installDis = true
+          this.apps[index].installed = false
+          setTimeout(() => {
+            const result = ipcRenderer.sendSync('downloadApplet', item.name)
+            const response = result.result
+            if (result.isSuccess) {
+              if (response === constants.RESULT_STATUS_SUCCESS) {
+                this.apps[index].installed = true
+                this.apps[index].deleteDis = false
+                this.apps[index].installLoading = false
+                this.apps[index].desc = this.apps[index].lastVersion
+              } else {
+                this.apps[index].installLoading = false
+                this.tip = true
+                this.apps[index].installDis = false
+              }
+            } else {
+              this.apps[index].installLoading = false
+              this.apps[index].installDis = false
               this.tip = true
-          }
-      }else{
+            }
+          }, 200)
+        } else {
+          this.tip = true
+        }
+      } else {
 
       }
-
     },
 
     updateApp (item, index) {
-        if(this.checkFirmwareVersion()==='1'){
-            this.updateFirmware()
-        }else if(this.checkFirmwareVersion()==='0') {
-            const connectResult = ipcRenderer.sendSync('connectDevice')
-            if (connectResult.isSuccess) {
-                this.apps[index].updateLoading = true
-                this.apps[index].deleteLoading = false
-                this.apps[index].updateDis = true
-                this.apps[index].installed = false
-                setTimeout(() => {
-                    const result = ipcRenderer.sendSync('updateApplet', item.name)
-                    const response = result.result
-                    if (result.isSuccess) {
-                        if (response === constants.RESULT_STATUS_SUCCESS) {
-                            this.apps[index].deleteDis = false
-                            this.apps[index].installed = true
-                            this.apps[index].updateLoading = false
-                            this.apps[index].installDis = false
-                            this.apps[index].installLoading = false
-                            this.apps[index].desc = this.apps[index].lastVersion
-                        } else {
-                            this.apps[index].installLoading = false
-                            this.apps[index].updateDis = false
-                            this.tip = true
-                        }
-                    } else {
-                        this.apps[index].updateDis = false
-                        this.apps[index].installLoading = false
-                        this.tip = true
-                    }
-                }, 200)
-            } else {
+      if (this.checkFirmwareVersion() === '1') {
+        this.updateFirmware()
+      } else if (this.checkFirmwareVersion() === '0') {
+        const connectResult = ipcRenderer.sendSync('connectDevice')
+        if (connectResult.isSuccess) {
+          this.apps[index].updateLoading = true
+          this.apps[index].deleteLoading = false
+          this.apps[index].updateDis = true
+          this.apps[index].installed = false
+          setTimeout(() => {
+            const result = ipcRenderer.sendSync('updateApplet', item.name)
+            const response = result.result
+            if (result.isSuccess) {
+              if (response === constants.RESULT_STATUS_SUCCESS) {
+                this.apps[index].deleteDis = false
+                this.apps[index].installed = true
+                this.apps[index].updateLoading = false
+                this.apps[index].installDis = false
+                this.apps[index].installLoading = false
+                this.apps[index].desc = this.apps[index].lastVersion
+              } else {
+                this.apps[index].installLoading = false
+                this.apps[index].updateDis = false
                 this.tip = true
+              }
+            } else {
+              this.apps[index].updateDis = false
+              this.apps[index].installLoading = false
+              this.tip = true
             }
-        }else{
-
+          }, 200)
+        } else {
+          this.tip = true
         }
+      } else {
+
+      }
     },
 
     deleteApp (item, index) {
-        if (this.checkFirmwareVersion() === '1') {
-            this.updateFirmware()
-        } else if (this.checkFirmwareVersion() === '0') {
-            const connectResult = ipcRenderer.sendSync('connectDevice')
-            if (connectResult.isSuccess) {
-                this.apps[index].deleteLoading = true
-                this.apps[index].installLoading = false
-                this.apps[index].deleteDis = true
+      if (this.checkFirmwareVersion() === '1') {
+        this.updateFirmware()
+      } else if (this.checkFirmwareVersion() === '0') {
+        const connectResult = ipcRenderer.sendSync('connectDevice')
+        if (connectResult.isSuccess) {
+          this.apps[index].deleteLoading = true
+          this.apps[index].installLoading = false
+          this.apps[index].deleteDis = true
+          this.apps[index].installed = false
+          setTimeout(() => {
+            const result = ipcRenderer.sendSync('deleteApplet', item.name)
+            const response = result.result
+            if (result.isSuccess) {
+              if (response === constants.RESULT_STATUS_SUCCESS) {
+                this.apps[index].installDis = false
+                this.apps[index].deleteLoading = false
+                this.apps[index].desc = ''
                 this.apps[index].installed = false
-                setTimeout(() => {
-                    const result = ipcRenderer.sendSync('deleteApplet', item.name)
-                    const response = result.result
-                    if (result.isSuccess) {
-                        if (response === constants.RESULT_STATUS_SUCCESS) {
-                            this.apps[index].installDis = false
-                            this.apps[index].deleteLoading = false
-                            this.apps[index].desc = ''
-                            this.apps[index].installed = false
-                        } else {
-                            this.apps[index].deleteDis = false
-                            this.apps[index].deleteLoading = false
-                            this.tip = true
-                        }
-                    } else {
-                        this.apps[index].deleteDis = false
-                        this.apps[index].deleteLoading = false
-                        this.tip = true
-                    }
-                }, 200)
-            } else {
+              } else {
+                this.apps[index].deleteDis = false
+                this.apps[index].deleteLoading = false
                 this.tip = true
+              }
+            } else {
+              this.apps[index].deleteDis = false
+              this.apps[index].deleteLoading = false
+              this.tip = true
             }
-        }else{}
+          }, 200)
+        } else {
+          this.tip = true
+        }
+      } else {}
     }
   }
 }

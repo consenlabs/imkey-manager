@@ -159,7 +159,7 @@ export default {
   name: 'connectDevice',
   data () {
     return {
-      errorInfo:'',
+      errorInfo: '',
       userPath: '',
       connectText: this.$t('m.connectDevice.connect'),
       codeIsTrue: true,
@@ -242,7 +242,7 @@ export default {
             this.checkIsActive()
           }
         } else {
-            this.errorInfo=response
+          this.errorInfo = response
           this.changeState(4)
         }
       }, 100)
@@ -289,7 +289,7 @@ export default {
             this.$router.push('imKeySetting')
           }
         } else {
-            this.errorInfo=response
+          this.errorInfo = response
           this.changeState(4)
         }
       }, 200)
@@ -301,7 +301,7 @@ export default {
         if (result.isSuccess) {
           if (response === '' || response === null) {
             // 失败的话
-              this.errorInfo=response
+            this.errorInfo = response
             this.changeState(4)
           } else {
             if (response === constants.BIND_STATUS_STRING_BOUND_OTHER) {
@@ -315,12 +315,12 @@ export default {
               this.checkDeviceBindingCode = 3
               this.checkIsCreateWallet()
             } else {
-                this.errorInfo=response
+              this.errorInfo = response
               this.changeState(4)
             }
           }
         } else {
-            this.errorInfo=response
+          this.errorInfo = response
           this.changeState(4)
         }
       }, 200)
@@ -353,7 +353,7 @@ export default {
           }
         } else {
           // 错误界面
-            this.errorInfo=response
+          this.errorInfo = response
           this.changeState(4)
         }
       }, 100)
@@ -377,7 +377,7 @@ export default {
           }
         } else {
         // 错误界面
-            this.errorInfo=response
+          this.errorInfo = response
           this.changeState(4)
         }
       }, 200)
@@ -392,12 +392,12 @@ export default {
             this.checkIsBL()
           } else {
           // 连接失败
-              this.errorInfo=response
+            this.errorInfo = response
             this.changeState(4)
           }
         } else {
         // 连接失败
-            this.errorInfo=response
+          this.errorInfo = response
           this.changeState(4)
         }
       }, 200)
@@ -432,7 +432,7 @@ export default {
             this.bindingStatus = 2
             this.bindOtherCheckIsCreateWallet()
           } else {
-            this.errorInfo=response
+            this.errorInfo = response
             this.changeState(4)
           }
         } else {
