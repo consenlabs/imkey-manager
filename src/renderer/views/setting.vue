@@ -325,114 +325,114 @@ export default {
       }
     },
     exportBindCode () {
-        this.$ipcRenderer.send('exportBindCode')
-        this.$ipcRenderer.on('exportBindCode', ( result) => {
-            const response = result.result
-            if (result.isSuccess) {
-                this.bindCode = response
-                // 显示绑定码
-                this.changeCode(4)
-            }
-        })
+      this.$ipcRenderer.send('exportBindCode')
+      this.$ipcRenderer.on('exportBindCode', (result) => {
+        const response = result.result
+        if (result.isSuccess) {
+          this.bindCode = response
+          // 显示绑定码
+          this.changeCode(4)
+        }
+      })
     },
     getSn () {
-              this.$ipcRenderer.send('connectDevice')
-              this.$ipcRenderer.on('connectDevice', ( connectResult) => {
-                  if (connectResult.isSuccess) {
-                      this.$ipcRenderer.send('getSn')
-                      this.$ipcRenderer.on('getSn', ( result) => {
-                          const response = result.result
-                          if (result.isSuccess) {
-                              this.SN = response
-                              console.log('SN:' + this.SN)
-                              this.firmwareVersion()
-                          } else {
-                              // 获取SN失败
-                              this.changeCode(5)
-                          }
-                      })
-                  } else {
-                      // 获取SN失败
-                      this.changeCode(5)
-                  }
-              })
+      this.$ipcRenderer.send('connectDevice')
+      this.$ipcRenderer.on('connectDevice', (connectResult) => {
+        if (connectResult.isSuccess) {
+          this.$ipcRenderer.send('getSn')
+          this.$ipcRenderer.on('getSn', (result) => {
+            const response = result.result
+            if (result.isSuccess) {
+              this.SN = response
+              console.log('SN:' + this.SN)
+              this.firmwareVersion()
+            } else {
+              // 获取SN失败
+              this.changeCode(5)
+            }
+          })
+        } else {
+          // 获取SN失败
+          this.changeCode(5)
+        }
+      })
     },
     firmwareVersion () {
-        this.$ipcRenderer.send('getFirmwareVersion')
-        this.$ipcRenderer.on('getFirmwareVersion', ( result) => {
-            const response = result.result
-            if (result.isSuccess) {
-                this.cosOldVersionData = response
-                this.$store.state.cosOldVersionData = response
-                // this.toCosCheckUpdate()
+      this.$ipcRenderer.send('getFirmwareVersion')
+      this.$ipcRenderer.on('getFirmwareVersion', (result) => {
+        const response = result.result
+        if (result.isSuccess) {
+          this.cosOldVersionData = response
+          this.$store.state.cosOldVersionData = response
+          // this.toCosCheckUpdate()
 
-                // TODO this.toCosCheckUpdate()
-                // 升级按钮变黑
-                // this.cosNewVersionData = '1.6.0'
-                // this.isCosUpdate = true
-                // this.$store.state.isCosUpdate = true
-                // this.$store.state.cosNewVersionData = this.cosNewVersionData
+          // TODO this.toCosCheckUpdate()
+          // 升级按钮变黑
+          // this.cosNewVersionData = '1.6.0'
+          // this.isCosUpdate = true
+          // this.$store.state.isCosUpdate = true
+          // this.$store.state.cosNewVersionData = this.cosNewVersionData
 
-                // 检查完成
-                this.status = 1
-            } else {
-                // 获取固件版本失败
-                this.changeCode(5)
-            }
-        })
+          // 检查完成
+          this.status = 1
+        } else {
+          // 获取固件版本失败
+          this.changeCode(5)
+        }
+      })
     },
     toCosCheckUpdate () {
-        this.$ipcRenderer.send('cosCheckUpdate')
-        this.$ipcRenderer.on('cosCheckUpdate', ( result) => {
-            const response = result.result
-            if (result.isSuccess) {
-                this.cosNewVersionData = response.latestCosVersion
-                this.isLatest = response.isLatest
-                this.updateType = response.updateType
-                this.description = response.description
-                // 对比COS版本，提示用户是否升级
-                this.compareByFirmwareVersion()
-            } else {
-                // 检查COS更新失败
-                this.changeCode(5)
-            }
-        })
+      this.$ipcRenderer.send('cosCheckUpdate')
+      this.$ipcRenderer.on('cosCheckUpdate', (result) => {
+        const response = result.result
+        if (result.isSuccess) {
+          this.cosNewVersionData = response.latestCosVersion
+          this.isLatest = response.isLatest
+          this.updateType = response.updateType
+          this.description = response.description
+          // 对比COS版本，提示用户是否升级
+          this.compareByFirmwareVersion()
+        } else {
+          // 检查COS更新失败
+          this.changeCode(5)
+        }
+      })
     },
     updateFirmware () {
       this.changeCode(1)
       setTimeout(() => {
-              this.$ipcRenderer.send('connectDevice')
-              this.$ipcRenderer.on('connectDevice', ( connectResult) => {
-                  if (connectResult.isSuccess) {
-                      this.$ipcRenderer.send('cosUpdate')
-                      this.$ipcRenderer.on('cosUpdate', ( result) => {
-                      const response = result.result
-                      if (result.isSuccess) {
-                          if (response === constants.RESULT_STATUS_SUCCESS) {
-                              this.isCosUpdate = false
-                              this.cosOldVersionData = this.cosNewVersionData
-                              this.$store.state.isCosUpdate = false
-                              this.$store.state.cosOldVersionData = this.cosNewVersionData
-                              this.$store.state.cosNewVersionData = this.cosNewVersionData
-                              this.changeCode(2)
-                              // 更新完cos之后需要清除缓存重新加载数据刷新页面
-                              // setTimeout(() => {
-                              //   this.init()
-                              //   this.changeCode(2)
-                              // }, 200)
-                          } else {
-                              this.isCosUpdate = true
-                              this.changeCode(3)
-                          }
-                      } else {
-                          this.isCosUpdate = true
-                          this.changeCode(3)
-                      }
-                  })
-                  }
+        this.$ipcRenderer.send('connectDevice')
+        this.$ipcRenderer.on('connectDevice', (connectResult) => {
+          if (connectResult.isSuccess) {
+            this.$ipcRenderer.send('cosUpdate')
+            this.$ipcRenderer.on('cosUpdate', (result) => {
+              const response = result.result
+              if (result.isSuccess) {
+                if (response === constants.RESULT_STATUS_SUCCESS) {
+                  this.isCosUpdate = false
+                  this.cosOldVersionData = this.cosNewVersionData
+                  this.$store.state.isCosUpdate = false
+                  this.$store.state.cosOldVersionData = this.cosNewVersionData
+                  this.$store.state.cosNewVersionData = this.cosNewVersionData
+                  this.changeCode(2)
+                  // 更新完cos之后需要清除缓存重新加载数据刷新页面
+                  // setTimeout(() => {
+                  //   this.init()
+                  //   this.changeCode(2)
+                  // }, 200)
+                } else {
                   this.isCosUpdate = true
                   this.changeCode(3)
-              })
+                }
+              } else {
+                this.isCosUpdate = true
+                this.changeCode(3)
+              }
+            })
+          }
+          this.isCosUpdate = true
+          this.changeCode(3)
+        })
       }, 200)
     },
 

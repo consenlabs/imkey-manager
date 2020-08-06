@@ -192,19 +192,18 @@ export default {
     this.noScroll()
   },
   methods: {
-      openUrl () {
-          ipcRenderer.send('openUrl', 'https://support.imkey.im/hc/zh-cn/articles/360019787533-%E5%A6%82%E4%BD%95%E9%87%8D%E7%BD%AEimKey-')
-      },
+    openUrl () {
+      ipcRenderer.send('openUrl', 'https://support.imkey.im/hc/zh-cn/articles/360019787533-%E5%A6%82%E4%BD%95%E9%87%8D%E7%BD%AEimKey-')
+    },
     changeState (index) {
       this.status = index
     },
     inpCode (code, event) {
-
       this.codeIsTrue = true
       if (code === 8) {
         // 完成输入  写完成后的跳转
         let bindCode = this.code1 + this.code2 + this.code3 + this.code4 + this.code5 + this.code6 + this.code7 + this.code8
-          bindCode=bindCode.toUpperCase()
+        bindCode = bindCode.toUpperCase()
         const reg = /^[a-hj-np-zA-HJ-NP-Z2-9]{8}$/
         if (reg.test(bindCode)) {
           if (bindCode.length === 8) {
@@ -220,8 +219,8 @@ export default {
       }
       if (event.srcElement.value.length === 1) {
         event.srcElement.nextElementSibling.focus()
-      }else{
-          event.srcElement.value = ''
+      } else {
+        event.srcElement.value = ''
       }
 
       if (event.keyCode === 8) {
@@ -233,7 +232,6 @@ export default {
     },
 
     check () {
-
       this.checkFirmwareUpgrade = 1
       this.checkDeviceBindingCode = 1
       this.checkPinAndWallet = 1
@@ -244,8 +242,8 @@ export default {
     checkIsBL () {
       this.checkFirmwareUpgrade = 2
 
-          this.$ipcRenderer.send('isBLStatus')
-          this.$ipcRenderer.on('isBLStatus', ( result) => {
+      this.$ipcRenderer.send('isBLStatus')
+      this.$ipcRenderer.on('isBLStatus', (result) => {
         // const result = ipcRenderer.sendSync('isBLStatus')
         const response = result.result
         if (result.isSuccess) {
@@ -261,15 +259,14 @@ export default {
           this.errorInfo = response
           this.changeState(4)
         }
-          })
-
+      })
     },
     checkIsActive () {
       // 绑定之前检查激活
       this.checkDeviceBindingCode = 2
 
-          this.$ipcRenderer.send('checkUpdate')
-          this.$ipcRenderer.on('checkUpdate', ( result) => {
+      this.$ipcRenderer.send('checkUpdate')
+      this.$ipcRenderer.on('checkUpdate', (result) => {
         // const result = ipcRenderer.sendSync('checkUpdate')
         const response = result.result
         if (result.isSuccess) {
@@ -311,13 +308,11 @@ export default {
           this.errorInfo = response
           this.changeState(4)
         }
-          })
-
+      })
     },
     checkIsBind () {
-
-              this.$ipcRenderer.send('deviceBindCheck', this.userPath)
-              this.$ipcRenderer.on('deviceBindCheck', ( result) => {
+      this.$ipcRenderer.send('deviceBindCheck', this.userPath)
+      this.$ipcRenderer.on('deviceBindCheck', (result) => {
         // const result = ipcRenderer.sendSync('deviceBindCheck', this.userPath)
         const response = result.result
         if (result.isSuccess) {
@@ -345,14 +340,13 @@ export default {
           this.errorInfo = response
           this.changeState(4)
         }
-              })
-
+      })
     },
     checkIsCreateWallet () {
       this.checkPinAndWallet = 2
 
-          this.$ipcRenderer.send('getBTCXpub')
-          this.$ipcRenderer.on('getBTCXpub', ( result) => {
+      this.$ipcRenderer.send('getBTCXpub')
+      this.$ipcRenderer.on('getBTCXpub', (result) => {
         // const result = ipcRenderer.sendSync('getBTCXpub')
         const response = result.result
         if (result.isSuccess) {
@@ -381,13 +375,11 @@ export default {
           this.errorInfo = response
           this.changeState(4)
         }
-          })
-
+      })
     },
     bindOtherCheckIsCreateWallet () {
-
-              this.$ipcRenderer.send('getBTCXpub')
-              this.$ipcRenderer.on('getBTCXpub', ( result) => {
+      this.$ipcRenderer.send('getBTCXpub')
+      this.$ipcRenderer.on('getBTCXpub', (result) => {
         // const result = ipcRenderer.sendSync('getBTCXpub')
         const response = result.result
         if (result.isSuccess) {
@@ -408,102 +400,98 @@ export default {
           this.errorInfo = response
           this.changeState(4)
         }
-              })
-
+      })
     },
     connect () {
-              this.$ipcRenderer.send('connectDevice')
-              this.$ipcRenderer.on('connectDevice', ( result) => {
-                  // event.sender.removeAllListeners('connectDeviceResult')
-                  // const result = ipcRenderer.sendSync('connectDevice')
-                  const response = result.result
-                  if (result.isSuccess) {
-                      if (response === constants.RESULT_STATUS_SUCCESS) {
-                          this.changeState(3)
-                          this.checkIsBL()
-                      } else {
-                          // 连接失败
-                          this.errorInfo = response
-                          this.changeState(4)
-                      }
-                  } else {
-                      // 连接失败
-                      this.errorInfo = response
-                      this.changeState(4)
-                  }
-              })
-        setTimeout(() => {
-            if(this.status === 1 ){
-                this.changeState(8)
-            }
-
+      this.$ipcRenderer.send('connectDevice')
+      this.$ipcRenderer.on('connectDevice', (result) => {
+        // event.sender.removeAllListeners('connectDeviceResult')
+        // const result = ipcRenderer.sendSync('connectDevice')
+        const response = result.result
+        if (result.isSuccess) {
+          if (response === constants.RESULT_STATUS_SUCCESS) {
+            this.changeState(3)
+            this.checkIsBL()
+          } else {
+            // 连接失败
+            this.errorInfo = response
+            this.changeState(4)
+          }
+        } else {
+          // 连接失败
+          this.errorInfo = response
+          this.changeState(4)
+        }
+      })
+      setTimeout(() => {
+        if (this.status === 1) {
+          this.changeState(8)
+        }
       }, 800)
-
     },
     toCosUpdate () {
       this.changeState(6)
 
-              this.$ipcRenderer.send('cosUpdate')
-              this.$ipcRenderer.on('cosUpdate', ( result) => {
-                  // const result = ipcRenderer.sendSync('cosUpdate')
-                  const response = result.result
-                  if (result.isSuccess) {
-                      if (response === constants.RESULT_STATUS_SUCCESS) {
-                          // cos更新成功检查是否激活
-                          this.check()
-                      } else {
-                          // 固件升级失败
-                          this.changeState(5)
-                      }
-                  } else {
-                      // 固件升级失败
-                      this.changeState(5)
-                  }
-              })
-
+      this.$ipcRenderer.send('cosUpdate')
+      this.$ipcRenderer.on('cosUpdate', (result) => {
+        // const result = ipcRenderer.sendSync('cosUpdate')
+        const response = result.result
+        if (result.isSuccess) {
+          if (response === constants.RESULT_STATUS_SUCCESS) {
+            // cos更新成功检查是否激活
+            this.check()
+          } else {
+            // 固件升级失败
+            this.changeState(5)
+          }
+        } else {
+          // 固件升级失败
+          this.changeState(5)
+        }
+      })
     },
     bindAcquire (bindCode) {
-        this.$ipcRenderer.send('deviceBindAcquire',bindCode)
-        this.$ipcRenderer.on('deviceBindAcquire', ( deviceBindResult) => {
-            // const deviceBindResult = ipcRenderer.sendSync('deviceBindAcquire', bindCode)
-            const response = deviceBindResult.result
-            console.log(response)
-            if (deviceBindResult.isSuccess) {
-                if (response === constants.RESULT_STATUS_SUCCESS) {
-                    // 绑定成功后存储绑定码
-                    this.$ipcRenderer.send('importBindCode',bindCode)
-                    this.$ipcRenderer.on('importBindCode', ( importBindResult) => {
-                        // const bindCodeResult = ipcRenderer.sendSync('importBindCode', bindCode)
-                        const importBindResponse =importBindResult.result
-                        if (importBindResult.isSuccess) {
-                            this.bindingStatus = 2
-                            this.bindOtherCheckIsCreateWallet()
-                        } else {
-                            this.errorInfo = importBindResponse
-                            this.changeState(4)
-                        }
-                    })
-                } else {
-                    this.codeIsTrue = false
-                    this.bindingStatus = 0
-                }
-            } else {
-                this.codeIsTrue = false
-                this.bindingStatus = 0
-            }
-        })
+      this.$ipcRenderer.send('deviceBindAcquire', bindCode)
+      this.$ipcRenderer.on('deviceBindAcquire', (deviceBindResult) => {
+        // const deviceBindResult = ipcRenderer.sendSync('deviceBindAcquire', bindCode)
+        const response = deviceBindResult.result
+        console.log(response)
+        if (deviceBindResult.isSuccess) {
+          if (response === constants.RESULT_STATUS_SUCCESS) {
+            // 绑定成功后存储绑定码
+            this.$ipcRenderer.send('importBindCode', bindCode)
+            this.$ipcRenderer.on('importBindCode', (importBindResult) => {
+              // const bindCodeResult = ipcRenderer.sendSync('importBindCode', bindCode)
+              const importBindResponse = importBindResult.result
+              if (importBindResult.isSuccess) {
+                this.bindingStatus = 2
+                this.bindOtherCheckIsCreateWallet()
+              } else {
+                this.errorInfo = importBindResponse
+                this.changeState(4)
+              }
+            })
+          } else {
+            this.codeIsTrue = false
+            this.bindingStatus = 0
+          }
+        } else {
+          this.codeIsTrue = false
+          this.bindingStatus = 0
+        }
+      })
     },
     getUserPath () {
-        this.$ipcRenderer.send('getUserPath')
-        this.$ipcRenderer.on('getUserPath', ( result) => {
-            // const result = ipcRenderer.sendSync('getUserPath')
-            const response = result.result
-            if (result.isSuccess) {
-                this.userPath = response
-                this.$store.state.userPath = response
-            } else {
-            }
-        })
+      this.$ipcRenderer.send('getUserPath')
+      this.$ipcRenderer.on('getUserPath', (result) => {
+        // const result = ipcRenderer.sendSync('getUserPath')
+        const response = result.result
+        if (result.isSuccess) {
+          this.userPath = response
+          this.$store.state.userPath = response
+        } else {
+        }
+      })
     },
     goStep (index) {
       switch (index) {

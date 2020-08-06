@@ -282,22 +282,22 @@ export default {
     }
   },
   mounted () {
-      this.$ipcRenderer.send('connectDevice')
-      this.$ipcRenderer.on('connectDevice', ( connectResult) => {
+    this.$ipcRenderer.send('connectDevice')
+    this.$ipcRenderer.on('connectDevice', (connectResult) => {
       if (connectResult.isSuccess) {
         // 判断是否已激活
         if (this.$store.state.activeStatus === 'latest') {
           // 开始判断是否绑定
-            this.$ipcRenderer.send('deviceBindCheck',this.$store.state.userPath)
-            this.$ipcRenderer.on('deviceBindCheck', ( deviceBindCheckResult) => {
+          this.$ipcRenderer.send('deviceBindCheck', this.$store.state.userPath)
+          this.$ipcRenderer.on('deviceBindCheck', (deviceBindCheckResult) => {
             if (deviceBindCheckResult.isSuccess) {
               if (deviceBindCheckResult.result === constants.BIND_STATUS_STRING_BOUND_OTHER) {
                 this.bindViewFinish = true
               } else if (deviceBindCheckResult.result === constants.BIND_STATUS_STRING_UNBOUND) {
                 // 显示绑定码
-                  this.$ipcRenderer.send('deviceBindDisplay')
-                  this.$ipcRenderer.on('deviceBindDisplay', ( deviceBindDisplayResult) => {
-                      if (deviceBindDisplayResult.isSuccess) {
+                this.$ipcRenderer.send('deviceBindDisplay')
+                this.$ipcRenderer.on('deviceBindDisplay', (deviceBindDisplayResult) => {
+                  if (deviceBindDisplayResult.isSuccess) {
                     this.bindViewFinish = true
                   } else {
                   }
@@ -311,20 +311,20 @@ export default {
             }
           })
         } else {
-            this.$ipcRenderer.send('activeDevice')
-            this.$ipcRenderer.on('activeDevice', ( activeDeviceResult) => {
-                if (activeDeviceResult.isSuccess) {
+          this.$ipcRenderer.send('activeDevice')
+          this.$ipcRenderer.on('activeDevice', (activeDeviceResult) => {
+            if (activeDeviceResult.isSuccess) {
               // 开始判断是否绑定
-                    this.$ipcRenderer.send('deviceBindCheck',this.$store.state.userPath)
-                    this.$ipcRenderer.on('deviceBindCheck', ( deviceBindCheckResult) => {
+              this.$ipcRenderer.send('deviceBindCheck', this.$store.state.userPath)
+              this.$ipcRenderer.on('deviceBindCheck', (deviceBindCheckResult) => {
                 if (deviceBindCheckResult.isSuccess) {
                   if (deviceBindCheckResult.result === constants.BIND_STATUS_STRING_BOUND_OTHER) {
                     this.bindViewFinish = true
                   } else if (deviceBindCheckResult.result === constants.BIND_STATUS_STRING_UNBOUND) {
                     // 显示绑定码
-                      this.$ipcRenderer.send('deviceBindDisplay')
-                      this.$ipcRenderer.on('deviceBindDisplay', ( deviceBindDisplayResult) => {
-                          if (deviceBindDisplayResult.isSuccess) {
+                    this.$ipcRenderer.send('deviceBindDisplay')
+                    this.$ipcRenderer.on('deviceBindDisplay', (deviceBindDisplayResult) => {
+                      if (deviceBindDisplayResult.isSuccess) {
                         this.bindViewFinish = true
                       } else {
                       }
@@ -347,15 +347,15 @@ export default {
     openUrl () {
       ipcRenderer.send('openUrl', 'https://support.imkey.im/')
     },
-      openUrlReset () {
-          ipcRenderer.send('openUrl', 'https://support.imkey.im/hc/zh-cn/articles/360019787533-%E5%A6%82%E4%BD%95%E9%87%8D%E7%BD%AEimKey-')
-      },
+    openUrlReset () {
+      ipcRenderer.send('openUrl', 'https://support.imkey.im/hc/zh-cn/articles/360019787533-%E5%A6%82%E4%BD%95%E9%87%8D%E7%BD%AEimKey-')
+    },
     send ({ page, active, isNext }) {
       if (page === 0 && active === 0) {
         if (this.finish === true) {
-            this.$ipcRenderer.send('connectDevice')
-            this.$ipcRenderer.on('connectDevice', ( connectResult) => {
-                if (connectResult.isSuccess) {
+          this.$ipcRenderer.send('connectDevice')
+          this.$ipcRenderer.on('connectDevice', (connectResult) => {
+            if (connectResult.isSuccess) {
               // 去首页
               this.$router.push('/home/welcomeHome')
             } else {
@@ -382,9 +382,9 @@ export default {
           // 连接设备，
           // 检查是否激活，如果未激活，就激活。
           // 检查是否绑定，如果未绑定，就再imkey上显示绑定码
-            this.$ipcRenderer.send('connectDevice')
-            this.$ipcRenderer.on('connectDevice', ( connectResult) => {
-                if (connectResult.isSuccess) {
+          this.$ipcRenderer.send('connectDevice')
+          this.$ipcRenderer.on('connectDevice', (connectResult) => {
+            if (connectResult.isSuccess) {
               this.active = active
               this.page = page
             } else {
@@ -396,9 +396,9 @@ export default {
           // 连接设备，
           // 绑定设备，如果失败提示，成功到下一步
           if (this.bindingStatus === 2) {
-              this.$ipcRenderer.send('connectDevice')
-              this.$ipcRenderer.on('connectDevice', ( connectResult) => {
-                  if (connectResult.isSuccess) {
+            this.$ipcRenderer.send('connectDevice')
+            this.$ipcRenderer.on('connectDevice', (connectResult) => {
+              if (connectResult.isSuccess) {
                 this.active = active
                 this.page = page
               } else {
@@ -409,23 +409,23 @@ export default {
         if (page === 4 && isNext === true) {
           // 连接设备，
           // 检查是否创建钱包，如果失败提示，成功到下一步
-            this.$ipcRenderer.send('connectDevice')
-            this.$ipcRenderer.on('connectDevice', ( connectResult) => {
-                if (connectResult.isSuccess) {
-                    this.$ipcRenderer.send('getBTCXpub')
-                    this.$ipcRenderer.on('getBTCXpub', ( getBTCXpubResult) => {
-                        let response = getBTCXpubResult.result
-                        if (getBTCXpubResult.isSuccess) {
-                            if (response !== '' || response != null) {
-                                if (response.match('xpu')) {
-                                    this.active = active
-                                    this.page = page
-                                } else {
-                                    this.checkWalletTip = true
-                                }
-                            } else {
-                                this.checkWalletTip = true
-                            }
+          this.$ipcRenderer.send('connectDevice')
+          this.$ipcRenderer.on('connectDevice', (connectResult) => {
+            if (connectResult.isSuccess) {
+              this.$ipcRenderer.send('getBTCXpub')
+              this.$ipcRenderer.on('getBTCXpub', (getBTCXpubResult) => {
+                const response = getBTCXpubResult.result
+                if (getBTCXpubResult.isSuccess) {
+                  if (response !== '' || response != null) {
+                    if (response.match('xpu')) {
+                      this.active = active
+                      this.page = page
+                    } else {
+                      this.checkWalletTip = true
+                    }
+                  } else {
+                    this.checkWalletTip = true
+                  }
                 } else {
                   // 提示
                   this.checkWalletTip = true
@@ -449,46 +449,45 @@ export default {
             this.bindCode = bindCode
             // 开始绑定
             this.bindingStatus = 1
-                this.$ipcRenderer.send('connectDevice')
-                this.$ipcRenderer.on('connectDevice', ( connectResult) => {
-                    if (connectResult.isSuccess) {
-                        this.$ipcRenderer.send('deviceBindAcquire',this.bindCode)
-                        this.$ipcRenderer.on('deviceBindAcquire', ( deviceBindAcquireResult) => {
-                           let deviceBindAcquireResponse =  deviceBindAcquireResult.result
-                            if (deviceBindAcquireResult.isSuccess) {
-                                if (deviceBindAcquireResponse === constants.RESULT_STATUS_SUCCESS) {
-                                    // 绑定成功后存储绑定码
-                                    this.$ipcRenderer.send('importBindCode',this.bindCode)
-                                    this.$ipcRenderer.on('importBindCode', ( importBindCodeResult) => {
-                                        if (importBindCodeResult.isSuccess) {
-                                                this.bindingStatus = 2
-                                                // 下一步按钮变黑，可点击
-                                                this.bindFinish = true
-                                            } else {
-                                                this.bindingStatus = 0
-                                                this.codeIsTrue = false
-                                                this.bindFinish = false
-                                            }
-                                        })
-                                } else {
-                                    this.bindingStatus = 0
-                                    this.codeIsTrue = false
-                                    this.bindFinish = false
-                                }
-
-                            }else{
-                                this.bindingStatus = 0
-                                this.codeIsTrue = false
-                                this.bindFinish = false
-                            }
-                  })
-                } else {
-                  // 检查绑定失败
-                  this.bindingStatus = 0
-                  this.codeIsTrue = false
-                  this.bindFinish = false
-                }
-              })
+            this.$ipcRenderer.send('connectDevice')
+            this.$ipcRenderer.on('connectDevice', (connectResult) => {
+              if (connectResult.isSuccess) {
+                this.$ipcRenderer.send('deviceBindAcquire', this.bindCode)
+                this.$ipcRenderer.on('deviceBindAcquire', (deviceBindAcquireResult) => {
+                  const deviceBindAcquireResponse = deviceBindAcquireResult.result
+                  if (deviceBindAcquireResult.isSuccess) {
+                    if (deviceBindAcquireResponse === constants.RESULT_STATUS_SUCCESS) {
+                      // 绑定成功后存储绑定码
+                      this.$ipcRenderer.send('importBindCode', this.bindCode)
+                      this.$ipcRenderer.on('importBindCode', (importBindCodeResult) => {
+                        if (importBindCodeResult.isSuccess) {
+                          this.bindingStatus = 2
+                          // 下一步按钮变黑，可点击
+                          this.bindFinish = true
+                        } else {
+                          this.bindingStatus = 0
+                          this.codeIsTrue = false
+                          this.bindFinish = false
+                        }
+                      })
+                    } else {
+                      this.bindingStatus = 0
+                      this.codeIsTrue = false
+                      this.bindFinish = false
+                    }
+                  } else {
+                    this.bindingStatus = 0
+                    this.codeIsTrue = false
+                    this.bindFinish = false
+                  }
+                })
+              } else {
+                // 检查绑定失败
+                this.bindingStatus = 0
+                this.codeIsTrue = false
+                this.bindFinish = false
+              }
+            })
           } else {
             this.bindingStatus = 0
             this.codeIsTrue = false
@@ -517,7 +516,7 @@ export default {
         this.finish = false
         this.checkTip = true
       }
-    },
+    }
     // connect () {
     //   return new Promise((resolve) => {
     //     const result = ipcRenderer.sendSync('connectDevice')

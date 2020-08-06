@@ -32,13 +32,13 @@ if (process.env.NODE_ENV !== 'development') {
   global.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
 }
 
-let mainWindow,workerWindow
+let mainWindow, workerWindow
 const winURL = process.env.NODE_ENV === 'development'
   ? 'http://localhost:9080'
   : `file://${__dirname}/index.html`
 const workerURL = process.env.NODE_ENV === 'development'
-    ? 'worker.html'
-    : `file://${__dirname}/worker.html`
+  ? 'worker.html'
+  : `file://${__dirname}/worker.html`
 const path = require('path')
 const ApplicationName = pkg.name
 // 托盘对象
@@ -59,17 +59,20 @@ const gotTheLock = app.requestSingleInstanceLock()
 if (process.platform === 'win32') {
   app.setAppUserModelId(ApplicationName)
 }
-//创建WorkerWindow
+// 创建WorkerWindow
 function createWorkerWindow () {
   workerWindow = new BrowserWindow({
     show: true,
-    webPreferences: {nodeIntegration: true}
+    webPreferences: { nodeIntegration: true }
   })
   workerWindow.on('closed', () => {
     console.log('background window closed')
   })
-  if (process.env.NODE_ENV === 'development') workerWindow.loadFile(workerURL) // 调试时的加载方式
-  else workerWindow.loadURL(workerURL)　　// 打包后的加载方式
+  if (process.env.NODE_ENV === 'development') {
+    workerWindow.loadFile(workerURL)// 调试时的加载方式
+  } else {
+    workerWindow.loadURL(workerURL)// 打包后的加载方式
+  }
 }
 /**
  * 创建主窗口
@@ -101,8 +104,8 @@ function createMainWindow () {
   mainWindow.loadURL(winURL)
   mainWindow.once('ready-to-show', () => {
     mainWindow.show()
-    //启动http server
-    sendWindowMessage(workerWindow, 'start-http-server', "")
+    // 启动http server
+    sendWindowMessage(workerWindow, 'start-http-server', '')
   })
 
   /**
@@ -445,14 +448,14 @@ function protocalHandler () {
     // 根据需要做其他事情
   }
 }
-function sendWindowMessage(targetWindow, message, payload) {
+function sendWindowMessage (targetWindow, message, payload) {
   if (typeof targetWindow === 'undefined') {
     console.log('Target window does not exist')
     return
   }
-  console.log("message:"+message)
-  console.log("type:"+payload.type)
-  console.log("data:"+payload.data)
+  console.log('message:' + message)
+  console.log('type:' + payload.type)
+  console.log('data:' + payload.data)
   targetWindow.webContents.send(message, payload)
 }
 function renderDeviceManagerHandler () {
@@ -472,7 +475,6 @@ function renderDeviceManagerHandler () {
   ipcMain.on('zoomIn', (event, zoomParam) => {
     webFrame.setZoomFactor(zoomParam)
   })
-
 }
 
 /**

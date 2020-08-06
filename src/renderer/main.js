@@ -23,7 +23,7 @@ Vue.prototype.$ipcRenderer = {
     })
   },
   on: (type, callback) => {
-    callbackCache={
+    callbackCache = {
       type,
       callback
     }
