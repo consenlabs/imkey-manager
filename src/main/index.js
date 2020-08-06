@@ -62,7 +62,7 @@ if (process.platform === 'win32') {
 // 创建WorkerWindow
 function createWorkerWindow () {
   workerWindow = new BrowserWindow({
-    show: true,
+    show: false,
     webPreferences: { nodeIntegration: true }
   })
   workerWindow.on('closed', () => {
