@@ -44,12 +44,141 @@
         <div class="routerView">
             <router-view></router-view>
         </div>
+        <div class="statusBox status4" v-if="status==4">
+            <div class="status4Alert">
+                <div class="status4AlertBox">
+                    <h4>{{$t('m.imKeyManager.found_new_soft_version')}}</h4>
+                    <p>{{$t('m.imKeyManager.new_version_is')}}V{{softNewVersionData}}{{$t('m.imKeyManager.current_version_is')}}V{{softOldVersionData}}</p>
+                    <p>
+                        <svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="3" cy="3" r="2.5" stroke="#8189A7"/>
+                        </svg>
+                        你可以在「管理」中看到设备内存并进行管理
+                    </p>
+                    <p>
+                        <svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="3" cy="3" r="2.5" stroke="#8189A7"/>
+                        </svg>
+                        新增暗黑模式
+                    </p>
+                    <p>
+                        <button class="later" @click="later">{{$t('m.imKeyManager.update_later')}}</button>
+                        <button class="updateNow" @click="updateNow">{{$t('m.imKeyManager.update_now')}}</button>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="statusBox status5" v-else-if="status==5">
+            <div class="status5Alert">
+                <div class="status5AlertBox">
+                    <h4>{{$t('m.imKeyManager.found_new_soft_version')}}</h4>
+                    <p>{{$t('m.imKeyManager.new_version_is')}}V{{softNewVersionData}}{{$t('m.imKeyManager.current_version_is')}}V{{softOldVersionData}}</p>
+                    <p>
+                        <svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="3" cy="3" r="2.5" stroke="#8189A7"/>
+                        </svg>
+                        你可以在「管理」中看到设备内存并进行管理
+                    </p>
+                    <p>
+                        <svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="3" cy="3" r="2.5" stroke="#8189A7"/>
+                        </svg>
+                        新增暗黑模式
+                    </p>
+                    <p>
+                        <el-progress color="#000" :percentage="progress" ></el-progress>
+                        <a href="javascript:;" @click="later">{{$t('m.imKeyManager.cancel')}}</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="tip6" v-else-if="status==6">
+            <p>{{$t('m.imKeyManager.found_imKey_manager_new_version')}}</p>
+            <button @click="updateNowTip">{{$t('m.imKeyManager.update')}}</button>
+        </div>
     </div>
+
 </template>
 
 <script>
+import {ipcRenderer} from "electron";
+const packagejson = require('../../../package.json')
 export default {
-  name: 'home'
+  name: 'home',
+    data () {
+        return {
+            supportCode: 0, // 0不显示  1升级中  2升级完成  3升级失败  4绑定码
+            status: 1, // 1正常状态  2访问错误 3加载中 4发现新版本 5加载新标准 6稍后左下角显示新版本
+            progress: 0, // 更新进度
+            name: this.$t('m.setting.info'),
+            showError: false,
+            errorInfo: {},
+            softUpdateInfo: '',
+            softOldVersionData: packagejson.version,
+            softNewVersionData: '',
+            copyTooltipDisabled: false
+        }
+    },
+    destroyed () {
+        // 移除事件监听
+        ipcRenderer.removeAllListeners('updateMessage')
+        ipcRenderer.removeAllListeners('downloadProgress')
+        // ipcRenderer.removeAllListeners('isUpdateNow')
+    },
+    mounted () {
+                //  软件升级检测
+                if (process.env.NODE_ENV === 'production') {
+                    this.checkSoftUpdate()
+                }
+    },
+    methods: {
+        changeCode (code) {
+            this.supportCode = code
+        },
+        later () {
+            // 稍后更新
+            this.status = 6
+        },
+        downloadAndUpdate () {
+            this.status = 5
+            // 开始下载
+            ipcRenderer.send('downloadUpdate')
+            ipcRenderer.on('downloadProgress', (event, progressObj) => {
+                this.progress = progressObj.percent.toFixed(0) || 0
+                if (progressObj.percent === 100) {
+                    // 下载完成， 立刻退出并更新
+                    ipcRenderer.send('isUpdateNow')
+                }
+            })
+        },
+        updateNowTip () {
+            this.status = 4
+            this.progress = 0
+        },
+        updateNow () {
+            // 下载并更新
+            this.downloadAndUpdate()
+        },
+        checkSoftUpdate () {
+            // 开始检查
+            ipcRenderer.send('checkForUpdate')
+            // 添加自动更新事件的监听
+            ipcRenderer.on('updateMessage', (event, obj) => {
+                // 显示更新
+                if (obj.action === 'updateAva') {
+                    // 显示更新
+                    this.status = 6
+                    this.softNewVersionData = obj.updateInfo.version
+                    this.softUpdateInfo = obj.updateInfo.releaseNotes
+                } else if (obj.action === 'error') {
+                    this.errorInfo = obj.errorInfo
+                } else if (obj.action === 'updateNotAva') {
+                    this.status = 1
+                } else {
+                }
+            })
+        },
+    }
 }
 </script>
 
@@ -107,5 +236,135 @@ export default {
     .router-link-exact-active,.router-link-active{
         background: rgba(0, 0, 0, 0.03);
     }
+    .statusBox{
+        height: 100%;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+    }
+    .statusBox svg{
+        margin-bottom: 30px;
+    }
+    .statusBox p{
+        font-size: 17px;
+        color: #0E1019;
+    }
+    .status4Alert,.status5Alert{
+        width: 100%;
+        height: 100%;
+        position: fixed;
+        left: 0;
+        top: 0;
+        background: rgba(0, 0, 0, 0.2);
+    }
+    .status4Alert .status4AlertBox,.status5Alert .status5AlertBox{
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 500px;
+        height: 288px;
+        margin-left:-250px;
+        margin-top:-144px;
+        background: #FAFBFC;
+        border-radius: 12px;
+    }
+    .status4AlertBox h4,.status5AlertBox h4{
+        font-weight: 500;
+        font-size: 18px;
+        color: #2C2842;
+        margin-top:35px;
+        margin-left: 35px;
+    }
+    .status4AlertBox p:nth-of-type(1),.status5AlertBox p:nth-of-type(1){
+        font-weight: 300;
+        font-size: 13px;
+        line-height: 30px;
+        color: #2C2842;
+        margin-top: 6px;
+        margin-left: 35px;
+        margin-bottom: 20px;
+    }
+    .status4AlertBox p:nth-of-type(2), .status4AlertBox p:nth-of-type(3),.status5AlertBox p:nth-of-type(2), .status5AlertBox p:nth-of-type(3){
+        font-weight: 300;
+        font-size: 13px;
+        color: #2C2842;
+        padding-left: 35px;
+        line-height: 30px;
+    }
+    .status4AlertBox p,.status5AlertBox p{
+        line-height: 30px;
+    }
+    .status4Alert .status4AlertBox p svg,.status5Alert .status5AlertBox p svg{
+        margin-right: 13px;
+        vertical-align: middle;
+        margin-bottom: 0;
+    }
+    .status4AlertBox p:nth-of-type(4),status5AlertBox p:nth-of-type(4){
+        margin-top: 54px;
+    }
+    .later{
+        margin-left: 250px;
+        width: 100px;
+        height: 36px;
+        border: 0.5px solid #000000;
+        box-shadow: 0px 2px 20px rgba(137, 101, 172, 0.30772);
+        border-radius: 26.5px;
+    }
+    .updateNow{
+        margin-left: 15px;
+        background: #2E3035;
+        box-shadow: 0px 2px 20px rgba(137, 101, 172, 0.30772);
+        border-radius: 26.5px;
+        width: 100px;
+        height: 36px;
+        color: #fff;
+    }
+    .el-progress{
+        width:355px;
+        height: 10px;
+        margin-left: 32px;
+        margin-top: 60px;
+        float: left;
+    }
+    .el-progress__text{
+        display: none !important;
+    }
+    .status5AlertBox a{
+        float: left;
+        margin-top: 53px;
+        font-weight: 500;
+        font-size: 14px;
+        color: #2C2842;
+        text-decoration: none;
+        margin-left: 10px;
+    }
+    .tip6{
+        width: 240px;
+        height: 100px;
+        background: linear-gradient(70.66deg, #1F2421 4.22%, #A4A4A4 96.58%);
+        border-radius: 12px;
+        position: fixed;
+        bottom: 23px;
+        left: 30px;
+        text-align: center;
 
+    }
+    .tip6 button{
+        border: 0.5px solid #E8E8E8;
+        border-radius: 27px;
+        color: #FFFFFF;
+        margin-top: 16px;
+        width: 62px;
+        height: 32px;
+        background: transparent;
+    }
+    .tip6 p{
+        text-align: center;
+        margin-top: 20px;
+        font-weight: 600;
+        font-size: 13px;
+        color: #DED0B6;
+    }
 </style>

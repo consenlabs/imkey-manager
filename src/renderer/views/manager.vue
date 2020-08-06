@@ -22,17 +22,17 @@
                         <a class="col" v-if="item.installed===true" href="javascript:;">{{$t('m.imKeyManager.installed')}}</a>
                         <a v-if="item.installDis===false" href="javascript:;" @click="installApp(item,index)">{{$t('m.imKeyManager.install')}}</a>
                         <a v-if="item.updateDis===false" href="javascript:;" @click="updateApp(item,index)">{{$t('m.imKeyManager.upgrade')}}</a>
-<!--                        <a v-if="item.deleteDis===false" href="javascript:;" @click="deleteApp(item,index)">{{$t('m.imKeyManager.delete')}}</a>-->
+                        <a v-if="item.deleteDis===false" href="javascript:;" @click="deleteApp(item,index)">{{$t('m.imKeyManager.delete')}}</a>
 
-                        <el-tooltip class="item" v-model="item.installLoading" :content="$t('m.imKeyManager.APP_installing_do_not_disconnect_usb')" effect="dark" placement="top end">
+                        <el-tooltip class="item" v-model="item.installLoading" :content="$t('m.imKeyManager.APP_installing_do_not_disconnect_usb')" effect="dark" placement="top">
                             <span v-if="item.installLoading===true" class="fas fa-circle-notch fa-spin"></span>
                         </el-tooltip>
-                        <el-tooltip  class="item" v-model="item.updateLoading" :content="$t('m.imKeyManager.APP_upgrading_do_not_disconnect_usb')" effect="dark" placement="top end">
+                        <el-tooltip  class="item" v-model="item.updateLoading" :content="$t('m.imKeyManager.APP_upgrading_do_not_disconnect_usb')" effect="dark" placement="top">
                             <span v-if="item.updateLoading===true" class="fas fa-circle-notch fa-spin"></span>
                         </el-tooltip>
-<!--                        <el-tooltip class="item" :manual="true" v-model="item.deleteLoading" :content="$t('m.imKeyManager.APP_deleting_do_not_disconnect_usb')" effect="dark" placement="top end">-->
-<!--                            <span v-if="item.deleteLoading===true" class="fas fa-circle-notch fa-spin"></span>-->
-<!--                        </el-tooltip>-->
+                        <el-tooltip class="item" :manual="true" v-model="item.deleteLoading" :content="$t('m.imKeyManager.APP_deleting_do_not_disconnect_usb')" effect="dark" placement="top">
+                            <span v-if="item.deleteLoading===true" class="fas fa-circle-notch fa-spin"></span>
+                        </el-tooltip>
 
                     </div>
                 </li>
@@ -102,7 +102,6 @@
 <script>
 import constants from '../../common/constants'
 import { ipcRenderer } from 'electron'
-// const getStyle = require('element-ui')
 export default {
   name: 'manager',
   data () {
@@ -118,7 +117,8 @@ export default {
       isCosUpdate: false,
       centerDialogVisible: false,
       cosOldVersionData: '',
-      cosNewVersionData: ''
+      cosNewVersionData: '',
+      cosUpdateStatus:'0'
     }
   },
 
@@ -143,80 +143,89 @@ export default {
       this.supportCode = code
     },
     checkFirmwareVersion () {
-      // 返回状态 0，无需更新COS，1，更新cos 2，更新错误
-      const result = ipcRenderer.sendSync('getFirmwareVersion')
-      const getFirmwareVersionResponse = result.result
-      if (result.isSuccess) {
-        this.cosOldVersionData = getFirmwareVersionResponse
-        this.$store.state.cosOldVersionData = getFirmwareVersionResponse
-        const result = ipcRenderer.sendSync('cosCheckUpdate')
-        const cosCheckUpdateResponse = result.result
-        if (result.isSuccess) {
-          this.cosNewVersionData = cosCheckUpdateResponse.latestCosVersion
-          this.isLatest = cosCheckUpdateResponse.isLatest
-          this.updateType = cosCheckUpdateResponse.updateType
-          this.description = cosCheckUpdateResponse.description
-          // 对比COS版本，提示用户是否升级
-          // 如果cos版本不一致，提示用户更新
-          if (this.cosNewVersionData === null || this.cosNewVersionData === '') {
-            this.isCosUpdate = false
-            return '0'
-          } else {
-            if (this.cosOldVersionData === this.cosNewVersionData) {
-              this.isCosUpdate = false
-              return '0'
+        // 返回状态 0，无需更新COS，1，更新cos 2，更新错误
+        this.$ipcRenderer.send('getFirmwareVersion')
+        this.$ipcRenderer.on('getFirmwareVersion', ( getFirmwareVersionResult) => {
+        const getFirmwareVersionResponse = getFirmwareVersionResult.result
+        if (getFirmwareVersionResult.isSuccess) {
+            this.cosOldVersionData = getFirmwareVersionResponse
+            this.$store.state.cosOldVersionData = getFirmwareVersionResponse
+            this.$ipcRenderer.send('cosCheckUpdate')
+            this.$ipcRenderer.on('cosCheckUpdate', ( cosCheckUpdateResult) => {
+            const cosCheckUpdateResponse = cosCheckUpdateResult.result
+            if (cosCheckUpdateResult.isSuccess) {
+                this.cosNewVersionData = cosCheckUpdateResponse.latestCosVersion
+                this.isLatest = cosCheckUpdateResponse.isLatest
+                this.updateType = cosCheckUpdateResponse.updateType
+                this.description = cosCheckUpdateResponse.description
+                // 对比COS版本，提示用户是否升级
+                // 如果cos版本不一致，提示用户更新
+                if (this.cosNewVersionData === null || this.cosNewVersionData === '') {
+                    this.isCosUpdate = false
+                    this.cosUpdateStatus='0'
+                } else {
+                    if (this.cosOldVersionData === this.cosNewVersionData) {
+                        this.isCosUpdate = false
+                        this.cosUpdateStatus= '0'
+                    } else {
+                        // 开始升级
+                        this.$store.state.isCosUpdate = true
+                        this.$store.state.cosNewVersionData = this.cosNewVersionData
+                        this.isCosUpdate = true
+                        this.cosUpdateStatus= '1'
+                    }
+                }
             } else {
-              // 开始升级
-              this.$store.state.isCosUpdate = true
-              this.$store.state.cosNewVersionData = this.cosNewVersionData
-              this.isCosUpdate = true
-              return '1'
+                this.isCosUpdate = false
+                // 检查COS更新失败
+                this.changeCode(5)
+                this.cosUpdateStatus= '2'
             }
-          }
+        })
         } else {
-          this.isCosUpdate = false
-          // 检查COS更新失败
-          this.changeCode(5)
-          return '2'
+            this.isCosUpdate = false
+            // 获取固件版本失败
+            this.changeCode(5)
+            this.cosUpdateStatus= '2'
         }
-      } else {
-        this.isCosUpdate = false
-        // 获取固件版本失败
-        this.changeCode(5)
-        return '2'
-      }
+    })
     },
     updateFirmware () {
       this.changeCode(1)
-      setTimeout(() => {
-        const connectResult = ipcRenderer.sendSync('connectDevice')
-        if (connectResult.isSuccess) {
-          const result = ipcRenderer.sendSync('cosUpdate')
-          const response = result.result
-          if (result.isSuccess) {
-            if (response === constants.RESULT_STATUS_SUCCESS) {
-              this.isCosUpdate = false
-              this.cosOldVersionData = this.cosNewVersionData
-              this.$store.state.isCosUpdate = false
-              this.$store.state.cosOldVersionData = this.cosNewVersionData
-              this.$store.state.cosNewVersionData = this.cosNewVersionData
-              this.changeCode(2)
-              // 更新完cos之后需要清除缓存重新加载数据刷新页面
-              // setTimeout(() => {
-              //   this.init()
-              //   this.changeCode(2)
-              // }, 200)
-            } else {
+        this.$ipcRenderer.send('connectDevice')
+        this.$ipcRenderer.on('connectDevice', ( connectResult) => {
+            if (connectResult.isSuccess) {
+                const result = ipcRenderer.sendSync('cosUpdate')
+                this.$ipcRenderer.send('cosUpdate')
+                this.$ipcRenderer.on('cosUpdate', ( cosUpdateResult) => {
+                const response = cosUpdateResult.result
+                if (cosUpdateResult.isSuccess) {
+                    if (response === constants.RESULT_STATUS_SUCCESS) {
+                        this.isCosUpdate = false
+                        this.cosOldVersionData = this.cosNewVersionData
+                        this.$store.state.isCosUpdate = false
+                        this.$store.state.cosOldVersionData = this.cosNewVersionData
+                        this.$store.state.cosNewVersionData = this.cosNewVersionData
+                        this.changeCode(2)
+                        // 更新完cos之后需要清除缓存重新加载数据刷新页面
+                        // setTimeout(() => {
+                        //   this.init()
+                        //   this.changeCode(2)
+                        // }, 200)
+                    } else {
+                        this.isCosUpdate = true
+                        this.changeCode(3)
+                    }
+                } else {
+                    this.isCosUpdate = true
+                    this.changeCode(3)
+                }
+            })
+          } else {
               this.isCosUpdate = true
               this.changeCode(3)
-            }
-          } else {
-            this.isCosUpdate = true
-            this.changeCode(3)
           }
-        } this.isCosUpdate = true
-        this.changeCode(3)
-      }, 200)
+      })
     },
 
     ok () {
@@ -233,7 +242,8 @@ export default {
       } else {
         this.apps = this.$store.state.apps
       }
-
+      //TODO 检测COS升级
+      // this.checkFirmwareVersion()
       //   } else {
       //     this.tip = true
       //   }
@@ -243,155 +253,165 @@ export default {
     },
 
     getAppsList () {
-      const connectResult = ipcRenderer.sendSync('connectDevice')
-      if (connectResult.isSuccess) {
-        const result = ipcRenderer.sendSync('checkUpdate')
-        const response = result.result
-        if (result.isSuccess) {
-          const appList = []
-          const tempAppList = response.list
-          for (let i = 0; i < tempAppList.length; i++) {
-            if (tempAppList[i].name === 'IMK') {
-              tempAppList[i].name = this.$t('m.imKeyManager.imKey_soft')
-            }
-            const collection = {
-              name: tempAppList[i].name,
-              desc: tempAppList[i].desc,
-              lastVersion: tempAppList[i].lastVersion,
-              id: i,
-              installLoading: tempAppList[i].installLoading,
-              installDis: tempAppList[i].installDis,
-              deleteDis: tempAppList[i].deleteDis,
-              installed: tempAppList[i].installed,
-              updateLoading: tempAppList[i].updateLoading,
-              updateDis: tempAppList[i].updateDis,
-              deleteLoading: tempAppList[i].deleteLoading,
-              icon: tempAppList[i].icon
-            }
-            appList.push(collection)
-          }
-          this.apps = appList
-          this.$store.state.apps = appList
-          this.isSuccess = true
+        this.$ipcRenderer.send('connectDevice')
+        this.$ipcRenderer.on('connectDevice', ( connectResult) => {
+            if (connectResult.isSuccess) {
+                this.$ipcRenderer.send('checkUpdate')
+                this.$ipcRenderer.on('checkUpdate', ( checkUpdateResult) => {
+                const response = checkUpdateResult.result
+                if (checkUpdateResult.isSuccess) {
+                    const appList = []
+                    const tempAppList = response.list
+                    for (let i = 0; i < tempAppList.length; i++) {
+                        if (tempAppList[i].name === 'IMK') {
+                            tempAppList[i].name = this.$t('m.imKeyManager.imKey_soft')
+                        }
+                        const collection = {
+                            name: tempAppList[i].name,
+                            desc: tempAppList[i].desc,
+                            lastVersion: tempAppList[i].lastVersion,
+                            id: i,
+                            installLoading: tempAppList[i].installLoading,
+                            installDis: tempAppList[i].installDis,
+                            deleteDis: tempAppList[i].deleteDis,
+                            installed: tempAppList[i].installed,
+                            updateLoading: tempAppList[i].updateLoading,
+                            updateDis: tempAppList[i].updateDis,
+                            deleteLoading: tempAppList[i].deleteLoading,
+                            icon: tempAppList[i].icon
+                        }
+                        appList.push(collection)
+                    }
+                    this.apps = appList
+                    this.$store.state.apps = appList
+                    this.isSuccess = true
+                } else {
+                    this.tip = true
+                }
+            })
         } else {
-          this.tip = true
+            this.tip = true
         }
-      } else {
-        this.tip = true
-      }
+    })
     },
 
     installApp (item, index) {
-      if (this.checkFirmwareVersion() === '1') {
+      if (this.cosUpdateStatus==="1") {
         this.updateFirmware()
-      } else if (this.checkFirmwareVersion() === '0') {
-        const connectResult = ipcRenderer.sendSync('connectDevice')
-        if (connectResult.isSuccess) {
-          this.apps[index].installLoading = true
-          this.apps[index].deleteLoading = false
-          this.apps[index].installDis = true
-          this.apps[index].installed = false
-          setTimeout(() => {
-            const result = ipcRenderer.sendSync('downloadApplet', item.name)
-            const response = result.result
-            if (result.isSuccess) {
-              if (response === constants.RESULT_STATUS_SUCCESS) {
-                this.apps[index].installed = true
-                this.apps[index].deleteDis = false
-                this.apps[index].installLoading = false
-                this.apps[index].desc = this.apps[index].lastVersion
-              } else {
-                this.apps[index].installLoading = false
-                this.tip = true
-                this.apps[index].installDis = false
-              }
-            } else {
-              this.apps[index].installLoading = false
-              this.apps[index].installDis = false
+      } else if (this.cosUpdateStatus==="0") {
+          this.$ipcRenderer.send('connectDevice')
+          this.$ipcRenderer.on('connectDevice', ( connectResult) => {
+              if (connectResult.isSuccess) {
+              this.apps[index].installLoading = true
+              this.apps[index].deleteLoading = false
+              this.apps[index].installDis = true
+              this.apps[index].installed = false
+                  this.$ipcRenderer.send('downloadApplet',item.name)
+                  this.$ipcRenderer.on('downloadApplet', ( downloadAppletResult) => {
+                  const response = downloadAppletResult.result
+                  if (downloadAppletResult.isSuccess) {
+                      if (response === constants.RESULT_STATUS_SUCCESS) {
+                          this.apps[index].installed = true
+                          this.apps[index].deleteDis = false
+                          this.apps[index].installLoading = false
+                          this.apps[index].desc = this.apps[index].lastVersion
+                      } else {
+                          this.apps[index].installLoading = false
+                          this.tip = true
+                          this.apps[index].installDis = false
+                      }
+                  } else {
+                      this.apps[index].installLoading = false
+                      this.apps[index].installDis = false
+                      this.tip = true
+                  }
+              })
+          } else {
               this.tip = true
-            }
-          }, 200)
-        } else {
-          this.tip = true
-        }
+          }
+      })
       } else {
 
       }
     },
 
     updateApp (item, index) {
-      if (this.checkFirmwareVersion() === '1') {
+      if (this.cosUpdateStatus==='1') {
         this.updateFirmware()
-      } else if (this.checkFirmwareVersion() === '0') {
-        const connectResult = ipcRenderer.sendSync('connectDevice')
-        if (connectResult.isSuccess) {
-          this.apps[index].updateLoading = true
-          this.apps[index].deleteLoading = false
-          this.apps[index].updateDis = true
-          this.apps[index].installed = false
-          setTimeout(() => {
-            const result = ipcRenderer.sendSync('updateApplet', item.name)
-            const response = result.result
-            if (result.isSuccess) {
-              if (response === constants.RESULT_STATUS_SUCCESS) {
-                this.apps[index].deleteDis = false
-                this.apps[index].installed = true
-                this.apps[index].updateLoading = false
-                this.apps[index].installDis = false
-                this.apps[index].installLoading = false
-                this.apps[index].desc = this.apps[index].lastVersion
-              } else {
-                this.apps[index].installLoading = false
-                this.apps[index].updateDis = false
-                this.tip = true
-              }
-            } else {
-              this.apps[index].updateDis = false
-              this.apps[index].installLoading = false
+      } else if (this.cosUpdateStatus==='0') {
+          this.$ipcRenderer.send('connectDevice')
+          this.$ipcRenderer.on('connectDevice', ( connectResult) => {
+              if (connectResult.isSuccess) {
+              this.apps[index].updateLoading = true
+              this.apps[index].deleteLoading = false
+              this.apps[index].updateDis = true
+              this.apps[index].installed = false
+                      this.$ipcRenderer.send('updateApplet', item.name)
+                      this.$ipcRenderer.on('updateApplet', ( updateAppletResult) => {
+                          const response = updateAppletResult.result
+                          if (updateAppletResult.isSuccess) {
+                      if (response === constants.RESULT_STATUS_SUCCESS) {
+                          this.apps[index].deleteDis = false
+                          this.apps[index].installed = true
+                          this.apps[index].updateLoading = false
+                          this.apps[index].installDis = false
+                          this.apps[index].installLoading = false
+                          this.apps[index].desc = this.apps[index].lastVersion
+                      } else {
+                          this.apps[index].installLoading = false
+                          this.apps[index].updateDis = false
+                          this.tip = true
+                      }
+                  } else {
+                      this.apps[index].updateDis = false
+                      this.apps[index].installLoading = false
+                      this.tip = true
+                  }
+              })
+          } else {
               this.tip = true
-            }
-          }, 200)
-        } else {
-          this.tip = true
-        }
+          }
+      })
       } else {
 
       }
     },
 
     deleteApp (item, index) {
-      if (this.checkFirmwareVersion() === '1') {
+      if (this.cosUpdateStatus==='1') {
         this.updateFirmware()
-      } else if (this.checkFirmwareVersion() === '0') {
-        const connectResult = ipcRenderer.sendSync('connectDevice')
-        if (connectResult.isSuccess) {
-          this.apps[index].deleteLoading = true
-          this.apps[index].installLoading = false
-          this.apps[index].deleteDis = true
-          this.apps[index].installed = false
-          setTimeout(() => {
-            const result = ipcRenderer.sendSync('deleteApplet', item.name)
-            const response = result.result
-            if (result.isSuccess) {
-              if (response === constants.RESULT_STATUS_SUCCESS) {
-                this.apps[index].installDis = false
-                this.apps[index].deleteLoading = false
-                this.apps[index].desc = ''
-                this.apps[index].installed = false
-              } else {
-                this.apps[index].deleteDis = false
-                this.apps[index].deleteLoading = false
-                this.tip = true
-              }
-            } else {
-              this.apps[index].deleteDis = false
-              this.apps[index].deleteLoading = false
+      } else if (this.cosUpdateStatus==='0') {
+          this.$ipcRenderer.send('connectDevice')
+          this.$ipcRenderer.on('connectDevice', ( connectResult) => {
+              if (connectResult.isSuccess) {
+              this.apps[index].deleteLoading = true
+              this.apps[index].installLoading = false
+              this.apps[index].deleteDis = true
+              this.apps[index].installed = false
+                  this.$ipcRenderer.send('deleteApplet', item.name)
+                  this.$ipcRenderer.on('deleteApplet', ( deleteAppletResult) => {
+                  const response = deleteAppletResult.result
+                  if (deleteAppletResult.isSuccess) {
+                      if (response === constants.RESULT_STATUS_SUCCESS) {
+                          this.apps[index].installDis = false
+                          this.apps[index].deleteLoading = false
+                          this.apps[index].desc = ''
+                          this.apps[index].installed = false
+                      } else {
+                          this.apps[index].deleteDis = false
+                          this.apps[index].deleteLoading = false
+                          this.tip = true
+                      }
+                  } else {
+                      this.apps[index].deleteDis = false
+                      this.apps[index].deleteLoading = false
+                      this.tip = true
+                  }
+              })
+          } else {
               this.tip = true
-            }
-          }, 200)
-        } else {
-          this.tip = true
-        }
+          }
+      })
       } else {}
     }
   }

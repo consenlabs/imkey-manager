@@ -24,7 +24,7 @@
   },
   "build": {
     "afterSign": "build/notarize.js",
-    "productName": "imkey manager",
+    "productName": "imkey Manager",
     "appId": "com.imkey.imkey-manager",
     "copyright": "Copyright © 2020 imkey",
     "directories": {

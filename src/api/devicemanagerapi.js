@@ -343,6 +343,7 @@ export function deviceBindCheck(filePath) {
 }
 
 export function deviceBindAcquire(bindCode) {
+    console.log("bindCode:"+bindCode)
     return bindAcquire(bindCode)
 }
 
