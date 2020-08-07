@@ -11,3 +11,5 @@ imkey-desktop.iml
 !.gitkeep
 .idea/
 yarn-error.log
+
+.env
