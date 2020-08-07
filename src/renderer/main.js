@@ -14,6 +14,24 @@ const devScaleFactor = 1.3 // 开发时的ScaleFactor
 const scaleFactor = screen.getPrimaryDisplay().scaleFactor
 const zoomFactor = (window.innerHeight / devInnerHeight) * (window.devicePixelRatio / devDevicePixelRatio) * (devScaleFactor / scaleFactor)
 ipcRenderer.send('zoomIn', zoomFactor)
+let callbackCache
+Vue.prototype.$ipcRenderer = {
+  send: (msgType, msgData) => {
+    ipcRenderer.send('message-from-renderer', {
+      type: msgType,
+      data: msgData
+    })
+  },
+  on: (type, callback) => {
+    callbackCache = {
+      type,
+      callback
+    }
+  }
+}
+ipcRenderer.on('message-to-renderer', (sender, msg) => {
+  callbackCache.callback(msg.data)
+}) // 监听主进程的消息
 Vue.config.productionTip = false
 Vue.prototype.$store = store
 Vue.prototype.router = router

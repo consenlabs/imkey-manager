@@ -6,8 +6,6 @@ import * as Sentry from '@sentry/electron'
 // test.json
 import pkg from '../../package.json'
 
-const deviceManger = require('../api/devicemanagerapi')
-const walletApi = require('../api/walletapi')
 let envPath
 if (process.platform === 'win32') {
   if (process.env.NODE_ENV === 'production') {
@@ -34,11 +32,13 @@ if (process.env.NODE_ENV !== 'development') {
   global.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
 }
 
-let mainWindow
+let mainWindow, workerWindow
 const winURL = process.env.NODE_ENV === 'development'
   ? 'http://localhost:9080'
   : `file://${__dirname}/index.html`
-
+const workerURL = process.env.NODE_ENV === 'development'
+  ? 'worker.html'
+  : `file://${__dirname}/worker.html`
 const path = require('path')
 const ApplicationName = pkg.name
 // 托盘对象
@@ -59,7 +59,21 @@ const gotTheLock = app.requestSingleInstanceLock()
 if (process.platform === 'win32') {
   app.setAppUserModelId(ApplicationName)
 }
-
+// 创建WorkerWindow
+function createWorkerWindow () {
+  workerWindow = new BrowserWindow({
+    show: false,
+    webPreferences: { nodeIntegration: true }
+  })
+  workerWindow.on('closed', () => {
+    console.log('background window closed')
+  })
+  if (process.env.NODE_ENV === 'development') {
+    workerWindow.loadFile(workerURL)// 调试时的加载方式
+  } else {
+    workerWindow.loadURL(workerURL)// 打包后的加载方式
+  }
+}
 /**
  * 创建主窗口
  */
@@ -90,6 +104,8 @@ function createMainWindow () {
   mainWindow.loadURL(winURL)
   mainWindow.once('ready-to-show', () => {
     mainWindow.show()
+    // 启动http server
+    sendWindowMessage(workerWindow, 'start-http-server', '')
   })
 
   /**
@@ -175,72 +191,72 @@ function createTray () {
   })
 }
 
-/**
- * 启动 http server
- */
-function startHttpServer () {
-  const express = require('express')
-  const app = express()
-  const cors = require('cors')
-  const bodyParser = require('body-parser')
-  const apiRouter = require('../api/apirouter')
-  // 配置cors解决跨域请求的问题
-  app.use(cors())
-  // 给app配置bodyParser中间件
-  // 通过如下配置再路由种处理request时，可以直接获得post请求的body部分
-  app.use(bodyParser.urlencoded({ extended: true }))
-  app.use(bodyParser.json())
-  // let router = express.Router();
-  // 获得express router对象
-  // 用post动词访问 http://localhost:8081/api/imKey
-  app.post('/api/imKey', function (req, res) {
-    let body = ''
-    let jsonStr
-    let reqJson
-    if (typeof (req.body.method) === 'undefined') {
-      req.on('data', function (chunk) {
-        body += chunk // 读取参数流转化为字符串
-      })
-      req.on('end', function () {
-        // 读取参数流结束后将转化的body字符串解析成 JSON 格式
-        reqJson = JSON.parse(body)
-        try {
-          jsonStr = apiRouter.api(reqJson)
-        } catch (err) {
-          jsonStr = {
-            'jsonrpc:': reqJson.jsonrpc,
-            error: {
-              code: -32606,
-              message: err
-            },
-            'id:': reqJson.id
-          }
-        }
-        res.json(jsonStr)
-      })
-    } else {
-      reqJson = req.body
-      // 读取参数流结束后将转化的body字符串解析成 JSON 格式
-      try {
-        jsonStr = apiRouter.api(reqJson)
-      } catch (err) {
-        jsonStr = {
-          'jsonrpc:': reqJson.jsonrpc,
-          error: {
-            code: -32604,
-            message: err
-          },
-          'id:': reqJson.id
-        }
-      }
-      res.json(jsonStr)
-    }
-  })
-  // 注册路由
-  // 所有的路由会加上“／api”前缀
-  // pp.use('/api/imKey/', router);
-  app.listen(8081)
-}
+// /**
+//  * 启动 http server
+//  */
+// function startHttpServer () {
+//   const express = require('express')
+//   const app = express()
+//   const cors = require('cors')
+//   const bodyParser = require('body-parser')
+//   const apiRouter = require('../api/apirouter')
+//   // 配置cors解决跨域请求的问题
+//   app.use(cors())
+//   // 给app配置bodyParser中间件
+//   // 通过如下配置再路由种处理request时，可以直接获得post请求的body部分
+//   app.use(bodyParser.urlencoded({ extended: true }))
+//   app.use(bodyParser.json())
+//   // let router = express.Router();
+//   // 获得express router对象
+//   // 用post动词访问 http://localhost:8081/api/imKey
+//   app.post('/api/imKey', function (req, res) {
+//     let body = ''
+//     let jsonStr
+//     let reqJson
+//     if (typeof (req.body.method) === 'undefined') {
+//       req.on('data', function (chunk) {
+//         body += chunk // 读取参数流转化为字符串
+//       })
+//       req.on('end', function () {
+//         // 读取参数流结束后将转化的body字符串解析成 JSON 格式
+//         reqJson = JSON.parse(body)
+//         try {
+//           jsonStr = apiRouter.api(reqJson)
+//         } catch (err) {
+//           jsonStr = {
+//             'jsonrpc:': reqJson.jsonrpc,
+//             error: {
+//               code: -32606,
+//               message: err
+//             },
+//             'id:': reqJson.id
+//           }
+//         }
+//         res.json(jsonStr)
+//       })
+//     } else {
+//       reqJson = req.body
+//       // 读取参数流结束后将转化的body字符串解析成 JSON 格式
+//       try {
+//         jsonStr = apiRouter.api(reqJson)
+//       } catch (err) {
+//         jsonStr = {
+//           'jsonrpc:': reqJson.jsonrpc,
+//           error: {
+//             code: -32604,
+//             message: err
+//           },
+//           'id:': reqJson.id
+//         }
+//       }
+//       res.json(jsonStr)
+//     }
+//   })
+//   // 注册路由
+//   // 所有的路由会加上“／api”前缀
+//   // pp.use('/api/imKey/', router);
+//   app.listen(8081)
+// }
 
 /**
  * 自动更新
@@ -432,96 +448,27 @@ function protocalHandler () {
     // 根据需要做其他事情
   }
 }
-
+function sendWindowMessage (targetWindow, message, payload) {
+  if (typeof targetWindow === 'undefined') {
+    console.log('Target window does not exist')
+    return
+  }
+  console.log('message:' + message)
+  console.log('type:' + payload.type)
+  console.log('data:' + payload.data)
+  targetWindow.webContents.send(message, payload)
+}
 function renderDeviceManagerHandler () {
-  ipcMain.on('connectDevice', (event) => {
-    const response = deviceManger.connect()
-    event.returnValue = response
+  ipcMain.on('message-from-worker', (event, arg) => {
+    sendWindowMessage(mainWindow, 'message-to-renderer', arg)
   })
-  ipcMain.on('getSeid', (event) => {
-    const response = deviceManger.getSeid()
-    event.returnValue = response
+  ipcMain.on('message-from-renderer', (event, arg) => {
+    sendWindowMessage(workerWindow, 'message-from-main', arg)
   })
-  ipcMain.on('getSn', (event) => {
-    const response = deviceManger.getSn()
-    event.returnValue = response
+  ipcMain.on('ready', (event, arg) => {
+    console.info('child process ready')
   })
-  ipcMain.on('getRamSize', (event) => {
-    const response = deviceManger.getRamSize()
-    event.returnValue = response
-  })
-  ipcMain.on('getFirmwareVersion', (event) => {
-    const response = deviceManger.getFirmwareVersion()
-    event.returnValue = response
-  })
-  ipcMain.on('getSdkInfo', (event) => {
-    const response = deviceManger.getSdkInfo()
-    event.returnValue = response
-  })
-  ipcMain.on('activeDevice', (event) => {
-    const response = deviceManger.activeDevice()
-    event.returnValue = response
-  })
-  ipcMain.on('cosUpdate', (event) => {
-    const response = deviceManger.cosUpdate()
-    event.returnValue = response
-  })
-  ipcMain.on('cosCheckUpdate', (event) => {
-    const response = deviceManger.cosCheckUpdate()
-    event.returnValue = response
-  })
-  ipcMain.on('isBLStatus', (event) => {
-    const response = deviceManger.isBLStatus()
-    event.returnValue = response
-  })
-  ipcMain.on('checkDevice', (event) => {
-    const response = deviceManger.checkDevice()
-    event.returnValue = response
-  })
-  ipcMain.on('checkUpdate', (event) => {
-    const response = deviceManger.checkUpdateAppList()
-    event.returnValue = response
-  })
-  ipcMain.on('downloadApplet', (event, appletName) => {
-    const response = deviceManger.downloadApplet(appletName)
-    event.returnValue = response
-  })
-  ipcMain.on('updateApplet', (event, appletName) => {
-    const response = deviceManger.updateApplet(appletName)
-    event.returnValue = response
-  })
-  ipcMain.on('deleteApplet', (event, appletName) => {
-    const response = deviceManger.deleteApplet(appletName)
-    event.returnValue = response
-  })
-  ipcMain.on('deviceBindCheck', (event, filePath) => {
-    const response = deviceManger.deviceBindCheck(filePath)
-    event.returnValue = response
-  })
-  ipcMain.on('deviceBindAcquire', (event, bindCode) => {
-    const response = deviceManger.deviceBindAcquire(bindCode)
-    event.returnValue = response
-  })
-  ipcMain.on('deviceBindDisplay', (event) => {
-    const response = deviceManger.deviceBindDisplay()
-    event.returnValue = response
-  })
-  ipcMain.on('getBTCXpub', (event) => {
-    const response = walletApi.getBTCXpub()
-    event.returnValue = response
-  })
-  ipcMain.on('getUserPath', (event) => {
-    const response = deviceManger.getUserPath()
-    event.returnValue = response
-  })
-  ipcMain.on('importBindCode', (event, bindCode) => {
-    const response = deviceManger.importBindCode(bindCode)
-    event.returnValue = response
-  })
-  ipcMain.on('exportBindCode', (event) => {
-    const response = deviceManger.exportBindCode()
-    event.returnValue = response
-  })
+
   ipcMain.on('openUrl', (event, url) => {
     shell.openExternal(url)
   })
@@ -545,14 +492,15 @@ if (!gotTheLock) {
   })
 
   // 创建 mainWindow, 加载应用的其余部分, etc...
-  app.on('ready', () => {
+  app.on('ready', async () => {
     createMainWindow()
+    createWorkerWindow()
     createTray()
     autoUpdate()
     crashReport()
     protocalHandler()
     renderDeviceManagerHandler()
-    startHttpServer()
+    // startHttpServer()
   })
 }
 

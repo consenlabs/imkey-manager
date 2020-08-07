@@ -118,26 +118,29 @@
                 <h3>{{$t('m.imKeyManager.enter_bind_code')}}</h3>
                 <div>
                     <input type="text" maxlength="1" v-model="code1" @focus="inpFocus($event)"
-                           @keyup="inpCode(1,$event)">
+                           @keyup="inpCode(1,$event)" onkeyup="this.value=this.value.toUpperCase()" >
                     <input type="text" maxlength="1" v-model="code2" @focus="inpFocus($event)"
-                           @keyup="inpCode(2,$event)">
+                           @keyup="inpCode(2,$event)" onkeyup="this.value=this.value.toUpperCase()" >
                     <input type="text" maxlength="1" v-model="code3" @focus="inpFocus($event)"
-                           @keyup="inpCode(3,$event)">
+                           @keyup="inpCode(3,$event)" onkeyup="this.value=this.value.toUpperCase()" >
                     <input type="text" maxlength="1" v-model="code4" @focus="inpFocus($event)"
-                           @keyup="inpCode(4,$event)">
+                           @keyup="inpCode(4,$event)" onkeyup="this.value=this.value.toUpperCase()" >
                     <input type="text" maxlength="1" v-model="code5" @focus="inpFocus($event)"
-                           @keyup="inpCode(5,$event)">
+                           @keyup="inpCode(5,$event)" onkeyup="this.value=this.value.toUpperCase()" >
                     <input type="text" maxlength="1" v-model="code6" @focus="inpFocus($event)"
-                           @keyup="inpCode(6,$event)">
+                           @keyup="inpCode(6,$event)" onkeyup="this.value=this.value.toUpperCase()" >
                     <input type="text" maxlength="1" v-model="code7" @focus="inpFocus($event)"
-                           @keyup="inpCode(7,$event)">
+                           @keyup="inpCode(7,$event)" onkeyup="this.value=this.value.toUpperCase()" >
                     <input type="text" maxlength="1" v-model="code8" @focus="inpFocus($event)"
-                           @keyup="inpCode(8,$event)">
+                           @keyup="inpCode(8,$event)" onkeyup="this.value=this.value.toUpperCase()" >
                 </div>
                 <div class="bindTip">
                 <p1 v-if="bindingStatus==1"><span class="fas fa-circle-notch fa-spin"></span>{{$t('m.imKeyManager.verifying')}}</p1>
                 <p2 v-if="bindingStatus==2"><span class="el-icon-success"></span>{{$t('m.imKeyManager.verified_successfully')}}</p2>
-                <p v-if="!codeIsTrue"><span class="el-icon-warning"></span>{{$t('m.imKeyManager.bind_code_error_please_check')}}</p>
+                <p v-if="!codeIsTrue"><span class="el-icon-warning"></span>{{$t('m.imKeyManager.bind_code_error_please_check')}}
+                    <a class="link1" @click="openUrl">{{$t('m.imKeyManager.reset_imKey')}}</a>
+                    <a>{{$t('m.imKeyManager.retrieved')}}</a>
+                </p>
                 </div>
             </div>
         </div>
@@ -145,7 +148,11 @@
         <div class="tip6 tip" v-if="status==8">
             <div class="tipBox">
                 <h3>{{$t('m.imKeyManager.enter_pin_imKey_pro')}}</h3>
-                <p>{{$t('m.imKeyManager.pin_code_error_please_check')}}</p>
+                <p>{{$t('m.imKeyManager.pin_code_error_please_check')}}
+                    <a class="link"   @click="openUrl">{{$t('m.imKeyManager.reset_imKey')}}</a>
+                    <a>{{$t('m.imKeyManager.retrieved')}}</a>
+                </p>
+
             </div>
         </div>
     </div>
@@ -185,6 +192,9 @@ export default {
     this.noScroll()
   },
   methods: {
+    openUrl () {
+      ipcRenderer.send('openUrl', 'https://support.imkey.im/hc/zh-cn/articles/360019787533-%E5%A6%82%E4%BD%95%E9%87%8D%E7%BD%AEimKey-')
+    },
     changeState (index) {
       this.status = index
     },
@@ -192,8 +202,8 @@ export default {
       this.codeIsTrue = true
       if (code === 8) {
         // 完成输入  写完成后的跳转
-        const bindCode = this.code1 + this.code2 + this.code3 + this.code4 + this.code5 + this.code6 + this.code7 + this.code8
-
+        let bindCode = this.code1 + this.code2 + this.code3 + this.code4 + this.code5 + this.code6 + this.code7 + this.code8
+        bindCode = bindCode.toUpperCase()
         const reg = /^[a-hj-np-zA-HJ-NP-Z2-9]{8}$/
         if (reg.test(bindCode)) {
           if (bindCode.length === 8) {
@@ -209,7 +219,10 @@ export default {
       }
       if (event.srcElement.value.length === 1) {
         event.srcElement.nextElementSibling.focus()
+      } else {
+        event.srcElement.value = ''
       }
+
       if (event.keyCode === 8) {
         event.srcElement.previousElementSibling.focus()
       }
@@ -219,7 +232,6 @@ export default {
     },
 
     check () {
-      this.changeState(8)
       this.checkFirmwareUpgrade = 1
       this.checkDeviceBindingCode = 1
       this.checkPinAndWallet = 1
@@ -229,8 +241,10 @@ export default {
     },
     checkIsBL () {
       this.checkFirmwareUpgrade = 2
-      setTimeout(() => {
-        const result = ipcRenderer.sendSync('isBLStatus')
+
+      this.$ipcRenderer.send('isBLStatus')
+      this.$ipcRenderer.on('isBLStatus', (result) => {
+        // const result = ipcRenderer.sendSync('isBLStatus')
         const response = result.result
         if (result.isSuccess) {
           if (response) {
@@ -245,13 +259,15 @@ export default {
           this.errorInfo = response
           this.changeState(4)
         }
-      }, 100)
+      })
     },
     checkIsActive () {
       // 绑定之前检查激活
       this.checkDeviceBindingCode = 2
-      setTimeout(() => {
-        const result = ipcRenderer.sendSync('checkUpdate')
+
+      this.$ipcRenderer.send('checkUpdate')
+      this.$ipcRenderer.on('checkUpdate', (result) => {
+        // const result = ipcRenderer.sendSync('checkUpdate')
         const response = result.result
         if (result.isSuccess) {
           const activeStatus = response.status
@@ -292,11 +308,12 @@ export default {
           this.errorInfo = response
           this.changeState(4)
         }
-      }, 200)
+      })
     },
     checkIsBind () {
-      setTimeout(() => {
-        const result = ipcRenderer.sendSync('deviceBindCheck', this.userPath)
+      this.$ipcRenderer.send('deviceBindCheck', this.userPath)
+      this.$ipcRenderer.on('deviceBindCheck', (result) => {
+        // const result = ipcRenderer.sendSync('deviceBindCheck', this.userPath)
         const response = result.result
         if (result.isSuccess) {
           if (response === '' || response === null) {
@@ -323,12 +340,14 @@ export default {
           this.errorInfo = response
           this.changeState(4)
         }
-      }, 200)
+      })
     },
     checkIsCreateWallet () {
       this.checkPinAndWallet = 2
-      setTimeout(() => {
-        const result = ipcRenderer.sendSync('getBTCXpub')
+
+      this.$ipcRenderer.send('getBTCXpub')
+      this.$ipcRenderer.on('getBTCXpub', (result) => {
+        // const result = ipcRenderer.sendSync('getBTCXpub')
         const response = result.result
         if (result.isSuccess) {
           if (response !== '' || response !== null) {
@@ -356,11 +375,12 @@ export default {
           this.errorInfo = response
           this.changeState(4)
         }
-      }, 100)
+      })
     },
     bindOtherCheckIsCreateWallet () {
-      setTimeout(() => {
-        const result = ipcRenderer.sendSync('getBTCXpub')
+      this.$ipcRenderer.send('getBTCXpub')
+      this.$ipcRenderer.on('getBTCXpub', (result) => {
+        // const result = ipcRenderer.sendSync('getBTCXpub')
         const response = result.result
         if (result.isSuccess) {
           if (response !== '' || response !== null) {
@@ -380,32 +400,41 @@ export default {
           this.errorInfo = response
           this.changeState(4)
         }
-      }, 200)
+      })
     },
     connect () {
-      setTimeout(() => {
-        const result = ipcRenderer.sendSync('connectDevice')
+      this.$ipcRenderer.send('connectDevice')
+      this.$ipcRenderer.on('connectDevice', (result) => {
+        // event.sender.removeAllListeners('connectDeviceResult')
+        // const result = ipcRenderer.sendSync('connectDevice')
         const response = result.result
         if (result.isSuccess) {
           if (response === constants.RESULT_STATUS_SUCCESS) {
             this.changeState(3)
             this.checkIsBL()
           } else {
-          // 连接失败
+            // 连接失败
             this.errorInfo = response
             this.changeState(4)
           }
         } else {
-        // 连接失败
+          // 连接失败
           this.errorInfo = response
           this.changeState(4)
         }
-      }, 200)
+      })
+      setTimeout(() => {
+        if (this.status === 1) {
+          this.changeState(8)
+        }
+      }, 800)
     },
     toCosUpdate () {
       this.changeState(6)
-      setTimeout(() => {
-        const result = ipcRenderer.sendSync('cosUpdate')
+
+      this.$ipcRenderer.send('cosUpdate')
+      this.$ipcRenderer.on('cosUpdate', (result) => {
+        // const result = ipcRenderer.sendSync('cosUpdate')
         const response = result.result
         if (result.isSuccess) {
           if (response === constants.RESULT_STATUS_SUCCESS) {
@@ -419,39 +448,50 @@ export default {
           // 固件升级失败
           this.changeState(5)
         }
-      }, 200)
+      })
     },
     bindAcquire (bindCode) {
-      const deviceBindResult = ipcRenderer.sendSync('deviceBindAcquire', bindCode)
-      const response = deviceBindResult.result
-      if (deviceBindResult.isSuccess) {
-        if (response === constants.RESULT_STATUS_SUCCESS) {
-          // 绑定成功后存储绑定码
-          const result = ipcRenderer.sendSync('importBindCode', bindCode)
-          if (result.isSuccess) {
-            this.bindingStatus = 2
-            this.bindOtherCheckIsCreateWallet()
+      this.$ipcRenderer.send('deviceBindAcquire', bindCode)
+      this.$ipcRenderer.on('deviceBindAcquire', (deviceBindResult) => {
+        // const deviceBindResult = ipcRenderer.sendSync('deviceBindAcquire', bindCode)
+        const response = deviceBindResult.result
+        console.log(response)
+        if (deviceBindResult.isSuccess) {
+          if (response === constants.RESULT_STATUS_SUCCESS) {
+            // 绑定成功后存储绑定码
+            this.$ipcRenderer.send('importBindCode', bindCode)
+            this.$ipcRenderer.on('importBindCode', (importBindResult) => {
+              // const bindCodeResult = ipcRenderer.sendSync('importBindCode', bindCode)
+              const importBindResponse = importBindResult.result
+              if (importBindResult.isSuccess) {
+                this.bindingStatus = 2
+                this.bindOtherCheckIsCreateWallet()
+              } else {
+                this.errorInfo = importBindResponse
+                this.changeState(4)
+              }
+            })
           } else {
-            this.errorInfo = response
-            this.changeState(4)
+            this.codeIsTrue = false
+            this.bindingStatus = 0
           }
         } else {
           this.codeIsTrue = false
           this.bindingStatus = 0
         }
-      } else {
-        this.codeIsTrue = false
-        this.bindingStatus = 0
-      }
+      })
     },
     getUserPath () {
-      const result = ipcRenderer.sendSync('getUserPath')
-      const response = result.result
-      if (result.isSuccess) {
-        this.userPath = response
-        this.$store.state.userPath = response
-      } else {
-      }
+      this.$ipcRenderer.send('getUserPath')
+      this.$ipcRenderer.on('getUserPath', (result) => {
+        // const result = ipcRenderer.sendSync('getUserPath')
+        const response = result.result
+        if (result.isSuccess) {
+          this.userPath = response
+          this.$store.state.userPath = response
+        } else {
+        }
+      })
     },
     goStep (index) {
       switch (index) {
@@ -486,6 +526,20 @@ export default {
 }
 </script>
 <style scoped>
+    .link:hover,
+    hover {
+        cursor: pointer;
+    }
+    .link {
+        border-bottom: 0.1px solid #2C2842;
+    }
+    .link1:hover,
+    hover {
+        cursor: pointer;
+    }
+    .link1 {
+        border-bottom: 0.1px solid #EC6D62;
+    }
     .connectDevice h1 {
         /*width: 48px;*/
         /*height: 48px;*/
