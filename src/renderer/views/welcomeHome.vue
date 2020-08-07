@@ -103,7 +103,7 @@
 </template>
 
 <script>
-import { ipcRenderer } from 'electron'
+import {   } from 'electron'
 
 export default {
   name: 'welcomeHome',

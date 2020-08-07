@@ -71,15 +71,23 @@
                     </p>
                 </div>
                 <div class="codeBox">
-                    <input type="text" maxlength="1" v-model="code1" @focus="inpFocus($event)" @keyup="inpCode(1,$event)">
-                    <input type="text" maxlength="1" v-model="code2" @focus="inpFocus($event)" @keyup="inpCode(2,$event)">
-                    <input type="text" maxlength="1" v-model="code3" @focus="inpFocus($event)" @keyup="inpCode(3,$event)">
-                    <input type="text" maxlength="1" v-model="code4" @focus="inpFocus($event)" @keyup="inpCode(4,$event)">
-                    <input type="text" maxlength="1" v-model="code5" @focus="inpFocus($event)" @keyup="inpCode(5,$event)">
-                    <input type="text" maxlength="1" v-model="code6" @focus="inpFocus($event)" @keyup="inpCode(6,$event)">
-                    <input type="text" maxlength="1" v-model="code7" @focus="inpFocus($event)" @keyup="inpCode(7,$event)">
-                    <input type="text" maxlength="1" v-model="code8" @focus="inpFocus($event)" @keyup="inpCode(8,$event)">
-                </div>
+                        <input type="text" maxlength="1" v-model="code1" @focus="inpFocus($event)" @keyup.delete="deleteInput(1)"
+                               @keyup="inpCode(1,$event)"  oninput="value=value.replace(/[^\w\.\/]/ig,'')" >
+                        <input type="text" maxlength="1" v-model="code2" @focus="inpFocus($event)" @keyup.delete="deleteInput(2)"
+                               @keyup="inpCode(2,$event)"  oninput="value=value.replace(/[^\w\.\/]/ig,'')" >
+                        <input type="text" maxlength="1" v-model="code3" @focus="inpFocus($event)" @keyup.delete="deleteInput(3)"
+                               @keyup="inpCode(3,$event)"  oninput="value=value.replace(/[^\w\.\/]/ig,'')" >
+                        <input type="text" maxlength="1" v-model="code4" @focus="inpFocus($event)" @keyup.delete="deleteInput(4)"
+                               @keyup="inpCode(4,$event)"  oninput="value=value.replace(/[^\w\.\/]/ig,'')" >
+                        <input type="text" maxlength="1" v-model="code5" @focus="inpFocus($event)" @keyup.delete="deleteInput(5)"
+                               @keyup="inpCode(5,$event)"  oninput="value=value.replace(/[^\w\.\/]/ig,'')" >
+                        <input type="text" maxlength="1" v-model="code6" @focus="inpFocus($event)" @keyup.delete="deleteInput(6)"
+                               @keyup="inpCode(6,$event)"  oninput="value=value.replace(/[^\w\.\/]/ig,'')">
+                        <input type="text" maxlength="1" v-model="code7" @focus="inpFocus($event)" @keyup.delete="deleteInput(7)"
+                               @keyup="inpCode(7,$event)"  oninput="value=value.replace(/[^\w\.\/]/ig,'')" >
+                        <input type="text" maxlength="1" v-model="code8" @focus="inpFocus($event)" @keyup.delete="deleteInput(8)"
+                               @keyup="inpCode(8,$event)"  oninput="value=value.replace(/[^\w\.\/]/ig,'')" >
+                    </div>
                 <p1 v-if="bindingStatus==1"><span class="fas fa-circle-notch fa-spin"></span>{{$t('m.imKeyManager.verifying')}}</p1>
                 <p2 v-if="bindingStatus==2"><span class="el-icon-success"></span>{{$t('m.imKeyManager.verified_successfully')}}</p2>
                 <p class="codeTit" v-if="!codeIsTrue"><span class="el-icon-warning"></span>{{$t('m.imKeyManager.bind_code_error_please_check')}}
@@ -497,16 +505,50 @@ export default {
           this.codeIsTrue = false
         }
       }
-      if (event.srcElement.value.length === 1) {
-        event.srcElement.nextElementSibling.focus()
-      }
-      if (event.keyCode === 8) {
+        if (event.srcElement.value.length === 1) {
+            event.srcElement.nextElementSibling.focus()
+        }else{
+            event.srcElement.value = ''
+        }
+
+        if (event.keyCode === 8) {
         event.srcElement.previousElementSibling.focus()
       }
     },
     inpFocus () {
-      event.srcElement.value = ''
+        if(this.bindCode.length ===8){
+
+        }else{
+            event.srcElement.value = ''
+        }
+
     },
+      deleteInput(code){
+          if (code === 1) {
+              this.code1=''
+          }
+          if (code === 2) {
+              this.code2=''
+          }
+          if (code === 3) {
+              this.code3=''
+          }
+          if (code === 4) {
+              this.code4=''
+          }
+          if (code === 5) {
+              this.code5=''
+          }
+          if (code === 6) {
+              this.code6=''
+          }
+          if (code === 7) {
+              this.code7=''
+          }
+          if (code === 8) {
+              this.code8=''
+          }
+      },
     changeStep (step) {
       this[step] = !this[step]
       if (this.step1 && this.step2 && this.step3) {

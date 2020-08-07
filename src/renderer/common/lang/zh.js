@@ -2,9 +2,9 @@
 export const m = {
   imKeyManager: {
     imKey_manager: 'imKey Manager',
-    your_imKey_manager: '你的imKey Pro桌面管理工具',
+    your_imKey_manager: '你的 imKey Pro 桌面管理工具',
     use_now: '立刻使用',
-    no_have_imKey_pro: '还未拥有imKey Pro?',
+    no_have_imKey_pro: '还未拥有 imKey Pro ?',
     use_imKey_connected: '使用 imKey Pro 完成连接',
     use_imKey_connect_computer: '1. 使用 USB 将 imKey Pro 连接至电脑',
     click_connect_button: '2. 点击「连接」按钮',
@@ -119,7 +119,23 @@ export const m = {
     copy_success: '复制成功',
     verifying: ' 正在验证',
     verified_successfully: ' 验证成功',
-    done_setting_select_next: ' 请完成上述设置再选择下一步'
+    done_setting_select_next: ' 请完成上述设置再选择下一步',
+
+
+    Beginner_guide:'新手引导',
+    learn_use_imKey:'学习如何配对和使用 imKey，或前往帮助中心浏览更多文章',
+    buy:'快速购买',
+    visit_Youzan_Mall_to_buy :'访问有赞商城购买 imKey 及其周边吧',
+    user_support:'用户支持',
+    Email:'邮件：support@imkey.im',
+    wechat:'微信：imKeyOfficial',
+    tokenlon_info   :'安全快速的去中心化交易所',
+    compound_info:'存币生息，支持 USDT/USDC/Dai等 ',
+    aave_info:'存/借贷生息，支持 17 个币种',
+
+
+
+
   },
   appStart: {
     imKey_manager: 'imKey Manager',
