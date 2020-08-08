@@ -1,6 +1,6 @@
 {
   "name": "imKey-manager",
-  "version": "1.0.1-alpha11",
+  "version": "1.0.0-alpha13",
   "author": "imkey <weiqiang@imkey.im>",
   "description": "imKey manager @2020",
   "license": "MIT",
@@ -23,7 +23,8 @@
     "release": "node .electron-vue/build.js && electron-builder"
   },
   "build": {
-    "productName": "imkey Manager",
+    "afterSign": "build/notarize.js",
+    "productName": "imkey manager",
     "appId": "com.imkey.imkey-manager",
     "copyright": "Copyright © 2020 imkey",
     "directories": {
@@ -36,12 +37,13 @@
       "releaseType": "release"
     },
     "releaseInfo": {
-      "releaseNotes": "1.解决了更新失败的问题 \n 2.解决了绑定失败的问题"
+      "releaseNotes": "1.Fixed unnetarize warning"
     },
     "files": [
       "dist/electron/**/*"
     ],
     "dmg": {
+      "sign": false,
       "contents": [
         {
           "x": 410,
@@ -57,6 +59,10 @@
       ]
     },
     "mac": {
+      "hardenedRuntime" : true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
       "icon": "build/icons/icon.icns",
       "extraResources": [
         {

@@ -1,4 +1,7 @@
 const { notarize } = require('electron-notarize');
+const dotenv = require('dotenv');
+dotenv.config();
+
 process.env.DEBUG = 'electron-notarize*'
 exports.default = async function notarizing(context) {
     const { electronPlatformName, appOutDir } = context;
@@ -7,11 +10,11 @@ exports.default = async function notarizing(context) {
     }
 
     const appName = context.packager.appInfo.productFilename;
-    const password = '@keychain:serv@imkey.im';
     return await notarize({
         appBundleId: 'com.imkey.imkey-manager',
         appPath: `${appOutDir}/${appName}.app`,
-        appleId: '',
-        appleIdPassword: '',
+        ascProvider: process.env.TEAM_SHORT_NAME,
+        appleId: process.env.APPLE_ID,
+        appleIdPassword: process.env.APPLE_ID_PASSWORD,
     });
 }
