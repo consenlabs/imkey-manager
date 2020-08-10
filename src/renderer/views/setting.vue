@@ -46,9 +46,9 @@
                                 </linearGradient>
                             </defs>
                         </svg>
-                        <h3>新手引导</h3>
+                        <h3>{{$t('m.imKeyManager.beginner_guide')}}</h3>
                         <span>
-                         <p>学习如何配对和使用 imKey，或前往帮助中心浏览更多文章</p>
+                         <p>{{$t('m.imKeyManager.learn_use_imKey')}}</p>
                     </span>
                     </a>
                 </div>
@@ -75,9 +75,9 @@
                                 </linearGradient>
                             </defs>
                         </svg>
-                        <h3>快速购买</h3>
+                        <h3>{{$t('m.imKeyManager.buy')}}</h3>
                         <span>
-                         <p>访问有赞商城购买 imKey 及其周边吧</p>
+                         <p>{{$t('m.imKeyManager.visit_Youzan_Mall_to_buy')}}</p>
                     </span>
                     </a>
                 </div>
@@ -98,10 +98,10 @@
                             </linearGradient>
                         </defs>
                     </svg>
-                        <h3>用户支持</h3>
+                        <h3>{{$t('m.imKeyManager.user_support')}}</h3>
                         <span>
-                         <p>邮件：support@imkey.im</p>
-                         <p>微信：imKeyOfficial</p>
+                         <p>{{$t('m.imKeyManager.email')}}</p>
+                         <p>{{$t('m.imKeyManager.wechat')}}</p>
                     </span>
                     </a>
                 </div>

@@ -7,71 +7,75 @@ ipcRenderer.on('message-from-main', (event, arg) => {
   console.log('arg.type:' + arg.type)
   console.log('arg.data:' + arg.data)
   let response
-  if (arg.type === 'connectDevice') {
-    response = deviceManger.connect()
-  }
-  if (arg.type === 'getSeid') {
-    response = deviceManger.getSeid()
-  }
-  if (arg.type === 'getSn') {
-    response = deviceManger.getSn()
-  }
-  if (arg.type === 'getRamSize') {
-    response = deviceManger.getRamSize()
-  }
-  if (arg.type === 'getFirmwareVersion') {
-    response = deviceManger.getFirmwareVersion()
-  }
-  if (arg.type === 'getSdkInfo') {
-    response = deviceManger.getSdkInfo()
-  }
-  if (arg.type === 'activeDevice') {
-    response = deviceManger.activeDevice()
-  }
-  if (arg.type === 'cosUpdate') {
-    response = deviceManger.cosUpdate()
-  }
-  if (arg.type === 'cosCheckUpdate') {
-    response = deviceManger.cosCheckUpdate()
-  }
-  if (arg.type === 'isBLStatus') {
-    response = deviceManger.isBLStatus()
-  }
-  if (arg.type === 'checkDevice') {
-    response = deviceManger.checkDevice()
-  }
-  if (arg.type === 'checkUpdate') {
-    response = deviceManger.checkUpdateAppList()
-  }
-  if (arg.type === 'downloadApplet') {
-    response = deviceManger.downloadApplet(arg.data)
-  }
-  if (arg.type === 'updateApplet') {
-    response = deviceManger.updateApplet(arg.data)
-  }
-  if (arg.type === 'deleteApplet') {
-    response = deviceManger.deleteApplet(arg.data)
-  }
-  if (arg.type === 'deviceBindCheck') {
-    response = deviceManger.deviceBindCheck(arg.data)
-  }
-  if (arg.type === 'deviceBindAcquire') {
-    response = deviceManger.deviceBindAcquire(arg.data)
-  }
-  if (arg.type === 'deviceBindDisplay') {
-    response = deviceManger.deviceBindDisplay()
-  }
-  if (arg.type === 'getBTCXpub') {
-    response = walletApi.getBTCXpub()
-  }
-  if (arg.type === 'getUserPath') {
-    response = deviceManger.getUserPath()
-  }
-  if (arg.type === 'importBindCode') {
-    response = deviceManger.importBindCode(arg.data)
-  }
-  if (arg.type === 'exportBindCode') {
-    response = deviceManger.exportBindCode()
+  try{
+    if (arg.type === 'connectDevice') {
+      response = deviceManger.connect()
+    }
+    if (arg.type === 'getSeid') {
+      response = deviceManger.getSeid()
+    }
+    if (arg.type === 'getSn') {
+      response = deviceManger.getSn()
+    }
+    if (arg.type === 'getRamSize') {
+      response = deviceManger.getRamSize()
+    }
+    if (arg.type === 'getFirmwareVersion') {
+      response = deviceManger.getFirmwareVersion()
+    }
+    if (arg.type === 'getSdkInfo') {
+      response = deviceManger.getSdkInfo()
+    }
+    if (arg.type === 'activeDevice') {
+      response = deviceManger.activeDevice()
+    }
+    if (arg.type === 'cosUpdate') {
+      response = deviceManger.cosUpdate()
+    }
+    if (arg.type === 'cosCheckUpdate') {
+      response = deviceManger.cosCheckUpdate()
+    }
+    if (arg.type === 'isBLStatus') {
+      response = deviceManger.isBLStatus()
+    }
+    if (arg.type === 'checkDevice') {
+      response = deviceManger.checkDevice()
+    }
+    if (arg.type === 'checkUpdate') {
+      response = deviceManger.checkUpdateAppList()
+    }
+    if (arg.type === 'downloadApplet') {
+      response = deviceManger.downloadApplet(arg.data)
+    }
+    if (arg.type === 'updateApplet') {
+      response = deviceManger.updateApplet(arg.data)
+    }
+    if (arg.type === 'deleteApplet') {
+      response = deviceManger.deleteApplet(arg.data)
+    }
+    if (arg.type === 'deviceBindCheck') {
+      response = deviceManger.deviceBindCheck(arg.data)
+    }
+    if (arg.type === 'deviceBindAcquire') {
+      response = deviceManger.deviceBindAcquire(arg.data)
+    }
+    if (arg.type === 'deviceBindDisplay') {
+      response = deviceManger.deviceBindDisplay()
+    }
+    if (arg.type === 'getBTCXpub') {
+      response = walletApi.getBTCXpub()
+    }
+    if (arg.type === 'getUserPath') {
+      response = deviceManger.getUserPath()
+    }
+    if (arg.type === 'importBindCode') {
+      response = deviceManger.importBindCode(arg.data)
+    }
+    if (arg.type === 'exportBindCode') {
+      response = deviceManger.exportBindCode()
+    }
+  }catch (e) {
+    response = e
   }
   const result = {
     type: arg.type,

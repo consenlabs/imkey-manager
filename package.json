@@ -1,6 +1,6 @@
 {
   "name": "imKey-manager",
-  "version": "1.0.0-alpha13",
+  "version": "1.0.1-alpha14",
   "author": "imkey <weiqiang@imkey.im>",
   "description": "imKey manager @2020",
   "license": "MIT",
@@ -37,7 +37,7 @@
       "releaseType": "release"
     },
     "releaseInfo": {
-      "releaseNotes": "1.Fixed unnetarize warning"
+      "releaseNotes": "[{id:1,info:\"解决卡死问题\"},{id:2,info:\"优化UI问题\"},{id:3,info:\"你可以在「管理」中看到设备内存并进行管理\"},{id:4,info:\"新增暗黑模式\"},{id:5,info:\"新增暗黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式\"}]"
     },
     "files": [
       "dist/electron/**/*"

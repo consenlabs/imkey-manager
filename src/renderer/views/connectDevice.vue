@@ -463,12 +463,11 @@ export default {
                       this.changeState(4)
                   }
               })
-        setTimeout(() => {
+        // setTimeout(() => {
             if(this.status === 1 ){
                 this.changeState(8)
             }
-
-      }, 800)
+      // }, 800)
 
     },
     toCosUpdate () {

@@ -49,22 +49,21 @@
                 <div class="status4AlertBox">
                     <h4>{{$t('m.imKeyManager.found_new_soft_version')}}</h4>
                     <p>{{$t('m.imKeyManager.new_version_is')}}V{{softNewVersionData}}{{$t('m.imKeyManager.current_version_is')}}V{{softOldVersionData}}</p>
-                    <p>
+                    <div class="update-info-scroller">
+                    <div v-for="item in softUpdateInfo" :key="item.id" >
+                    <p >
                         <svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <circle cx="3" cy="3" r="2.5" stroke="#8189A7"/>
                         </svg>
-                        你可以在「管理」中看到设备内存并进行管理
+                       {{item.info}}
                     </p>
-                    <p>
-                        <svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="3" cy="3" r="2.5" stroke="#8189A7"/>
-                        </svg>
-                        新增暗黑模式
-                    </p>
-                    <p>
+                    </div>
+                    </div>
+
+                    <div class="view_button" style="display:inline-block;float: left;">
                         <button class="later" @click="later">{{$t('m.imKeyManager.update_later')}}</button>
                         <button class="updateNow" @click="updateNow">{{$t('m.imKeyManager.update_now')}}</button>
-                    </p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -73,19 +72,18 @@
                 <div class="status5AlertBox">
                     <h4>{{$t('m.imKeyManager.found_new_soft_version')}}</h4>
                     <p>{{$t('m.imKeyManager.new_version_is')}}V{{softNewVersionData}}{{$t('m.imKeyManager.current_version_is')}}V{{softOldVersionData}}</p>
-                    <p>
-                        <svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="3" cy="3" r="2.5" stroke="#8189A7"/>
-                        </svg>
-                        你可以在「管理」中看到设备内存并进行管理
-                    </p>
-                    <p>
-                        <svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="3" cy="3" r="2.5" stroke="#8189A7"/>
-                        </svg>
-                        新增暗黑模式
-                    </p>
-                    <p>
+                    <div class="update-info-scroller">
+                        <div v-for="item in softUpdateInfo" :key="item.id" >
+                            <p >
+                                <svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="3" cy="3" r="2.5" stroke="#8189A7"/>
+                                </svg>
+                                {{item.info}}
+                            </p>
+                        </div>
+                    </div>
+
+                    <p >
                         <el-progress color="#000" :percentage="progress" ></el-progress>
                         <a href="javascript:;" @click="later">{{$t('m.imKeyManager.cancel')}}</a>
                     </p>
@@ -108,12 +106,14 @@ export default {
   data () {
     return {
       supportCode: 0, // 0不显示  1升级中  2升级完成  3升级失败  4绑定码
-      status: 1, // 1正常状态  2访问错误 3加载中 4发现新版本 5加载新标准 6稍后左下角显示新版本
+      status: 6, // 1正常状态  2访问错误 3加载中 4发现新版本 5加载新标准 6稍后左下角显示新版本
       progress: 0, // 更新进度
       name: this.$t('m.setting.info'),
       showError: false,
       errorInfo: {},
-      softUpdateInfo: '',
+      softUpdateInfo:[],
+      // softUpdateInfo: [{id:1,info:"解决卡死问题"},{id:2,info:"优化UI问题"},{id:3,info:"你可以在「管理」中看到设备内存并进行管理"},{id:4,info:"新增暗黑模式"},{id:5,info:"新增暗黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式"}],
+      // softUpdateInfo: [{id:1,info:"解决卡死问题"},{id:2,info:"优化UI问题"}],
       softOldVersionData: packagejson.version,
       softNewVersionData: '',
       copyTooltipDisabled: false
@@ -132,6 +132,10 @@ export default {
     }
   },
   methods: {
+      getSoftUpdateInfo () {
+          console.log(this.softUpdateInfo)
+          return this.softUpdateInfo
+      },
     changeCode (code) {
       this.supportCode = code
     },
@@ -284,7 +288,8 @@ export default {
         color: #2C2842;
         margin-top: 6px;
         margin-left: 35px;
-        margin-bottom: 20px;
+        margin-bottom: 5px;
+        justify-content: center;
     }
     .status4AlertBox p:nth-of-type(2), .status4AlertBox p:nth-of-type(3),.status5AlertBox p:nth-of-type(2), .status5AlertBox p:nth-of-type(3){
         font-weight: 300;
@@ -292,9 +297,11 @@ export default {
         color: #2C2842;
         padding-left: 35px;
         line-height: 30px;
+        justify-content: center;
     }
     .status4AlertBox p,.status5AlertBox p{
         line-height: 30px;
+        justify-content: center;
     }
     .status4Alert .status4AlertBox p svg,.status5Alert .status5AlertBox p svg{
         margin-right: 13px;
@@ -311,6 +318,9 @@ export default {
         border: 0.5px solid #000000;
         box-shadow: 0px 2px 20px rgba(137, 101, 172, 0.30772);
         border-radius: 26.5px;
+        font-weight: 500;
+        font-size: 14px;
+        line-height: 32px;
     }
     .updateNow{
         margin-left: 15px;
@@ -320,6 +330,9 @@ export default {
         width: 100px;
         height: 36px;
         color: #fff;
+        font-weight: 500;
+        font-size: 14px;
+        line-height: 32px;
     }
     .el-progress{
         width:355px;
@@ -366,5 +379,14 @@ export default {
         font-weight: 600;
         font-size: 13px;
         color: #DED0B6;
+    }
+    .update-info-scroller {
+        -webkit-overflow-scrolling: touch;
+        overflow-scrolling: touch;
+        height: 100px;
+        overflow: scroll;
+    }
+    .view_button{
+        margin-top: 30px;
     }
 </style>
