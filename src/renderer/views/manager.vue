@@ -24,13 +24,13 @@
                         <a v-if="item.updateDis===false" href="javascript:;" @click="updateApp(item,index)">{{$t('m.imKeyManager.upgrade')}}</a>
 <!--                        <a v-if="item.deleteDis===false" href="javascript:;" @click="deleteApp(item,index)">{{$t('m.imKeyManager.delete')}}</a>-->
 
-                        <el-tooltip class="item" v-model="item.installLoading" :content="$t('m.imKeyManager.APP_installing_do_not_disconnect_usb')" effect="dark" placement="top">
+                        <el-tooltip class="item"  :manual="true" v-if="item.installLoading===true" v-model="item.installLoading" :content="$t('m.imKeyManager.APP_installing_do_not_disconnect_usb')" effect="dark" placement="top-start">
                             <span v-if="item.installLoading===true" class="fas fa-circle-notch fa-spin"></span>
                         </el-tooltip>
-                        <el-tooltip  class="item" v-model="item.updateLoading" :content="$t('m.imKeyManager.APP_upgrading_do_not_disconnect_usb')" effect="dark" placement="top">
+                        <el-tooltip  class="item" :manual="true" v-if="item.updateLoading===true" v-model="item.updateLoading" :content="$t('m.imKeyManager.APP_upgrading_do_not_disconnect_usb')" effect="dark" placement="top-start">
                             <span v-if="item.updateLoading===true" class="fas fa-circle-notch fa-spin"></span>
                         </el-tooltip>
-<!--                        <el-tooltip class="item" :manual="true" v-model="item.deleteLoading" :content="$t('m.imKeyManager.APP_deleting_do_not_disconnect_usb')" effect="dark" placement="top">-->
+<!--                        <el-tooltip class="item" :manual="true" v-if="item.deleteLoading===true" v-model="item.deleteLoading" :content="$t('m.imKeyManager.APP_deleting_do_not_disconnect_usb')" effect="dark" placement="top-start">-->
 <!--                            <span v-if="item.deleteLoading===true" class="fas fa-circle-notch fa-spin"></span>-->
 <!--                        </el-tooltip>-->
 
@@ -654,5 +654,15 @@ export default {
     .appItem ul li div span {
         margin-right: 20px;
         color: #B8AC95;
+    }
+    .el-tooltip__popper {
+        font-style: normal;
+        font-weight: normal;
+        font-size: 13px;
+        line-height: 18px;
+        font-size: 12px;
+        line-height: 1.2;
+        background: #2E3035;
+        border-radius: 6px;
     }
 </style>
