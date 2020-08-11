@@ -106,7 +106,7 @@ export default {
   data () {
     return {
       supportCode: 0, // 0不显示  1升级中  2升级完成  3升级失败  4绑定码
-      status: 6, // 1正常状态  2访问错误 3加载中 4发现新版本 5加载新标准 6稍后左下角显示新版本
+      status: 1, // 1正常状态  2访问错误 3加载中 4发现新版本 5加载新标准 6稍后左下角显示新版本
       progress: 0, // 更新进度
       name: this.$t('m.setting.info'),
       showError: false,
@@ -130,10 +130,10 @@ export default {
     if (process.env.NODE_ENV === 'production') {
       this.checkSoftUpdate()
     }
+
   },
   methods: {
       getSoftUpdateInfo () {
-          console.log(this.softUpdateInfo)
           return this.softUpdateInfo
       },
     changeCode (code) {
@@ -173,7 +173,19 @@ export default {
           // 显示更新
           this.status = 6
           this.softNewVersionData = obj.updateInfo.version
-          this.softUpdateInfo = obj.updateInfo.releaseNotes
+            let releaseNotes= obj.updateInfo.releaseNotes
+            let arr=[]
+            let json = {infos:releaseNotes}
+            json = eval(json.infos)
+            for(let i=0; i<json.length; i++)
+            {
+                let temp = {
+                    id:json[i].id,
+                    info:json[i].info
+                }
+                arr.push(temp)
+            }
+            this.softUpdateInfo =arr
         } else if (obj.action === 'error') {
           this.errorInfo = obj.errorInfo
         } else if (obj.action === 'updateNotAva') {
