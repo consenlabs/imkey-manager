@@ -121,17 +121,16 @@ export const m = {
     verified_successfully: ' Verified successfully',
     done_setting_select_next: ' Please complete the above settings and then select the next step',
 
-
-    beginner_guide:'新手引导',
-    learn_use_imKey:'学习如何配对和使用 imKey，或前往帮助中心浏览更多文章',
-    buy:'快速购买',
-    visit_Youzan_Mall_to_buy :'访问有赞商城购买 imKey 及其周边吧',
-    user_support:'用户支持',
-    email:'邮件：support@imkey.im',
-    wechat:'微信：imKeyOfficial',
-    tokenlon_info   :'安全快速的去中心化交易所',
-    compound_info:'存币生息，支持 USDT/USDC/Dai等 ',
-    aave_info:'存/借贷生息，支持 17 个币种',
+    beginner_guide: '新手引导',
+    learn_use_imKey: '学习如何配对和使用 imKey，或前往帮助中心浏览更多文章',
+    buy: '快速购买',
+    visit_Youzan_Mall_to_buy: '访问有赞商城购买 imKey 及其周边吧',
+    user_support: '用户支持',
+    email: '邮件：support@imkey.im',
+    wechat: '微信：imKeyOfficial',
+    tokenlon_info: '安全快速的去中心化交易所',
+    compound_info: '存币生息，支持 USDT/USDC/Dai等 ',
+    aave_info: '存/借贷生息，支持 17 个币种'
   },
   appStart: {
     imKey_manager: 'imKey Manager',

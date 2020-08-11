@@ -505,50 +505,49 @@ export default {
           this.codeIsTrue = false
         }
       }
-        if (event.srcElement.value.length === 1) {
-            event.srcElement.nextElementSibling.focus()
-        }else{
-            event.srcElement.value = ''
-        }
+      if (event.srcElement.value.length === 1) {
+        event.srcElement.nextElementSibling.focus()
+      } else {
+        event.srcElement.value = ''
+      }
 
-        if (event.keyCode === 8) {
+      if (event.keyCode === 8) {
         event.srcElement.previousElementSibling.focus()
       }
     },
     inpFocus () {
-        if(this.bindCode.length ===8){
+      if (this.bindCode.length === 8) {
 
-        }else{
-            event.srcElement.value = ''
-        }
-
+      } else {
+        event.srcElement.value = ''
+      }
     },
-      deleteInput(code){
-          if (code === 1) {
-              this.code1=''
-          }
-          if (code === 2) {
-              this.code2=''
-          }
-          if (code === 3) {
-              this.code3=''
-          }
-          if (code === 4) {
-              this.code4=''
-          }
-          if (code === 5) {
-              this.code5=''
-          }
-          if (code === 6) {
-              this.code6=''
-          }
-          if (code === 7) {
-              this.code7=''
-          }
-          if (code === 8) {
-              this.code8=''
-          }
-      },
+    deleteInput (code) {
+      if (code === 1) {
+        this.code1 = ''
+      }
+      if (code === 2) {
+        this.code2 = ''
+      }
+      if (code === 3) {
+        this.code3 = ''
+      }
+      if (code === 4) {
+        this.code4 = ''
+      }
+      if (code === 5) {
+        this.code5 = ''
+      }
+      if (code === 6) {
+        this.code6 = ''
+      }
+      if (code === 7) {
+        this.code7 = ''
+      }
+      if (code === 8) {
+        this.code8 = ''
+      }
+    },
     changeStep (step) {
       this[step] = !this[step]
       if (this.step1 && this.step2 && this.step3) {

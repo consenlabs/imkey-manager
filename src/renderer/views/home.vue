@@ -111,7 +111,7 @@ export default {
       name: this.$t('m.setting.info'),
       showError: false,
       errorInfo: {},
-      softUpdateInfo:[],
+      softUpdateInfo: [],
       // softUpdateInfo: [{id:1,info:"解决卡死问题"},{id:2,info:"优化UI问题"},{id:3,info:"你可以在「管理」中看到设备内存并进行管理"},{id:4,info:"新增暗黑模式"},{id:5,info:"新增暗黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式"}],
       // softUpdateInfo: [{id:1,info:"解决卡死问题"},{id:2,info:"优化UI问题"}],
       softOldVersionData: packagejson.version,
@@ -130,12 +130,11 @@ export default {
     if (process.env.NODE_ENV === 'production') {
       this.checkSoftUpdate()
     }
-
   },
   methods: {
-      getSoftUpdateInfo () {
-          return this.softUpdateInfo
-      },
+    getSoftUpdateInfo () {
+      return this.softUpdateInfo
+    },
     changeCode (code) {
       this.supportCode = code
     },
@@ -173,19 +172,17 @@ export default {
           // 显示更新
           this.status = 6
           this.softNewVersionData = obj.updateInfo.version
-            let releaseNotes= obj.updateInfo.releaseNotes
-            let arr=[]
-            let json = {infos:releaseNotes}
-            json = eval(json.infos)
-            for(let i=0; i<json.length; i++)
-            {
-                let temp = {
-                    id:json[i].id,
-                    info:json[i].info
-                }
-                arr.push(temp)
+          const releaseNotes = obj.updateInfo.releaseNotes
+          const arr = []
+          const json = eval(releaseNotes)
+          for (let i = 0; i < json.length; i++) {
+            const temp = {
+              id: json[i].id,
+              info: json[i].info
             }
-            this.softUpdateInfo =arr
+            arr.push(temp)
+          }
+          this.softUpdateInfo = arr
         } else if (obj.action === 'error') {
           this.errorInfo = obj.errorInfo
         } else if (obj.action === 'updateNotAva') {

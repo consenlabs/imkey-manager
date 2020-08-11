@@ -7,7 +7,7 @@ ipcRenderer.on('message-from-main', (event, arg) => {
   console.log('arg.type:' + arg.type)
   console.log('arg.data:' + arg.data)
   let response
-  try{
+  try {
     if (arg.type === 'connectDevice') {
       response = deviceManger.connect()
     }
@@ -74,7 +74,7 @@ ipcRenderer.on('message-from-main', (event, arg) => {
     if (arg.type === 'exportBindCode') {
       response = deviceManger.exportBindCode()
     }
-  }catch (e) {
+  } catch (e) {
     response = e
   }
   const result = {
