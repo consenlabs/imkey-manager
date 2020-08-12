@@ -23,6 +23,7 @@
     "release": "node .electron-vue/build.js && electron-builder"
   },
   "build": {
+    "afterSign": "build/notarize.js",
     "productName": "imkey manager",
     "appId": "com.imkey.imkey-manager",
     "copyright": "Copyright © 2020 imkey",
@@ -42,7 +43,7 @@
       "dist/electron/**/*"
     ],
     "dmg": {
-
+      "sign": false,
       "contents": [
         {
           "x": 410,
@@ -58,7 +59,10 @@
       ]
     },
     "mac": {
-
+      "hardenedRuntime" : true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
       "icon": "build/icons/icon.icns",
       "extraResources": [
         {
