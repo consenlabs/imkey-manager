@@ -241,7 +241,7 @@ export default {
         this.apps = this.$store.state.apps
       }
       // TODO 检测COS升级
-      // this.checkFirmwareVersion()
+      this.checkFirmwareVersion()
       //   } else {
       //     this.tip = true
       //   }
@@ -304,7 +304,13 @@ export default {
             this.apps[index].deleteLoading = false
             this.apps[index].installDis = true
             this.apps[index].installed = false
-            this.$ipcRenderer.send('downloadApplet', item.name)
+              let name = '';
+              if (item.name === this.$t('m.imKeyManager.imKey_soft')) {
+                  name = 'IMK'
+              }else{
+                  name = item.name
+              }
+            this.$ipcRenderer.send('downloadApplet', name)
             this.$ipcRenderer.on('downloadApplet', (downloadAppletResult) => {
               const response = downloadAppletResult.result
               if (downloadAppletResult.isSuccess) {
@@ -344,7 +350,13 @@ export default {
             this.apps[index].deleteLoading = false
             this.apps[index].updateDis = true
             this.apps[index].installed = false
-            this.$ipcRenderer.send('updateApplet', item.name)
+              let name = '';
+              if (item.name === this.$t('m.imKeyManager.imKey_soft')) {
+                  name = 'IMK'
+              }else{
+                  name = item.name
+              }
+            this.$ipcRenderer.send('updateApplet', name)
             this.$ipcRenderer.on('updateApplet', (updateAppletResult) => {
               const response = updateAppletResult.result
               if (updateAppletResult.isSuccess) {
@@ -352,7 +364,7 @@ export default {
                   this.apps[index].deleteDis = false
                   this.apps[index].installed = true
                   this.apps[index].updateLoading = false
-                  this.apps[index].installDis = false
+                  this.apps[index].installDis = true
                   this.apps[index].installLoading = false
                   this.apps[index].desc = this.apps[index].lastVersion
                 } else {
@@ -386,7 +398,13 @@ export default {
             this.apps[index].installLoading = false
             this.apps[index].deleteDis = true
             this.apps[index].installed = false
-            this.$ipcRenderer.send('deleteApplet', item.name)
+              let name = '';
+              if (item.name === this.$t('m.imKeyManager.imKey_soft')) {
+                  name = 'IMK'
+              }else{
+                  name = item.name
+              }
+            this.$ipcRenderer.send('deleteApplet', name)
             this.$ipcRenderer.on('deleteApplet', (deleteAppletResult) => {
               const response = deleteAppletResult.result
               if (deleteAppletResult.isSuccess) {

@@ -364,7 +364,7 @@ export default {
         if (result.isSuccess) {
           this.cosOldVersionData = response
           this.$store.state.cosOldVersionData = response
-          // this.toCosCheckUpdate()
+          this.toCosCheckUpdate()
 
           // TODO this.toCosCheckUpdate()
           // 升级按钮变黑
@@ -400,7 +400,6 @@ export default {
     },
     updateFirmware () {
       this.changeCode(1)
-      setTimeout(() => {
         this.$ipcRenderer.send('connectDevice')
         this.$ipcRenderer.on('connectDevice', (connectResult) => {
           if (connectResult.isSuccess) {
@@ -429,11 +428,11 @@ export default {
                 this.changeCode(3)
               }
             })
+          }else {
+              this.isCosUpdate = true
+              this.changeCode(3)
           }
-          this.isCosUpdate = true
-          this.changeCode(3)
         })
-      }, 200)
     },
 
     downloadAndUpdate () {

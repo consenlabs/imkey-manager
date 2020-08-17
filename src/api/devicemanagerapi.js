@@ -223,6 +223,7 @@ export function checkUpdateAppList() {
                     installDis = true
                     deleteDis = true
                     deleteLoading = false
+                    installed = false
                 }
             }
             // 过滤imkey Applet BTC Applet 不能删除
