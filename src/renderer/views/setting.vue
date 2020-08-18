@@ -400,39 +400,39 @@ export default {
     },
     updateFirmware () {
       this.changeCode(1)
-        this.$ipcRenderer.send('connectDevice')
-        this.$ipcRenderer.on('connectDevice', (connectResult) => {
-          if (connectResult.isSuccess) {
-            this.$ipcRenderer.send('cosUpdate')
-            this.$ipcRenderer.on('cosUpdate', (result) => {
-              const response = result.result
-              if (result.isSuccess) {
-                if (response === constants.RESULT_STATUS_SUCCESS) {
-                  this.isCosUpdate = false
-                  this.cosOldVersionData = this.cosNewVersionData
-                  this.$store.state.isCosUpdate = false
-                  this.$store.state.cosOldVersionData = this.cosNewVersionData
-                  this.$store.state.cosNewVersionData = this.cosNewVersionData
-                  this.changeCode(2)
-                  // 更新完cos之后需要清除缓存重新加载数据刷新页面
-                  // setTimeout(() => {
-                  //   this.init()
-                  //   this.changeCode(2)
-                  // }, 200)
-                } else {
-                  this.isCosUpdate = true
-                  this.changeCode(3)
-                }
+      this.$ipcRenderer.send('connectDevice')
+      this.$ipcRenderer.on('connectDevice', (connectResult) => {
+        if (connectResult.isSuccess) {
+          this.$ipcRenderer.send('cosUpdate')
+          this.$ipcRenderer.on('cosUpdate', (result) => {
+            const response = result.result
+            if (result.isSuccess) {
+              if (response === constants.RESULT_STATUS_SUCCESS) {
+                this.isCosUpdate = false
+                this.cosOldVersionData = this.cosNewVersionData
+                this.$store.state.isCosUpdate = false
+                this.$store.state.cosOldVersionData = this.cosNewVersionData
+                this.$store.state.cosNewVersionData = this.cosNewVersionData
+                this.changeCode(2)
+                // 更新完cos之后需要清除缓存重新加载数据刷新页面
+                // setTimeout(() => {
+                //   this.init()
+                //   this.changeCode(2)
+                // }, 200)
               } else {
                 this.isCosUpdate = true
                 this.changeCode(3)
               }
-            })
-          }else {
+            } else {
               this.isCosUpdate = true
               this.changeCode(3)
-          }
-        })
+            }
+          })
+        } else {
+          this.isCosUpdate = true
+          this.changeCode(3)
+        }
+      })
     },
 
     downloadAndUpdate () {

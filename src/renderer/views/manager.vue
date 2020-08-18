@@ -296,7 +296,7 @@ export default {
     installApp (item, index) {
       if (this.cosUpdateStatus === '1') {
         this.updateFirmware()
-      } else if (this.cosUpdateStatus === '0') {
+      } else if (this.cosUpdateStatus === '0' || this.cosUpdateStatus === '2') {
         this.$ipcRenderer.send('connectDevice')
         this.$ipcRenderer.on('connectDevice', (connectResult) => {
           if (connectResult.isSuccess) {
@@ -304,12 +304,12 @@ export default {
             this.apps[index].deleteLoading = false
             this.apps[index].installDis = true
             this.apps[index].installed = false
-              let name = '';
-              if (item.name === this.$t('m.imKeyManager.imKey_soft')) {
-                  name = 'IMK'
-              }else{
-                  name = item.name
-              }
+            let name = ''
+            if (item.name === this.$t('m.imKeyManager.imKey_soft')) {
+              name = 'IMK'
+            } else {
+              name = item.name
+            }
             this.$ipcRenderer.send('downloadApplet', name)
             this.$ipcRenderer.on('downloadApplet', (downloadAppletResult) => {
               const response = downloadAppletResult.result
@@ -342,7 +342,7 @@ export default {
     updateApp (item, index) {
       if (this.cosUpdateStatus === '1') {
         this.updateFirmware()
-      } else if (this.cosUpdateStatus === '0') {
+      } else if (this.cosUpdateStatus === '0' || this.cosUpdateStatus === '2') {
         this.$ipcRenderer.send('connectDevice')
         this.$ipcRenderer.on('connectDevice', (connectResult) => {
           if (connectResult.isSuccess) {
@@ -350,12 +350,12 @@ export default {
             this.apps[index].deleteLoading = false
             this.apps[index].updateDis = true
             this.apps[index].installed = false
-              let name = '';
-              if (item.name === this.$t('m.imKeyManager.imKey_soft')) {
-                  name = 'IMK'
-              }else{
-                  name = item.name
-              }
+            let name = ''
+            if (item.name === this.$t('m.imKeyManager.imKey_soft')) {
+              name = 'IMK'
+            } else {
+              name = item.name
+            }
             this.$ipcRenderer.send('updateApplet', name)
             this.$ipcRenderer.on('updateApplet', (updateAppletResult) => {
               const response = updateAppletResult.result
@@ -390,7 +390,7 @@ export default {
     deleteApp (item, index) {
       if (this.cosUpdateStatus === '1') {
         this.updateFirmware()
-      } else if (this.cosUpdateStatus === '0') {
+      } else if (this.cosUpdateStatus === '0' || this.cosUpdateStatus === '2') {
         this.$ipcRenderer.send('connectDevice')
         this.$ipcRenderer.on('connectDevice', (connectResult) => {
           if (connectResult.isSuccess) {
@@ -398,12 +398,12 @@ export default {
             this.apps[index].installLoading = false
             this.apps[index].deleteDis = true
             this.apps[index].installed = false
-              let name = '';
-              if (item.name === this.$t('m.imKeyManager.imKey_soft')) {
-                  name = 'IMK'
-              }else{
-                  name = item.name
-              }
+            let name = ''
+            if (item.name === this.$t('m.imKeyManager.imKey_soft')) {
+              name = 'IMK'
+            } else {
+              name = item.name
+            }
             this.$ipcRenderer.send('deleteApplet', name)
             this.$ipcRenderer.on('deleteApplet', (deleteAppletResult) => {
               const response = deleteAppletResult.result
