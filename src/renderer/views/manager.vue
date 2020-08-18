@@ -200,6 +200,7 @@ export default {
             if (cosUpdateResult.isSuccess) {
               if (response === constants.RESULT_STATUS_SUCCESS) {
                 this.isCosUpdate = false
+                this.cosUpdateStatus = '0'
                 this.cosOldVersionData = this.cosNewVersionData
                 this.$store.state.isCosUpdate = false
                 this.$store.state.cosOldVersionData = this.cosNewVersionData
