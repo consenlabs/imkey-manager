@@ -234,14 +234,15 @@ export default {
       // const response = result.result
       // if (result.isSuccess) {
       //   if (response === constants.RESULT_STATUS_SUCCESS) {
-      if (JSON.stringify(this.$store.state.apps) === '[]') {
+        if (this.isEmptyObject(this.$store.state.apps) ||JSON.stringify(this.$store.state.apps) ==='[]') {
         // 加载应用
         this.getAppsList()
       } else {
         this.apps = this.$store.state.apps
+          // TODO 检测COS升级
+          this.checkFirmwareVersion()
       }
-      // TODO 检测COS升级
-      this.checkFirmwareVersion()
+
       //   } else {
       //     this.tip = true
       //   }
@@ -249,7 +250,12 @@ export default {
       //   this.tip = true
       // }
     },
-
+     isEmptyObject(e){
+        let t;
+        for(t in e)
+            return !1
+         return !0
+     },
     getAppsList () {
       this.$ipcRenderer.send('connectDevice')
       this.$ipcRenderer.on('connectDevice', (connectResult) => {
@@ -283,6 +289,8 @@ export default {
               this.apps = appList
               this.$store.state.apps = appList
               this.isSuccess = true
+                // TODO 检测COS升级
+                this.checkFirmwareVersion()
             } else {
               this.tip = true
             }
