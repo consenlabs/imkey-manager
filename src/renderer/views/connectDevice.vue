@@ -118,7 +118,7 @@
                 <h3>{{$t('m.imKeyManager.enter_bind_code')}}</h3>
                 <div>
                     <input type="text" maxlength="1" v-model="code1" @focus="inpFocus($event)" @keyup.delete="deleteInput(1)"
-                           @keyup="inpCode(1,$event)"  oninput="value=value.replace(/[^\w\.\/]/ig,'')" >
+                           @keyup="inpCode(1,$event)"  oninput="value=value.replace(/[^\w\.\/]/ig,'')" autofocus="autofocus">
                     <input type="text" maxlength="1" v-model="code2" @focus="inpFocus($event)" @keyup.delete="deleteInput(2)"
                            @keyup="inpCode(2,$event)"  oninput="value=value.replace(/[^\w\.\/]/ig,'')" >
                     <input type="text" maxlength="1" v-model="code3" @focus="inpFocus($event)" @keyup.delete="deleteInput(3)"
@@ -390,8 +390,8 @@ export default {
               }, 1000)
               setTimeout(() => {
                 // 跳转到主页
-                this.$router.push('/home/welcomeHome')
-                // this.$router.push('imKeySetting')
+                // this.$router.push('/home/welcomeHome')
+                this.$router.push('imKeySetting')
               }, 2000)
             } else {
               // 跳转到创建钱包界面
