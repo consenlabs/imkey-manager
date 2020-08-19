@@ -22,17 +22,23 @@
                         <a class="col" v-if="item.installed===true" href="javascript:;">{{$t('m.imKeyManager.installed')}}</a>
                         <a v-if="item.installDis===false" href="javascript:;" @click="installApp(item,index)">{{$t('m.imKeyManager.install')}}</a>
                         <a v-if="item.updateDis===false" href="javascript:;" @click="updateApp(item,index)">{{$t('m.imKeyManager.upgrade')}}</a>
-<!--                        <a v-if="item.deleteDis===false" href="javascript:;" @click="deleteApp(item,index)">{{$t('m.imKeyManager.delete')}}</a>-->
+                        <!--                        <a v-if="item.deleteDis===false" href="javascript:;" @click="deleteApp(item,index)">{{$t('m.imKeyManager.delete')}}</a>-->
 
-                        <el-tooltip class="item"  :manual="true" v-if="item.installLoading===true" v-model="item.installLoading" :content="$t('m.imKeyManager.APP_installing_do_not_disconnect_usb')" effect="dark" placement="top-start">
+                        <el-tooltip class="item" :manual="true" v-if="item.installLoading===true"
+                                    v-model="item.installLoading"
+                                    :content="$t('m.imKeyManager.APP_installing_do_not_disconnect_usb')" effect="dark"
+                                    placement="top-start">
                             <span v-if="item.installLoading===true" class="fas fa-circle-notch fa-spin"></span>
                         </el-tooltip>
-                        <el-tooltip  class="item" :manual="true" v-if="item.updateLoading===true" v-model="item.updateLoading" :content="$t('m.imKeyManager.APP_upgrading_do_not_disconnect_usb')" effect="dark" placement="top-start">
+                        <el-tooltip class="item" :manual="true" v-if="item.updateLoading===true"
+                                    v-model="item.updateLoading"
+                                    :content="$t('m.imKeyManager.APP_upgrading_do_not_disconnect_usb')" effect="dark"
+                                    placement="top-start">
                             <span v-if="item.updateLoading===true" class="fas fa-circle-notch fa-spin"></span>
                         </el-tooltip>
-<!--                        <el-tooltip class="item" :manual="true" v-if="item.deleteLoading===true" v-model="item.deleteLoading" :content="$t('m.imKeyManager.APP_deleting_do_not_disconnect_usb')" effect="dark" placement="top-start">-->
-<!--                            <span v-if="item.deleteLoading===true" class="fas fa-circle-notch fa-spin"></span>-->
-<!--                        </el-tooltip>-->
+                        <!--                        <el-tooltip class="item" :manual="true" v-if="item.deleteLoading===true" v-model="item.deleteLoading" :content="$t('m.imKeyManager.APP_deleting_do_not_disconnect_usb')" effect="dark" placement="top-start">-->
+                        <!--                            <span v-if="item.deleteLoading===true" class="fas fa-circle-notch fa-spin"></span>-->
+                        <!--                        </el-tooltip>-->
 
                     </div>
                 </li>
@@ -52,7 +58,7 @@
             </div>
         </div>
         <div class="alert" v-if="supportCode==1">
-            <div class="alertBox alert1" >
+            <div class="alertBox alert1">
                 <span class="fas fa-circle-notch fa-spin"></span>
                 <h4>{{$t('m.imKeyManager.imKey_pro_firmware_update_wait')}}</h4>
                 <line></line>
@@ -63,7 +69,8 @@
         <div class="alert" v-if="supportCode==2">
             <div class="alertBox alert2">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M7 22H4C3.46957 22 2.96086 21.7893 2.58579 21.4142C2.21071 21.0391 2 20.5304 2 20V13C2 12.4696 2.21071 11.9609 2.58579 11.5858C2.96086 11.2107 3.46957 11 4 11H7M14 9V5C14 4.20435 13.6839 3.44129 13.1213 2.87868C12.5587 2.31607 11.7956 2 11 2L7 11V22H18.28C18.7623 22.0055 19.2304 21.8364 19.5979 21.524C19.9654 21.2116 20.2077 20.7769 20.28 20.3L21.66 11.3C21.7035 11.0134 21.6842 10.7207 21.6033 10.4423C21.5225 10.1638 21.3821 9.90629 21.1919 9.68751C21.0016 9.46873 20.7661 9.29393 20.5016 9.17522C20.2371 9.0565 19.9499 8.99672 19.66 9H14Z" stroke="#43454F" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M7 22H4C3.46957 22 2.96086 21.7893 2.58579 21.4142C2.21071 21.0391 2 20.5304 2 20V13C2 12.4696 2.21071 11.9609 2.58579 11.5858C2.96086 11.2107 3.46957 11 4 11H7M14 9V5C14 4.20435 13.6839 3.44129 13.1213 2.87868C12.5587 2.31607 11.7956 2 11 2L7 11V22H18.28C18.7623 22.0055 19.2304 21.8364 19.5979 21.524C19.9654 21.2116 20.2077 20.7769 20.28 20.3L21.66 11.3C21.7035 11.0134 21.6842 10.7207 21.6033 10.4423C21.5225 10.1638 21.3821 9.90629 21.1919 9.68751C21.0016 9.46873 20.7661 9.29393 20.5016 9.17522C20.2371 9.0565 19.9499 8.99672 19.66 9H14Z"
+                          stroke="#43454F" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
                 <h5>{{$t('m.imKeyManager.upgrade_done')}}</h5>
                 <p>{{$t('m.imKeyManager.can_used_imKey_manager')}}</p>
@@ -73,7 +80,8 @@
         <div class="alert" v-if="supportCode==3">
             <div class="alertBox alert3">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M7.86 2H16.14L22 7.86V16.14L16.14 22H7.86L2 16.14V7.86L7.86 2Z" stroke="#43454F" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M7.86 2H16.14L22 7.86V16.14L16.14 22H7.86L2 16.14V7.86L7.86 2Z" stroke="#43454F"
+                          stroke-linecap="round" stroke-linejoin="round"/>
                     <path d="M15 9L9 15" stroke="#43454F" stroke-linecap="round" stroke-linejoin="round"/>
                     <path d="M9 9L15 15" stroke="#43454F" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
@@ -86,7 +94,8 @@
         <div class="alert" v-if="supportCode==5">
             <div class="alertBox alert3">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M7.86 2H16.14L22 7.86V16.14L16.14 22H7.86L2 16.14V7.86L7.86 2Z" stroke="#43454F" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M7.86 2H16.14L22 7.86V16.14L16.14 22H7.86L2 16.14V7.86L7.86 2Z" stroke="#43454F"
+                          stroke-linecap="round" stroke-linejoin="round"/>
                     <path d="M15 9L9 15" stroke="#43454F" stroke-linecap="round" stroke-linejoin="round"/>
                     <path d="M9 9L15 15" stroke="#43454F" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
@@ -101,6 +110,7 @@
 
 <script>
 import constants from '../../common/constants'
+
 export default {
   name: 'manager',
   data () {
@@ -189,6 +199,35 @@ export default {
         }
       })
     },
+    cosUpdateWalletAddress () {
+      // 发送应用查询请求
+      this.$ipcRenderer.send('checkUpdate')
+      this.$ipcRenderer.on('checkUpdate', (CheckUpdateResult) => {
+        // const result = ipcRenderer.sendSync('checkUpdate')
+        const CheckUpdateResponse = CheckUpdateResult.result
+        if (CheckUpdateResult.isSuccess) {
+          const appList = CheckUpdateResponse.list
+          const nameList = []
+          for (let i = 0; i < appList.length; i++) {
+            nameList.push(appList[i].name)
+          }
+          // 写wallet地址
+          this.$ipcRenderer.send('writeWalletAddress', { name: nameList, filePath: this.$store.state.userPath })
+          this.$ipcRenderer.on('writeWalletAddress', (result) => {
+            if (result.isSuccess) {
+              // wallet地址写入成功，开始再次检查
+              this.isCosUpdate = false
+              this.cosUpdateStatus = '0'
+              this.cosOldVersionData = this.cosNewVersionData
+              this.$store.state.isCosUpdate = false
+              this.$store.state.cosOldVersionData = this.cosNewVersionData
+              this.$store.state.cosNewVersionData = this.cosNewVersionData
+              this.changeCode(2)
+            }
+          })
+        }
+      })
+    },
     updateFirmware () {
       this.changeCode(1)
       this.$ipcRenderer.send('connectDevice')
@@ -199,13 +238,7 @@ export default {
             const response = cosUpdateResult.result
             if (cosUpdateResult.isSuccess) {
               if (response === constants.RESULT_STATUS_SUCCESS) {
-                this.isCosUpdate = false
-                this.cosUpdateStatus = '0'
-                this.cosOldVersionData = this.cosNewVersionData
-                this.$store.state.isCosUpdate = false
-                this.$store.state.cosOldVersionData = this.cosNewVersionData
-                this.$store.state.cosNewVersionData = this.cosNewVersionData
-                this.changeCode(2)
+                this.cosUpdateWalletAddress()
                 // 更新完cos之后需要清除缓存重新加载数据刷新页面
                 // setTimeout(() => {
                 //   this.init()
@@ -231,32 +264,32 @@ export default {
       this.tip = false
     },
     init () {
-      // const result = ipcRenderer.sendSync('connectDevice')
-      // const response = result.result
-      // if (result.isSuccess) {
-      //   if (response === constants.RESULT_STATUS_SUCCESS) {
-        if (this.isEmptyObject(this.$store.state.apps) ||JSON.stringify(this.$store.state.apps) ==='[]') {
-        // 加载应用
-        this.getAppsList()
-      } else {
-        this.apps = this.$store.state.apps
-          // TODO 检测COS升级
-          this.checkFirmwareVersion()
-      }
-
-      //   } else {
-      //     this.tip = true
-      //   }
-      // } else {
-      //   this.tip = true
-      // }
+      this.$ipcRenderer.send('connectDevice')
+      this.$ipcRenderer.on('connectDevice', (connectResult) => {
+        const response = connectResult.result
+        if (connectResult.isSuccess) {
+          if (response === constants.RESULT_STATUS_SUCCESS) {
+            if (this.isEmptyObject(this.$store.state.apps) || JSON.stringify(this.$store.state.apps) === '[]') {
+              // 加载应用
+              this.getAppsList()
+            } else {
+              this.apps = this.$store.state.apps
+              // TODO 检测COS升级
+              this.checkFirmwareVersion()
+            }
+          } else {
+            this.tip = true
+          }
+        } else {
+          this.tip = true
+        }
+      })
     },
-     isEmptyObject(e){
-        let t;
-        for(t in e)
-            return !1
-         return !0
-     },
+    isEmptyObject (e) {
+      let t
+      for (t in e) { return !1 }
+      return !0
+    },
     getAppsList () {
       this.$ipcRenderer.send('connectDevice')
       this.$ipcRenderer.on('connectDevice', (connectResult) => {
@@ -290,8 +323,8 @@ export default {
               this.apps = appList
               this.$store.state.apps = appList
               this.isSuccess = true
-                // TODO 检测COS升级
-                this.checkFirmwareVersion()
+              // TODO 检测COS升级
+              this.checkFirmwareVersion()
             } else {
               this.tip = true
             }
@@ -437,14 +470,15 @@ export default {
             this.tip = true
           }
         })
-      } else {}
+      } else {
+      }
     }
   }
 }
 </script>
 
 <style scoped>
-    .alert{
+    .alert {
         position: fixed;
         top: 0;
         left: 0;
@@ -452,7 +486,8 @@ export default {
         height: 100%;
         background: rgba(0, 0, 0, 0.2);
     }
-    .alert .alertBox{
+
+    .alert .alertBox {
         background: #FAFBFC;
         border-radius: 12px;
         position: absolute;
@@ -465,18 +500,21 @@ export default {
         height: 225px;
         text-align: center;
     }
-    .alert1  span{
+
+    .alert1 span {
         margin-top: 33px;
         font-size: 22px;
     }
-    .alert1  h4{
+
+    .alert1 h4 {
         font-weight: 500;
         font-size: 15px;
         color: #2C2842;
         margin-bottom: 41px;
         margin-top: 11px;
     }
-    .alert1  p{
+
+    .alert1 p {
         font-weight: 300;
         font-style: normal;
         font-size: 13px;
@@ -486,22 +524,26 @@ export default {
         color: #2C2842;
         margin-bottom: 6px;
     }
-    .alert2 svg,.alert3 svg{
+
+    .alert2 svg, .alert3 svg {
         margin-top: 34px;
     }
-    .alert2 h5,.alert3 h5,.alert5 h5{
+
+    .alert2 h5, .alert3 h5, .alert5 h5 {
         font-weight: 500;
         font-size: 15px;
         color: #2C2842;
         margin-top: 12px;
     }
-    .alert2 p,.alert3 p,.alert5 p{
+
+    .alert2 p, .alert3 p, .alert5 p {
         font-weight: 300;
         font-size: 13px;
         color: #2C2842;
         margin-top: 6px;
     }
-    .alert2 button,.alert3 button,.alert5 button{
+
+    .alert2 button, .alert3 button, .alert5 button {
         width: 90px;
         height: 36px;
         background: #2E3035;
@@ -678,10 +720,12 @@ export default {
     .appItem ul li div span {
         margin-right: 20px;
     }
+
     .appItem ul li div span {
         margin-right: 20px;
         color: #B8AC95;
     }
+
     .el-tooltip__popper {
         font-style: normal;
         font-weight: normal;

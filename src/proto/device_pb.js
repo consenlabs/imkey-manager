@@ -3432,7 +3432,8 @@ proto.deviceapi.CosCheckUpdateRes.toObject = function(includeInstance, msg) {
     isLatest: jspb.Message.getBooleanFieldWithDefault(msg, 2, false),
     latestCosVersion: jspb.Message.getFieldWithDefault(msg, 3, ""),
     updateType: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    description: jspb.Message.getFieldWithDefault(msg, 5, "")
+    description: jspb.Message.getFieldWithDefault(msg, 5, ""),
+    isUpdateSuccess: jspb.Message.getBooleanFieldWithDefault(msg, 6, false)
   };
 
   if (includeInstance) {
@@ -3488,6 +3489,10 @@ proto.deviceapi.CosCheckUpdateRes.deserializeBinaryFromReader = function(msg, re
     case 5:
       var value = /** @type {string} */ (reader.readString());
       msg.setDescription(value);
+      break;
+    case 6:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setIsUpdateSuccess(value);
       break;
     default:
       reader.skipField();
@@ -3550,6 +3555,13 @@ proto.deviceapi.CosCheckUpdateRes.serializeBinaryToWriter = function(message, wr
   if (f.length > 0) {
     writer.writeString(
       5,
+      f
+    );
+  }
+  f = message.getIsUpdateSuccess();
+  if (f) {
+    writer.writeBool(
+      6,
       f
     );
   }
@@ -3643,6 +3655,24 @@ proto.deviceapi.CosCheckUpdateRes.prototype.getDescription = function() {
  */
 proto.deviceapi.CosCheckUpdateRes.prototype.setDescription = function(value) {
   return jspb.Message.setProto3StringField(this, 5, value);
+};
+
+
+/**
+ * optional bool is_update_success = 6;
+ * @return {boolean}
+ */
+proto.deviceapi.CosCheckUpdateRes.prototype.getIsUpdateSuccess = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 6, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.deviceapi.CosCheckUpdateRes} returns this
+ */
+proto.deviceapi.CosCheckUpdateRes.prototype.setIsUpdateSuccess = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 6, value);
 };
 
 

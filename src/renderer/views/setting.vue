@@ -398,6 +398,34 @@ export default {
         }
       })
     },
+    cosUpdateWalletAddress () {
+      // 发送应用查询请求
+      this.$ipcRenderer.send('checkUpdate')
+      this.$ipcRenderer.on('checkUpdate', (CheckUpdateResult) => {
+        // const result = ipcRenderer.sendSync('checkUpdate')
+        const CheckUpdateResponse = CheckUpdateResult.result
+        if (CheckUpdateResult.isSuccess) {
+          const appList = CheckUpdateResponse.list
+          const nameList = []
+          for (let i = 0; i < appList.length; i++) {
+            nameList.push(appList[i].name)
+          }
+          // 写wallet地址
+          this.$ipcRenderer.send('writeWalletAddress', { name: nameList, filePath: this.$store.state.userPath })
+          this.$ipcRenderer.on('writeWalletAddress', (result) => {
+            if (result.isSuccess) {
+              // wallet地址写入成功，开始再次检查
+              this.isCosUpdate = false
+              this.cosOldVersionData = this.cosNewVersionData
+              this.$store.state.isCosUpdate = false
+              this.$store.state.cosOldVersionData = this.cosNewVersionData
+              this.$store.state.cosNewVersionData = this.cosNewVersionData
+              this.changeCode(2)
+            }
+          })
+        }
+      })
+    },
     updateFirmware () {
       this.changeCode(1)
       this.$ipcRenderer.send('connectDevice')
@@ -408,12 +436,7 @@ export default {
             const response = result.result
             if (result.isSuccess) {
               if (response === constants.RESULT_STATUS_SUCCESS) {
-                this.isCosUpdate = false
-                this.cosOldVersionData = this.cosNewVersionData
-                this.$store.state.isCosUpdate = false
-                this.$store.state.cosOldVersionData = this.cosNewVersionData
-                this.$store.state.cosNewVersionData = this.cosNewVersionData
-                this.changeCode(2)
+                this.cosUpdateWalletAddress()
                 // 更新完cos之后需要清除缓存重新加载数据刷新页面
                 // setTimeout(() => {
                 //   this.init()

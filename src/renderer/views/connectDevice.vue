@@ -100,7 +100,7 @@
                 <p><span class="el-icon-warning-outline"></span></p>
                 <h3>{{$t('m.imKeyManager.firmware_update_fail')}}</h3>
                 <p>{{$t('m.imKeyManager.find_firmware_update_fail_continue')}}</p>
-                <button @click="changeState(7)">{{$t('m.imKeyManager.ok')}}</button>
+                <button @click="changeState(1)">{{$t('m.imKeyManager.ok')}}</button>
             </div>
         </div>
         <!--tip 固件升级中-->
@@ -282,9 +282,19 @@ export default {
             // 处于BL状态,更新COS
             this.toCosUpdate()
           } else {
-            // 无需更新COS
-            this.checkFirmwareUpgrade = 3
-            this.checkIsActive()
+            this.$ipcRenderer.send('cosCheckUpdate')
+            this.$ipcRenderer.on('cosCheckUpdate', (cosCheckUpdateResult) => {
+              const cosCheckUpdateResponse = cosCheckUpdateResult.result
+              if (cosCheckUpdateResult.isSuccess) {
+                if (cosCheckUpdateResponse.isUpdateSuccess === true) {
+                  // 无需更新COS
+                  this.checkFirmwareUpgrade = 3
+                  this.checkIsActive()
+                } else {
+                  this.toCosUpdate()
+                }
+              }
+            })
           }
         } else {
           this.errorInfo = response
@@ -436,8 +446,6 @@ export default {
     connect () {
       this.$ipcRenderer.send('connectDevice')
       this.$ipcRenderer.on('connectDevice', (result) => {
-        // event.sender.removeAllListeners('connectDeviceResult')
-        // const result = ipcRenderer.sendSync('connectDevice')
         const response = result.result
         if (result.isSuccess) {
           if (response === constants.RESULT_STATUS_SUCCESS) {
@@ -460,6 +468,29 @@ export default {
       }
       // }, 800)
     },
+    cosUpdateWalletAddress () {
+      // 发送应用查询请求
+      this.$ipcRenderer.send('checkUpdate')
+      this.$ipcRenderer.on('checkUpdate', (CheckUpdateResult) => {
+        // const result = ipcRenderer.sendSync('checkUpdate')
+        const CheckUpdateResponse = CheckUpdateResult.result
+        if (CheckUpdateResult.isSuccess) {
+          const appList = CheckUpdateResponse.list
+          const nameList = []
+          for (let i = 0; i < appList.length; i++) {
+            nameList.push(appList[i].name)
+          }
+          // 写wallet地址
+          this.$ipcRenderer.send('writeWalletAddress', { name: nameList, filePath: this.userPath })
+          this.$ipcRenderer.on('writeWalletAddress', (result) => {
+            if (result.isSuccess) {
+              // wallet地址写入成功，开始再次检查
+              this.check()
+            }
+          })
+        }
+      })
+    },
     toCosUpdate () {
       this.changeState(6)
 
@@ -469,8 +500,9 @@ export default {
         const response = result.result
         if (result.isSuccess) {
           if (response === constants.RESULT_STATUS_SUCCESS) {
+            // cos 更新完成需要写wallet地址
+            this.cosUpdateWalletAddress()
             // cos更新成功检查是否激活
-            this.check()
           } else {
             // 固件升级失败
             this.changeState(5)

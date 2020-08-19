@@ -63,7 +63,10 @@ ipcRenderer.on('message-from-main', (event, arg) => {
       response = deviceManger.deviceBindDisplay()
     }
     if (arg.type === 'getBTCXpub') {
-      response = walletApi.getBTCXpub()
+      const bindCheckRes = deviceManger.deviceBindCheck(arg.data)
+      if (bindCheckRes.isSuccess) {
+        response = walletApi.getBTCXpub()
+      }
     }
     if (arg.type === 'getUserPath') {
       response = deviceManger.getUserPath()
@@ -73,6 +76,52 @@ ipcRenderer.on('message-from-main', (event, arg) => {
     }
     if (arg.type === 'exportBindCode') {
       response = deviceManger.exportBindCode()
+    }
+    if (arg.type === 'writeWalletAddress') {
+      try {
+        const coinNameArr = arg.data.name
+
+        for (let i = 0; i < coinNameArr.length; i++) {
+          const bindCheckRes = deviceManger.deviceBindCheck(arg.data.filePath)
+          if (bindCheckRes.isSuccess) {
+            if (coinNameArr[i] === 'BTC') {
+              walletApi.registerBTCAddress({
+                network: 'MAINNET',
+                path: "m/44'/0'/0'/0/0"
+              })
+            }
+            if (coinNameArr[i] === 'ETH') {
+              walletApi.registerBTCAddress({
+                path: "m/44'/60'/0'/0/0"
+              })
+            }
+            if (coinNameArr[i] === 'EOS') {
+              walletApi.registerBTCAddress({
+                path: "m/44'/194'/0'/0/0"
+              })
+            }
+            if (coinNameArr[i] === 'COSMOS') {
+              walletApi.registerBTCAddress({
+                path: "m/44'/118'/0'/0/0"
+              })
+            }
+          } else {
+            response = {
+              isSuccess: false,
+              result: 'error'
+            }
+          }
+        }
+      } catch (error) {
+        response = {
+          isSuccess: false,
+          result: error
+        }
+      }
+      response = {
+        isSuccess: true,
+        result: 'success'
+      }
     }
   } catch (e) {
     response = e
