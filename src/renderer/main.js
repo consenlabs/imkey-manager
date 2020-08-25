@@ -48,7 +48,6 @@ ipcRenderer.on('message-to-renderer', (sender, msg) => {
   if (callbackCache.type === msg.type) {
     callbackCache.callback(msg.data)
   }
-
 }) // 监听主进程的消息
 Vue.config.productionTip = false
 Vue.prototype.$store = store

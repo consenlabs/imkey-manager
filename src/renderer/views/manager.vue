@@ -152,7 +152,6 @@ export default {
       this.supportCode = code
     },
     checkFirmwareVersion () {
-
       // 返回状态 0，无需更新COS，1，更新cos 2，更新错误
       this.$ipcRenderer.send('getFirmwareVersion')
       this.$ipcRenderer.on('getFirmwareVersion', (getFirmwareVersionResult) => {

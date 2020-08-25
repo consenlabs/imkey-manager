@@ -10,94 +10,94 @@ ipcRenderer.on('message-from-main', (event, arg) => {
   try {
     if (arg.type === 'connectDevice') {
       response = deviceManger.connect()
-      handleType = "connectDevice"
+      handleType = 'connectDevice'
     }
     if (arg.type === 'getSeid') {
       response = deviceManger.getSeid()
-      handleType = "getSeid"
+      handleType = 'getSeid'
     }
     if (arg.type === 'getSn') {
       response = deviceManger.getSn()
-      handleType = "getSn"
+      handleType = 'getSn'
     }
     if (arg.type === 'getRamSize') {
       response = deviceManger.getRamSize()
-      handleType = "getRamSize"
+      handleType = 'getRamSize'
     }
     if (arg.type === 'getFirmwareVersion') {
       response = deviceManger.getFirmwareVersion()
-      handleType = "getFirmwareVersion"
+      handleType = 'getFirmwareVersion'
     }
     if (arg.type === 'getSdkInfo') {
       response = deviceManger.getSdkInfo()
-      handleType = "getSdkInfo"
+      handleType = 'getSdkInfo'
     }
     if (arg.type === 'activeDevice') {
       response = deviceManger.activeDevice()
-      handleType = "activeDevice"
+      handleType = 'activeDevice'
     }
     if (arg.type === 'cosUpdate') {
       response = deviceManger.cosUpdate()
-      handleType = "cosUpdate"
+      handleType = 'cosUpdate'
     }
     if (arg.type === 'cosCheckUpdate') {
       response = deviceManger.cosCheckUpdate()
-      handleType = "cosCheckUpdate"
+      handleType = 'cosCheckUpdate'
     }
     if (arg.type === 'isBLStatus') {
       response = deviceManger.isBLStatus()
-      handleType = "isBLStatus"
+      handleType = 'isBLStatus'
     }
     if (arg.type === 'checkDevice') {
       response = deviceManger.checkDevice()
-      handleType = "checkDevice"
+      handleType = 'checkDevice'
     }
     if (arg.type === 'checkUpdate') {
       response = deviceManger.checkUpdateAppList()
-      handleType = "checkUpdate"
+      handleType = 'checkUpdate'
     }
     if (arg.type === 'downloadApplet') {
       response = deviceManger.downloadApplet(arg.data)
-      handleType = "downloadApplet"
+      handleType = 'downloadApplet'
     }
     if (arg.type === 'updateApplet') {
       response = deviceManger.updateApplet(arg.data)
-      handleType = "updateApplet"
+      handleType = 'updateApplet'
     }
     if (arg.type === 'deleteApplet') {
       response = deviceManger.deleteApplet(arg.data)
-      handleType = "deleteApplet"
+      handleType = 'deleteApplet'
     }
     if (arg.type === 'deviceBindCheck') {
       response = deviceManger.deviceBindCheck(arg.data)
-      handleType = "deviceBindCheck"
+      handleType = 'deviceBindCheck'
     }
     if (arg.type === 'deviceBindAcquire') {
       response = deviceManger.deviceBindAcquire(arg.data)
-      handleType = "deviceBindAcquire"
+      handleType = 'deviceBindAcquire'
     }
     if (arg.type === 'deviceBindDisplay') {
       response = deviceManger.deviceBindDisplay()
-      handleType = "deviceBindDisplay"
+      handleType = 'deviceBindDisplay'
     }
     if (arg.type === 'getBTCXpub') {
       const bindCheckRes = deviceManger.deviceBindCheck(arg.data)
       if (bindCheckRes.isSuccess) {
         response = walletApi.getBTCXpub()
       }
-      handleType = "getBTCXpub"
+      handleType = 'getBTCXpub'
     }
     if (arg.type === 'getUserPath') {
       response = deviceManger.getUserPath()
-      handleType = "getUserPath"
+      handleType = 'getUserPath'
     }
     if (arg.type === 'importBindCode') {
       response = deviceManger.importBindCode(arg.data)
-      handleType = "importBindCode"
+      handleType = 'importBindCode'
     }
     if (arg.type === 'exportBindCode') {
       response = deviceManger.exportBindCode()
-      handleType = "exportBindCode"
+      handleType = 'exportBindCode'
     }
     if (arg.type === 'writeWalletAddress') {
       try {
@@ -144,7 +144,7 @@ ipcRenderer.on('message-from-main', (event, arg) => {
         isSuccess: true,
         result: 'success'
       }
-      handleType = "writeWalletAddress"
+      handleType = 'writeWalletAddress'
     }
   } catch (e) {
     response = e
@@ -154,9 +154,7 @@ ipcRenderer.on('message-from-main', (event, arg) => {
     data: response
   }
   console.log(result)
-    ipcRenderer.send('message-from-worker', result)
-
-
+  ipcRenderer.send('message-from-worker', result)
 })
 
 /**
