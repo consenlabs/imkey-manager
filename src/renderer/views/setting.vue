@@ -340,10 +340,10 @@ export default {
       this.$ipcRenderer.on('connectDevice', (connectResult) => {
         if (connectResult.isSuccess) {
           this.$ipcRenderer.send('getSn')
-          this.$ipcRenderer.on('getSn', (result) => {
-            const response = result.result
-            if (result.isSuccess) {
-              this.SN = response
+          this.$ipcRenderer.on('getSn', (getSnResult) => {
+            const getSnResponse = getSnResult.result
+            if (getSnResult.isSuccess) {
+              this.SN = getSnResponse
               console.log('SN:' + this.SN)
               this.firmwareVersion()
             } else {
@@ -359,11 +359,11 @@ export default {
     },
     firmwareVersion () {
       this.$ipcRenderer.send('getFirmwareVersion')
-      this.$ipcRenderer.on('getFirmwareVersion', (result) => {
-        const response = result.result
-        if (result.isSuccess) {
-          this.cosOldVersionData = response
-          this.$store.state.cosOldVersionData = response
+      this.$ipcRenderer.on('getFirmwareVersion', (getFirmwareVersionResult) => {
+        const getFirmwareVersionResponse = getFirmwareVersionResult.result
+        if (getFirmwareVersionResult.isSuccess) {
+          this.cosOldVersionData = getFirmwareVersionResponse
+          this.$store.state.cosOldVersionData = getFirmwareVersionResponse
           this.toCosCheckUpdate()
 
           // TODO this.toCosCheckUpdate()
@@ -415,14 +415,19 @@ export default {
           this.$ipcRenderer.on('writeWalletAddress', (result) => {
             if (result.isSuccess) {
               // wallet地址写入成功，开始再次检查
+              this.$sa.track('im_setting_version$upgrade', { status: 1 })
               this.isCosUpdate = false
               this.cosOldVersionData = this.cosNewVersionData
               this.$store.state.isCosUpdate = false
               this.$store.state.cosOldVersionData = this.cosNewVersionData
               this.$store.state.cosNewVersionData = this.cosNewVersionData
               this.changeCode(2)
+            } else {
+              this.$sa.track('im_setting_version$upgrade', { status: 0, message: '固件升级写wallet地址失败：' + result.result })
             }
           })
+        } else {
+          this.$sa.track('im_setting_version$upgrade', { status: 0, message: '固件升级写wallet地址前获取应用失败失败：' + CheckUpdateResponse })
         }
       })
     },
@@ -443,15 +448,18 @@ export default {
                 //   this.changeCode(2)
                 // }, 200)
               } else {
+                this.$sa.track('im_setting_version$upgrade', { status: 0, message: '固件升级失败：' + response })
                 this.isCosUpdate = true
                 this.changeCode(3)
               }
             } else {
+              this.$sa.track('im_setting_version$upgrade', { status: 0, message: '固件升级失败：' + response })
               this.isCosUpdate = true
               this.changeCode(3)
             }
           })
         } else {
+          this.$sa.track('im_setting_version$upgrade', { status: 0, message: '固件升级失败：' + connectResult.result })
           this.isCosUpdate = true
           this.changeCode(3)
         }

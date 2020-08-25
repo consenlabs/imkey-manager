@@ -152,6 +152,7 @@ export default {
       this.supportCode = code
     },
     checkFirmwareVersion () {
+
       // 返回状态 0，无需更新COS，1，更新cos 2，更新错误
       this.$ipcRenderer.send('getFirmwareVersion')
       this.$ipcRenderer.on('getFirmwareVersion', (getFirmwareVersionResult) => {
@@ -203,7 +204,6 @@ export default {
       // 发送应用查询请求
       this.$ipcRenderer.send('checkUpdate')
       this.$ipcRenderer.on('checkUpdate', (CheckUpdateResult) => {
-        // const result = ipcRenderer.sendSync('checkUpdate')
         const CheckUpdateResponse = CheckUpdateResult.result
         if (CheckUpdateResult.isSuccess) {
           const appList = CheckUpdateResponse.list
@@ -216,6 +216,7 @@ export default {
           this.$ipcRenderer.on('writeWalletAddress', (result) => {
             if (result.isSuccess) {
               // wallet地址写入成功，开始再次检查
+              this.$sa.track('im_manage_firmware$upgrade', { status: 1 })
               this.isCosUpdate = false
               this.cosUpdateStatus = '0'
               this.cosOldVersionData = this.cosNewVersionData
@@ -223,8 +224,12 @@ export default {
               this.$store.state.cosOldVersionData = this.cosNewVersionData
               this.$store.state.cosNewVersionData = this.cosNewVersionData
               this.changeCode(2)
+            } else {
+              this.$sa.track('im_manage_firmware$upgrade', { status: 0, message: '固件升级写wallet地址失败：' + result.result })
             }
           })
+        } else {
+          this.$sa.track('im_manage_firmware$upgrade', { status: 0, message: '固件升级写wallet地址前获取应用失败失败：' + CheckUpdateResponse })
         }
       })
     },
@@ -245,15 +250,18 @@ export default {
                 //   this.changeCode(2)
                 // }, 200)
               } else {
+                this.$sa.track('im_manage_firmware$upgrade', { status: 0, message: '固件升级失败：' + response })
                 this.isCosUpdate = true
                 this.changeCode(3)
               }
             } else {
+              this.$sa.track('im_manage_firmware$upgrade', { status: 0, message: '固件升级失败：' + response })
               this.isCosUpdate = true
               this.changeCode(3)
             }
           })
         } else {
+          this.$sa.track('im_manage_firmware$upgrade', { status: 0, message: '固件升级失败：' + connectResult.result })
           this.isCosUpdate = true
           this.changeCode(3)
         }
@@ -357,22 +365,26 @@ export default {
               const response = downloadAppletResult.result
               if (downloadAppletResult.isSuccess) {
                 if (response === constants.RESULT_STATUS_SUCCESS) {
+                  this.$sa.track('im_manage$install', { symbol: name, status: 1 })
                   this.apps[index].installed = true
                   this.apps[index].deleteDis = false
                   this.apps[index].installLoading = false
                   this.apps[index].desc = this.apps[index].lastVersion
                 } else {
+                  this.$sa.track('im_manage$install', { symbol: name, status: 0, message: response })
                   this.apps[index].installLoading = false
                   this.tip = true
                   this.apps[index].installDis = false
                 }
               } else {
+                this.$sa.track('im_manage$install', { symbol: name, status: 0, message: response })
                 this.apps[index].installLoading = false
                 this.apps[index].installDis = false
                 this.tip = true
               }
             })
           } else {
+            this.$sa.track('im_manage$install', { symbol: name, status: 0, message: connectResult.result })
             this.tip = true
           }
         })
@@ -403,6 +415,7 @@ export default {
               const response = updateAppletResult.result
               if (updateAppletResult.isSuccess) {
                 if (response === constants.RESULT_STATUS_SUCCESS) {
+                  this.$sa.track('im_manage$upgrade', { symbol: name, status: 1 })
                   this.apps[index].deleteDis = false
                   this.apps[index].installed = true
                   this.apps[index].updateLoading = false
@@ -410,17 +423,20 @@ export default {
                   this.apps[index].installLoading = false
                   this.apps[index].desc = this.apps[index].lastVersion
                 } else {
+                  this.$sa.track('im_manage$upgrade', { symbol: name, status: 0, message: response })
                   this.apps[index].installLoading = false
                   this.apps[index].updateDis = false
                   this.tip = true
                 }
               } else {
+                this.$sa.track('im_manage$upgrade', { symbol: name, status: 0, message: response })
                 this.apps[index].updateDis = false
                 this.apps[index].installLoading = false
                 this.tip = true
               }
             })
           } else {
+            this.$sa.track('im_manage$upgrade', { symbol: name, status: 0, message: connectResult.result })
             this.tip = true
           }
         })

@@ -130,8 +130,8 @@ export const m = {
     wechat: '微信：imKeyOfficial',
     tokenlon_info: '安全快速的去中心化交易所',
     compound_info: '存币生息，支持 USDT/USDC/Dai等 ',
-    aave_info: '存/借贷生息，支持 17 个币种'
-
+    aave_info: '存/借贷生息，支持 17 个币种',
+    operating_tutorial_url: 'https://imkey.im/get-started?locale=zh-cn'
   },
   appStart: {
     imKey_manager: 'imKey Manager',

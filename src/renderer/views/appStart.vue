@@ -30,10 +30,11 @@ export default {
   name: 'appStart',
   data () {
     return {
-      connectText: this.$t('m.appStart.use_now')
+      connectText: this.$t('m.imKeyManager.use_now')
     }
   },
   mounted () {
+    this.$sa.track('im_app$start', { name: 'appStart' })
     // 禁止主页面滑动
     this.noScroll()
   },
@@ -42,6 +43,7 @@ export default {
       this.router.replace('/connectDevice')
     },
     openUrl () {
+      this.$sa.track('im_app$buyimkey', { name: 'buyimkey' })
       ipcRenderer.send('openUrl', 'https://imkey.im/')
     }
 
