@@ -8,7 +8,7 @@ import pkg from '../../package.json'
 import SensorsAnalytics from 'sa-sdk-node'
 const url = 'https://imtoken.datasink.sensorsdata.cn/sa?project=production&token=27d69b3e7fd25949'
 const sa = new SensorsAnalytics()
-const distinct_id = 'imkey-manager'
+const distinctId = 'imkey-manager'
 let envPath
 if (process.platform === 'win32') {
   if (process.env.NODE_ENV === 'production') {
@@ -70,7 +70,7 @@ function createWorkerWindow () {
   })
   workerWindow.on('closed', () => {
     console.log('background window closed')
-    sa.track(distinct_id,'im_app$end', { name: 'appEnd' })
+    sa.track(distinctId, 'im_app$end', { name: 'appEnd' })
   })
   if (process.env.NODE_ENV === 'development') {
     workerWindow.loadFile(workerURL)// 调试时的加载方式
@@ -116,14 +116,14 @@ function createMainWindow () {
      * 监听
      */
   mainWindow.on('close', (event) => {
-    sa.track(distinct_id,'im_app$end', { name: 'appEnd' })
+    sa.track(distinctId, 'im_app$end', { name: 'appEnd' })
     if (process.platform === 'win32') {
       if (!trayClose) {
         // 最小化
         mainWindow.hide()
         event.preventDefault()
       }
-    }else{
+    } else {
       setTimeout(() => {
         app.quit()
       }, 3000)
@@ -180,8 +180,7 @@ function createTray () {
         setTimeout(() => {
           app.quit()
         }, 3000)
-        sa.track(distinct_id,'im_app$end', { name: 'appEnd' })
-
+        sa.track(distinctId, 'im_app$end', { name: 'appEnd' })
       }
     }
   ]
@@ -365,7 +364,7 @@ function crashReport () {
 
   // 渲染进程崩溃事件
   mainWindow.webContents.on('crashed', () => {
-    sa.track(distinct_id,'im_app$crash', { name: 'appCrash' })
+    sa.track(distinctId, 'im_app$crash', { name: 'appCrash' })
     const options = {
       type: 'error',
       title: '进程崩溃了',
@@ -471,7 +470,7 @@ function sendWindowMessage (targetWindow, message, payload) {
   console.log('type:' + payload.type)
   console.log('data:' + payload.data)
   console.log(payload.data)
-  sa.track(distinct_id,'im_app$test', { name: 'appTest' })
+  sa.track(distinctId, 'im_app$test', { name: 'appTest' })
   targetWindow.webContents.send(message, payload)
 }
 function renderDeviceManagerHandler () {

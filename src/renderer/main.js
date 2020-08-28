@@ -27,7 +27,7 @@ sa.init({
     scroll_notice_map: 'not_collect'
   }
 })
-sa.login("imkey-manager")
+sa.login('imkey-manager')
 // sa.track("im_app$start",{name:"appStart",DataType:"NUMBER",data:0})
 let callbackCache
 Vue.prototype.$ipcRenderer = {

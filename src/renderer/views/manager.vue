@@ -128,7 +128,7 @@ export default {
   data () {
     return {
       tip: false,
-        tip1: false,
+      tip1: false,
       buttonTexts: '',
       appName: '',
       apps: [],
@@ -282,7 +282,7 @@ export default {
 
     ok () {
       this.tip = false
-        this.tip1 = false
+      this.tip1 = false
     },
     init () {
       this.$ipcRenderer.send('connectDevice')

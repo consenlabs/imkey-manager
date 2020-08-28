@@ -349,13 +349,13 @@ export default {
             } else {
               // 获取SN失败
               // this.changeCode(5)
-                this.status = 2
+              this.status = 2
             }
           })
         } else {
           // 获取SN失败
           // this.changeCode(5)
-            this.status = 2
+          this.status = 2
         }
       })
     },
