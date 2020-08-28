@@ -280,19 +280,8 @@ export default {
             // 处于BL状态,更新COS
             this.toCosUpdate()
           } else {
-            this.$ipcRenderer.send('cosCheckUpdate')
-            this.$ipcRenderer.on('cosCheckUpdate', (cosCheckUpdateResult) => {
-              const cosCheckUpdateResponse = cosCheckUpdateResult.result
-              if (cosCheckUpdateResult.isSuccess) {
-                if (cosCheckUpdateResponse.isUpdateSuccess === true) {
-                  // 无需更新COS
-                  this.checkFirmwareUpgrade = 3
-                  this.checkIsActive()
-                } else {
-                  this.toCosUpdate()
-                }
-              }
-            })
+              this.checkFirmwareUpgrade = 3
+              this.checkIsActive()
           }
         } else {
           this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否处于BL状态失败：' + response })
@@ -305,46 +294,61 @@ export default {
       // 绑定之前检查激活
       this.checkDeviceBindingCode = 2
       this.$ipcRenderer.send('checkUpdate')
-      this.$ipcRenderer.on('checkUpdate', (result) => {
-        const response = result.result
-        if (result.isSuccess) {
-          const activeStatus = response.status
+      this.$ipcRenderer.on('checkUpdate', (checkUpdateResult) => {
+        const checkUpdateResponse = checkUpdateResult.result
+        if (checkUpdateResult.isSuccess) {
+          const activeStatus = checkUpdateResponse.status
           if (activeStatus === 'latest') {
-            // 缓存激活状态
-            this.$store.state.activeStatus = response.status
-            // 缓存应用数据
-            const appList = []
-            const tempAppList = response.list
-            for (let i = 0; i < tempAppList.length; i++) {
-              if (tempAppList[i].name === 'IMK') {
-                tempAppList[i].name = this.$t('m.imKeyManager.imKey_soft')
-              }
-              const collection = {
-                name: tempAppList[i].name,
-                desc: tempAppList[i].desc,
-                lastVersion: tempAppList[i].lastVersion,
-                id: i,
-                installLoading: tempAppList[i].installLoading,
-                installDis: tempAppList[i].installDis,
-                deleteDis: tempAppList[i].deleteDis,
-                installed: tempAppList[i].installed,
-                updateLoading: tempAppList[i].updateLoading,
-                updateDis: tempAppList[i].updateDis,
-                deleteLoading: tempAppList[i].deleteLoading,
-                icon: tempAppList[i].icon
-              }
-              appList.push(collection)
-            }
-            this.$store.state.apps = appList
-            this.connectText = this.$t('m.connectDevice.active_success')
-            this.checkIsBind()
+              this.$ipcRenderer.send('cosCheckUpdate')
+              this.$ipcRenderer.on('cosCheckUpdate', (cosCheckUpdateResult) => {
+                  const cosCheckUpdateResponse = cosCheckUpdateResult.result
+                  if (cosCheckUpdateResult.isSuccess) {
+                      if (cosCheckUpdateResponse.isUpdateSuccess === true) {
+
+                          // 缓存激活状态
+                          this.$store.state.activeStatus = checkUpdateResponse.status
+                          // 缓存应用数据
+                          const appList = []
+                          const tempAppList = checkUpdateResponse.list
+                          for (let i = 0; i < tempAppList.length; i++) {
+                              if (tempAppList[i].name === 'IMK') {
+                                  tempAppList[i].name = this.$t('m.imKeyManager.imKey_soft')
+                              }
+                              const collection = {
+                                  name: tempAppList[i].name,
+                                  desc: tempAppList[i].desc,
+                                  lastVersion: tempAppList[i].lastVersion,
+                                  id: i,
+                                  installLoading: tempAppList[i].installLoading,
+                                  installDis: tempAppList[i].installDis,
+                                  deleteDis: tempAppList[i].deleteDis,
+                                  installed: tempAppList[i].installed,
+                                  updateLoading: tempAppList[i].updateLoading,
+                                  updateDis: tempAppList[i].updateDis,
+                                  deleteLoading: tempAppList[i].deleteLoading,
+                                  icon: tempAppList[i].icon
+                              }
+                              appList.push(collection)
+                          }
+                          this.$store.state.apps = appList
+                          this.connectText = this.$t('m.connectDevice.active_success')
+                          this.checkIsBind()
+                      } else {
+                          this.toCosUpdate()
+                      }
+                  }else{
+                      this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否升级COS失败：' + cosCheckUpdateResponse })
+                      this.errorInfo = cosCheckUpdateResponse
+                      this.changeState(4)
+                  }
+              })
           } else {
             // 还没有激活，跳转到激活界面
             this.$router.push('imKeySetting')
           }
         } else {
-          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否激活失败：' + response })
-          this.errorInfo = response
+          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否激活失败：' + checkUpdateResponse })
+          this.errorInfo = checkUpdateResponse
           this.changeState(4)
         }
       })

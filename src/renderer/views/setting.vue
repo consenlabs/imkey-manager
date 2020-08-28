@@ -348,12 +348,14 @@ export default {
               this.firmwareVersion()
             } else {
               // 获取SN失败
-              this.changeCode(5)
+              // this.changeCode(5)
+                this.status = 2
             }
           })
         } else {
           // 获取SN失败
-          this.changeCode(5)
+          // this.changeCode(5)
+            this.status = 2
         }
       })
     },
@@ -385,7 +387,7 @@ export default {
       this.$ipcRenderer.send('cosCheckUpdate')
       this.$ipcRenderer.on('cosCheckUpdate', (result) => {
         const response = result.result
-        if (result.isSuccess) {
+        if (result.isSuccess && response.isUpdateSuccess === true) {
           this.cosNewVersionData = response.latestCosVersion
           this.isLatest = response.isLatest
           this.updateType = response.updateType

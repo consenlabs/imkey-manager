@@ -108,7 +108,7 @@ export const m = {
     check_usb_internet_connect_retry: 'Please check the USB connection or network connection and try again after confirming that it is normal',
     found_imKey_manager_new_version: 'New version of imKey Manager available',
     update: 'Upgrade',
-    access_error_please_check_your_network_connection: 'Access error, please check your network connection',
+    access_error_please_check_your_network_connection: 'Access error, please check your network/usb connection',
     loading_please_wait: 'Loading, please wait patiently',
     new_version_is: 'The new version is ',
     current_version_is: 'The current version is ',

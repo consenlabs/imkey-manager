@@ -57,6 +57,18 @@
                 <button @click="ok">{{$t('m.imKeyManager.ok')}}</button>
             </div>
         </div>
+        <div class="dioBox" v-if="tip1">
+            <div class="box">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7.86 2H16.14L22 7.86V16.14L16.14 22H7.86L2 16.14V7.86L7.86 2Z" stroke="#43454F"
+                          stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M15 9L9 15" stroke="#43454F" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M9 9L15 15" stroke="#43454F" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <h4>{{$t('m.imKeyManager.check_usb_or_internet_connect')}}</h4>
+                <button @click="ok">{{$t('m.imKeyManager.ok')}}</button>
+            </div>
+        </div>
         <div class="alert" v-if="supportCode==1">
             <div class="alertBox alert1">
                 <span class="fas fa-circle-notch fa-spin"></span>
@@ -116,6 +128,7 @@ export default {
   data () {
     return {
       tip: false,
+        tip1: false,
       buttonTexts: '',
       appName: '',
       apps: [],
@@ -162,7 +175,7 @@ export default {
           this.$ipcRenderer.send('cosCheckUpdate')
           this.$ipcRenderer.on('cosCheckUpdate', (cosCheckUpdateResult) => {
             const cosCheckUpdateResponse = cosCheckUpdateResult.result
-            if (cosCheckUpdateResult.isSuccess) {
+            if (cosCheckUpdateResult.isSuccess && cosCheckUpdateResponse.isUpdateSuccess === true) {
               this.cosNewVersionData = cosCheckUpdateResponse.latestCosVersion
               this.isLatest = cosCheckUpdateResponse.isLatest
               this.updateType = cosCheckUpdateResponse.updateType
@@ -269,6 +282,7 @@ export default {
 
     ok () {
       this.tip = false
+        this.tip1 = false
     },
     init () {
       this.$ipcRenderer.send('connectDevice')
@@ -285,10 +299,10 @@ export default {
               this.checkFirmwareVersion()
             }
           } else {
-            this.tip = true
+            this.tip1 = true
           }
         } else {
-          this.tip = true
+          this.tip1 = true
         }
       })
     },

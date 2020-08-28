@@ -109,7 +109,7 @@ export const m = {
     check_usb_internet_connect_retry: '请检查 USB 连接或网络连接情况，确认无误后点击重试',
     found_imKey_manager_new_version: 'imKey Manager 新版本提示',
     update: '更新',
-    access_error_please_check_your_network_connection: '访问出错，请检查你的网络连接',
+    access_error_please_check_your_network_connection: '访问出错，请检查你的网络/USB连接',
     loading_please_wait: '加载中，请耐心等待',
     new_version_is: '新版本为 ',
     current_version_is: '，当前版本为 ',
