@@ -365,7 +365,7 @@ export default {
           this.$ipcRenderer.send('connectDevice')
           this.$ipcRenderer.on('connectDevice', (connectResult) => {
             if (connectResult.isSuccess) {
-              this.$sa.track('im_onboarding_complete$finish', { name: 'onboardingCompleteClick', to: '指向im_homepage' })
+              this.$sa.track('im_onboarding_complete$finish', { name: 'onboardingCompleteClick', to: 'im_homepage' })
               // 去首页
               this.$router.push('/home/welcomeHome')
             } else {

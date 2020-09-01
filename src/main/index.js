@@ -364,7 +364,7 @@ function crashReport () {
 
   // 渲染进程崩溃事件
   mainWindow.webContents.on('crashed', () => {
-    sa.track(distinctId, 'im_app$crash', { name: 'appCrash' })
+
     const options = {
       type: 'error',
       title: '进程崩溃了',
@@ -386,6 +386,7 @@ function crashReport () {
 
   function recordCrash () {
     return new Promise(resolve => {
+      sa.track(distinctId, 'im_app$crash', { name: 'appCrash' })
       // 崩溃日志请求成功....
       resolve()
     })
@@ -470,7 +471,6 @@ function sendWindowMessage (targetWindow, message, payload) {
   console.log('type:' + payload.type)
   console.log('data:' + payload.data)
   console.log(payload.data)
-  sa.track(distinctId, 'im_app$test', { name: 'appTest' })
   targetWindow.webContents.send(message, payload)
 }
 function renderDeviceManagerHandler () {

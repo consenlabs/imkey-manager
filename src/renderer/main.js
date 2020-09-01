@@ -109,31 +109,31 @@ router.beforeEach(function (to, from, next) {
   if (from.name === 'welcomeHome') {
     if (to.name === 'manager') {
       eventName = 'im_homepage$manage'
-      toName = '指向im_manage'
+      toName = 'im_manage'
     }
     if (to.name === 'setting') {
       eventName = 'im_homepage$setting'
-      toName = '指向im_setting'
+      toName = 'im_setting'
     }
   }
   if (from.name === 'manager') {
     if (to.name === 'welcomeHome') {
       eventName = 'im_manage$homepage'
-      toName = '指向im_homepage'
+      toName = 'im_homepage'
     }
     if (to.name === 'setting') {
       eventName = 'im_manage$setting'
-      toName = '指向im_setting'
+      toName = 'im_setting'
     }
   }
   if (from.name === 'setting') {
     if (to.name === 'welcomeHome') {
       eventName = 'im_setting$homepage'
-      toName = '指向im_homepage'
+      toName = 'im_homepage'
     }
     if (to.name === 'manager') {
       eventName = 'im_setting$manage'
-      toName = '指向im_manage'
+      toName = 'im_manage'
     }
   }
   if (eventName !== '' && toName !== '') {

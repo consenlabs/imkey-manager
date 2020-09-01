@@ -417,7 +417,7 @@ export default {
           this.$ipcRenderer.on('writeWalletAddress', (result) => {
             if (result.isSuccess) {
               // wallet地址写入成功，开始再次检查
-              this.$sa.track('im_setting_version$upgrade', { status: 1 })
+              this.$sa.track('im_setting_firmware$upgrade', { status: 1 })
               this.isCosUpdate = false
               this.cosOldVersionData = this.cosNewVersionData
               this.$store.state.isCosUpdate = false
@@ -425,11 +425,11 @@ export default {
               this.$store.state.cosNewVersionData = this.cosNewVersionData
               this.changeCode(2)
             } else {
-              this.$sa.track('im_setting_version$upgrade', { status: 0, message: '固件升级写wallet地址失败：' + result.result })
+              this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级写wallet地址失败：' + result.result })
             }
           })
         } else {
-          this.$sa.track('im_setting_version$upgrade', { status: 0, message: '固件升级写wallet地址前获取应用失败失败：' + CheckUpdateResponse })
+          this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级写wallet地址前获取应用失败失败：' + CheckUpdateResponse })
         }
       })
     },
@@ -450,18 +450,18 @@ export default {
                 //   this.changeCode(2)
                 // }, 200)
               } else {
-                this.$sa.track('im_setting_version$upgrade', { status: 0, message: '固件升级失败：' + response })
+                this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级失败：' + response })
                 this.isCosUpdate = true
                 this.changeCode(3)
               }
             } else {
-              this.$sa.track('im_setting_version$upgrade', { status: 0, message: '固件升级失败：' + response })
+              this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级失败：' + response })
               this.isCosUpdate = true
               this.changeCode(3)
             }
           })
         } else {
-          this.$sa.track('im_setting_version$upgrade', { status: 0, message: '固件升级失败：' + connectResult.result })
+          this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级失败：' + connectResult.result })
           this.isCosUpdate = true
           this.changeCode(3)
         }

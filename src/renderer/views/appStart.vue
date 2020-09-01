@@ -43,7 +43,7 @@ export default {
       this.router.replace('/connectDevice')
     },
     openUrl () {
-      this.$sa.track('im_app$buyimkey', { name: 'buyimkey' })
+      // this.$sa.track('im_app$buyimkey', { name: 'buyimkey' })
       ipcRenderer.send('openUrl', 'https://imkey.im/')
     }
 

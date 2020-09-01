@@ -400,7 +400,7 @@ export default {
                 this.checkSafetyTest = 3
               }, 1000)
               setTimeout(() => {
-                this.$sa.track('im_landing_connect$success', { name: 'landingConnectSuccess', to: '指向im_homepage' })
+                this.$sa.track('im_landing_connect$success', { name: 'landingConnectSuccess', to: 'im_homepage' })
                 // 跳转到主页
                 this.$router.push('/home/welcomeHome')
                 // this.$router.push('imKeySetting')
@@ -428,9 +428,10 @@ export default {
         if (result.isSuccess) {
           if (response !== '' || response !== null) {
               if (response.search('xpu') !== -1) {
-              this.$sa.track('im_landing_connect$success', { name: 'landingConnectSuccess', to: '指向im_homepage' })
+              this.$sa.track('im_landing_connect$success', { name: 'landingConnectSuccess', to: 'im_homepage' })
               // 跳转到主页
               this.$router.push('/home/welcomeHome')
+                  // this.$router.push('imKeySetting')
             } else {
             // 跳转到创建钱包界面
               this.$router.push('imKeySetting')

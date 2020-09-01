@@ -147,6 +147,7 @@ export default {
       // 开始下载
       ipcRenderer.send('downloadUpdate')
       ipcRenderer.on('downloadProgress', (event, progressObj) => {
+          this.$sa.track('im_setting_version$upgrade', { status: 1 })
         this.progress = progressObj.percent.toFixed(0) || 0
         if (progressObj.percent === 100) {
           // 下载完成， 立刻退出并更新
