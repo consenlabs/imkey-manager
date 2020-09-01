@@ -516,7 +516,7 @@ if (!gotTheLock) {
     createTray()
     autoUpdate()
     crashReport()
-    protocalHandler()
+    // protocalHandler()
     renderDeviceManagerHandler()
     initSa()
     // startHttpServer()
