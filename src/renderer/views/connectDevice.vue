@@ -388,12 +388,12 @@ export default {
     },
     checkIsCreateWallet () {
       this.checkPinAndWallet = 2
-      this.$ipcRenderer.send('getBTCXpub')
+      this.$ipcRenderer.send('getBTCXpub',this.userPath)
       this.$ipcRenderer.on('getBTCXpub', (result) => {
         const response = result.result
         if (result.isSuccess) {
           if (response !== '' || response !== null) {
-            if (response.match('xpu')) {
+            if (response.search('xpu') !== -1) {
               this.checkPinAndWallet = 3
               this.checkSafetyTest = 2
               setTimeout(() => {
@@ -422,12 +422,12 @@ export default {
       })
     },
     bindOtherCheckIsCreateWallet () {
-      this.$ipcRenderer.send('getBTCXpub')
+      this.$ipcRenderer.send('getBTCXpub',this.userPath)
       this.$ipcRenderer.on('getBTCXpub', (result) => {
         const response = result.result
         if (result.isSuccess) {
           if (response !== '' || response !== null) {
-            if (response.match('xpu')) {
+              if (response.search('xpu') !== -1) {
               this.$sa.track('im_landing_connect$success', { name: 'landingConnectSuccess', to: '指向im_homepage' })
               // 跳转到主页
               this.$router.push('/home/welcomeHome')

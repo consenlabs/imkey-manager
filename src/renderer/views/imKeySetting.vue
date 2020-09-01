@@ -422,12 +422,12 @@ export default {
           this.$ipcRenderer.send('connectDevice')
           this.$ipcRenderer.on('connectDevice', (connectResult) => {
             if (connectResult.isSuccess) {
-              this.$ipcRenderer.send('getBTCXpub')
+              this.$ipcRenderer.send('getBTCXpub',this.$store.state.userPath)
               this.$ipcRenderer.on('getBTCXpub', (getBTCXpubResult) => {
                 const response = getBTCXpubResult.result
                 if (getBTCXpubResult.isSuccess) {
                   if (response !== '' || response != null) {
-                    if (response.match('xpu')) {
+                      if (response.search('xpu') !== -1) {
                       this.$sa.track('im_onboarding_wallet_next$success', { name: 'onboardingWalletNextSuccess' })
                       this.active = active
                       this.page = page
