@@ -116,7 +116,6 @@ function createMainWindow () {
      * 监听
      */
   mainWindow.on('close', (event) => {
-    sa.track(distinctId, 'im_app$end', { name: 'appEnd' })
     if (process.platform === 'win32') {
       if (!trayClose) {
         // 最小化
@@ -124,9 +123,7 @@ function createMainWindow () {
         event.preventDefault()
       }
     } else {
-      setTimeout(() => {
         app.quit()
-      }, 3000)
     }
   })
 

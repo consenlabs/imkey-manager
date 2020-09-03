@@ -83,7 +83,7 @@
                         </div>
                     </div>
 
-                    <p >
+                    <p>
                         <el-progress color="#000" :percentage="progress" ></el-progress>
                         <a href="javascript:;" @click="later">{{$t('m.imKeyManager.cancel')}}</a>
                     </p>
@@ -393,7 +393,7 @@ export default {
     .update-info-scroller {
         -webkit-overflow-scrolling: touch;
         overflow-scrolling: touch;
-        height: 100px;
+        height: 70px;
         overflow: scroll;
     }
     .view_button{
