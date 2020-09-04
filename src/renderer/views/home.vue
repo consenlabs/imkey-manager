@@ -71,7 +71,7 @@
             <div class="status5Alert">
                 <div class="status5AlertBox">
                     <h4>{{$t('m.imKeyManager.found_new_soft_version')}}</h4>
-                    <p>{{$t('m.imKeyManager.new_version_is')}}V{{softNewVersionData}}{{$t('m.imKeyManager.current_version_is')}}V{{softOldVersionData}}</p>
+                    <p>{{$t('m.imKeyManager.update_tip_wait')}}</p>
                     <div class="update-info-scroller">
                         <div v-for="item in softUpdateInfo" :key="item.id" >
                             <p >
@@ -141,6 +141,7 @@ export default {
     later () {
       // 稍后更新
       this.status = 6
+      this.progress = 0
     },
     downloadAndUpdate () {
       this.status = 5
