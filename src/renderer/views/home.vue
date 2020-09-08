@@ -150,9 +150,12 @@ export default {
       ipcRenderer.on('downloadProgress', (event, progressObj) => {
         this.$sa.track('im_setting_version$upgrade', { status: 1 })
         this.progress = progressObj.percent.toFixed(0) || 0
+          // if (this.progress  === 100) {
         if (progressObj.percent === 100) {
-          // 下载完成， 立刻退出并更新
-          ipcRenderer.send('isUpdateNow')
+            setTimeout(() => {
+                // 下载完成， 立刻退出并更新
+                ipcRenderer.send('isUpdateNow')
+            }, 5000)
         }
       })
     },
