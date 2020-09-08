@@ -381,7 +381,7 @@ export default {
     },
     checkIsCreateWallet () {
       this.checkPinAndWallet = 2
-      this.$ipcRenderer.send('getBTCXpub',this.userPath)
+      this.$ipcRenderer.send('getBTCXpub', this.userPath)
       this.$ipcRenderer.on('getBTCXpub', (result) => {
         const response = result.result
         if (result.isSuccess) {
@@ -415,16 +415,16 @@ export default {
       })
     },
     bindOtherCheckIsCreateWallet () {
-      this.$ipcRenderer.send('getBTCXpub',this.userPath)
+      this.$ipcRenderer.send('getBTCXpub', this.userPath)
       this.$ipcRenderer.on('getBTCXpub', (result) => {
         const response = result.result
         if (result.isSuccess) {
           if (response !== '' || response !== null) {
-              if (response.search('xpu') !== -1) {
+            if (response.search('xpu') !== -1) {
               this.$sa.track('im_landing_connect$success', { name: 'landingConnectSuccess', to: 'im_homepage' })
               // 跳转到主页
               this.$router.push('/home/welcomeHome')
-                  // this.$router.push('imKeySetting')
+              // this.$router.push('imKeySetting')
             } else {
             // 跳转到创建钱包界面
               this.$router.push('imKeySetting')

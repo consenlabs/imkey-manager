@@ -42,7 +42,7 @@ const winURL = process.env.NODE_ENV === 'development'
 const workerURL = process.env.NODE_ENV === 'development'
   ? 'worker.html'
   : `file://${__dirname}/worker.html`
-const path = require('path')
+// const path = require('path')
 const ApplicationName = pkg.name
 // 托盘对象
 let appTray = null
@@ -123,7 +123,7 @@ function createMainWindow () {
         event.preventDefault()
       }
     } else {
-        app.quit()
+      app.quit()
     }
   })
 
@@ -361,7 +361,6 @@ function crashReport () {
 
   // 渲染进程崩溃事件
   mainWindow.webContents.on('crashed', () => {
-
     const options = {
       type: 'error',
       title: '进程崩溃了',
@@ -407,58 +406,58 @@ function crashReport () {
 /**
  * 协议处理
  */
-function protocalHandler () {
-  const args = []
-  if (!app.isPackaged) {
-    // 如果是开发阶段，需要把我们的脚本的绝对路径加入参数中
-    args.push(path.resolve(process.argv[1]))
-  }
-  // 加一个 `--` 以确保后面的参数不被 Electron 处理
-  args.push('--')
-
-  // 注册协议
-  const PROTOCOL = pkg.name
-  console.log('PROTOCOL:' + PROTOCOL)
-  app.setAsDefaultProtocolClient(PROTOCOL, process.execPath, args)
-
-  // 如果打开协议时，没有其他实例，则当前实例当做主实例，处理参数
-  handleArgv(process.argv)
-
-  // 其他实例启动时，主实例会通过 second-instance 事件接收其他实例的启动参数 `argv`
-  app.on('second-instance', (event, argv) => {
-    // Windows 下通过协议URL启动时，URL会作为参数，所以需要在这个事件里处理
-    if (process.platform === 'win32') {
-      handleArgv(argv)
-    }
-  })
-
-  // macOS 下通过协议URL启动时，主实例会通过 open-url 事件接收这个 URL
-  app.on('open-url', (event, urlStr) => {
-    handleUrl(urlStr)
-  })
-
-  // 处理参数
-  function handleArgv (argv) {
-    const prefix = `${PROTOCOL}:`
-    // 开发阶段，跳过前两个参数（`electron.exe .`）
-    // 打包后，跳过第一个参数（`myapp.exe`）
-    const offset = app.isPackaged ? 1 : 2
-    const url = argv.find((arg, i) => i >= offset && arg.startsWith(prefix))
-    if (url) handleUrl(url)
-  }
-
-  // 解析Url
-  function handleUrl (urlStr) {
-    console.log('urlStr:' + urlStr)
-    // myapp:?a=1&b=2
-    const urlObj = new URL(urlStr)
-    const { searchParams } = urlObj
-    console.log(urlObj.query) // -> a=1&b=2
-    console.log(searchParams.get('a')) // -> 1
-    console.log(searchParams.get('b')) // -> 2
-    // 根据需要做其他事情
-  }
-}
+// function protocalHandler () {
+//   const args = []
+//   if (!app.isPackaged) {
+//     // 如果是开发阶段，需要把我们的脚本的绝对路径加入参数中
+//     args.push(path.resolve(process.argv[1]))
+//   }
+//   // 加一个 `--` 以确保后面的参数不被 Electron 处理
+//   args.push('--')
+//
+//   // 注册协议
+//   const PROTOCOL = pkg.name
+//   console.log('PROTOCOL:' + PROTOCOL)
+//   app.setAsDefaultProtocolClient(PROTOCOL, process.execPath, args)
+//
+//   // 如果打开协议时，没有其他实例，则当前实例当做主实例，处理参数
+//   handleArgv(process.argv)
+//
+//   // 其他实例启动时，主实例会通过 second-instance 事件接收其他实例的启动参数 `argv`
+//   app.on('second-instance', (event, argv) => {
+//     // Windows 下通过协议URL启动时，URL会作为参数，所以需要在这个事件里处理
+//     if (process.platform === 'win32') {
+//       handleArgv(argv)
+//     }
+//   })
+//
+//   // macOS 下通过协议URL启动时，主实例会通过 open-url 事件接收这个 URL
+//   app.on('open-url', (event, urlStr) => {
+//     handleUrl(urlStr)
+//   })
+//
+//   // 处理参数
+//   function handleArgv (argv) {
+//     const prefix = `${PROTOCOL}:`
+//     // 开发阶段，跳过前两个参数（`electron.exe .`）
+//     // 打包后，跳过第一个参数（`myapp.exe`）
+//     const offset = app.isPackaged ? 1 : 2
+//     const url = argv.find((arg, i) => i >= offset && arg.startsWith(prefix))
+//     if (url) handleUrl(url)
+//   }
+//
+//   // 解析Url
+//   function handleUrl (urlStr) {
+//     console.log('urlStr:' + urlStr)
+//     // myapp:?a=1&b=2
+//     const urlObj = new URL(urlStr)
+//     const { searchParams } = urlObj
+//     console.log(urlObj.query) // -> a=1&b=2
+//     console.log(searchParams.get('a')) // -> 1
+//     console.log(searchParams.get('b')) // -> 2
+//     // 根据需要做其他事情
+//   }
+// }
 function sendWindowMessage (targetWindow, message, payload) {
   if (typeof targetWindow === 'undefined') {
     console.log('Target window does not exist')

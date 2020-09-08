@@ -131,7 +131,7 @@ export const m = {
     compound_info: 'Deposit to earn, support USDT, USDC, Dai & 6 more ',
     aave_info: 'Deposit/Lend to earn, support TUSD, USDT & 15 more',
     operating_tutorial_url: 'https://imkey.im/get-started?locale=en-us',
-    update_tip_wait:'After the update, the app will restart. Please be patient'
+    update_tip_wait: 'After the update, the app will restart. Please be patient'
   },
   appStart: {
     imKey_manager: 'imKey Manager',
