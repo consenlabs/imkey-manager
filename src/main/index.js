@@ -104,7 +104,7 @@ function createMainWindow () {
     }
 
   })
-  Menu.setApplicationMenu(null)
+  Menu.setApplicationMenu(Menu.buildFromTemplate([]))
   mainWindow.loadURL(winURL)
   mainWindow.once('ready-to-show', () => {
     mainWindow.show()
@@ -155,23 +155,35 @@ function createTray () {
     // iconMessagePath = `${__static}\\iconMessage.ico`
     // iconTransparentPath = `${__static}\\iconTransparent.ico`
   }
-
+  let locale = app.getLocale()
+  let help = ''
+  let about = ''
+  let quit = ''
+  if(locale !== 'zh-CN'){
+     help = 'Help'
+     about = 'About imKey'
+     quit = 'Quit'
+  }else{
+     help = '帮助'
+     about = '关于imKey'
+     quit = '退出'
+  }
   // 系统托盘右键菜单
   trayMenuTemplate = [
     {
-      label: '帮助',
+      label: help,
       click: function () {
         shell.openExternal('https://support.imkey.im')
       }
     },
     {
-      label: '关于imKey',
+      label: about,
       click: function () {
         shell.openExternal('https://imkey.im')
       }
     },
     {
-      label: '退出',
+      label: quit,
       click: function () {
         trayClose = true
         setTimeout(() => {
