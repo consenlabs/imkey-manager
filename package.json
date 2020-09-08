@@ -1,8 +1,8 @@
 {
-  "name": "imKey-manager",
-  "version": "1.0.0-alpha30",
+  "name": "imKeyManager",
+  "version": "1.0.0-Beta",
   "author": "imkey <weiqiang@imkey.im>",
-  "description": "imKey manager @2020",
+  "description": "imKey Manager @2020",
   "license": "MIT",
   "main": "./dist/electron/main.js",
   "scripts": {
@@ -23,7 +23,8 @@
     "release": "node .electron-vue/build.js && electron-builder"
   },
   "build": {
-    "productName": "imkey manager",
+    "afterSign": "build/notarize.js",
+    "productName": "imKey Manager",
     "appId": "com.imkey.imkey-manager",
     "copyright": "Copyright © 2020 imkey",
     "directories": {
@@ -40,6 +41,7 @@
       "dist/electron/**/*"
     ],
     "dmg": {
+      "sign": false,
       "contents": [
         {
           "x": 410,
@@ -55,6 +57,10 @@
       ]
     },
     "mac": {
+      "hardenedRuntime" : true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
       "icon": "build/icons/icon.icns",
       "extraResources": [
         {
