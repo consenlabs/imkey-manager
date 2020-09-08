@@ -155,18 +155,18 @@ function createTray () {
     // iconMessagePath = `${__static}\\iconMessage.ico`
     // iconTransparentPath = `${__static}\\iconTransparent.ico`
   }
-  let locale = app.getLocale()
+  const locale = app.getLocale()
   let help = ''
   let about = ''
   let quit = ''
-  if(locale !== 'zh-CN'){
-     help = 'Help'
-     about = 'About imKey'
-     quit = 'Quit'
-  }else{
-     help = '帮助'
-     about = '关于imKey'
-     quit = '退出'
+  if (locale !== 'zh-CN') {
+    help = 'Help'
+    about = 'About imKey'
+    quit = 'Quit'
+  } else {
+    help = '帮助'
+    about = '关于imKey'
+    quit = '退出'
   }
   // 系统托盘右键菜单
   trayMenuTemplate = [
