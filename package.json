@@ -23,7 +23,6 @@
     "release": "node .electron-vue/build.js && electron-builder"
   },
   "build": {
-    "afterSign": "build/notarize.js",
     "productName": "imKey Manager",
     "appId": "com.imkey.imkey-manager",
     "copyright": "Copyright © 2020 imkey",
@@ -32,7 +31,7 @@
     },
     "publish": {
       "provider": "generic",
-      "url": "https://files.token.im/downloads/imKeyManager"
+      "url": "https://files.imkey.im/downloads/imKeyManager"
     },
     "releaseInfo": {
       "releaseNotes": "[{id:1,info:\"解决卡死问题\"},{id:2,info:\"优化UI问题\"},{id:3,info:\"修改安装应用时的提示显示问题\"},{id:4,info:\"修改连接设备的问题\"},{id:5,info:\"解决公证的问题\"}]"
@@ -41,7 +40,6 @@
       "dist/electron/**/*"
     ],
     "dmg": {
-      "sign": false,
       "contents": [
         {
           "x": 410,
@@ -57,10 +55,6 @@
       ]
     },
     "mac": {
-      "hardenedRuntime" : true,
-      "gatekeeperAssess": false,
-      "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.plist",
       "icon": "build/icons/icon.icns",
       "extraResources": [
         {
