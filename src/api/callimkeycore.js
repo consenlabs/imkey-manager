@@ -18,7 +18,7 @@ if (process.platform === 'win32') {
   }
 } else if (process.platform === 'darwin') {
   if (process.env.NODE_ENV === 'production') {
-    libraryName = path.resolve(__dirname, 'connector').replace('/Resources/app.asar/dist/electron', '')
+    libraryName = path.resolve(__dirname, 'connector').replace('/app.asar/dist/electron', '')
   } else {
     libraryName = path.resolve('connector')
   }

@@ -2,6 +2,5 @@ test/unit/coverage/**
 test/unit/*.js
 test/e2e/*.js
 src/proto/**
-src/api/devicemanager.js
 src/api/devicemanagerapi.js
 src/api/walletapi.js

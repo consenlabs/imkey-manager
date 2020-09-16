@@ -9,9 +9,9 @@ export default new Vuex.Store({
     message: '',
     activeStatus: '',
     apps: [],
-    updateSuccess: false,
-    oldVersionData: '',
-    newVersionData: '',
+    isCosUpdate: false,
+    cosOldVersionData: '',
+    cosNewVersionData: '',
     buttonTexts: '',
     userPath: ''
   },

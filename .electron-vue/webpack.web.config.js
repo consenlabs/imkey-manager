@@ -15,7 +15,8 @@ const {VueLoaderPlugin} = require('vue-loader')
 let webConfig = {
     devtool: '#cheap-module-eval-source-map',
     entry: {
-        web: path.join(__dirname, '../src/renderer/main.js')
+        web: path.join(__dirname, '../src/renderer/main.js'),
+        worker: path.join(__dirname, '../src/worker/worker.js')
     },
     module: {
         rules: [
@@ -97,6 +98,7 @@ let webConfig = {
         new HtmlWebpackPlugin({
             filename: 'index.html',
             template: path.resolve(__dirname, '../src/index.ejs'),
+            chunks: ['renderer', 'vendor'],
             templateParameters(compilation, assets, options) {
                 return {
                     compilation: compilation,
@@ -118,6 +120,31 @@ let webConfig = {
         }),
         new webpack.DefinePlugin({
             'process.env.IS_WEB': 'true'
+        }),
+        new HtmlWebpackPlugin({
+            filename: 'worker.html',
+            template: path.resolve(__dirname, '../src/worker.ejs'),
+            chunks: ['worker', 'vendor'],
+            minify: {
+                collapseWhitespace: true,
+                removeAttributeQuotes: true,
+                removeComments: true
+            },
+            templateParameters(compilation, assets, options) {
+                return {
+                    compilation: compilation,
+                    webpack: compilation.getStats().toJson(),
+                    webpackConfig: compilation.options,
+                    htmlWebpackPlugin: {
+                        files: assets,
+                        options: options
+                    },
+                    process,
+                };
+            },
+            nodeModules: process.env.NODE_ENV !== 'production'
+                ? path.resolve(__dirname, '../node_modules')
+                : false
         }),
         new webpack.HotModuleReplacementPlugin(),
         new webpack.NoEmitOnErrorsPlugin()

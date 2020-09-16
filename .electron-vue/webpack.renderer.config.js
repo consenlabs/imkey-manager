@@ -20,12 +20,13 @@ const {VueLoaderPlugin} = require('vue-loader')
  * that provide pure *.vue files that need compiling
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/webpack-configurations.html#white-listing-externals
  */
-let whiteListedModules = ['vue']
+let whiteListedModules = ['vue', 'element-ui']
 
 let rendererConfig = {
     devtool: '#cheap-module-eval-source-map',
     entry: {
-        renderer: path.join(__dirname, '../src/renderer/main.js')
+        renderer: path.join(__dirname, '../src/renderer/main.js'),
+        worker: path.join(__dirname, '../src/worker/worker.js')
     },
     externals: [
         ...Object.keys(dependencies || {}).filter(d => !whiteListedModules.includes(d))
@@ -127,6 +128,7 @@ let rendererConfig = {
         new HtmlWebpackPlugin({
             filename: 'index.html',
             template: path.resolve(__dirname, '../src/index.ejs'),
+            chunks: ['renderer', 'vendor'],
             templateParameters(compilation, assets, options) {
                 return {
                     compilation: compilation,
@@ -143,6 +145,31 @@ let rendererConfig = {
                 collapseWhitespace: true,
                 removeAttributeQuotes: true,
                 removeComments: true
+            },
+            nodeModules: process.env.NODE_ENV !== 'production'
+                ? path.resolve(__dirname, '../node_modules')
+                : false
+        }),
+        new HtmlWebpackPlugin({
+            filename: 'worker.html',
+            template: path.resolve(__dirname, '../src/worker.ejs'),
+            chunks: ['worker', 'vendor'],
+            minify: {
+                collapseWhitespace: true,
+                removeAttributeQuotes: true,
+                removeComments: true
+            },
+            templateParameters(compilation, assets, options) {
+                return {
+                    compilation: compilation,
+                    webpack: compilation.getStats().toJson(),
+                    webpackConfig: compilation.options,
+                    htmlWebpackPlugin: {
+                        files: assets,
+                        options: options
+                    },
+                    process,
+                };
             },
             nodeModules: process.env.NODE_ENV !== 'production'
                 ? path.resolve(__dirname, '../node_modules')

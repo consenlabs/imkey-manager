@@ -5,6 +5,7 @@ const constants = require('../common/constants')
 const _ = require('lodash')
 const crypto = require('./crypto')
 const fs = require('fs')
+const writeFileAtomic = require("write-file-atomic");
 
 export function connect(deviceModelName) {
     const request = new devicePb.DeviceConnectReq()
@@ -185,17 +186,26 @@ export function checkUpdateAppList() {
         let deleteLoading
         let buttonTexts
         let version
+        let installed
+        let updateLoading
+        let updateDis
         for (let i = 0; i < collections.length; i++) {
             if (collections[i].installedVersion === 'none' || collections[i].installedVersion === null) {
                 installLoading = false
                 installDis = false
+                installed = false
                 deleteDis = true
                 deleteLoading = false
+                updateLoading = false
+                updateDis = true
             } else {
                 installLoading = false
                 installDis = true
+                installed = true
                 deleteDis = false
                 deleteLoading = false
+                updateLoading = false
+                updateDis = true
             }
             if (collections[i].latestVersion === collections[i].installedVersion) {
                 buttonTexts = 'install'
@@ -207,6 +217,13 @@ export function checkUpdateAppList() {
                 } else {
                     buttonTexts = 'update'
                     version = 'version ' + collections[i].installedVersion
+                    updateLoading = false
+                    updateDis = false
+                    installLoading = false
+                    installDis = true
+                    deleteDis = true
+                    deleteLoading = false
+                    installed = false
                 }
             }
             // 过滤imkey Applet BTC Applet 不能删除
@@ -220,6 +237,9 @@ export function checkUpdateAppList() {
                 id: i,
                 installLoading: installLoading,
                 installDis: installDis,
+                installed:installed,
+                updateLoading: updateLoading,
+                updateDis: updateDis,
                 deleteDis: deleteDis,
                 deleteLoading: deleteLoading,
                 icon: collections[i].appLogo,
@@ -324,6 +344,7 @@ export function deviceBindCheck(filePath) {
 }
 
 export function deviceBindAcquire(bindCode) {
+    console.log("bindCode:"+bindCode)
     return bindAcquire(bindCode)
 }
 
@@ -347,15 +368,16 @@ export function importBindCode(bindCode) {
         const bindCodePath = response.result + "bindCode.json"
         //加密绑定码
         const enBindCode ={
-            bindCode:crypto.encryptData(bindCode, process.env.bindCode_encryptionKey)
+            bindCode:crypto.encryptData(bindCode.toUpperCase(), process.env.bindCode_encryptionKey)
         }
         // fs.writeFile  写入文件（会覆盖之前的内容）（文件不存在就创建）  utf8参数可以省略
         try {
-            fs.writeFileSync(bindCodePath, JSON.stringify(enBindCode), 'utf8')
-            return {
-                isSuccess: true,
-            }
+            writeFileAtomic(bindCodePath, JSON.stringify(enBindCode))
+                return {
+                    isSuccess: true,
+                }
         } catch (error) {
+            console.log(error)
             return {
                 isSuccess: false,
                 result: error
@@ -379,6 +401,7 @@ export function exportBindCode() {
                 result: crypto.decryptData(jsonObj.bindCode, process.env.bindCode_encryptionKey)
             }
         } catch (error) {
+            console.log(error)
             return {
                 isSuccess: false,
                 result: error
@@ -387,7 +410,6 @@ export function exportBindCode() {
     }
 
 }
-
 // module.exports = {
 //     connect,
 //     getSeid,
