@@ -1,16 +1,20 @@
+import {api} from "./apirouter";
+
 const apiPb = require('../proto/api_pb')
+const commonPb = require('../proto/common_pb')
 const btcPb = require('../proto/btc_pb')
 const ethPb = require('../proto/eth_pb')
 const eosPb = require('../proto/eos_pb')
 const cosmosPb = require('../proto/cosmos_pb')
+const filecoinPb = require('../proto/filecoin_pb')
 const callImKeyCore = require('./callimkeycore')
 const constants = require('../common/constants')
 const path = require('../common/path')
 
-function btcSignTransactionCallImKeyApi (json, method_) {
+function btcSignTransactionCallImKeyApi (json) {
   let utxos = []
   utxos = json.utxo
-  const btcTxReq = new btcPb.BtcTxReq()
+  const btcTxInput = new btcPb.BtcTxInput()
   for (let i = 0; i < utxos.length; i++) {
     const utxo = new btcPb.Utxo()
     const utxoObj = utxos[i]
@@ -21,113 +25,68 @@ function btcSignTransactionCallImKeyApi (json, method_) {
     utxo.setScriptPubkey(utxoObj.scriptPubkey)
     utxo.setDerivedPath(utxoObj.derivedPath)
     utxo.setSequence(utxoObj.sequence)
-    btcTxReq.addUnspents(utxo)
+    btcTxInput.addUnspents(utxo)
   }
-  btcTxReq.setTo(json.to)
-  btcTxReq.setAmount(json.amount)
-  btcTxReq.setFee(json.fee)
+  const btcTxExtra = new btcPb.BtcTxExtra()
+  if (typeof (json.extra) === 'undefined') {
+  }else{
+    btcTxExtra.setOpreturn(json.extra.opreturn)
+    btcTxExtra.setPropertyid(json.extra.propertyId)
+    btcTxExtra.setFeemode(json.extra.feeMode)
+    btcTxInput.setExtra(btcTxExtra)
+  }
+  btcTxInput.setTo(json.to)
+  btcTxInput.setAmount(json.amount)
+  btcTxInput.setFee(json.fee)
+  if (typeof (json.protocol) === 'undefined') {
+  } else {
+    if (json.protocol !== '' || json.protocol !== null) {
+      btcTxInput.setProtocol(json.protocol)
+    }
+  }
+  if (typeof (json.segWit) === 'undefined') {
+  } else {
+    if (json.segWit !== '' || json.segWit !== null) {
+      btcTxInput.setSegwit(json.segWit)
+    }
+  }
+
   if (typeof (json.changeAddressIndex) === 'undefined') {
   } else {
     if (json.changeAddressIndex !== '' || json.changeAddressIndex !== null) {
-      btcTxReq.setChangeAddressIndex(json.changeAddressIndex)
+      btcTxInput.setChangeAddressIndex(json.changeAddressIndex)
     }
   }
-  if (typeof (json.extraData) === 'undefined') {
+  const btcTxReqBytes = btcTxInput.serializeBinary()
+  const inputAny = new proto.google.protobuf.Any()
+  inputAny.setValue(btcTxReqBytes)
+  const signParam = new commonPb.SignParam()
+  signParam.setChaintype('BITCOIN')
+  signParam.setPath(json.path)
+  signParam.setNetwork(json.network)
+  signParam.setInput(inputAny)
+  if (typeof (json.preview) === 'undefined') {
 
-  } else {
-    if (json.extraData !== '' || json.extraData !== null) {
-      btcTxReq.setExtraData(Buffer.from(json.extraData, 'hex'))
-    }
+  }else{
+    signParam.setPayment(json.preview.payment)
+    signParam.setReceiver(json.preview.receiver)
+    signParam.setSender(json.preview.sender)
+    signParam.setFee(json.preview.fee)
   }
-  if (typeof (json.propertyId) === 'undefined') {
-
-  } else {
-    if (json.propertyId !== '' || json.propertyId !== null) {
-      btcTxReq.setPropertyId(json.propertyId)
-    }
-  }
-  btcTxReq.setNetwork(json.network)
-  btcTxReq.setPathPrefix(json.pathPrefix)
-  const btcTxReqBytes = btcTxReq.serializeBinary()
-  const any = new proto.google.protobuf.Any()
-  any.setValue(btcTxReqBytes)
+  const signParamBytes = signParam.serializeBinary()
+  const signParamAny = new proto.google.protobuf.Any()
+  signParamAny.setValue(signParamBytes)
   const imKeyAction = new apiPb.ImkeyAction()
-  imKeyAction.setMethod(method_)
-  imKeyAction.setParam(any)
+  imKeyAction.setMethod('sign_tx')
+  imKeyAction.setParam(signParamAny)
   const imKeyActionBytes = imKeyAction.serializeBinary()
   const resBuffer = callImKeyCore.callImKeyApi(bytes2HexStr(imKeyActionBytes))
   const error = callImKeyCore.getLastErrorMessage()
   if (error === '' || error === null) {
-    const response = new btcPb.BtcTxRes.deserializeBinary(hexStr2Bytes(resBuffer))
+    const response = new btcPb.BtcTxOutput.deserializeBinary(hexStr2Bytes(resBuffer))
     return {
       isSuccess: true,
-      result: response
-    }
-  } else {
-    const errorResponse = new apiPb.ErrorResponse.deserializeBinary(hexStr2Bytes(error))
-    return {
-      isSuccess: false,
-      result: errorResponse.getError()
-    }
-  }
-}
-
-function btcSegWitSignTransactionCallImKeyApi (json, method_) {
-  let utxos = []
-  utxos = json.utxo
-  const btcSegwitTxReq = new btcPb.BtcSegwitTxReq()
-  for (let i = 0; i < utxos.length; i++) {
-    const utxo = new btcPb.Utxo()
-    const utxoObj = utxos[i]
-    utxo.setTxHash(utxoObj.txHash)
-    utxo.setVout(utxoObj.vout)
-    utxo.setAmount(utxoObj.amount)
-    utxo.setAddress(utxoObj.address)
-    utxo.setScriptPubkey(utxoObj.scriptPubkey)
-    utxo.setDerivedPath(utxoObj.derivedPath)
-    utxo.setSequence(utxoObj.sequence)
-    btcSegwitTxReq.addUnspents(utxo)
-  }
-  btcSegwitTxReq.setTo(json.to)
-  btcSegwitTxReq.setAmount(json.amount)
-  btcSegwitTxReq.setFee(json.fee)
-  if (typeof (json.changeAddressIndex) === 'undefined') {
-
-  } else {
-    if (json.changeAddressIndex !== '' || json.changeAddressIndex !== null) {
-      btcSegwitTxReq.setChangeAddressIndex(json.changeAddressIndex)
-    }
-  }
-  if (typeof (json.extraData) === 'undefined') {
-
-  } else {
-    if (json.extraData !== '' || json.extraData !== null) {
-      btcSegwitTxReq.setExtraData(Buffer.from(json.extraData, 'hex'))
-    }
-  }
-  if (typeof (json.propertyId) === 'undefined') {
-
-  } else {
-    if (json.propertyId !== '' || json.propertyId !== null) {
-      btcSegwitTxReq.setPropertyId(json.propertyId)
-    }
-  }
-  btcSegwitTxReq.setNetwork(json.network)
-  btcSegwitTxReq.setPathPrefix(json.pathPrefix)
-  const btcSegwitTxReqBytes = btcSegwitTxReq.serializeBinary()
-  const any = new proto.google.protobuf.Any()
-  any.setValue(btcSegwitTxReqBytes)
-  const imKeyAction = new apiPb.ImkeyAction()
-  imKeyAction.setMethod(method_)
-  imKeyAction.setParam(any)
-  const imKeyActionBytes = imKeyAction.serializeBinary()
-  const resBuffer = callImKeyCore.callImKeyApi(bytes2HexStr(imKeyActionBytes))
-  const error = callImKeyCore.getLastErrorMessage()
-  if (error === '' || error === null) {
-    const response = new btcPb.BtcSegwitTxRes.deserializeBinary(hexStr2Bytes(resBuffer))
-    return {
-      isSuccess: true,
-      result: response
+      result: response.toObject()
     }
   } else {
     const errorResponse = new apiPb.ErrorResponse.deserializeBinary(hexStr2Bytes(error))
@@ -141,33 +100,41 @@ function btcSegWitSignTransactionCallImKeyApi (json, method_) {
 function ethSignTransactionCallImKeyApi (json) {
   const transaction = json.transaction
   const preview = json.preview
-  const ethTxReq = new ethPb.EthTxReq()
-  ethTxReq.setNonce(transaction.nonce.toString())
-  ethTxReq.setGasPrice(transaction.gasPrice.toString())
-  ethTxReq.setGasLimit(transaction.gasLimit.toString())
-  ethTxReq.setTo(transaction.to)
-  ethTxReq.setValue(transaction.value.toString())
-  ethTxReq.setData(transaction.data)
-  ethTxReq.setChainId(transaction.chainId.toString())
-  ethTxReq.setPayment(preview.payment)
-  ethTxReq.setReceiver(preview.receiver)
-  ethTxReq.setSender(preview.sender)
-  ethTxReq.setFee(preview.fee)
-  ethTxReq.setPath(path.ETH_LEDGER)
-  const ethTxReqBytes = ethTxReq.serializeBinary()
-  const any = new proto.google.protobuf.Any()
-  any.setValue(ethTxReqBytes)
+  const ethTxInput = new ethPb.EthTxInput()
+  ethTxInput.setNonce(transaction.nonce.toString())
+  ethTxInput.setGasPrice(transaction.gasPrice.toString())
+  ethTxInput.setGasLimit(transaction.gasLimit.toString())
+  ethTxInput.setTo(transaction.to)
+  ethTxInput.setValue(transaction.value.toString())
+  ethTxInput.setData(transaction.data)
+  ethTxInput.setChainId(transaction.chainId.toString())
+  const ethTxInputBytes = ethTxInput.serializeBinary()
+  const ethTxInputAny = new proto.google.protobuf.Any()
+  ethTxInputAny.setValue(ethTxInputBytes)
+
+  const signParam = new commonPb.SignParam()
+  signParam.setChaintype('ETHEREUM')
+  signParam.setPath(transaction.path)
+  signParam.setInput(ethTxInputAny)
+  signParam.setPayment(preview.payment)
+  signParam.setReceiver(preview.receiver)
+  signParam.setSender(preview.sender)
+  signParam.setFee(preview.fee)
+  const signParamBytes = signParam.serializeBinary()
+  const signParamAny = new proto.google.protobuf.Any()
+  signParamAny.setValue(signParamBytes)
+
   const imKeyAction = new apiPb.ImkeyAction()
-  imKeyAction.setMethod('eth_tx_sign')
-  imKeyAction.setParam(any)
+  imKeyAction.setMethod('sign_tx')
+  imKeyAction.setParam(signParamAny)
   const imKeyActionBytes = imKeyAction.serializeBinary()
   const resBuffer = callImKeyCore.callImKeyApi(bytes2HexStr(imKeyActionBytes))
   const error = callImKeyCore.getLastErrorMessage()
   if (error === '' || error === null) {
-    const response = new ethPb.EthTxRes.deserializeBinary(hexStr2Bytes(resBuffer))
+    const response = new ethPb.EthTxOutput.deserializeBinary(hexStr2Bytes(resBuffer))
     return {
       isSuccess: true,
-      result: response
+      result: response.toObject()
     }
   } else {
     const errorResponse = new apiPb.ErrorResponse.deserializeBinary(hexStr2Bytes(error))
@@ -179,22 +146,31 @@ function ethSignTransactionCallImKeyApi (json) {
 }
 
 function ethSignMessageCallImKeyApi (json) {
-  const ethMessageSignReq = new ethPb.EthMessageSignReq()
-  ethMessageSignReq.setPath(json.path)
-  ethMessageSignReq.setMessage(json.data)
-  ethMessageSignReq.setSender(json.sender)
-  const ethMessageSignReqBytes = ethMessageSignReq.serializeBinary()
+  const ethMessageInput = new ethPb.EthMessageInput()
+  ethMessageInput.setMessage(json.data)
+  ethMessageInput.setIspersonalsign(json.isPersonalSign)
+  const ethMessageInputBytes = ethMessageInput.serializeBinary()
 
-  const any = new proto.google.protobuf.Any()
-  any.setValue(ethMessageSignReqBytes)
+  const ethMessageInputAny = new proto.google.protobuf.Any()
+  ethMessageInputAny.setValue(ethMessageInputBytes)
+
+  const signParam = new commonPb.SignParam()
+  signParam.setChaintype('ETHEREUM')
+  signParam.setPath(json.path)
+  signParam.setInput(ethMessageInputAny)
+  signParam.setSender(json.sender)
+  const signParamBytes = signParam.serializeBinary()
+  const signParamAny = new proto.google.protobuf.Any()
+  signParamAny.setValue(signParamBytes)
+
   const imKeyAction = new apiPb.ImkeyAction()
-  imKeyAction.setMethod('eth_message_sign')
-  imKeyAction.setParam(any)
+  imKeyAction.setMethod('sign_message')
+  imKeyAction.setParam(signParamAny)
   const imKeyActionBytes = imKeyAction.serializeBinary()
   const resBuffer = callImKeyCore.callImKeyApi(bytes2HexStr(imKeyActionBytes))
   const error = callImKeyCore.getLastErrorMessage()
   if (error === '' || error === null) {
-    const response = new ethPb.EthMessageSignRes.deserializeBinary(hexStr2Bytes(resBuffer))
+    const response = new ethPb.EthMessageOutput.deserializeBinary(hexStr2Bytes(resBuffer))
     return {
       isSuccess: true,
       result: response
@@ -209,22 +185,30 @@ function ethSignMessageCallImKeyApi (json) {
 }
 
 function eosSignMessageCallImKeyApi (json) {
-  const eosMessageSignReq = new eosPb.EosMessageSignReq()
-  eosMessageSignReq.setPath(json.path)
-  eosMessageSignReq.setData(json.data)
-  eosMessageSignReq.setIsHex(json.isHex)
-  eosMessageSignReq.setPubkey(json.publicKey)
-  const eosMessageSignReqBytes = eosMessageSignReq.serializeBinary()
-  const any = new proto.google.protobuf.Any()
-  any.setValue(eosMessageSignReqBytes)
+  const eosMessageInput = new eosPb.EosMessageInput()
+  eosMessageInput.setData(json.data)
+  eosMessageInput.setIshex(json.isHex)
+  eosMessageInput.setPubkey(json.publicKey)
+  const eosMessageInputBytes = eosMessageInput.serializeBinary()
+  const eosMessageInputAny = new proto.google.protobuf.Any()
+  eosMessageInputAny.setValue(eosMessageInputBytes)
+
+  const signParam = new commonPb.SignParam()
+  signParam.setChaintype('EOS')
+  signParam.setPath(json.path)
+  signParam.setInput(eosMessageInputAny)
+  const signParamBytes = signParam.serializeBinary()
+  const signParamAny = new proto.google.protobuf.Any()
+  signParamAny.setValue(signParamBytes)
+
   const imKeyAction = new apiPb.ImkeyAction()
-  imKeyAction.setMethod('eos_message_sign')
-  imKeyAction.setParam(any)
+  imKeyAction.setMethod('sign_message')
+  imKeyAction.setParam(signParamAny)
   const imKeyActionBytes = imKeyAction.serializeBinary()
   const resBuffer = callImKeyCore.callImKeyApi(bytes2HexStr(imKeyActionBytes))
   const error = callImKeyCore.getLastErrorMessage()
   if (error === '' || error === null) {
-    const response = new eosPb.EosMessageSignRes.deserializeBinary(hexStr2Bytes(resBuffer))
+    const response = new eosPb.EosMessageOutput.deserializeBinary(hexStr2Bytes(resBuffer))
     return {
       isSuccess: true,
       result: response
@@ -245,27 +229,38 @@ function eosSignTransactionCallImKeyApi (json) {
   const preview = json.preview
   const eosSignData = new eosPb.EosSignData()
   for (let i = 0; i < publicKeys.length; i++) {
-    eosSignData.addPubKeys(publicKeys[i].publicKey)
+    eosSignData.addPublickeys(publicKeys[i].publicKey)
   }
-  eosSignData.setTxData(txData)
-  eosSignData.setChainId(chainId)
-  eosSignData.setTo(preview.to)
-  eosSignData.setFrom(preview.from)
+  eosSignData.setTxhex(txData)
+  eosSignData.setChainid(chainId)
+  eosSignData.setReceiver(preview.receiver)
+  eosSignData.setSender(preview.sender)
   eosSignData.setPayment(preview.payment)
-  const eosTxReq = new eosPb.EosTxReq()
-  eosTxReq.setPath(json.path)
-  eosTxReq.addSignDatas(eosSignData)
-  const eosTxReqbytes = eosTxReq.serializeBinary()
-  const any = new proto.google.protobuf.Any()
-  any.setValue(eosTxReqbytes)
+  const eosTxInput = new eosPb.EosTxInput()
+  eosTxInput.addTransactions(eosSignData)
+
+
+  const eosTxInputBytes = eosTxInput.serializeBinary()
+  const eosTxInputAny = new proto.google.protobuf.Any()
+  eosTxInputAny.setValue(eosTxInputBytes)
+  const signParam = new commonPb.SignParam()
+  signParam.setChaintype('EOS')
+  signParam.setPath(json.path)
+  signParam.setInput(eosTxInputAny)
+  signParam.setPayment(preview.payment)
+  signParam.setReceiver(preview.receiver)
+  signParam.setSender(preview.sender)
+  const signParamBytes = signParam.serializeBinary()
+  const signParamAny = new proto.google.protobuf.Any()
+  signParamAny.setValue(signParamBytes)
   const imKeyAction = new apiPb.ImkeyAction()
-  imKeyAction.setMethod('eos_tx_sign')
-  imKeyAction.setParam(any)
+  imKeyAction.setMethod('sign_tx')
+  imKeyAction.setParam(signParamAny)
   const imKeyActionBytes = imKeyAction.serializeBinary()
   const resBuffer = callImKeyCore.callImKeyApi(bytes2HexStr(imKeyActionBytes))
   const error = callImKeyCore.getLastErrorMessage()
   if (error === '' || error === null) {
-    const response = new eosPb.EosTxRes.deserializeBinary(hexStr2Bytes(resBuffer))
+    const response = new eosPb.EosTxOutput.deserializeBinary(hexStr2Bytes(resBuffer))
     const list = response.getTransMultiSignsList()
     const resultList = []
     for (let i = 0; i < list.length; i++) {
@@ -286,7 +281,6 @@ function eosSignTransactionCallImKeyApi (json) {
 
 function cosmosSignTransactionCallImKeyApi (json) {
   const stdFee = new cosmosPb.StdFee()
-  const signData = new cosmosPb.SignData()
   const amountList = json.fee.amount
   for (let i = 0; i < amountList.length; i++) {
     const coin = new cosmosPb.Coin()
@@ -295,33 +289,87 @@ function cosmosSignTransactionCallImKeyApi (json) {
     stdFee.addAmount(coin)
   }
   stdFee.setGas(json.fee.gas)
-  signData.setMsgs(JSON.stringify(json.msg))
-  signData.setFee(stdFee)
-  signData.setAccountNumber(json.accountNumber)
-  signData.setChainId(json.chainId)
-  signData.setMemo(json.memo)
-  signData.setSequence(json.sequence)
-  const cosmosTxReq = new cosmosPb.CosmosTxReq()
-  cosmosTxReq.setPath(json.path)
-  cosmosTxReq.setSigndata(signData)
-  cosmosTxReq.setPaymentDis(json.preview.paymentDis)
-  cosmosTxReq.setToDis(json.preview.toDis)
-  cosmosTxReq.setFromDis(json.preview.fromDis)
-  cosmosTxReq.setFeeDis(json.preview.feeDis)
-  const cosmosTxReqBytes = cosmosTxReq.serializeBinary()
-  const any = new proto.google.protobuf.Any()
-  any.setValue(cosmosTxReqBytes)
+  const cosmosTxInput = new cosmosPb.CosmosTxInput()
+  cosmosTxInput.setMsgs(JSON.stringify(json.msg))
+  cosmosTxInput.setFee(stdFee)
+  cosmosTxInput.setAccountNumber(json.accountNumber)
+  cosmosTxInput.setChainId(json.chainId)
+  cosmosTxInput.setMemo(json.memo)
+  cosmosTxInput.setSequence(json.sequence)
+  const cosmosTxInputBytes = cosmosTxInput.serializeBinary()
+  const cosmosTxInputAny = new proto.google.protobuf.Any()
+  cosmosTxInputAny.setValue(cosmosTxInputBytes)
+
+
+  const signParam = new commonPb.SignParam()
+  signParam.setChaintype('COSMOS')
+  signParam.setPath(json.path)
+  signParam.setInput(cosmosTxInputAny)
+  signParam.setPayment(json.preview.payment)
+  signParam.setReceiver(json.preview.receiver)
+  signParam.setSender(json.preview.sender)
+  signParam.setFee(json.preview.fee)
+  const signParamBytes = signParam.serializeBinary()
+  const signParamAny = new proto.google.protobuf.Any()
+  signParamAny.setValue(signParamBytes)
+
   const imKeyAction = new apiPb.ImkeyAction()
-  imKeyAction.setMethod('cosmos_tx_sign')
-  imKeyAction.setParam(any)
+  imKeyAction.setMethod('sign_tx')
+  imKeyAction.setParam(signParamAny)
   const imKeyActionBytes = imKeyAction.serializeBinary()
   const resBuffer = callImKeyCore.callImKeyApi(bytes2HexStr(imKeyActionBytes))
   const error = callImKeyCore.getLastErrorMessage()
   if (error === '' || error === null) {
-    const response = new cosmosPb.CosmosTxRes.deserializeBinary(hexStr2Bytes(resBuffer))
+    const response = new cosmosPb.CosmosTxOutput.deserializeBinary(hexStr2Bytes(resBuffer))
     return {
       isSuccess: true,
-      result: response
+      result: response.toObject()
+    }
+  } else {
+    const errorResponse = new apiPb.ErrorResponse.deserializeBinary(hexStr2Bytes(error))
+    return {
+      isSuccess: false,
+      result: errorResponse.getError()
+    }
+  }
+}
+
+function filecoinSignTransactionCallImKeyApi (json) {
+  const filecoinTxInput = new filecoinPb.FilecoinTxInput()
+  filecoinTxInput.setTo(json.to)
+  filecoinTxInput.setFrom(json.from)
+  filecoinTxInput.setNonce(json.nonce)
+  filecoinTxInput.setValue(json.value)
+  filecoinTxInput.setGaslimit(json.gasLimit)
+  filecoinTxInput.setGasfeecap(json.gasFeeCap)
+  filecoinTxInput.setGaspremium(json.gasPremium)
+  filecoinTxInput.setMethod(json.method)
+  filecoinTxInput.setParams(json.params)
+  const filecoinTxInputBytes = filecoinTxInput.serializeBinary()
+  const filecoinTxInputAny = new proto.google.protobuf.Any()
+  filecoinTxInputAny.setValue(filecoinTxInputBytes)
+  const signParam = new commonPb.SignParam()
+  signParam.setChaintype('FILECOIN')
+  signParam.setPath(json.path)
+  signParam.setInput(filecoinTxInputAny)
+  signParam.setPayment(json.preview.payment)
+  signParam.setReceiver(json.preview.receiver)
+  signParam.setSender(json.preview.sender)
+  signParam.setFee(json.preview.fee)
+  const signParamBytes = signParam.serializeBinary()
+  const signParamAny = new proto.google.protobuf.Any()
+  signParamAny.setValue(signParamBytes)
+  const imKeyAction = new apiPb.ImkeyAction()
+  imKeyAction.setMethod('sign_tx')
+  imKeyAction.setParam(signParamAny)
+  const imKeyActionBytes = imKeyAction.serializeBinary()
+  const resBuffer = callImKeyCore.callImKeyApi(bytes2HexStr(imKeyActionBytes))
+  const error = callImKeyCore.getLastErrorMessage()
+  if (error === '' || error === null) {
+    const response = new filecoinPb.FilecoinTxOutput.deserializeBinary(hexStr2Bytes(resBuffer))
+    return {
+      isSuccess: true,
+      result: response.toObject()
     }
   } else {
     const errorResponse = new apiPb.ErrorResponse.deserializeBinary(hexStr2Bytes(error))
@@ -360,64 +408,13 @@ function btcXpub (path, netWork) {
   }
 }
 
-function btcAddress (path, netWork, method_) {
-  const btcAddressReq = new btcPb.BtcAddressReq()
-  btcAddressReq.setPath(path)
-  btcAddressReq.setNetwork(netWork)
-  const btcAddressReqBytes = btcAddressReq.serializeBinary()
-  const any = new proto.google.protobuf.Any()
-  any.setValue(btcAddressReqBytes)
-  const imKeyAction = new apiPb.ImkeyAction()
-  imKeyAction.setMethod(method_)
-  imKeyAction.setParam(any)
-  const imKeyActionBytes = imKeyAction.serializeBinary()
-  const resBuffer = callImKeyCore.callImKeyApi(bytes2HexStr(imKeyActionBytes))
-  const error = callImKeyCore.getLastErrorMessage()
-  if (error === '' || error === null) {
-    const response = new btcPb.BtcAddressRes.deserializeBinary(hexStr2Bytes(resBuffer))
-    return {
-      isSuccess: true,
-      result: response.getAddress()
-    }
-  } else {
-    const errorResponse = new apiPb.ErrorResponse.deserializeBinary(hexStr2Bytes(error))
-    return {
-      isSuccess: false,
-      result: errorResponse.getError()
-    }
-  }
-}
 
-function ethAddress (path, method_) {
-  const ethAddressReq = new ethPb.EthAddressReq()
-  ethAddressReq.setPath(path)
-  const ethAddressReqBytes = ethAddressReq.serializeBinary()
-  const any = new proto.google.protobuf.Any()
-  any.setValue(ethAddressReqBytes)
-  const imKeyAction = new apiPb.ImkeyAction()
-  imKeyAction.setMethod(method_)
-  imKeyAction.setParam(any)
-  const imKeyActionBytes = imKeyAction.serializeBinary()
-  const resBuffer = callImKeyCore.callImKeyApi(bytes2HexStr(imKeyActionBytes))
-  const error = callImKeyCore.getLastErrorMessage()
-  if (error === '' || error === null) {
-    const response = new ethPb.EthAddressRes.deserializeBinary(hexStr2Bytes(resBuffer))
-    return {
-      isSuccess: true,
-      result: response.getAddress()
-    }
-  } else {
-    const errorResponse = new apiPb.ErrorResponse.deserializeBinary(hexStr2Bytes(error))
-    return {
-      isSuccess: false,
-      result: errorResponse.getError()
-    }
-  }
-}
-
-function eosPubkey (path, method_) {
-  const eosPubkeyReq = new eosPb.EosPubkeyReq()
+function eosPubkey (chainType,path, network,isSegWit,method_) {
+  const eosPubkeyReq = new apiPb.PubKeyParam()
+  eosPubkeyReq.setChaintype(chainType)
   eosPubkeyReq.setPath(path)
+  eosPubkeyReq.setNetwork(network)
+  eosPubkeyReq.setIssegwit(isSegWit)
   const eosPubkeyReqBytes = eosPubkeyReq.serializeBinary()
   const any = new proto.google.protobuf.Any()
   any.setValue(eosPubkeyReqBytes)
@@ -428,11 +425,11 @@ function eosPubkey (path, method_) {
   const resBuffer = callImKeyCore.callImKeyApi(bytes2HexStr(imKeyActionBytes))
   const error = callImKeyCore.getLastErrorMessage()
   if (error === '' || error === null) {
-    const response = new eosPb.EosPubkeyRes.deserializeBinary(hexStr2Bytes(resBuffer))
+    const response = new apiPb.EosWallet.deserializeBinary(hexStr2Bytes(resBuffer))
     return {
       isSuccess: true,
-      result: response.getPubkey()
-    }
+      result: response.toObject()
+      }
   } else {
     const errorResponse = new apiPb.ErrorResponse.deserializeBinary(hexStr2Bytes(error))
     return {
@@ -442,12 +439,15 @@ function eosPubkey (path, method_) {
   }
 }
 
-function cosmosAddress (path, method_) {
-  const cosmosAddressReq = new cosmosPb.CosmosAddressReq()
-  cosmosAddressReq.setPath(path)
-  const cosmosAddressReqBytes = cosmosAddressReq.serializeBinary()
+function address (chainType,path, network,isSegWit,method_) {
+  const AddressReq = new apiPb.AddressParam()
+  AddressReq.setChaintype(chainType)
+  AddressReq.setPath(path)
+  AddressReq.setNetwork(network)
+  AddressReq.setIssegwit(isSegWit)
+  const AddressReqBytes = AddressReq.serializeBinary()
   const any = new proto.google.protobuf.Any()
-  any.setValue(cosmosAddressReqBytes)
+  any.setValue(AddressReqBytes)
   const imKeyAction = new apiPb.ImkeyAction()
   imKeyAction.setMethod(method_)
   imKeyAction.setParam(any)
@@ -455,11 +455,20 @@ function cosmosAddress (path, method_) {
   const resBuffer = callImKeyCore.callImKeyApi(bytes2HexStr(imKeyActionBytes))
   const error = callImKeyCore.getLastErrorMessage()
   if (error === '' || error === null) {
-    const response = new cosmosPb.CosmosAddressRes.deserializeBinary(hexStr2Bytes(resBuffer))
-    return {
-      isSuccess: true,
-      result: response.getAddress()
+    if(chainType === 'BITCOIN' && method_ === 'get_address'){
+      const response = new apiPb.BitcoinWallet.deserializeBinary(hexStr2Bytes(resBuffer))
+      return {
+        isSuccess: true,
+        result: response.toObject()
+      }
+    }else{
+      const response = new apiPb.AddressResult.deserializeBinary(hexStr2Bytes(resBuffer))
+      return {
+        isSuccess: true,
+        result: response.toObject()
+      }
     }
+
   } else {
     const errorResponse = new apiPb.ErrorResponse.deserializeBinary(hexStr2Bytes(error))
     return {
@@ -478,59 +487,67 @@ export function getBTCXpubApi (json) {
 }
 
 export function getBTCAddress (json) {
-  return btcAddress(json.path, json.network, 'btc_get_address')
+  return address('BITCOIN',json.path, json.network, false,'get_address')
 }
 
 export function registerBTCAddress (json) {
-  return btcAddress(json.path, json.network, 'btc_register_address')
+  return address('BITCOIN',json.path, json.network, false, 'register_address')
 }
 
 export function getBTCSegWitAddress (json) {
-  return btcAddress(json.path, json.network, 'btc_get_setwit_address')
+  return address('BITCOIN',json.path, json.network, true,'get_address')
 }
 
 export function registerBTCSegWitAddress (json) {
-  return btcAddress(json.path, json.network, 'btc_register_segwit_address')
+  return address('BITCOIN',json.path, json.network, true, 'register_address')
 }
 
 export function getCOSMOSAddress (json) {
-  return cosmosAddress(json.path, 'cosmos_get_address')
+  return address('COSMOS',json.path, '', false,'get_address')
 }
 
 export function registerCOSMOSAddress (json) {
-  return cosmosAddress(json.path, 'cosmos_register_address')
+  return address('COSMOS',json.path, '', false, 'register_address')
 }
 
 export function getEOSPubKey (json) {
-  return eosPubkey(json.path, 'eos_get_pubkey')
+  return eosPubkey('EOS',json.path, '', false,'get_pub_key')
 }
 
 export function registerEOSPubKey (json) {
-  return eosPubkey(json.path, 'eos_register_pubkey')
+  return eosPubkey('EOS',json.path, '', false,'register_pub_key')
 }
 
 export function getETHAddress (json) {
-  return ethAddress(json.path, 'eth_get_address')
+  return address('ETHEREUM',json.path, '', false,'get_address')
 }
 
 export function registerETHAddress (json) {
-  return ethAddress(json.path, 'eth_register_address')
+  return address('ETHEREUM',json.path, '', false,'register_address')
+}
+
+export function getFILECOINAddress (json) {
+  return address('FILECOIN',json.path, '', false,'get_address')
+}
+
+export function registerFILECOINAddress (json) {
+  return address('FILECOIN',json.path, '', false,'register_address')
 }
 
 export function btcSignTransaction (json) {
-  return btcSignTransactionCallImKeyApi(json, 'btc_tx_sign')
+  return btcSignTransactionCallImKeyApi(json)
 }
 
 export function btcSegWitSignTransaction (json) {
-  return btcSegWitSignTransactionCallImKeyApi(json, 'btc_segwit_tx_sign')
+  return btcSignTransactionCallImKeyApi(json)
 }
 
 export function btcUsdtSignTransaction (json) {
-  return btcSignTransactionCallImKeyApi(json, 'btc_usdt_tx_sign')
+  return btcSignTransactionCallImKeyApi(json)
 }
 
 export function btcUsdtSegWitSignTransaction (json) {
-  return btcSegWitSignTransactionCallImKeyApi(json, 'btc_usdt_segwit_tx_sign')
+  return btcSignTransactionCallImKeyApi(json )
 }
 
 export function ethSignTransaction (json) {
@@ -552,7 +569,9 @@ export function eosSignMessage (json) {
 export function cosmosSignTransaction (json) {
   return cosmosSignTransactionCallImKeyApi(json)
 }
-
+export function filecoinSignTransaction (json) {
+  return filecoinSignTransactionCallImKeyApi(json)
+}
 // /**
 //  *  @desc 二进制数组转字符串
 //  * @param arr

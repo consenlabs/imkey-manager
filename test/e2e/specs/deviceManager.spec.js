@@ -1,6 +1,17 @@
 // const chai = require('chai')
 const deviceManager = require('../../../src/api/devicemanagerapi')
 describe('Api', () => {
+  describe('test initImKeyCore()', () => {
+    it('it should show initImKeyCore() result', (done) => {
+      const response = deviceManager.initImKeyCore()
+      if (response.isSuccess) {
+        expect(response.result).to.eq('success')
+        done()
+      } else {
+        console.error(response.result)
+      }
+    }).timeout(500000)
+  })
   describe('test connect()', () => {
     it('it should show connect() result', (done) => {
       const response = deviceManager.connect()

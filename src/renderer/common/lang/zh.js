@@ -133,7 +133,7 @@ export const m = {
     aave_info: '存/借贷生息，支持 17 个币种',
     operating_tutorial_url: 'https://imkey.im/get-started?locale=zh-cn',
     update_tip_wait: '更新完成后 App 将自动重启，请耐心等待',
-    coming_soon:' 敬请期待 '
+    coming_soon: ' 敬请期待 '
   },
   appStart: {
     imKey_manager: 'imKey Manager',

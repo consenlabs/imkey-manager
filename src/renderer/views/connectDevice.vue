@@ -557,6 +557,15 @@ export default {
         if (result.isSuccess) {
           this.userPath = response
           this.$store.state.userPath = response
+          // 初始化imkey core
+          this.$ipcRenderer.send('initImKeyCore')
+          this.$ipcRenderer.on('initImKeyCore', (result) => {
+            const response = result.result
+            if (result.isSuccess) {
+            } else {
+              this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '初始化imkey core失败：' + response })
+            }
+          })
         } else {
         }
       })

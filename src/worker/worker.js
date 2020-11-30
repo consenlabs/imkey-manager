@@ -8,6 +8,10 @@ ipcRenderer.on('message-from-main', (event, arg) => {
   console.log('arg.data:' + arg.data)
   let response
   try {
+    if (arg.type === 'initImKeyCore') {
+      response = deviceManger.initImKeyCore()
+      handleType = 'initImKeyCore'
+    }
     if (arg.type === 'connectDevice') {
       response = deviceManger.connect()
       handleType = 'connectDevice'
@@ -109,7 +113,7 @@ ipcRenderer.on('message-from-main', (event, arg) => {
             if (coinNameArr[i] === 'BTC') {
               walletApi.registerBTCAddress({
                 network: 'MAINNET',
-                path: "m/44'/0'/0'/0/0"
+                path: "m/44'/0'/0'"
               })
             }
             if (coinNameArr[i] === 'ETH') {
@@ -125,6 +129,11 @@ ipcRenderer.on('message-from-main', (event, arg) => {
             if (coinNameArr[i] === 'COSMOS') {
               walletApi.registerCOSMOSAddress({
                 path: "m/44'/118'/0'/0/0"
+              })
+            }
+            if (coinNameArr[i] === 'FILECOIN') {
+              walletApi.registerFILECOINAddress({
+                path: "m/44'/461'/0'/0/0"
               })
             }
           } else {

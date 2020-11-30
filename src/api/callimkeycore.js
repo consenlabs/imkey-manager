@@ -27,16 +27,16 @@ if (process.platform === 'win32') {
 }
 const lib = ffi.Library(libraryName, {
   // [a, [b，c....]] a是函数出参类型，[b，c]是dll函数的入参类型
-  clear_err: [ref.types.void, [ref.types.void]],
+  imkey_clear_err: [ref.types.void, [ref.types.void]],
   call_imkey_api: ['String', ['String']],
-  get_last_err_message: ['String', [ref.types.void]]
+  imkey_get_last_err_message: ['String', [ref.types.void]]
 })
 
 export function callImKeyApi (protobufStr) {
-  lib.clear_err('')// 清空之前的error
+  lib.imkey_clear_err('')// 清空之前的error
   return lib.call_imkey_api(protobufStr)
 }
 
 export function getLastErrorMessage () {
-  return lib.get_last_err_message('')// 获取错误的信息
+  return lib.imkey_get_last_err_message('')// 获取错误的信息
 }
