@@ -1,8 +1,6 @@
 const walletApi = require('./walletapi')
 const constants = require('../common/constants')
 const deviceManger = require('./devicemanagerapi')
-const electron = require('electron')
-const filePath = (electron.app || electron.remote.app).getPath('userData') + '/'
 
 export function api (reqJson) {
   const jsonrpc = reqJson.jsonrpc
