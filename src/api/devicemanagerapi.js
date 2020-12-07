@@ -304,7 +304,7 @@ export function getFirmwareVersion() {
     if (response.isSuccess) {
         return {
             isSuccess: true,
-            result: response.result.substring(0, 1) + '.' + response.result.substring(1, 2) + '.' + response.result.substring(2)
+            result: response.result
         }
     } else {
         return {
