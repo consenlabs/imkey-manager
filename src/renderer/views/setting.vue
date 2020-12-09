@@ -387,7 +387,7 @@ export default {
       this.$ipcRenderer.send('cosCheckUpdate')
       this.$ipcRenderer.on('cosCheckUpdate', (result) => {
         const response = result.result
-        if (result.isSuccess && response.isUpdateSuccess === true) {
+        if (result.isSuccess) {
           this.cosNewVersionData = response.latestCosVersion
           this.isLatest = response.isLatest
           this.updateType = response.updateType
@@ -683,8 +683,10 @@ export default {
         font-weight: 500;
         font-size: 15px;
         color: #2C2842;
-        margin-bottom: 41px;
+        margin-bottom: 30px;
         margin-top: 11px;
+        margin-left: 2%;
+        margin-right: 2%;
     }
     .alert1  p{
         font-weight: 300;
@@ -695,6 +697,8 @@ export default {
         text-align: center;
         color: #2C2842;
         margin-bottom: 6px;
+        margin-left: 2%;
+        margin-right: 2%;
     }
     .alert2 svg,.alert3 svg{
         margin-top: 34px;
@@ -710,6 +714,8 @@ export default {
         font-size: 13px;
         color: #2C2842;
         margin-top: 6px;
+        margin-left: 2%;
+        margin-right: 2%;
     }
     .alert2 button,.alert3 button,.alert4 button{
         width: 90px;
@@ -718,7 +724,7 @@ export default {
         box-shadow: 0px 2px 20px rgba(137, 101, 172, 0.30772);
         border-radius: 26.5px;
         color: #fff;
-        margin-top: 24px;
+        margin-top: 30px;
     }
     .alert4 .codeBox{
         width: 127px;

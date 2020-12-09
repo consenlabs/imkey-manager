@@ -89,7 +89,7 @@
         </div>
         <!--tip 固件未升级完毕-->
         <div class="tip3 tip" v-if="status==5">
-            <div class="tipBox">
+            <div class="tipBox3">
                 <p><span class="el-icon-warning-outline"></span></p>
                 <h3>{{$t('m.imKeyManager.firmware_update_fail')}}</h3>
                 <p>{{$t('m.imKeyManager.find_firmware_update_fail_continue')}}</p>
@@ -98,7 +98,7 @@
         </div>
         <!--tip 固件升级中-->
         <div class="tip4 tip" v-if="status==6">
-            <div class="tipBox">
+            <div class="tipBox4">
                 <p><span class="fas fa-circle-notch fa-spin"></span></p>
                 <h3>{{$t('m.imKeyManager.imKey_pro_firmware_update_wait')}}</h3>
                 <p>{{$t('m.imKeyManager.imKey_pro_firmware_update_no_disconnect')}}
@@ -681,7 +681,7 @@ export default {
         font-style: normal;
         font-weight: 500;
         font-size: 15px;
-        ine-height: 30px;
+        line-height: 30px;
         color: #2C2842;
     }
 
@@ -692,6 +692,8 @@ export default {
         font-size: 13px;
         line-height: 20px;
         color: #2C2842;
+        margin-left: 2%;
+        margin-right: 2%;
     }
 
     .tipBox button {
@@ -701,13 +703,103 @@ export default {
         width: 90px;
         height: 36px;
         color: #fff;
-        margin-top: 45px;
-
+        margin-top: 30px;
         font-weight: 500;
         font-size: 14px;
         line-height: 32px;
     }
+    .tipBox3 {
+        background: #FAFBFC;
+        border-radius: 12px;
+        width: 400px;
+        height: 217px;
+        position: absolute;
+        top: 45%;
+        left: 50%;
+        margin-left: -240px;
+        margin-top: -140px;
+        text-align: center;
+        padding: 0 44px;
+    }
 
+    .tipBox3 h3 {
+        margin-top: 10px;
+        font-style: normal;
+        font-weight: 500;
+        font-size: 15px;
+        line-height: 30px;
+        color: #2C2842;
+    }
+
+    .tipBox3 p {
+        margin-top: 14px;
+        font-style: normal;
+        font-weight: 300;
+        font-size: 13px;
+        line-height: 20px;
+        color: #2C2842;
+        margin-left: 2%;
+        margin-right: 2%;
+    }
+
+    .tipBox3 button {
+        background: #2E3035;
+        box-shadow: 0px 2px 20px rgba(137, 101, 172, 0.30772);
+        border-radius: 26.5px;
+        width: 90px;
+        height: 36px;
+        color: #fff;
+        margin-top: 20px;
+        font-weight: 500;
+        font-size: 14px;
+        line-height: 32px;
+    }
+    .tipBox4 {
+        background: #FAFBFC;
+        border-radius: 12px;
+        width: 400px;
+        height: 260px;
+        position: absolute;
+        top: 45%;
+        left: 50%;
+        margin-left: -240px;
+        margin-top: -140px;
+        text-align: center;
+        padding: 0 44px;
+    }
+
+    .tipBox4 h3 {
+        margin-top: 40px;
+        font-style: normal;
+        font-weight: 500;
+        font-size: 15px;
+        line-height: 30px;
+        color: #2C2842;
+    }
+
+    .tipBox4 p {
+        margin-top: 14px;
+        font-style: normal;
+        font-weight: 300;
+        font-size: 13px;
+        line-height: 20px;
+        color: #2C2842;
+        margin-left: 2%;
+        margin-right: 2%;
+    }
+
+    .tipBox4 button {
+        background: #2E3035;
+        box-shadow: 0px 2px 20px rgba(137, 101, 172, 0.30772);
+        border-radius: 26.5px;
+        width: 90px;
+        height: 36px;
+        color: #fff;
+        margin-top: 30px;
+        font-weight: 500;
+        font-size: 14px;
+        line-height: 32px;
+    }
     .tip2 h3 {
         font-weight: 500;
         font-size: 15px;
@@ -726,19 +818,7 @@ export default {
         color: #000;
     }
 
-    .tip3 button {
-        background: #2E3035;
-        border-radius: 26.5px;
-        color: #FAFBFC;
-    }
 
-    .tip3 h3 {
-        margin-top: 20px;
-    }
-
-    .tip3 button {
-        margin-top: 26px;
-    }
 
     .tip4 span {
         margin-top: 20px;
