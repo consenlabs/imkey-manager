@@ -303,6 +303,101 @@ export function api (reqJson) {
       }
     }
     return result
+  }else if (method === constants.API_NAME_TRANSACTION_SIGNTX_POLKADOT) {
+    const response = walletApi.dotSignTransaction(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  }else if (method === constants.API_NAME_TRANSACTION_SIGNTX_KUSAMA) {
+    const response = walletApi.ksmSignTransaction(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  }else if (method === constants.API_NAME_TRANSACTION_SIGNTX_TRON) {
+    const response = walletApi.tronSignTransaction(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  }else if (method === constants.API_NAME_TRANSACTION_SIGNMSG_TRON) {
+    const response = walletApi.tronSignMessage(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  }else if (method === constants.API_NAME_TRANSACTION_SIGNTX_XTZ) {
+    const response = walletApi.xtzSignTransaction(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
   } else if (method === constants.API_NAME_GET_BTC_XPUB) {
     const response = walletApi.getBTCXpubApi(params)
     if (!response.isSuccess) {
@@ -535,6 +630,158 @@ export function api (reqJson) {
     return result
   } else if (method === constants.API_NAME_REGISTER_ADDRESS_FILECOIN) {
     const response = walletApi.registerFILECOINAddress(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_GET_ADDRESS_POLKADOT) {
+    const response = walletApi.getDOTAddress(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_REGISTER_ADDRESS_POLKADOT) {
+    const response = walletApi.registerDOTAddress(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_GET_ADDRESS_KUSAMA) {
+    const response = walletApi.getKSMAddress(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_REGISTER_ADDRESS_KUSAMA) {
+    const response = walletApi.registerKSMAddress(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_GET_ADDRESS_TRON) {
+    const response = walletApi.getTRONAddress(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_REGISTER_ADDRESS_TRON) {
+    const response = walletApi.registerTRONAddress(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_GET_ADDRESS_XTZ) {
+    const response = walletApi.getXTZAddress(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_REGISTER_ADDRESS_XTZ) {
+    const response = walletApi.registerXTZAddress(params)
     if (!response.isSuccess) {
       result = {
         'jsonrpc:': jsonrpc,

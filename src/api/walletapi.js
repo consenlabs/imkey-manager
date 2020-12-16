@@ -7,9 +7,10 @@ const ethPb = require('../proto/eth_pb')
 const eosPb = require('../proto/eos_pb')
 const cosmosPb = require('../proto/cosmos_pb')
 const filecoinPb = require('../proto/filecoin_pb')
+const tronPb = require('../proto/tron_pb')
+const substratePb = require('../proto/substrate_pb')
 const callImKeyCore = require('./callimkeycore')
 const constants = require('../common/constants')
-const path = require('../common/path')
 
 function btcSignTransactionCallImKeyApi (json) {
   let utxos = []
@@ -379,6 +380,116 @@ function filecoinSignTransactionCallImKeyApi (json) {
     }
   }
 }
+function substrateSignTransactionCallImKeyApi (json,chainType) {
+  const substrateRawTxIn = new substratePb.SubstrateRawTxIn()
+  substrateRawTxIn.setRawdata(json.rawdata)
+  const substrateRawTxInBytes = substrateRawTxIn.serializeBinary()
+  const substrateRawTxInAny = new proto.google.protobuf.Any()
+  substrateRawTxInAny.setValue(substrateRawTxInBytes)
+  const signParam = new commonPb.SignParam()
+  signParam.setChaintype(chainType)
+  signParam.setPath(json.path)
+  signParam.setInput(substrateRawTxInAny)
+  signParam.setPayment(json.preview.payment)
+  signParam.setReceiver(json.preview.receiver)
+  signParam.setSender(json.preview.sender)
+  signParam.setFee(json.preview.fee)
+  const signParamBytes = signParam.serializeBinary()
+  const signParamAny = new proto.google.protobuf.Any()
+  signParamAny.setValue(signParamBytes)
+  const imKeyAction = new apiPb.ImkeyAction()
+  imKeyAction.setMethod('sign_tx')
+  imKeyAction.setParam(signParamAny)
+  const imKeyActionBytes = imKeyAction.serializeBinary()
+  const resBuffer = callImKeyCore.callImKeyApi(bytes2HexStr(imKeyActionBytes))
+  const error = callImKeyCore.getLastErrorMessage()
+  if (error === '' || error === null) {
+    const response = new substratePb.SubstrateTxOut.deserializeBinary(hexStr2Bytes(resBuffer))
+    return {
+      isSuccess: true,
+      result: response.toObject()
+    }
+  } else {
+    const errorResponse = new apiPb.ErrorResponse.deserializeBinary(hexStr2Bytes(error))
+    return {
+      isSuccess: false,
+      result: errorResponse.getError()
+    }
+  }
+}
+function tronSignTransactionCallImKeyApi (json) {
+  const tronTxInput = new tronPb.TronTxInput()
+  tronTxInput.setRawData(json.rawdata)
+  const tronTxInputBytes = tronTxInput.serializeBinary()
+  const tronTxInputAny = new proto.google.protobuf.Any()
+  tronTxInputAny.setValue(tronTxInputBytes)
+  const signParam = new commonPb.SignParam()
+  signParam.setChaintype('TRON')
+  signParam.setPath(json.path)
+  signParam.setInput(tronTxInputAny)
+  signParam.setPayment(json.preview.payment)
+  signParam.setReceiver(json.preview.receiver)
+  signParam.setSender(json.preview.sender)
+  signParam.setFee(json.preview.fee)
+  const signParamBytes = signParam.serializeBinary()
+  const signParamAny = new proto.google.protobuf.Any()
+  signParamAny.setValue(signParamBytes)
+  const imKeyAction = new apiPb.ImkeyAction()
+  imKeyAction.setMethod('sign_tx')
+  imKeyAction.setParam(signParamAny)
+  const imKeyActionBytes = imKeyAction.serializeBinary()
+  const resBuffer = callImKeyCore.callImKeyApi(bytes2HexStr(imKeyActionBytes))
+  const error = callImKeyCore.getLastErrorMessage()
+  if (error === '' || error === null) {
+    const response = new tronPb.TronTxOutput.deserializeBinary(hexStr2Bytes(resBuffer))
+    return {
+      isSuccess: true,
+      result: response.toObject()
+    }
+  } else {
+    const errorResponse = new apiPb.ErrorResponse.deserializeBinary(hexStr2Bytes(error))
+    return {
+      isSuccess: false,
+      result: errorResponse.getError()
+    }
+  }
+}
+function tronSignMessageCallImKeyApi (json) {
+  const tronMessageInput = new tronPb.TronMessageInput()
+  tronMessageInput.setMessage(json.message)
+  tronMessageInput.setIsHex(json.isHex)
+  tronMessageInput.setIsTronHeader(json.isTronHeader)
+  const tronMessageInputBytes = tronMessageInput.serializeBinary()
+  const tronMessageInputAny = new proto.google.protobuf.Any()
+  tronMessageInputAny.setValue(tronMessageInputBytes)
+  const signParam = new commonPb.SignParam()
+  signParam.setChaintype('TRON')
+  signParam.setPath(json.path)
+  signParam.setSender(json.sender)
+  signParam.setInput(tronMessageInputAny)
+  const signParamBytes = signParam.serializeBinary()
+  const signParamAny = new proto.google.protobuf.Any()
+  signParamAny.setValue(signParamBytes)
+  const imKeyAction = new apiPb.ImkeyAction()
+  imKeyAction.setMethod('sign_message')
+  imKeyAction.setParam(signParamAny)
+  const imKeyActionBytes = imKeyAction.serializeBinary()
+  const resBuffer = callImKeyCore.callImKeyApi(bytes2HexStr(imKeyActionBytes))
+  const error = callImKeyCore.getLastErrorMessage()
+  if (error === '' || error === null) {
+    const response = new tronPb.TronMessageOutput.deserializeBinary(hexStr2Bytes(resBuffer))
+    return {
+      isSuccess: true,
+      result: response.toObject()
+    }
+  } else {
+    const errorResponse = new apiPb.ErrorResponse.deserializeBinary(hexStr2Bytes(error))
+    return {
+      isSuccess: false,
+      result: errorResponse.getError()
+    }
+  }
+}
 
 function btcXpub (path, netWork) {
   const btcXpubReq = new btcPb.BtcXpubReq()
@@ -533,7 +644,34 @@ export function getFILECOINAddress (json) {
 export function registerFILECOINAddress (json) {
   return address('FILECOIN',json.path, '', false,'register_address')
 }
+export function getDOTAddress (json) {
+  return address('POLKADOT',json.path, '', false,'get_address')
+}
 
+export function registerDOTAddress (json) {
+  return address('POLKADOT',json.path, '', false,'register_address')
+}
+export function getKSMAddress (json) {
+  return address('KUSAMA',json.path, '', false,'get_address')
+}
+
+export function registerKSMAddress (json) {
+  return address('KUSAMA',json.path, '', false,'register_address')
+}
+export function getTRONAddress (json) {
+  return address('TRON',json.path, '', false,'get_address')
+}
+
+export function registerTRONAddress (json) {
+  return address('TRON',json.path, '', false,'register_address')
+}
+export function getXTZAddress (json) {
+  return address('XTZ',json.path, '', false,'get_address')
+}
+
+export function registerXTZAddress (json) {
+  return address('XTZ',json.path, '', false,'register_address')
+}
 export function btcSignTransaction (json) {
   return btcSignTransactionCallImKeyApi(json)
 }
@@ -570,6 +708,21 @@ export function cosmosSignTransaction (json) {
   return cosmosSignTransactionCallImKeyApi(json)
 }
 export function filecoinSignTransaction (json) {
+  return filecoinSignTransactionCallImKeyApi(json)
+}
+export function dotSignTransaction (json) {
+  return substrateSignTransactionCallImKeyApi(json,'POLKADOT')
+}
+export function ksmSignTransaction (json) {
+  return substrateSignTransactionCallImKeyApi(json,'KUSAMA')
+}
+export function tronSignTransaction (json) {
+  return tronSignTransactionCallImKeyApi(json)
+}
+export function tronSignMessage (json) {
+  return tronSignMessageCallImKeyApi(json)
+}
+export function xtzSignTransaction (json) {
   return filecoinSignTransactionCallImKeyApi(json)
 }
 // /**

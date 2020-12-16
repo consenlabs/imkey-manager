@@ -136,6 +136,31 @@ ipcRenderer.on('message-from-main', (event, arg) => {
                 path: "m/44'/461'/0'/0/0"
               })
             }
+            if (coinNameArr[i] === 'POLKADOT') {
+              walletApi.registerDOTAddress({
+                path: "m/44'/354'/0'/0/0"
+              })
+            }
+            if (coinNameArr[i] === 'KUSAMA') {
+              walletApi.registerKSMAddress({
+                path: "m/44'/343'/0'/0/0"
+              })
+            }
+            if (coinNameArr[i] === 'TRON') {
+              walletApi.registerTRONAddress({
+                path: "m/44'/195'/0'/0/0"
+              })
+            }
+            if (coinNameArr[i] === 'TEZOS') {
+              // walletApi.registerXTZAddress({
+              //   path: "m/44'/1279'/0'/0/0"
+              // })
+            }
+            if (coinNameArr[i] === 'NERVOS') {
+              // walletApi.registerCKBAddress({
+              //   path: "m/44'/1279'/0'/0/0"
+              // })
+            }
           } else {
             response = {
               isSuccess: false,

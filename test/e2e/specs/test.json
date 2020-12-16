@@ -676,5 +676,271 @@
       "address": "f1o2ph66tg7o7obyrqa7eiwiinrltauzxitkuk4ay"
     },
     "id:": 23
+  },
+  "dot.signTransaction": {
+  "jsonrpc": "2.0",
+  "method": "dot.signTransaction",
+  "params": {
+    "rawdata": "0600ffd7568e5f0a7eda67a82691ff379ac4bba4f9c9b859fe779b5d46363b61ad2db9e56c0703d148e25901007b000000dcd1346701ca8396496e52aa2785b1748deb6db09551b72159dcb3e08991025bde8f69eeb5e065e18c6950ff708d7e551f68dc9bf59a07c52367c0280f805ec7",
+    "path": "m/44'/354'/0/0/0",
+    "preview": {
+      "payment": "25 DOT",
+      "receiver": "12pWV6LvG4iAfNpFNTvvkWy3H9H8wtCkjiXupAzo2BCmPViM",
+      "sender": "147mvrDYhFpZzvFASKBDNVcxoyz8XCVNyyFKSZcpbQxN33TT",
+      "fee": "15.4000 milli DOT"
+    }
+  },
+  "id": 24
+},
+  "dot.signTransaction.result":{
+    "jsonrpc:": "2.0",
+    "result": {
+      "signature": "0x004772d1580d39db83ea83c662d3a86391685f05008ee9e0cf7ddfe117c697f3ff12dda07c76658017a0a2f4c94221e63fdbc75fdf4f0b2c21f8d471a2098e3d01"
+    },
+    "id:": 24
+  },
+  "dot.getAddress": {
+    "jsonrpc": "2.0",
+    "method": "dot.getAddress",
+    "params": {
+      "path": "m/44'/461'/0/0/0"
+    },
+    "id": 25
+  },
+  "dot.getAddress.result":{
+    "jsonrpc:": "2.0",
+    "result": {
+      "path": "m/44'/461'/0/0/0",
+      "chaintype": "POLKADOT",
+      "address": "1HyP3DdxrWySNzss2vg954JX47PDyqL4WXJs139juUTrR6P"
+    },
+    "id:": 25
+  },
+  "dot.registerAddress": {
+    "jsonrpc": "2.0",
+    "method": "dot.registerAddress",
+    "params": {
+      "path": "m/44'/461'/0/0/0"
+    },
+    "id": 26
+  },
+  "dot.registerAddress.result": {
+    "jsonrpc:": "2.0",
+    "result": {
+      "path": "m/44'/461'/0/0/0",
+      "chaintype": "POLKADOT",
+      "address": "1HyP3DdxrWySNzss2vg954JX47PDyqL4WXJs139juUTrR6P"
+    },
+    "id:": 26
+  },
+  "ksm.signTransaction": {
+  "jsonrpc": "2.0",
+  "method": "ksm.signTransaction",
+  "params": {
+    "rawdata": "0600ffd7568e5f0a7eda67a82691ff379ac4bba4f9c9b859fe779b5d46363b61ad2db9e56c0703d148e25901007b000000dcd1346701ca8396496e52aa2785b1748deb6db09551b72159dcb3e08991025bde8f69eeb5e065e18c6950ff708d7e551f68dc9bf59a07c52367c0280f805ec7",
+    "path": "m/44'/434'/0/0/0",
+    "preview": {
+      "payment": "25 DOT",
+      "receiver": "12pWV6LvG4iAfNpFNTvvkWy3H9H8wtCkjiXupAzo2BCmPViM",
+      "sender": "147mvrDYhFpZzvFASKBDNVcxoyz8XCVNyyFKSZcpbQxN33TT",
+      "fee": "15.4000 milli DOT"
+    }
+  },
+  "id": 27
+},
+  "ksm.signTransaction.result": {
+    "jsonrpc:": "2.0",
+    "result": {
+      "signature": "0x000ed23f3a878624c2f1b85a9d9c7bcdbc53ab59aacb5b48d8b622609deb4b3eb645d1d372522cea947c1ca91c183b3b4ca60fd63e050a2344665f6d58090e0d03"
+    },
+    "id:": 27
+  },
+  "ksm.getAddress": {
+    "jsonrpc": "2.0",
+    "method": "ksm.getAddress",
+    "params": {
+      "path": "m/44'/434'/0/0/0"
+    },
+    "id": 28
+  },
+  "ksm.getAddress.result":{
+    "jsonrpc:": "2.0",
+    "result": {
+      "path": "m/44'/434'/0/0/0",
+      "chaintype": "KUSAMA",
+      "address": "Fde6T2hDvbvuQrRizcjPoQNZTxuVSbTp78zwFcxzUb86xXS"
+    },
+    "id:": 28
+  },
+  "ksm.registerAddress": {
+    "jsonrpc": "2.0",
+    "method": "ksm.registerAddress",
+    "params": {
+      "path": "m/44'/434'/0/0/0"
+    },
+    "id": 29
+  },
+  "ksm.registerAddress.result": {
+    "jsonrpc:": "2.0",
+    "result": {
+      "path": "m/44'/434'/0/0/0",
+      "chaintype": "KUSAMA",
+      "address": "Fde6T2hDvbvuQrRizcjPoQNZTxuVSbTp78zwFcxzUb86xXS"
+    },
+    "id:": 29
+  },
+  "tron.signTransaction": {
+  "jsonrpc": "2.0",
+  "method": "tron.signTransaction",
+  "params": {
+    "rawdata": "0a0208312208b02efdc02638b61e40f083c3a7c92d5a65080112610a2d747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e5472616e73666572436f6e747261637412300a1541a1e81654258bf14f63feb2e8d1380075d45b0dac1215410b3e84ec677b3e63c99affcadb91a6b4e086798f186470a0bfbfa7c92d",
+    "path": "m/44'/195'/0'/0/0",
+    "preview": {
+      "payment": "100 TRX",
+      "receiver": "TDQqJsFsStSy5fjG52KuiWW7HhJGAKGJLb",
+      "sender": "TY2uroBeZ5trA9QT96aEWj32XLkAAhQ9R2"
+    }
+  },
+  "id": 30
+},
+  "tron.signTransaction.result": {
+    "jsonrpc:": "2.0",
+    "result": {
+      "signature": "c65b4bde808f7fcfab7b0ef9c1e3946c83311f8ac0a5e95be2d8b6d2400cfe8b5e24dc8f0883132513e422f2aaad8a4ecc14438eae84b2683eefa626e3adffc61c"
+    },
+    "id:": 30
+  },
+  "tron.signMessage": {
+  "jsonrpc": "2.0",
+  "method": "tron.signMessage",
+  "params": {
+    "path": "m/44'/195'/0'/0/0",
+    "sender": "TY2uroBeZ5trA9QT96aEWj32XLkAAhQ9R2",
+    "message": "645c0b7b58158babbfa6c6cd5a48aa7340a8749176b120e8516216787a13dc76",
+    "isHex": true,
+    "isTronHeader": true
+  },
+  "id": 31
+},
+  "tron.signMessage.result": {
+    "jsonrpc:": "2.0",
+    "result": {
+      "signature": "16417c6489da3a88ef980bf0a42551b9e76181d03e7334548ab3cb36e7622a484482722882a29e2fe4587b95c739a68624ebf9ada5f013a9340d883f03fcf9af1b"
+    },
+    "id:": 31
+  },
+  "tron.getAddress": {
+    "jsonrpc": "2.0",
+    "method": "tron.getAddress",
+    "params": {
+      "path": "m/44'/195'/0'/0/0"
+    },
+    "id": 32
+  },
+  "tron.getAddress.result":{
+    "jsonrpc:": "2.0",
+    "result": {
+      "path": "m/44'/195'/0'/0/0",
+      "chaintype": "TRON",
+      "address": "TY2uroBeZ5trA9QT96aEWj32XLkAAhQ9R2"
+    },
+    "id:": 32
+  },
+  "tron.registerAddress": {
+    "jsonrpc": "2.0",
+    "method": "tron.registerAddress",
+    "params": {
+      "path": "m/44'/195'/0'/0/0"
+    },
+    "id": 33
+  },
+  "tron.registerAddress.result": {
+    "jsonrpc:": "2.0",
+    "result": {
+      "path": "m/44'/195'/0'/0/0",
+      "chaintype": "TRON",
+      "address": "TY2uroBeZ5trA9QT96aEWj32XLkAAhQ9R2"
+    },
+    "id:": 33
+  },
+  "xtz.signTransaction": {
+  "jsonrpc": "2.0",
+  "method": "xtz.signTransaction",
+  "params": {
+    "to": "f1d2xrzcslx7xlbbylc5c3d5lvandqw4iwl6epxba",
+    "from": "f1o2ph66tg7o7obyrqa7eiwiinrltauzxitkuk4ay",
+    "nonce": 1,
+    "value": "100000",
+    "gasLimit": 1,
+    "gasFeeCap": "1",
+    "gasPremium": "1",
+    "method": 0,
+    "params": "",
+    "path": "m/44'/1279'/0/0/0",
+    "preview": {
+      "payment": "1 FILECOIN",
+      "receiver": "f1d2xrzcslx7xlbbylc5c3d5lvandqw4iwl6epxba",
+      "sender": "f1o2ph66tg7o7obyrqa7eiwiinrltauzxitkuk4ay",
+      "fee": "0.1 FILECOIN"
+    }
+  },
+  "id": 21
+},
+  "xtz.signTransaction.result": {
+    "jsonrpc:": "2.0",
+    "result": {
+      "cid": "bafy2bzaceawarox6h5my5vk2gqe5v3qzzcsccoet4a5mrtg6xw7haeg7rd5ce",
+      "message": {
+        "to": "f1d2xrzcslx7xlbbylc5c3d5lvandqw4iwl6epxba",
+        "from": "f1o2ph66tg7o7obyrqa7eiwiinrltauzxitkuk4ay",
+        "nonce": 1,
+        "value": "100000",
+        "gaslimit": 1,
+        "gasfeecap": "1",
+        "gaspremium": "1",
+        "method": 0,
+        "params": ""
+      },
+      "signature": {
+        "type": 1,
+        "data": "k/ODPDElcw/xCQ0WWO3r7H3GoKpJVX7j6x1lyNFZ4YNvoWx8/RVqn0/+GNUvFCj1EOEXKFNf2h5LsBmiHDllkgE="
+      }
+    },
+    "id:": 21
+  }
+,
+  "xtz.getAddress": {
+    "jsonrpc": "2.0",
+    "method": "xtz.getAddress",
+    "params": {
+      "path": "m/44'/1279'/0/0/0"
+    },
+    "id": 22
+  },
+  "xtz.getAddress.result":{
+    "jsonrpc:": "2.0",
+    "result": {
+      "path": "m/44'/461'/0/0/0",
+      "chaintype": "FILECOIN",
+      "address": "f1o2ph66tg7o7obyrqa7eiwiinrltauzxitkuk4ay"
+    },
+    "id:": 22
+  },
+  "xtz.registerAddress": {
+    "jsonrpc": "2.0",
+    "method": "xtz.registerAddress",
+    "params": {
+      "path": "m/44'/1279'/0/0/0"
+    },
+    "id": 23
+  },
+  "filecoin.registerAddress.result": {
+    "jsonrpc:": "2.0",
+    "result": {
+      "path": "m/44'/1279'/0/0/0",
+      "chaintype": "FILECOIN",
+      "address": "f1o2ph66tg7o7obyrqa7eiwiinrltauzxitkuk4ay"
+    },
+    "id:": 23
   }
 }
