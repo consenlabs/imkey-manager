@@ -818,8 +818,6 @@ export default {
         color: #000;
     }
 
-
-
     .tip4 span {
         margin-top: 20px;
         font-size: 26px;

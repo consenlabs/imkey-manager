@@ -303,7 +303,7 @@ export function api (reqJson) {
       }
     }
     return result
-  }else if (method === constants.API_NAME_TRANSACTION_SIGNTX_POLKADOT) {
+  } else if (method === constants.API_NAME_TRANSACTION_SIGNTX_POLKADOT) {
     const response = walletApi.dotSignTransaction(params)
     if (!response.isSuccess) {
       result = {
@@ -322,7 +322,7 @@ export function api (reqJson) {
       }
     }
     return result
-  }else if (method === constants.API_NAME_TRANSACTION_SIGNTX_KUSAMA) {
+  } else if (method === constants.API_NAME_TRANSACTION_SIGNTX_KUSAMA) {
     const response = walletApi.ksmSignTransaction(params)
     if (!response.isSuccess) {
       result = {
@@ -341,7 +341,7 @@ export function api (reqJson) {
       }
     }
     return result
-  }else if (method === constants.API_NAME_TRANSACTION_SIGNTX_TRON) {
+  } else if (method === constants.API_NAME_TRANSACTION_SIGNTX_TRON) {
     const response = walletApi.tronSignTransaction(params)
     if (!response.isSuccess) {
       result = {
@@ -360,7 +360,7 @@ export function api (reqJson) {
       }
     }
     return result
-  }else if (method === constants.API_NAME_TRANSACTION_SIGNMSG_TRON) {
+  } else if (method === constants.API_NAME_TRANSACTION_SIGNMSG_TRON) {
     const response = walletApi.tronSignMessage(params)
     if (!response.isSuccess) {
       result = {
@@ -379,7 +379,7 @@ export function api (reqJson) {
       }
     }
     return result
-  }else if (method === constants.API_NAME_TRANSACTION_SIGNTX_XTZ) {
+  } else if (method === constants.API_NAME_TRANSACTION_SIGNTX_XTZ) {
     const response = walletApi.xtzSignTransaction(params)
     if (!response.isSuccess) {
       result = {

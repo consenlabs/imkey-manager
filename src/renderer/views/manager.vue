@@ -176,7 +176,7 @@ export default {
           this.$ipcRenderer.send('cosCheckUpdate')
           this.$ipcRenderer.on('cosCheckUpdate', (cosCheckUpdateResult) => {
             const cosCheckUpdateResponse = cosCheckUpdateResult.result
-            if (cosCheckUpdateResult.isSuccess ) {
+            if (cosCheckUpdateResult.isSuccess) {
               this.cosNewVersionData = cosCheckUpdateResponse.latestCosVersion
               this.isLatest = cosCheckUpdateResponse.isLatest
               this.updateType = cosCheckUpdateResponse.updateType
