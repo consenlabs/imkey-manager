@@ -480,8 +480,8 @@ function createBrowserView(url,isClose) {
     view.destroy()
   }
   mainWindow.setBrowserView(view);
-  view.setBounds({x:300,y:10,width:1100,height:1000});
-  // view.setAutoResize({ width: true, height: true })
+  view.setBounds({x:300,y:0,width:1050,height:700})
+  view.setAutoResize({ width: true, height: true })
   view.webContents.loadURL(url);
   // setTimeout(()=>{
   //   view.destroy()
