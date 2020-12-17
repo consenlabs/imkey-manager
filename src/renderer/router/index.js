@@ -43,6 +43,11 @@ const routes = [
         path: 'setting',
         name: 'setting',
         component: require('@/views/setting').default
+      },
+      {
+        path: 'dapp',
+        name: 'dapp',
+        component: require('@/views/dapp').default
       }
     ]
   }

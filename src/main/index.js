@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, Menu, shell, Tray, dialog, crashReporter, webFrame } from 'electron'
+import { app, BrowserWindow,BrowserView, ipcMain, Menu, shell, Tray, dialog, crashReporter, webFrame } from 'electron'
 // 自动更新相关
 import { autoUpdater } from 'electron-updater'
 // 崩溃报告
@@ -470,6 +470,19 @@ function crashReport () {
 //     // 根据需要做其他事情
 //   }
 // }
+function createBrowserView(url) {
+  let view=new BrowserView(  {
+    webPreferences: {
+      nodeIntegration: true
+    }});
+  view.setBounds({x:300,y:0,width:1050,height:1000});
+  view.setAutoResize({ width: true, height: true })
+  mainWindow.setBrowserView(view);
+  view.webContents.loadURL(url);
+  // setTimeout(()=>{
+  //   view.destroy()
+  // },5000)
+}
 function sendWindowMessage (targetWindow, message, payload) {
   if (typeof targetWindow === 'undefined') {
     console.log('Target window does not exist')
@@ -493,6 +506,12 @@ function renderDeviceManagerHandler () {
   })
 
   ipcMain.on('openUrl', (event, url) => {
+    shell.openExternal(url)
+  })
+  ipcMain.on('openBrowserView', (event, url) => {
+    createBrowserView(url)
+  })
+  ipcMain.on('closeBrowserView', (event, url) => {
     shell.openExternal(url)
   })
   ipcMain.on('zoomIn', (event, zoomParam) => {
