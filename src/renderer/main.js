@@ -136,6 +136,7 @@ router.beforeEach(function (to, from, next) {
       toName = 'im_manage'
     }
   }
+  ipcRenderer.send('openBrowserView', "url",true)
   if (eventName !== '' && toName !== '') {
     sa.track(eventName, { to: toName }) // after the next(); statement
   }

@@ -470,14 +470,18 @@ function crashReport () {
 //     // 根据需要做其他事情
 //   }
 // }
-function createBrowserView(url) {
+function createBrowserView(url,isClose) {
+
   let view=new BrowserView(  {
     webPreferences: {
       nodeIntegration: true
     }});
-  view.setBounds({x:300,y:0,width:1050,height:1000});
-  view.setAutoResize({ width: true, height: true })
+  if(isClose){
+    view.destroy()
+  }
   mainWindow.setBrowserView(view);
+  view.setBounds({x:300,y:10,width:1100,height:1000});
+  // view.setAutoResize({ width: true, height: true })
   view.webContents.loadURL(url);
   // setTimeout(()=>{
   //   view.destroy()
@@ -508,8 +512,8 @@ function renderDeviceManagerHandler () {
   ipcMain.on('openUrl', (event, url) => {
     shell.openExternal(url)
   })
-  ipcMain.on('openBrowserView', (event, url) => {
-    createBrowserView(url)
+  ipcMain.on('openBrowserView', (event, url,isClose) => {
+    createBrowserView(url,isClose)
   })
   ipcMain.on('closeBrowserView', (event, url) => {
     shell.openExternal(url)
