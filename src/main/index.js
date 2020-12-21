@@ -1,4 +1,4 @@
-import { app, BrowserWindow,BrowserView, ipcMain, Menu, shell, Tray, dialog, crashReporter, webFrame } from 'electron'
+import { app, BrowserWindow, BrowserView, ipcMain, Menu, shell, Tray, dialog, crashReporter, webFrame } from 'electron'
 // 自动更新相关
 import { autoUpdater } from 'electron-updater'
 // 崩溃报告
@@ -470,15 +470,42 @@ function crashReport () {
 //     // 根据需要做其他事情
 //   }
 // }
-function createBrowserView(url) {
-  let view=new BrowserView(  {
-    webPreferences: {
-      nodeIntegration: true
-    }});
-  view.setBounds({x:300,y:0,width:1050,height:1000});
-  view.setAutoResize({ width: true, height: true })
-  mainWindow.setBrowserView(view);
-  view.webContents.loadURL(url);
+import ImKeyProvider from '@imkey/web3-provider'
+function createBrowserView (url) {
+  console.log('hhh')
+  const win = new BrowserWindow({ width: 1500, height: 1000 })
+
+  const view = new BrowserView()
+  win.setBrowserView(view)
+  view.setBounds({ x: 0, y: 0, width: 1500, height: 1000 })
+  view.webContents.loadURL('https://danfinlay.github.io/js-eth-personal-sign-examples/')
+  view.webContents.openDevTools()
+
+  view.webContents.once('dom-ready', () => {
+    console.log('dom-ready')
+    view.webContents.executeJavaScript(`
+  console.log("This loads no problem!");
+  window.ethereum = 'test'
+  console.log(window.ethereum);
+  console.log(window.web3);
+
+  // const ImKeyProvider = require('@imkey/web3-provider‘);
+  // window.web3 = "ImKeyProvider";
+  // console.log(window.web3);
+
+  const imkeyProvider: any = new ${ImKeyProvider}({
+    rpcUrl: false ? KOVAN_RPC_URL : ETHEREUM_MAIN_NET,
+    chainId: false ? 42 : 1,
+    headers: {
+      agent: 'ios:2.4.2:2',
+    },
+  })
+  window.web3 = new Web3(imkeyProvider)
+  console.log(window.web3)
+`)
+  })
+
+  console.log(url)
   // setTimeout(()=>{
   //   view.destroy()
   // },5000)

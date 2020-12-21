@@ -71,7 +71,7 @@ export default {
     openUrl (urlType) {
       let url
       if (urlType === 'TokenLon') {
-        url = 'https://tokenlon.im'
+        url = 'https://decentraland.org/'
       }
       if (urlType === 'Compound') {
         url = 'https://compound.finance/'
