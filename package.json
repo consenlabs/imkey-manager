@@ -1,6 +1,6 @@
 {
   "name": "imKeyManager",
-  "version": "1.1.2",
+  "version": "1.1.31",
   "author": "imkey <weiqiang@imkey.im>",
   "description": "imKey Manager @2020",
   "license": "MIT",
@@ -95,8 +95,10 @@
     }
   },
   "dependencies": {
+    "@imkey/web3-provider": "https://github.com/consenlabs/imkey-web3-provider.git#63cb7f6",
     "@fortawesome/fontawesome-free": "^5.13.1",
     "@sentry/electron": "^1.3.0",
+    "web3": "^1.3.1",
     "body-parser": "^1.19.0",
     "copy-to-clipboard": "^3.3.1",
     "cors": "^2.8.5",
