@@ -1,11 +1,13 @@
-import { app, BrowserWindow,BrowserView, ipcMain, Menu, shell, Tray, dialog, crashReporter, webFrame } from 'electron'
+import { app, BrowserWindow, BrowserView, ipcMain, Menu, shell, Tray, dialog, crashReporter, webFrame } from 'electron'
 // 自动更新相关
 import { autoUpdater } from 'electron-updater'
 // 崩溃报告
 import * as Sentry from '@sentry/electron'
+import ImKeyProvider from '@imkey/web3-provider'
 // test.json
 import pkg from '../../package.json'
 import SensorsAnalytics from 'sa-sdk-node'
+import Web3 from 'web3'
 const url = 'https://imtoken.datasink.sensorsdata.cn/sa?project=production&token=27d69b3e7fd25949'
 const sa = new SensorsAnalytics()
 const distinctId = 'imkey-manager'
@@ -100,7 +102,8 @@ function createMainWindow () {
     transparent: false, // 透明
     // fullscreen: true, // 全屏
     webPreferences: {
-      nodeIntegration: true
+      nodeIntegration: true,
+      enableRemoteModule: true
     }
 
   })
@@ -470,19 +473,60 @@ function crashReport () {
 //     // 根据需要做其他事情
 //   }
 // }
-function createBrowserView(url,isClose) {
-
-  let view=new BrowserView(  {
+const KOVAN_RPC_URL = 'https://kovan.infura.io'
+const ETHEREUM_MAIN_NET = 'https://kovan.infura.io'
+const imkeyProvider = new ImKeyProvider({
+  rpcUrl: 'https://eth-mainnet.token.im',
+  chainId: 1,
+  headers: {
+    agent: 'ios:2.4.2:2'
+  }
+})
+imkeyProvider.enable()
+function createBrowserView (url, isClose) {
+  const view = new BrowserView({
     webPreferences: {
-      nodeIntegration: true
-    }});
-  if(isClose){
+      nodeIntegration: true, // 设置开启nodejs环境
+      preload:require('path').resolve(__dirname, '../api/imkeyprovider.js')
+    }
+  })
+  if (isClose) {
     view.destroy()
   }
-  mainWindow.setBrowserView(view);
-  view.setBounds({x:300,y:0,width:1050,height:700})
+  mainWindow.setBrowserView(view)
+  view.setBounds({ x: 300, y: 0, width: 1140, height: 820 })
   view.setAutoResize({ width: true, height: true })
-  view.webContents.loadURL(url);
+  // view.webContents.loadURL(url);
+
+  view.webContents.loadURL('https://danfinlay.github.io/js-eth-personal-sign-examples/')
+  view.webContents.openDevTools()
+
+//   view.webContents.once('dom-ready', () => {
+//     console.log('dom-ready')
+//     view.webContents.executeJavaScript(`
+//   console.log("This loads no problem!");
+//   window.ethereum = 'test'
+//   console.log(window.ethereum);
+//   console.log(window.web3);
+//   // const ImKeyProvider = require('@imkey/web3-provider‘);
+//   // window.web3 = "ImKeyProvider";
+//   // console.log(window.web3);
+//   const KOVAN_RPC_URL = 'https://kovan.infura.io';
+//   const ETHEREUM_MAIN_NET = 'https://kovan.infura.io';
+//   // const imkeyProvider = new ${ImKeyProvider}({
+//   //  rpcUrl: "https://eth-mainnet.token.im",
+//   //   chainId: 1,
+//   //   headers: {
+//   //       agent: "ios:2.4.2:2",
+//   //   },
+//   // });
+//   // imkeyProvider.enable();
+//   window.web3 = new Web3(${ImKeyProvider})
+//   console.log(window.web3)
+// `)
+//   })
+
+  console.log(url)
   // setTimeout(()=>{
   //   view.destroy()
   // },5000)
@@ -512,8 +556,8 @@ function renderDeviceManagerHandler () {
   ipcMain.on('openUrl', (event, url) => {
     shell.openExternal(url)
   })
-  ipcMain.on('openBrowserView', (event, url,isClose) => {
-    createBrowserView(url,isClose)
+  ipcMain.on('openBrowserView', (event, url, isClose) => {
+    createBrowserView(url, isClose)
   })
   ipcMain.on('closeBrowserView', (event, url) => {
     shell.openExternal(url)

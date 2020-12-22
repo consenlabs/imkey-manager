@@ -79,7 +79,7 @@ export default {
       if (urlType === 'AAVE') {
         url = 'https://aave.com/'
       }
-      ipcRenderer.send('openBrowserView', url,false)
+      ipcRenderer.send('openBrowserView', url, false)
     }
   }
 }
