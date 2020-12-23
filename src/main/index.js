@@ -487,7 +487,7 @@ function createBrowserView (url, isClose) {
   const view = new BrowserView({
     webPreferences: {
       nodeIntegration: true, // 设置开启nodejs环境
-      preload:require('path').resolve(__dirname, '../api/imkeyprovider.js')
+      preload: require('path').resolve(__dirname, '../api/imkeyprovider.js')
     }
   })
   if (isClose) {
@@ -501,30 +501,30 @@ function createBrowserView (url, isClose) {
   view.webContents.loadURL('https://danfinlay.github.io/js-eth-personal-sign-examples/')
   view.webContents.openDevTools()
 
-//   view.webContents.once('dom-ready', () => {
-//     console.log('dom-ready')
-//     view.webContents.executeJavaScript(`
-//   console.log("This loads no problem!");
-//   window.ethereum = 'test'
-//   console.log(window.ethereum);
-//   console.log(window.web3);
-//   // const ImKeyProvider = require('@imkey/web3-provider‘);
-//   // window.web3 = "ImKeyProvider";
-//   // console.log(window.web3);
-//   const KOVAN_RPC_URL = 'https://kovan.infura.io';
-//   const ETHEREUM_MAIN_NET = 'https://kovan.infura.io';
-//   // const imkeyProvider = new ${ImKeyProvider}({
-//   //  rpcUrl: "https://eth-mainnet.token.im",
-//   //   chainId: 1,
-//   //   headers: {
-//   //       agent: "ios:2.4.2:2",
-//   //   },
-//   // });
-//   // imkeyProvider.enable();
-//   window.web3 = new Web3(${ImKeyProvider})
-//   console.log(window.web3)
-// `)
-//   })
+  //   view.webContents.once('dom-ready', () => {
+  //     console.log('dom-ready')
+  //     view.webContents.executeJavaScript(`
+  //   console.log("This loads no problem!");
+  //   window.ethereum = 'test'
+  //   console.log(window.ethereum);
+  //   console.log(window.web3);
+  //   // const ImKeyProvider = require('@imkey/web3-provider‘);
+  //   // window.web3 = "ImKeyProvider";
+  //   // console.log(window.web3);
+  //   const KOVAN_RPC_URL = 'https://kovan.infura.io';
+  //   const ETHEREUM_MAIN_NET = 'https://kovan.infura.io';
+  //   // const imkeyProvider = new ${ImKeyProvider}({
+  //   //  rpcUrl: "https://eth-mainnet.token.im",
+  //   //   chainId: 1,
+  //   //   headers: {
+  //   //       agent: "ios:2.4.2:2",
+  //   //   },
+  //   // });
+  //   // imkeyProvider.enable();
+  //   window.web3 = new Web3(${ImKeyProvider})
+  //   console.log(window.web3)
+  // `)
+  //   })
 
   console.log(url)
   // setTimeout(()=>{
