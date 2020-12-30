@@ -132,7 +132,8 @@ export const m = {
     aave_info: 'Deposit/Lend to earn, support TUSD, USDT & 15 more',
     operating_tutorial_url: 'https://imkey.im/get-started?locale=en-us',
     update_tip_wait: 'After the update, the app will restart. Please be patient',
-    coming_soon: ' Coming Soon '
+    coming_soon: ' Coming Soon ',
+    found_dapp_access: 'imKey Manager 提示',
   },
   appStart: {
     imKey_manager: 'imKey Manager',

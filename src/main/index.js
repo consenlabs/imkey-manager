@@ -28,7 +28,9 @@ if (process.platform === 'win32') {
 
 }
 require('dotenv').config({ path: envPath })
-
+app.apirouter = require('../api/apirouter')
+app.devicemanagerapi = require('../api/devicemanagerapi')
+app.walletapi = require('../api/walletapi')
 /**
  * Set `__static` path to static files in production
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html

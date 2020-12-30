@@ -30,6 +30,11 @@ export function api (reqJson) {
     }
     return result
   }
+
+  const initImKeyCore = deviceManger.initImKeyCore()
+  if(!initImKeyCore.isSuccess){
+    return initImKeyCore.result
+  }
   const connectRes = deviceManger.connect(constants.DEVICE_NAME_IMKEY_PRO)
   if (connectRes.isSuccess) {
     if (connectRes.result !== constants.RESULT_STATUS_SUCCESS) {

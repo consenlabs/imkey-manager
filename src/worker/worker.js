@@ -1,6 +1,7 @@
-const deviceManger = require('../api/devicemanagerapi')
-const walletApi = require('../api/walletapi')
-const { ipcRenderer } = require('electron')
+
+const { ipcRenderer,remote } = require('electron')
+const deviceManger = remote.app.devicemanagerapi
+const walletApi = remote.app.walletapi
 let handleType = ''
 ipcRenderer.on('message-from-main', (event, arg) => {
   console.log('arg', arg)
@@ -190,7 +191,6 @@ ipcRenderer.on('message-from-main', (event, arg) => {
   console.log(result)
   ipcRenderer.send('message-from-worker', result)
 })
-
 /**
  * 启动 http server
  */
@@ -199,7 +199,7 @@ ipcRenderer.on('start-http-server', (event, arg) => {
   const app = express()
   const cors = require('cors')
   const bodyParser = require('body-parser')
-  const apiRouter = require('../api/apirouter')
+  const apiRouter = remote.app.apirouter
   // 配置cors解决跨域请求的问题
   app.use(cors())
   // 给app配置bodyParser中间件

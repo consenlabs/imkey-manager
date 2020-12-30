@@ -59,15 +59,65 @@
                         <span class="rightLine">——</span>
                 </div>
         </div>
+        <div class="statusBox status5" v-if="status==1">
+            <div class="status5Alert">
+                <div class="status5AlertBox">
+                    <h4>{{$t('m.imKeyManager.found_dapp_access')}}</h4>
+                    <p>{{viewInfo}}</p>
+
+                    <div class="view_button" style="display:inline-block;float: left;">
+                        <button class="cancel" @click="cancel">{{$t('m.imKeyManager.cancel')}}</button>
+                        <button class="ok" @click="confirm">{{$t('m.imKeyManager.ok')}}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
         </div>
 </template>
 
 <script>
 import { ipcRenderer } from 'electron'
-
+const {dialog} = require('electron').remote;
 export default {
   name: 'welcomeHome',
+  data () {
+    return {
+      status: 0, // 0显示 1不显示
+      name: this.$t('m.setting.info'),
+        viewInfo: '正在访问你的地址请确认,注意财产安全'
+    }
+  },
+  mounted () {
+    // this.ShowMessageDialog()
+  },
   methods: {
+       ShowMessageDialog() {
+
+    dialog.showMessageBox({
+        type: 'info',
+        title: "访问说明",
+        message: "你正在访问第三方DAPP",
+        buttons: ["OK", "Cancel"]
+    }).then(result => {
+        console.log("您的选择:" , result.response);
+        console.log(result)
+    }).catch(err => {
+        console.log(err)
+    })
+},
+
+init () {
+      // ipcRenderer.on('confirmWindow', (confirmWindowInfo) => {
+      //     this.viewInfo = confirmWindowInfo
+      //   this.status = 0;
+      // })
+    },
+    cancel(){
+        this.status= 1
+    },
+      confirm(){
+          this.status= 1
+      },
     openUrl (urlType) {
       let url
       if (urlType === 'TokenLon') {
@@ -204,5 +254,101 @@ export default {
         color: #979797;
         vertical-align: middle;
         text-align: center;
+    }
+    .statusBox{
+        height: 100%;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+    }
+    .statusBox svg{
+        margin-bottom: 30px;
+    }
+    .statusBox p{
+        font-size: 17px;
+        color: #0E1019;
+    }
+    .status5Alert{
+        width: 100%;
+        height: 100%;
+        position: fixed;
+        left: 0;
+        top: 0;
+        background: rgba(0, 0, 0, 0.2);
+    }
+    .status5Alert .status5AlertBox{
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 500px;
+        height: 288px;
+        margin-left:-250px;
+        margin-top:-144px;
+        background: #FAFBFC;
+        border-radius: 12px;
+    }
+    .status5AlertBox h4{
+        font-weight: 500;
+        font-size: 18px;
+        color: #2C2842;
+        margin-top:35px;
+        margin-left: 35px;
+    }
+    .status5AlertBox p:nth-of-type(1){
+        font-weight: 300;
+        font-size: 13px;
+        line-height: 30px;
+        color: #2C2842;
+        margin-top: 6px;
+        margin-left: 35px;
+        margin-bottom: 5px;
+        justify-content: center;
+    }
+    .status5AlertBox p:nth-of-type(2), .status5AlertBox p:nth-of-type(3){
+        font-weight: 300;
+        font-size: 13px;
+        color: #2C2842;
+        padding-left: 35px;
+        line-height: 30px;
+        justify-content: center;
+    }
+    .status5AlertBox p{
+        line-height: 30px;
+        justify-content: center;
+    }
+   .status5Alert .status5AlertBox p svg{
+        margin-right: 13px;
+        vertical-align: middle;
+        margin-bottom: 0;
+    }
+    .status5AlertBox p:nth-of-type(4){
+        margin-top: 54px;
+    }
+    .cancel{
+        margin-left: 250px;
+        margin-top: 30px;
+        width: 100px;
+        height: 36px;
+        border: 0.5px solid #000000;
+        box-shadow: 0px 2px 20px rgba(137, 101, 172, 0.30772);
+        border-radius: 26.5px;
+        font-weight: 500;
+        font-size: 14px;
+        line-height: 32px;
+    }
+    .ok{
+        margin-left: 15px;
+        margin-top: 30px;
+        background: #2E3035;
+        box-shadow: 0px 2px 20px rgba(137, 101, 172, 0.30772);
+        border-radius: 26.5px;
+        width: 100px;
+        height: 36px;
+        color: #fff;
+        font-weight: 500;
+        font-size: 14px;
+        line-height: 32px;
     }
 </style>
