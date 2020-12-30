@@ -95,10 +95,9 @@
     }
   },
   "dependencies": {
-    "@imkey/web3-provider": "https://github.com/consenlabs/imkey-web3-provider.git#63cb7f6",
     "@fortawesome/fontawesome-free": "^5.13.1",
+    "@imkey/web3-provider": "file:../imkey-web3-provider",
     "@sentry/electron": "^1.3.0",
-    "web3": "^1.3.1",
     "body-parser": "^1.19.0",
     "copy-to-clipboard": "^3.3.1",
     "cors": "^2.8.5",
@@ -121,6 +120,7 @@
     "vue-router": "^3.2.0",
     "vuex": "^3.4.0",
     "vuex-electron": "^1.0.3",
+    "web3": "^1.3.1",
     "write-file-atomic": "^3.0.3"
   },
   "devDependencies": {

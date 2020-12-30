@@ -77,47 +77,46 @@
 
 <script>
 import { ipcRenderer } from 'electron'
-const {dialog} = require('electron').remote;
+const { dialog } = require('electron').remote
 export default {
   name: 'welcomeHome',
   data () {
     return {
       status: 0, // 0显示 1不显示
       name: this.$t('m.setting.info'),
-        viewInfo: '正在访问你的地址请确认,注意财产安全'
+      viewInfo: '正在访问你的地址请确认,注意财产安全'
     }
   },
   mounted () {
     // this.ShowMessageDialog()
   },
   methods: {
-       ShowMessageDialog() {
-
-    dialog.showMessageBox({
+    ShowMessageDialog () {
+      dialog.showMessageBox({
         type: 'info',
-        title: "访问说明",
-        message: "你正在访问第三方DAPP",
-        buttons: ["OK", "Cancel"]
-    }).then(result => {
-        console.log("您的选择:" , result.response);
+        title: '访问说明',
+        message: '你正在访问第三方DAPP',
+        buttons: ['OK', 'Cancel']
+      }).then(result => {
+        console.log('您的选择:', result.response)
         console.log(result)
-    }).catch(err => {
+      }).catch(err => {
         console.log(err)
-    })
-},
+      })
+    },
 
-init () {
+    init () {
       // ipcRenderer.on('confirmWindow', (confirmWindowInfo) => {
       //     this.viewInfo = confirmWindowInfo
       //   this.status = 0;
       // })
     },
-    cancel(){
-        this.status= 1
+    cancel () {
+      this.status = 1
     },
-      confirm(){
-          this.status= 1
-      },
+    confirm () {
+      this.status = 1
+    },
     openUrl (urlType) {
       let url
       if (urlType === 'TokenLon') {

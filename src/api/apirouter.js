@@ -32,7 +32,7 @@ export function api (reqJson) {
   }
 
   const initImKeyCore = deviceManger.initImKeyCore()
-  if(!initImKeyCore.isSuccess){
+  if (!initImKeyCore.isSuccess) {
     return initImKeyCore.result
   }
   const connectRes = deviceManger.connect(constants.DEVICE_NAME_IMKEY_PRO)

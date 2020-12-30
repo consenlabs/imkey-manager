@@ -134,7 +134,7 @@ export const m = {
     operating_tutorial_url: 'https://imkey.im/get-started?locale=zh-cn',
     update_tip_wait: '更新完成后 App 将自动重启，请耐心等待',
     coming_soon: ' 敬请期待 ',
-    found_dapp_access: 'imKey Manager 提示',
+    found_dapp_access: 'imKey Manager 提示'
   },
   appStart: {
     imKey_manager: 'imKey Manager',

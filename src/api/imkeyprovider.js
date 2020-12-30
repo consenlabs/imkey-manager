@@ -2,31 +2,31 @@
 const KOVAN_RPC_URL = 'https://kovan.infura.io'
 const ETHEREUM_MAIN_NET = 'https://kovan.infura.io'
 
-const {remote} = require('electron');
-const apirouter = remote.app.apirouter;
+const { remote } = require('electron')
+const apirouter = remote.app.apirouter
 const json = {
-    "jsonrpc": "2.0",
-    "method": "btc.getXpub",
-    "params": {
-        "network": "MAINNET",
-        "path": "m/44'/0'/0'/0/0"
-    },
-    "id": 5
+  jsonrpc: '2.0',
+  method: 'btc.getXpub',
+  params: {
+    network: 'MAINNET',
+    path: "m/44'/0'/0'/0/0"
+  },
+  id: 5
 }
 const res = apirouter.api(json)
-if(res !== null || typeof (res) !=='undefined'){
-    const {dialog} = require('electron').remote;
-    dialog.showMessageBox({
-        type: 'info',
-        title: "访问说明",
-        message: "你正在访问第三方DAPP"+res.result.xpub,
-        buttons: ["OK", "Cancel"]
-    }).then(result => {
-        console.log("您的选择:" , res.result.xpub);
-        console.log(result)
-    }).catch(err => {
-        console.log(err)
-    })
+if (res !== null || typeof (res) !== 'undefined') {
+  const { dialog } = require('electron').remote
+  dialog.showMessageBox({
+    type: 'info',
+    title: '访问说明',
+    message: '你正在访问第三方DAPP' + res.result.xpub,
+    buttons: ['OK', 'Cancel']
+  }).then(result => {
+    console.log('您的选择:', res.result.xpub)
+    console.log(result)
+  }).catch(err => {
+    console.log(err)
+  })
 }
 // ipcRenderer.send('message-from-provider', {
 //     type: "getSeid",

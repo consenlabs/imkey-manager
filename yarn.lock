@@ -1067,9 +1067,8 @@
   resolved "https://registry.yarnpkg.com/@fortawesome/fontawesome-free/-/fontawesome-free-5.15.1.tgz#ccfef6ddbe59f8fe8f694783e1d3eb88902dc5eb"
   integrity sha512-OEdH7SyC1suTdhBGW91/zBfR6qaIhThbcN8PUXtXilY4GYnSBbVqOntdHbC1vXwsDnX0Qix2m2+DSU1J51ybOQ==
 
-"@imkey/web3-provider@https://github.com/consenlabs/imkey-web3-provider.git#63cb7f6":
+"@imkey/web3-provider@file:../imkey-web3-provider":
   version "1.0.0"
-  resolved "https://github.com/consenlabs/imkey-web3-provider.git#63cb7f6601b2e4210617c2c1777545fd78bf7116"
   dependencies:
     "@types/event-emitter-es6" "^1.1.0"
     ethjs "^0.4.0"

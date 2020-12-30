@@ -1,5 +1,5 @@
 
-const { ipcRenderer,remote } = require('electron')
+const { ipcRenderer, remote } = require('electron')
 const deviceManger = remote.app.devicemanagerapi
 const walletApi = remote.app.walletapi
 let handleType = ''
