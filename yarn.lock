@@ -4243,7 +4243,16 @@ electron-updater@^4.3.1:
     lodash.isequal "^4.5.0"
     semver "^7.1.3"
 
-electron@^7.0.0, electron@^7.3.1:
+electron@7.3.3:
+  version "7.3.3"
+  resolved "https://registry.yarnpkg.com/electron/-/electron-7.3.3.tgz#f61502a3d42d85adfecd8e37f98da449b591f8af"
+  integrity sha512-PrJEsuRiaAhTDHtbH3EM+RIne+nZ6ifGChUadmtmPqHUQ+rIhf4jSi2ZN768IgBDw4SidMJiCrvQRiuDha9+Ew==
+  dependencies:
+    "@electron/get" "^1.0.1"
+    "@types/node" "^12.0.12"
+    extract-zip "^1.0.3"
+
+electron@^7.0.0:
   version "7.3.1"
   resolved "https://registry.npm.taobao.org/electron/download/electron-7.3.1.tgz?cache=0&sync_timestamp=1591999942137&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Felectron%2Fdownload%2Felectron-7.3.1.tgz#3574f85866b97a8712265442dbf7244cac639910"
   integrity sha1-NXT4WGa5eocSJlRC2/ckTKxjmRA=
@@ -4981,10 +4990,10 @@ fecha@^4.2.0:
   resolved "https://registry.yarnpkg.com/fecha/-/fecha-4.2.0.tgz#3ffb6395453e3f3efff850404f0a59b6747f5f41"
   integrity sha512-aN3pcx/DSmtyoovUudctc8+6Hl4T+hI9GBBHLjA76jdZl7+b1sgh5g4k+u/GL3dTy1/pnYzKp69FpJ0OicE3Wg==
 
-ffi-napi@^3.0.1:
-  version "3.0.1"
-  resolved "https://registry.npm.taobao.org/ffi-napi/download/ffi-napi-3.0.1.tgz#4a33a919f199c06546abbada610e508a0c03c754"
-  integrity sha1-SjOpGfGZwGVGq7raYQ5QigwDx1Q=
+ffi-napi@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/ffi-napi/-/ffi-napi-3.1.0.tgz#5bd037a26eaa4234c664e8b9d27be3719505c7bd"
+  integrity sha512-EsHO+sP2p/nUC/3l/l8m9niee1BLm4asUFDzkkBGR4kYVgp2KqdAYUomZhkKtzim4Fq7mcYHjpUaIHsMqs+E1g==
   dependencies:
     debug "^4.1.1"
     get-uv-event-loop-napi-h "^1.0.5"
@@ -9297,10 +9306,20 @@ redent@^1.0.0:
     indent-string "^2.1.0"
     strip-indent "^1.0.1"
 
-ref-napi@^2.0.1, ref-napi@^2.0.2:
+ref-napi@^2.0.1:
   version "2.0.2"
   resolved "https://registry.npm.taobao.org/ref-napi/download/ref-napi-2.0.2.tgz#1ea8b40f4423cde8fcc223a320e31162cbd525b4"
   integrity sha1-Hqi0D0Qjzej8wiOjIOMRYsvVJbQ=
+  dependencies:
+    debug "^4.1.1"
+    get-symbol-from-current-process-h "^1.0.2"
+    node-addon-api "^2.0.0"
+    node-gyp-build "^4.2.1"
+
+ref-napi@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/ref-napi/-/ref-napi-3.0.1.tgz#442c0b266c14620a3c3b5a1d9c8d8d997f33a86d"
+  integrity sha512-W3rcb0E+tlO9u9ySFnX5vifInwwPGToOfFgTZUHJBNiOBsW0NNvgHz2zJN7ctABo/2yIlgdPQUvuqqfORIF4LA==
   dependencies:
     debug "^4.1.1"
     get-symbol-from-current-process-h "^1.0.2"

@@ -14,7 +14,7 @@ exports.default = async function notarizing(context) {
         appBundleId: 'com.imkey.imkey-manager',
         appPath: `${appOutDir}/${appName}.app`,
         ascProvider: process.env.TEAM_SHORT_NAME,
-        appleId: process.env.APPLE_ID,
-        appleIdPassword: process.env.APPLE_ID_PASSWORD,
+        appleApiKey: process.env.APPLE_ID,
+        appleApiIssuer: process.env.APPLE_ID_PASSWORD,
     });
 }

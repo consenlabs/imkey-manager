@@ -1,8 +1,6 @@
 const walletApi = require('./walletapi')
 const constants = require('../common/constants')
 const deviceManger = require('./devicemanagerapi')
-const electron = require('electron')
-const filePath = (electron.app || electron.remote.app).getPath('userData') + '/'
 
 export function api (reqJson) {
   const jsonrpc = reqJson.jsonrpc
@@ -46,7 +44,7 @@ export function api (reqJson) {
       return result
     } else {
       // 检查是否绑定
-      const bindCheckRes = deviceManger.deviceBindCheck(filePath)
+      const bindCheckRes = deviceManger.deviceBindCheck()
       if (bindCheckRes.isSuccess) {
         if (bindCheckRes.result !== constants.BIND_STATUS_STRING_BOUND_THIS) {
           if (bindCheckRes.result === constants.BIND_STATUS_STRING_BOUND_OTHER || bindCheckRes.result === constants.BIND_STATUS_STRING_UNBOUND) {
@@ -119,10 +117,7 @@ export function api (reqJson) {
     } else {
       result = {
         'jsonrpc:': jsonrpc,
-        result: {
-          txHash: response.result.getTxHash(),
-          txData: response.result.getTxData()
-        },
+        result: response.result,
         'id:': id
       }
     }
@@ -141,11 +136,7 @@ export function api (reqJson) {
     } else {
       result = {
         'jsonrpc:': jsonrpc,
-        result: {
-          txHash: response.result.getTxHash(),
-          witnessTxData: response.result.getWitnessTxData(),
-          wtxHash: response.result.getWtxHash()
-        },
+        result: response.result,
         'id:': id
       }
     }
@@ -164,10 +155,7 @@ export function api (reqJson) {
     } else {
       result = {
         'jsonrpc:': jsonrpc,
-        result: {
-          txHash: response.result.getTxHash(),
-          txData: response.result.getTxData()
-        },
+        result: response.result,
         'id:': id
       }
     }
@@ -186,11 +174,7 @@ export function api (reqJson) {
     } else {
       result = {
         'jsonrpc:': jsonrpc,
-        result: {
-          txHash: response.result.getTxHash(),
-          witnessTxData: response.result.getWitnessTxData(),
-          wtxHash: response.result.getWtxHash()
-        },
+        result: response.result,
         'id:': id
       }
     }
@@ -209,10 +193,7 @@ export function api (reqJson) {
     } else {
       result = {
         'jsonrpc:': jsonrpc,
-        result: {
-          txHash: response.result.getTxHash(),
-          txData: response.result.getTxData()
-        },
+        result: response.result,
         'id:': id
       }
     }
@@ -298,10 +279,121 @@ export function api (reqJson) {
     } else {
       result = {
         'jsonrpc:': jsonrpc,
-        result: {
-          txHash: response.result.getTxHash(),
-          txData: response.result.getTxData()
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_TRANSACTION_SIGNTX_FILECOIN) {
+    const response = walletApi.filecoinSignTransaction(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
         },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_TRANSACTION_SIGNTX_POLKADOT) {
+    const response = walletApi.dotSignTransaction(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_TRANSACTION_SIGNTX_KUSAMA) {
+    const response = walletApi.ksmSignTransaction(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_TRANSACTION_SIGNTX_TRON) {
+    const response = walletApi.tronSignTransaction(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_TRANSACTION_SIGNMSG_TRON) {
+    const response = walletApi.tronSignMessage(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_TRANSACTION_SIGNTX_XTZ) {
+    const response = walletApi.xtzSignTransaction(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
         'id:': id
       }
     }
@@ -341,9 +433,7 @@ export function api (reqJson) {
     } else {
       result = {
         'jsonrpc:': jsonrpc,
-        result: {
-          address: response.result
-        },
+        result: response.result,
         'id:': id
       }
     }
@@ -362,9 +452,7 @@ export function api (reqJson) {
     } else {
       result = {
         'jsonrpc:': jsonrpc,
-        result: {
-          address: response.result
-        },
+        result: response.result,
         'id:': id
       }
     }
@@ -383,9 +471,7 @@ export function api (reqJson) {
     } else {
       result = {
         'jsonrpc:': jsonrpc,
-        result: {
-          address: response.result
-        },
+        result: response.result,
         'id:': id
       }
     }
@@ -404,9 +490,7 @@ export function api (reqJson) {
     } else {
       result = {
         'jsonrpc:': jsonrpc,
-        result: {
-          address: response.result
-        },
+        result: response.result,
         'id:': id
       }
     }
@@ -425,9 +509,7 @@ export function api (reqJson) {
     } else {
       result = {
         'jsonrpc:': jsonrpc,
-        result: {
-          address: response.result
-        },
+        result: response.result,
         'id:': id
       }
     }
@@ -446,9 +528,7 @@ export function api (reqJson) {
     } else {
       result = {
         'jsonrpc:': jsonrpc,
-        result: {
-          address: response.result
-        },
+        result: response.result,
         'id:': id
       }
     }
@@ -467,9 +547,7 @@ export function api (reqJson) {
     } else {
       result = {
         'jsonrpc:': jsonrpc,
-        result: {
-          pubkey: response.result
-        },
+        result: response.result,
         'id:': id
       }
     }
@@ -488,9 +566,7 @@ export function api (reqJson) {
     } else {
       result = {
         'jsonrpc:': jsonrpc,
-        result: {
-          pubkey: response.result
-        },
+        result: response.result,
         'id:': id
       }
     }
@@ -509,9 +585,7 @@ export function api (reqJson) {
     } else {
       result = {
         'jsonrpc:': jsonrpc,
-        result: {
-          address: response.result
-        },
+        result: response.result,
         'id:': id
       }
     }
@@ -530,9 +604,197 @@ export function api (reqJson) {
     } else {
       result = {
         'jsonrpc:': jsonrpc,
-        result: {
-          address: response.result
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_GET_ADDRESS_FILECOIN) {
+    const response = walletApi.getFILECOINAddress(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
         },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_REGISTER_ADDRESS_FILECOIN) {
+    const response = walletApi.registerFILECOINAddress(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_GET_ADDRESS_POLKADOT) {
+    const response = walletApi.getDOTAddress(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_REGISTER_ADDRESS_POLKADOT) {
+    const response = walletApi.registerDOTAddress(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_GET_ADDRESS_KUSAMA) {
+    const response = walletApi.getKSMAddress(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_REGISTER_ADDRESS_KUSAMA) {
+    const response = walletApi.registerKSMAddress(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_GET_ADDRESS_TRON) {
+    const response = walletApi.getTRONAddress(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_REGISTER_ADDRESS_TRON) {
+    const response = walletApi.registerTRONAddress(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_GET_ADDRESS_XTZ) {
+    const response = walletApi.getXTZAddress(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_REGISTER_ADDRESS_XTZ) {
+    const response = walletApi.registerXTZAddress(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
         'id:': id
       }
     }

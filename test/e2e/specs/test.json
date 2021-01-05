@@ -45,13 +45,22 @@
       "changeAddressIndex": 53,
       "amount": 799988000,
       "fee": 10000,
-      "extraData": "0200000080a10bc28928f4c17a287318125115c3f098ed20a8237d1e8e4125bc25d1be99752adad0a7b9ceca853768aebb6965eca126a62965f698a0c1bc43d83db632ad7f717276057e6012afa99385",
-      "payment": "0.0001 BT",
-      "toDis": "3CVD68V71no5jn2UZpLLq6hASpXu1jrByt",
-      "from": "3GrvKsZWbb9ocBaNF7XosFZEKuCVBRSoiy",
-      "feeDis": "0.00007945 BTC",
+      "protocol": "",
+      "segWit": "",
+      "path": "m/44'/1'/0'",
       "network": "TESTNET",
-      "pathPrefix": "m/44'/1'/0'",
+      "extra": {
+        "opreturn": "0200000080a10bc28928f4c17a287318125115c3f098ed20a8237d1e8e4125bc25d1be99752adad0a7b9ceca853768aebb6965eca126a62965f698a0c1bc43d83db632ad7f717276057e6012afa99385",
+        "propertyId": 31,
+        "feeMode": ""
+      },
+      "preview": {
+        "payment": "0.0001 BTC",
+        "receiver": "3CVD68V71no5jn2UZpLLq6hASpXu1jrByt",
+        "sender": "3GrvKsZWbb9ocBaNF7XosFZEKuCVBRSoiy",
+        "fee": "0.00007945 BTC"
+      },
+
       "txHash": "d40ceeecbb1ad07e7a19d4c807808ad7b5c78854cfebd7f25e2f79fcc43055f4"
     },
     "id": 1
@@ -59,8 +68,9 @@
   "btc.signTransaction.result": {
     "jsonrpc:": "2.0",
     "result": {
-      "txHash": "d40ceeecbb1ad07e7a19d4c807808ad7b5c78854cfebd7f25e2f79fcc43055f4",
-      "txData": "01000000047a222fb053b6e5339a9b6f9649f88a9481606cf3c64c4557802b3a819ddf3a98000000006a47304402207fbe1aa92e06847b600e62769576d39215836baabddd05d8454304b8411fead702203deeab72295057d44918d42c227b0fd337812673fe8e60f1483117adf016c57901210312a0cb31ff52c480c049da26d0aaa600f47e9deee53d02fc2b0e9acf3c20fbdfffffffff31b5a9794dcaf82af1738745afe1ecf402ea4a93e71ae75c7d3d8bf7c78aef45010000006b483045022100ee223feab22dbaa37258d6cfa9a5f3ed506c5d5f00d6af26b722e21abfb489b30220792d9a8c6303300037e46baac603893adc9109cdd062e4e15b726f7ccbf6edd70121033d710ab45bb54ac99618ad23b3c1da661631aa25f23bfe9d22b41876f1d46e4effffffffa92c40dfd195a188d87110557fb7f46dbbfb68c4bb8718f33dc31d61927ec614000000006a473044022051d9a35e9f82a79769daddd52ef829e2637c20340e2b50942e83d1bb2d9b69ad022042bb388ae7d64d6b556544a5f6d9ce1a36d26670101e61831e6dd3fa532119200121033d710ab45bb54ac99618ad23b3c1da661631aa25f23bfe9d22b41876f1d46e4effffffffb99a3e8884b14f330d2a444a4bc2a03af16804fb99b5e37ee892ed5db8b67f11010000006a47304402206a8f7d6c14bd0368af518bb6467f75b5a573b0ffe8d948ff689e93f51c7f594c02200d72f37aef7bb6fbbeacc4ccc736210306c3a1f86b84144aa2193bce2227e1540121033d710ab45bb54ac99618ad23b3c1da661631aa25f23bfe9d22b41876f1d46e4effffffff0220d9ae2f000000001976a91455bdc1b42e3bed851959846ddf600e96125423e088ac0000000000000000536a4c500200000080a10bc28928f4c17a287318125115c3f098ed20a8237d1e8e4125bc25d1be99752adad0a7b9ceca853768aebb6965eca126a62965f698a0c1bc43d83db632ad7f717276057e6012afa9938500000000"
+      "signature": "01000000047a222fb053b6e5339a9b6f9649f88a9481606cf3c64c4557802b3a819ddf3a98000000006a47304402207fbe1aa92e06847b600e62769576d39215836baabddd05d8454304b8411fead702203deeab72295057d44918d42c227b0fd337812673fe8e60f1483117adf016c57901210312a0cb31ff52c480c049da26d0aaa600f47e9deee53d02fc2b0e9acf3c20fbdfffffffff31b5a9794dcaf82af1738745afe1ecf402ea4a93e71ae75c7d3d8bf7c78aef45010000006b483045022100ee223feab22dbaa37258d6cfa9a5f3ed506c5d5f00d6af26b722e21abfb489b30220792d9a8c6303300037e46baac603893adc9109cdd062e4e15b726f7ccbf6edd70121033d710ab45bb54ac99618ad23b3c1da661631aa25f23bfe9d22b41876f1d46e4effffffffa92c40dfd195a188d87110557fb7f46dbbfb68c4bb8718f33dc31d61927ec614000000006a473044022051d9a35e9f82a79769daddd52ef829e2637c20340e2b50942e83d1bb2d9b69ad022042bb388ae7d64d6b556544a5f6d9ce1a36d26670101e61831e6dd3fa532119200121033d710ab45bb54ac99618ad23b3c1da661631aa25f23bfe9d22b41876f1d46e4effffffffb99a3e8884b14f330d2a444a4bc2a03af16804fb99b5e37ee892ed5db8b67f11010000006a47304402206a8f7d6c14bd0368af518bb6467f75b5a573b0ffe8d948ff689e93f51c7f594c02200d72f37aef7bb6fbbeacc4ccc736210306c3a1f86b84144aa2193bce2227e1540121033d710ab45bb54ac99618ad23b3c1da661631aa25f23bfe9d22b41876f1d46e4effffffff0220d9ae2f000000001976a91455bdc1b42e3bed851959846ddf600e96125423e088ac0000000000000000536a4c500200000080a10bc28928f4c17a287318125115c3f098ed20a8237d1e8e4125bc25d1be99752adad0a7b9ceca853768aebb6965eca126a62965f698a0c1bc43d83db632ad7f717276057e6012afa9938500000000",
+      "txhash": "d40ceeecbb1ad07e7a19d4c807808ad7b5c78854cfebd7f25e2f79fcc43055f4",
+      "wtxhash": ""
     },
     "id:": 1
   },
@@ -92,13 +102,20 @@
       "changeAddressIndex": 0,
       "amount": 88000,
       "fee": 10000,
-      "extraData": "1234",
-      "payment": "0.0001 BT",
-      "toDis": "3CVD68V71no5jn2UZpLLq6hASpXu1jrByt",
-      "from": "3GrvKsZWbb9ocBaNF7XosFZEKuCVBRSoiy",
-      "feeDis": "0.00007945 BTC",
+      "protocol": "",
+      "segWit": "P2WPKH",
+      "path": "m/49'/1'/0'/",
       "network": "TESTNET",
-      "pathPrefix": "m/49'/1'/0'/",
+      "extra": {
+        "opreturn": "1234",
+        "feeMode": ""
+      },
+      "preview": {
+        "payment": "0.0001 BTC",
+        "receiver": "3CVD68V71no5jn2UZpLLq6hASpXu1jrByt",
+        "sender": "3GrvKsZWbb9ocBaNF7XosFZEKuCVBRSoiy",
+        "fee": "0.00007945 BTC"
+      },
       "txHash": "3b2178aa4d52377226dd394776680a91a05781fe93ce42666e307dc16aeaae99",
       "wtxId": "92fa20346dc6a97d852db332beffb7d60d57d82207b63c6484d886541a924041"
     },
@@ -107,9 +124,9 @@
   "btc.signSegWitTransaction.result": {
     "jsonrpc:": "2.0",
     "result": {
-      "txHash": "3b2178aa4d52377226dd394776680a91a05781fe93ce42666e307dc16aeaae99",
-      "witnessTxData": "020000000001027f717276057e6012afa99385c18cc692397a666560520577679bf38c08b5cec20000000017160014654fbb08267f3d50d715a8f1abb55979b160dd5bffffffff74cdd54bc48333e1d2f108460284d137c39b6c417d9ff55a572a9550d428d69a00000000171600149d66aa6399de69d5c5ae19f9098047760251a854ffffffff02c05701000000000017a914b710f6e5049eaf0404c2f02f091dd5bb79fa135e870000000000000000046a021234024730440220527c098c320c54ac56445b757a76833f7a47229fa0fe2b179f55bd718822695e022060f48b05c46f8335266eade0fe503448ff4222efc7e84ef86a25abffbe02ead20121031aee5e20399d68cf0035d1a21564868f22bc448ab205292b4279136b15ecaebc024730440220551ab42b94841b43e6118a6adb39a561f138ae9ee8d2c00ffa3886839afe66d2022046686666245b94b7272d7cbd17a6f20639532ddefafe0572ecc28dcb246d33f8012103a241c8d13dd5c92475652c43bf56580fbf9f1e8bc0aa0132ddc8443c03062bb900000000",
-      "wtxHash": "92fa20346dc6a97d852db332beffb7d60d57d82207b63c6484d886541a924041"
+      "signature": "020000000001027f717276057e6012afa99385c18cc692397a666560520577679bf38c08b5cec20000000017160014654fbb08267f3d50d715a8f1abb55979b160dd5bffffffff74cdd54bc48333e1d2f108460284d137c39b6c417d9ff55a572a9550d428d69a00000000171600149d66aa6399de69d5c5ae19f9098047760251a854ffffffff02c05701000000000017a914b710f6e5049eaf0404c2f02f091dd5bb79fa135e870000000000000000046a021234024730440220527c098c320c54ac56445b757a76833f7a47229fa0fe2b179f55bd718822695e022060f48b05c46f8335266eade0fe503448ff4222efc7e84ef86a25abffbe02ead20121031aee5e20399d68cf0035d1a21564868f22bc448ab205292b4279136b15ecaebc024730440220551ab42b94841b43e6118a6adb39a561f138ae9ee8d2c00ffa3886839afe66d2022046686666245b94b7272d7cbd17a6f20639532ddefafe0572ecc28dcb246d33f8012103a241c8d13dd5c92475652c43bf56580fbf9f1e8bc0aa0132ddc8443c03062bb900000000",
+      "txhash": "3b2178aa4d52377226dd394776680a91a05781fe93ce42666e307dc16aeaae99",
+      "wtxhash": "92fa20346dc6a97d852db332beffb7d60d57d82207b63c6484d886541a924041"
     },
     "id:": 2
   },
@@ -131,22 +148,31 @@
       "to": "moLK3tBG86ifpDDTqAQzs4a9cUoNjVLRE3",
       "amount": 10050000000,
       "fee": 4000,
-      "payment": "100 USDT",
-      "toDis": "moLK3tBG86ifpDDTqAQzs4a9cUoNjVLRE3",
-      "from": "2MwN441dq8qudMvtM5eLVwC3u4zfKuGSQAB",
-      "feeDis": "0.0004 BTC",
-      "propertyId": 31,
+      "protocol": "OMNI",
+      "segWit": "",
+      "path": "m/44'/1'/0'",
       "network": "TESTNET",
-      "pathPrefix": "m/44'/1'/0'",
+      "extra": {
+        "opreturn": "",
+        "propertyId": 31,
+        "feeMode": ""
+      },
+      "preview": {
+        "payment": "100 USDT",
+        "receiver": "moLK3tBG86ifpDDTqAQzs4a9cUoNjVLRE3",
+        "sender": "2MwN441dq8qudMvtM5eLVwC3u4zfKuGSQAB",
+        "fee": "0.0004 BTC"
+      },
       "txHash": "36a25fa2005b5d4922d18f6f819bf068dca479d4103904ce225a9438a2c1f5a0"
     },
     "id": 3
   },
-  "btc.signUsdtTransaction.result": {
+  "btc.signUsdtTransaction.result":{
     "jsonrpc:": "2.0",
     "result": {
-      "txHash": "36a25fa2005b5d4922d18f6f819bf068dca479d4103904ce225a9438a2c1f5a0",
-      "txData": "010000000131204fa5fe40ef035e9a7330a15fae4483d2670c3af495596c08c515c895d10d000000006a47304402206ac15b4d02b503116770ca485e33a495fd2370cb8a6fa1d9870e62503dee035a02203754d4c4bf8d58cd98d10ca5797a7f98f2095bee8176dd94d5b39bdb07c57cf00121033d710ab45bb54ac99618ad23b3c1da661631aa25f23bfe9d22b41876f1d46e4effffffff03d423e200000000001976a914383fb81cb0a3fc724b5e08cf8bbd404336d711f688ac22020000000000001976a91455bdc1b42e3bed851959846ddf600e96125423e088ac0000000000000000166a146f6d6e69000000000000001f000000025706d48000000000"
+      "signature": "010000000131204fa5fe40ef035e9a7330a15fae4483d2670c3af495596c08c515c895d10d000000006a47304402206ac15b4d02b503116770ca485e33a495fd2370cb8a6fa1d9870e62503dee035a02203754d4c4bf8d58cd98d10ca5797a7f98f2095bee8176dd94d5b39bdb07c57cf00121033d710ab45bb54ac99618ad23b3c1da661631aa25f23bfe9d22b41876f1d46e4effffffff03d423e200000000001976a914383fb81cb0a3fc724b5e08cf8bbd404336d711f688ac22020000000000001976a91455bdc1b42e3bed851959846ddf600e96125423e088ac0000000000000000166a146f6d6e69000000000000001f000000025706d48000000000",
+      "txhash": "36a25fa2005b5d4922d18f6f819bf068dca479d4103904ce225a9438a2c1f5a0",
+      "wtxhash": ""
     },
     "id:": 3
   },
@@ -168,13 +194,21 @@
       "to": "moLK3tBG86ifpDDTqAQzs4a9cUoNjVLRE3",
       "amount": 10000000000,
       "fee": 4000,
-      "payment": "100 USDT",
-      "toDis": "moLK3tBG86ifpDDTqAQzs4a9cUoNjVLRE3",
-      "from": "2MwN441dq8qudMvtM5eLVwC3u4zfKuGSQAB",
-      "feeDis": "0.0004 BTC",
-      "propertyId": 31,
+      "protocol": "OMNI",
+      "segWit": "P2WPKH",
+      "path": "m/49'/1'/0'/",
       "network": "TESTNET",
-      "pathPrefix": "m/49'/1'/0'/",
+      "extra": {
+        "opreturn": "",
+        "propertyId": 31,
+        "feeMode": ""
+      },
+      "preview": {
+        "payment": "100 USDT",
+        "receiver": "moLK3tBG86ifpDDTqAQzs4a9cUoNjVLRE3",
+        "sender": "2MwN441dq8qudMvtM5eLVwC3u4zfKuGSQAB",
+        "fee": "0.0004 BTC"
+      },
       "txHash": "e664888c4a67cfed29786e5ada0c24cb25b91cafca4ae699fb7b90e7071e88bc",
       "wtxHash": "acde42849de610fcd79da9f9b782bc9dc08545af82be830ca6e28362865099ba"
     },
@@ -183,9 +217,9 @@
   "btc.signUsdtSegWitTransaction.result": {
     "jsonrpc:": "2.0",
     "result": {
-      "txHash": "e664888c4a67cfed29786e5ada0c24cb25b91cafca4ae699fb7b90e7071e88bc",
-      "witnessTxData": "02000000000101784c9fa8ef8756b8acdbcfa154fbafc4b973cb239c87f499f1f960e5d06faf9b0100000017160014654fbb08267f3d50d715a8f1abb55979b160dd5bffffffff03228a4d010000000017a9142d2b1ef5ee4cf6c3ebc8cf66a602783798f787598722020000000000001976a91455bdc1b42e3bed851959846ddf600e96125423e088ac0000000000000000166a146f6d6e69000000000000001f00000002540be40002483045022100d2d521822c2ec4d5396928ca21420c963876d9c946932adb030c0cc976198c6b02206aa58d146f3e6b613a178cf87163dd887ca3f13944117d29b8877c86a0e5811e0121031aee5e20399d68cf0035d1a21564868f22bc448ab205292b4279136b15ecaebc00000000",
-      "wtxHash": "acde42849de610fcd79da9f9b782bc9dc08545af82be830ca6e28362865099ba"
+      "signature": "02000000000101784c9fa8ef8756b8acdbcfa154fbafc4b973cb239c87f499f1f960e5d06faf9b0100000017160014654fbb08267f3d50d715a8f1abb55979b160dd5bffffffff03228a4d010000000017a9142d2b1ef5ee4cf6c3ebc8cf66a602783798f787598722020000000000001976a91455bdc1b42e3bed851959846ddf600e96125423e088ac0000000000000000166a146f6d6e69000000000000001f00000002540be40002483045022100d2d521822c2ec4d5396928ca21420c963876d9c946932adb030c0cc976198c6b02206aa58d146f3e6b613a178cf87163dd887ca3f13944117d29b8877c86a0e5811e0121031aee5e20399d68cf0035d1a21564868f22bc448ab205292b4279136b15ecaebc00000000",
+      "txhash": "e664888c4a67cfed29786e5ada0c24cb25b91cafca4ae699fb7b90e7071e88bc",
+      "wtxhash": "acde42849de610fcd79da9f9b782bc9dc08545af82be830ca6e28362865099ba"
     },
     "id:": 4
   },
@@ -210,14 +244,22 @@
     "method": "btc.getAddress",
     "params": {
       "network": "MAINNET",
-      "path": "m/44'/0'/0'/0/0"
+      "path": "m/44'/0'/0'"
     },
     "id": 6
   },
   "btc.getAddress.result": {
     "jsonrpc:": "2.0",
     "result": {
-      "address": "12z6UzsA3tjpaeuvA2Zr9jwx19Azz74D6g"
+      "path": "m/44'/0'/0'",
+      "chaintype": "BITCOIN",
+      "address": "12z6UzsA3tjpaeuvA2Zr9jwx19Azz74D6g",
+      "encxpub": "BdgvWHN/Uh/K526q/+CdpGwEPZ41SvZHHGSgiSqhFesjErdbo6UnJMIoDOHV94qW8fd2KBW18UG3nTzDwS7a5oArqPtv+2aE9+1bNvCdtYoAx3979N3vbX4Xxn/najTABykXrJDjgpoaXxSo/xTktQ==",
+      "externaladdress": {
+        "address": "1962gsZ8PoPUYHneFakkCTrukdFMVQ4i4T",
+        "derivedpath": "0/1",
+        "type": "EXTERNAL"
+      }
     },
     "id:": 6
   },
@@ -226,14 +268,22 @@
     "method": "btc.getSegWitAddress",
     "params": {
       "network": "MAINNET",
-      "path": "m/49'/0'/0'/0/22"
+      "path": "m/49'/0'/0'"
     },
     "id": 7
   },
-  "btc.getSegWitAddress.result": {
+  "btc.getSegWitAddress.result":{
     "jsonrpc:": "2.0",
     "result": {
-      "address": "37E2J9ViM4QFiewo7aw5L3drF2QKB99F9e"
+      "path": "m/49'/0'/0'",
+      "chaintype": "BITCOIN",
+      "address": "3JmreiUEKn8P3SyLYmZ7C1YCd4r2nFy3Dp",
+      "encxpub": "CPEZEgxonR02LextSVWxqQmH7zSjfNN44+0KYuTJ4ezARna34lG4YcX7nR5xvSrMhuRv4eI8BG+2h3Zz4523lNPp8Y6pEEtdJHSvTzS/APQYtdpHB3Hye+kQ+D7YuJ7Ps+LxoxFAwpic7a3CS+R+cw==",
+      "externaladdress": {
+        "address": "33xJxujVGf4qBmPTnGW9P8wrKCmT7Nwt3t",
+        "derivedpath": "0/1",
+        "type": "EXTERNAL"
+      }
     },
     "id:": 7
   },
@@ -242,13 +292,15 @@
     "method": "btc.registerAddress",
     "params": {
       "network": "MAINNET",
-      "path": "m/44'/0'/0'/0/0"
+      "path": "m/44'/0'/0'"
     },
     "id": 8
   },
   "btc.registerAddress.result": {
     "jsonrpc:": "2.0",
     "result": {
+      "path": "m/44'/0'/0'",
+      "chaintype": "BITCOIN",
       "address": "12z6UzsA3tjpaeuvA2Zr9jwx19Azz74D6g"
     },
     "id:": 8
@@ -258,13 +310,15 @@
     "method": "btc.registerSegWitAddress",
     "params": {
       "network": "MAINNET",
-      "path": "m/49'/0'/0'/0/0"
+      "path": "m/49'/0'/0'"
     },
     "id": 9
   },
   "btc.registerSegWitAddress.result": {
     "jsonrpc:": "2.0",
     "result": {
+      "path": "m/49'/0'/0'",
+      "chaintype": "BITCOIN",
       "address": "3JmreiUEKn8P3SyLYmZ7C1YCd4r2nFy3Dp"
     },
     "id:": 9
@@ -296,8 +350,8 @@
   "eth.signTransaction.result": {
     "jsonrpc:": "2.0",
     "result": {
-      "txHash": "0x09fa41c4d6b92482506c8c56f65b217cc3398821caec7695683110997426db01",
-      "txData": "f867088504a817c8088302e248943535353535353535353535353535353535353535820200805ba03aa62abb45b77418caf139dda0179aea802c99967b3d690b87d586a87bc805afa02b5ce94f40dc865ca63403e0e5e723e1523884f001573677cd8cec11c7ca332f"
+      "signature": "f867088504a817c8088302e248943535353535353535353535353535353535353535820200805ba03aa62abb45b77418caf139dda0179aea802c99967b3d690b87d586a87bc805afa02b5ce94f40dc865ca63403e0e5e723e1523884f001573677cd8cec11c7ca332f",
+      "txhash": "0x09fa41c4d6b92482506c8c56f65b217cc3398821caec7695683110997426db01"
     },
     "id:": 10
   },
@@ -306,6 +360,7 @@
     "method": "eth.signMessage",
     "params": {
       "data": "Hello imKey",
+      "isPersonalSign": true,
       "sender": "0x6031564e7b2F5cc33737807b2E58DaFF870B590b",
       "path": "m/44'/60'/0'/0/0",
       "signature": "d928f76ad80d63003c189b095078d94ae068dc2f18a5cafd97b3a630d7bc47465bd6f1e74de2e88c05b271e1c5a8b93564d9d8842c207482b20634d68f2d54e51b"
@@ -330,6 +385,8 @@
   "eth.getAddress.result": {
     "jsonrpc:": "2.0",
     "result": {
+      "path": "m/44'/60'/0'/0/0",
+      "chaintype": "ETHEREUM",
       "address": "0x6031564e7b2F5cc33737807b2E58DaFF870B590b"
     },
     "id:": 12
@@ -345,6 +402,8 @@
   "eth.registerAddress.result": {
     "jsonrpc:": "2.0",
     "result": {
+      "path": "m/44'/60'/0'/0/0",
+      "chaintype": "ETHEREUM",
       "address": "0x6031564e7b2F5cc33737807b2E58DaFF870B590b"
     },
     "id:": 13
@@ -363,8 +422,8 @@
       "path": "m/44'/194'/0'/0/0",
       "preview": {
         "payment": "1000 eos",
-        "to": "bbbb5555bbbb",
-        "from": "liujianmin12"
+        "receiver": "bbbb5555bbbb",
+        "sender": "liujianmin12"
       },
       "txHash": "6af5b3ae9871c25e2de195168ed7423f455a68330955701e327f02276bb34088"
     },
@@ -414,7 +473,15 @@
   "eos.getPubKey.result": {
     "jsonrpc:": "2.0",
     "result": {
-      "pubkey": "EOS88XhiiP7Cu5TmAUJqHbyuhyYgd6sei68AU266PyetDDAtjmYWF"
+      "chaintype": "EOS",
+      "address": "",
+      "publickeysList": [
+        {
+          "path": "m/44'/194'/0'/0/0",
+          "derivedmode": "PATH_DIRECTLY",
+          "publickey": "EOS88XhiiP7Cu5TmAUJqHbyuhyYgd6sei68AU266PyetDDAtjmYWF"
+        }
+      ]
     },
     "id:": 16
   },
@@ -429,7 +496,15 @@
   "eos.registerPubKey.result": {
     "jsonrpc:": "2.0",
     "result": {
-      "pubkey": "EOS88XhiiP7Cu5TmAUJqHbyuhyYgd6sei68AU266PyetDDAtjmYWF"
+      "chaintype": "EOS",
+      "address": "",
+      "publickeysList": [
+        {
+          "path": "m/44'/194'/0'/0/0",
+          "derivedmode": "PATH_DIRECTLY",
+          "publickey": "EOS88XhiiP7Cu5TmAUJqHbyuhyYgd6sei68AU266PyetDDAtjmYWF"
+        }
+      ]
     },
     "id:": 17
   },
@@ -463,10 +538,10 @@
       "chainId": "tendermint_test",
       "sequence": "1234567890",
       "preview": {
-        "paymentDis": "",
-        "toDis": "",
-        "fromDis": "",
-        "feeDis": "0.00075 atom"
+        "payment": "",
+        "receiver": "",
+        "sender": "",
+        "fee": "0.00075 atom"
       },
       "signatures": [
         {
@@ -483,8 +558,8 @@
   "cosmos.signTransaction.result": {
     "jsonrpc:": "2.0",
     "result": {
-      "txHash": "",
-      "txData": "{\"fee\":{\"amount\":[{\"amount\":\"750\",\"denom\":\"muon\"}],\"gas\":\"30000\"},\"memo\":\"\",\"signatures\":[{\"account_number\":\"1234567890\",\"pub_key\":{\"type\":\"tendermint/PubKeySecp256k1\",\"value\":\"AjLB7yHXPBlTGwqk6GPPOXwrmCsvlY9gzbYpaYJMCW1l\"},\"sequence\":\"1234567890\",\"signature\":\"AmMvo7RhDOD4E9PeK2igCAv+rI8R9U/4x7scp4/5YPAj7FzGQXjDtV3cPLcrcZEyqLYKs4NLGWU18Bjx9D0cTA==\"}],\"msg\":[{\"type\":\"cosmos-sdk/MsgSend\",\"value\":{\"amount\":[],\"fromAddress\":\"cosmos1ajz9y0x3wekez7tz2td2j6l2dftn28v26dd992\",\"toAddress\":\"cosmos1yeckxz7tapz34kjwnjxvmxzurerquhtrmxmuxt\"}}]}"
+      "signature": "{\"fee\":{\"amount\":[{\"amount\":\"750\",\"denom\":\"muon\"}],\"gas\":\"30000\"},\"memo\":\"\",\"signatures\":[{\"account_number\":\"1234567890\",\"pub_key\":{\"type\":\"tendermint/PubKeySecp256k1\",\"value\":\"AjLB7yHXPBlTGwqk6GPPOXwrmCsvlY9gzbYpaYJMCW1l\"},\"sequence\":\"1234567890\",\"signature\":\"AmMvo7RhDOD4E9PeK2igCAv+rI8R9U/4x7scp4/5YPAj7FzGQXjDtV3cPLcrcZEyqLYKs4NLGWU18Bjx9D0cTA==\"}],\"msg\":[{\"type\":\"cosmos-sdk/MsgSend\",\"value\":{\"amount\":[],\"fromAddress\":\"cosmos1ajz9y0x3wekez7tz2td2j6l2dftn28v26dd992\",\"toAddress\":\"cosmos1yeckxz7tapz34kjwnjxvmxzurerquhtrmxmuxt\"}}]}",
+      "txhash": ""
     },
     "id:": 18
   },
@@ -499,6 +574,8 @@
   "cosmos.getAddress.result": {
     "jsonrpc:": "2.0",
     "result": {
+      "path": "m/44'/118'/0'/0/0",
+      "chaintype": "COSMOS",
       "address": "cosmos1ajz9y0x3wekez7tz2td2j6l2dftn28v26dd992"
     },
     "id:": 19
@@ -514,8 +591,356 @@
   "cosmos.registerAddress.result": {
     "jsonrpc:": "2.0",
     "result": {
+      "path": "m/44'/118'/0'/0/0",
+      "chaintype": "COSMOS",
       "address": "cosmos1ajz9y0x3wekez7tz2td2j6l2dftn28v26dd992"
     },
     "id:": 20
+  },
+  "filecoin.signTransaction": {
+    "jsonrpc": "2.0",
+    "method": "filecoin.signTransaction",
+    "params": {
+      "to": "f1d2xrzcslx7xlbbylc5c3d5lvandqw4iwl6epxba",
+      "from": "f1o2ph66tg7o7obyrqa7eiwiinrltauzxitkuk4ay",
+      "nonce": 1,
+      "value": "100000",
+      "gasLimit": 1,
+      "gasFeeCap": "1",
+      "gasPremium": "1",
+      "method": 0,
+      "params": "",
+      "path": "m/44'/461'/0/0/0",
+      "preview": {
+        "payment": "1 FILECOIN",
+        "receiver": "f1d2xrzcslx7xlbbylc5c3d5lvandqw4iwl6epxba",
+        "sender": "f1o2ph66tg7o7obyrqa7eiwiinrltauzxitkuk4ay",
+        "fee": "0.1 FILECOIN"
+      }
+    },
+    "id": 21
+  },
+  "filecoin.signTransaction.result": {
+    "jsonrpc:": "2.0",
+    "result": {
+      "cid": "bafy2bzaceawarox6h5my5vk2gqe5v3qzzcsccoet4a5mrtg6xw7haeg7rd5ce",
+      "message": {
+        "to": "f1d2xrzcslx7xlbbylc5c3d5lvandqw4iwl6epxba",
+        "from": "f1o2ph66tg7o7obyrqa7eiwiinrltauzxitkuk4ay",
+        "nonce": 1,
+        "value": "100000",
+        "gaslimit": 1,
+        "gasfeecap": "1",
+        "gaspremium": "1",
+        "method": 0,
+        "params": ""
+      },
+      "signature": {
+        "type": 1,
+        "data": "k/ODPDElcw/xCQ0WWO3r7H3GoKpJVX7j6x1lyNFZ4YNvoWx8/RVqn0/+GNUvFCj1EOEXKFNf2h5LsBmiHDllkgE="
+      }
+    },
+    "id:": 21
+  }
+,
+  "filecoin.getAddress": {
+    "jsonrpc": "2.0",
+    "method": "filecoin.getAddress",
+    "params": {
+      "path": "m/44'/461'/0/0/0"
+    },
+    "id": 22
+  },
+  "filecoin.getAddress.result":{
+    "jsonrpc:": "2.0",
+    "result": {
+      "path": "m/44'/461'/0/0/0",
+      "chaintype": "FILECOIN",
+      "address": "f1o2ph66tg7o7obyrqa7eiwiinrltauzxitkuk4ay"
+    },
+    "id:": 22
+  },
+  "filecoin.registerAddress": {
+    "jsonrpc": "2.0",
+    "method": "filecoin.registerAddress",
+    "params": {
+      "path": "m/44'/461'/0/0/0"
+    },
+    "id": 23
+  },
+  "filecoin.registerAddress.result": {
+    "jsonrpc:": "2.0",
+    "result": {
+      "path": "m/44'/461'/0/0/0",
+      "chaintype": "FILECOIN",
+      "address": "f1o2ph66tg7o7obyrqa7eiwiinrltauzxitkuk4ay"
+    },
+    "id:": 23
+  },
+  "dot.signTransaction": {
+  "jsonrpc": "2.0",
+  "method": "dot.signTransaction",
+  "params": {
+    "rawdata": "0600ffd7568e5f0a7eda67a82691ff379ac4bba4f9c9b859fe779b5d46363b61ad2db9e56c0703d148e25901007b000000dcd1346701ca8396496e52aa2785b1748deb6db09551b72159dcb3e08991025bde8f69eeb5e065e18c6950ff708d7e551f68dc9bf59a07c52367c0280f805ec7",
+    "path": "m/44'/354'/0/0/0",
+    "preview": {
+      "payment": "25 DOT",
+      "receiver": "12pWV6LvG4iAfNpFNTvvkWy3H9H8wtCkjiXupAzo2BCmPViM",
+      "sender": "147mvrDYhFpZzvFASKBDNVcxoyz8XCVNyyFKSZcpbQxN33TT",
+      "fee": "15.4000 milli DOT"
+    }
+  },
+  "id": 24
+},
+  "dot.signTransaction.result":{
+    "jsonrpc:": "2.0",
+    "result": {
+      "signature": "0x004772d1580d39db83ea83c662d3a86391685f05008ee9e0cf7ddfe117c697f3ff12dda07c76658017a0a2f4c94221e63fdbc75fdf4f0b2c21f8d471a2098e3d01"
+    },
+    "id:": 24
+  },
+  "dot.getAddress": {
+    "jsonrpc": "2.0",
+    "method": "dot.getAddress",
+    "params": {
+      "path": "m/44'/461'/0/0/0"
+    },
+    "id": 25
+  },
+  "dot.getAddress.result":{
+    "jsonrpc:": "2.0",
+    "result": {
+      "path": "m/44'/461'/0/0/0",
+      "chaintype": "POLKADOT",
+      "address": "1HyP3DdxrWySNzss2vg954JX47PDyqL4WXJs139juUTrR6P"
+    },
+    "id:": 25
+  },
+  "dot.registerAddress": {
+    "jsonrpc": "2.0",
+    "method": "dot.registerAddress",
+    "params": {
+      "path": "m/44'/461'/0/0/0"
+    },
+    "id": 26
+  },
+  "dot.registerAddress.result": {
+    "jsonrpc:": "2.0",
+    "result": {
+      "path": "m/44'/461'/0/0/0",
+      "chaintype": "POLKADOT",
+      "address": "1HyP3DdxrWySNzss2vg954JX47PDyqL4WXJs139juUTrR6P"
+    },
+    "id:": 26
+  },
+  "ksm.signTransaction": {
+  "jsonrpc": "2.0",
+  "method": "ksm.signTransaction",
+  "params": {
+    "rawdata": "0600ffd7568e5f0a7eda67a82691ff379ac4bba4f9c9b859fe779b5d46363b61ad2db9e56c0703d148e25901007b000000dcd1346701ca8396496e52aa2785b1748deb6db09551b72159dcb3e08991025bde8f69eeb5e065e18c6950ff708d7e551f68dc9bf59a07c52367c0280f805ec7",
+    "path": "m/44'/434'/0/0/0",
+    "preview": {
+      "payment": "25 DOT",
+      "receiver": "12pWV6LvG4iAfNpFNTvvkWy3H9H8wtCkjiXupAzo2BCmPViM",
+      "sender": "147mvrDYhFpZzvFASKBDNVcxoyz8XCVNyyFKSZcpbQxN33TT",
+      "fee": "15.4000 milli DOT"
+    }
+  },
+  "id": 27
+},
+  "ksm.signTransaction.result": {
+    "jsonrpc:": "2.0",
+    "result": {
+      "signature": "0x000ed23f3a878624c2f1b85a9d9c7bcdbc53ab59aacb5b48d8b622609deb4b3eb645d1d372522cea947c1ca91c183b3b4ca60fd63e050a2344665f6d58090e0d03"
+    },
+    "id:": 27
+  },
+  "ksm.getAddress": {
+    "jsonrpc": "2.0",
+    "method": "ksm.getAddress",
+    "params": {
+      "path": "m/44'/434'/0/0/0"
+    },
+    "id": 28
+  },
+  "ksm.getAddress.result":{
+    "jsonrpc:": "2.0",
+    "result": {
+      "path": "m/44'/434'/0/0/0",
+      "chaintype": "KUSAMA",
+      "address": "Fde6T2hDvbvuQrRizcjPoQNZTxuVSbTp78zwFcxzUb86xXS"
+    },
+    "id:": 28
+  },
+  "ksm.registerAddress": {
+    "jsonrpc": "2.0",
+    "method": "ksm.registerAddress",
+    "params": {
+      "path": "m/44'/434'/0/0/0"
+    },
+    "id": 29
+  },
+  "ksm.registerAddress.result": {
+    "jsonrpc:": "2.0",
+    "result": {
+      "path": "m/44'/434'/0/0/0",
+      "chaintype": "KUSAMA",
+      "address": "Fde6T2hDvbvuQrRizcjPoQNZTxuVSbTp78zwFcxzUb86xXS"
+    },
+    "id:": 29
+  },
+  "tron.signTransaction": {
+  "jsonrpc": "2.0",
+  "method": "tron.signTransaction",
+  "params": {
+    "rawdata": "0a0208312208b02efdc02638b61e40f083c3a7c92d5a65080112610a2d747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e5472616e73666572436f6e747261637412300a1541a1e81654258bf14f63feb2e8d1380075d45b0dac1215410b3e84ec677b3e63c99affcadb91a6b4e086798f186470a0bfbfa7c92d",
+    "path": "m/44'/195'/0'/0/0",
+    "preview": {
+      "payment": "100 TRX",
+      "receiver": "TDQqJsFsStSy5fjG52KuiWW7HhJGAKGJLb",
+      "sender": "TY2uroBeZ5trA9QT96aEWj32XLkAAhQ9R2"
+    }
+  },
+  "id": 30
+},
+  "tron.signTransaction.result": {
+    "jsonrpc:": "2.0",
+    "result": {
+      "signature": "c65b4bde808f7fcfab7b0ef9c1e3946c83311f8ac0a5e95be2d8b6d2400cfe8b5e24dc8f0883132513e422f2aaad8a4ecc14438eae84b2683eefa626e3adffc61c"
+    },
+    "id:": 30
+  },
+  "tron.signMessage": {
+  "jsonrpc": "2.0",
+  "method": "tron.signMessage",
+  "params": {
+    "path": "m/44'/195'/0'/0/0",
+    "sender": "TY2uroBeZ5trA9QT96aEWj32XLkAAhQ9R2",
+    "message": "645c0b7b58158babbfa6c6cd5a48aa7340a8749176b120e8516216787a13dc76",
+    "isHex": true,
+    "isTronHeader": true
+  },
+  "id": 31
+},
+  "tron.signMessage.result": {
+    "jsonrpc:": "2.0",
+    "result": {
+      "signature": "16417c6489da3a88ef980bf0a42551b9e76181d03e7334548ab3cb36e7622a484482722882a29e2fe4587b95c739a68624ebf9ada5f013a9340d883f03fcf9af1b"
+    },
+    "id:": 31
+  },
+  "tron.getAddress": {
+    "jsonrpc": "2.0",
+    "method": "tron.getAddress",
+    "params": {
+      "path": "m/44'/195'/0'/0/0"
+    },
+    "id": 32
+  },
+  "tron.getAddress.result":{
+    "jsonrpc:": "2.0",
+    "result": {
+      "path": "m/44'/195'/0'/0/0",
+      "chaintype": "TRON",
+      "address": "TY2uroBeZ5trA9QT96aEWj32XLkAAhQ9R2"
+    },
+    "id:": 32
+  },
+  "tron.registerAddress": {
+    "jsonrpc": "2.0",
+    "method": "tron.registerAddress",
+    "params": {
+      "path": "m/44'/195'/0'/0/0"
+    },
+    "id": 33
+  },
+  "tron.registerAddress.result": {
+    "jsonrpc:": "2.0",
+    "result": {
+      "path": "m/44'/195'/0'/0/0",
+      "chaintype": "TRON",
+      "address": "TY2uroBeZ5trA9QT96aEWj32XLkAAhQ9R2"
+    },
+    "id:": 33
+  },
+  "xtz.signTransaction": {
+  "jsonrpc": "2.0",
+  "method": "xtz.signTransaction",
+  "params": {
+    "to": "f1d2xrzcslx7xlbbylc5c3d5lvandqw4iwl6epxba",
+    "from": "f1o2ph66tg7o7obyrqa7eiwiinrltauzxitkuk4ay",
+    "nonce": 1,
+    "value": "100000",
+    "gasLimit": 1,
+    "gasFeeCap": "1",
+    "gasPremium": "1",
+    "method": 0,
+    "params": "",
+    "path": "m/44'/1279'/0/0/0",
+    "preview": {
+      "payment": "1 FILECOIN",
+      "receiver": "f1d2xrzcslx7xlbbylc5c3d5lvandqw4iwl6epxba",
+      "sender": "f1o2ph66tg7o7obyrqa7eiwiinrltauzxitkuk4ay",
+      "fee": "0.1 FILECOIN"
+    }
+  },
+  "id": 21
+},
+  "xtz.signTransaction.result": {
+    "jsonrpc:": "2.0",
+    "result": {
+      "cid": "bafy2bzaceawarox6h5my5vk2gqe5v3qzzcsccoet4a5mrtg6xw7haeg7rd5ce",
+      "message": {
+        "to": "f1d2xrzcslx7xlbbylc5c3d5lvandqw4iwl6epxba",
+        "from": "f1o2ph66tg7o7obyrqa7eiwiinrltauzxitkuk4ay",
+        "nonce": 1,
+        "value": "100000",
+        "gaslimit": 1,
+        "gasfeecap": "1",
+        "gaspremium": "1",
+        "method": 0,
+        "params": ""
+      },
+      "signature": {
+        "type": 1,
+        "data": "k/ODPDElcw/xCQ0WWO3r7H3GoKpJVX7j6x1lyNFZ4YNvoWx8/RVqn0/+GNUvFCj1EOEXKFNf2h5LsBmiHDllkgE="
+      }
+    },
+    "id:": 21
+  }
+,
+  "xtz.getAddress": {
+    "jsonrpc": "2.0",
+    "method": "xtz.getAddress",
+    "params": {
+      "path": "m/44'/1279'/0/0/0"
+    },
+    "id": 22
+  },
+  "xtz.getAddress.result":{
+    "jsonrpc:": "2.0",
+    "result": {
+      "path": "m/44'/461'/0/0/0",
+      "chaintype": "FILECOIN",
+      "address": "f1o2ph66tg7o7obyrqa7eiwiinrltauzxitkuk4ay"
+    },
+    "id:": 22
+  },
+  "xtz.registerAddress": {
+    "jsonrpc": "2.0",
+    "method": "xtz.registerAddress",
+    "params": {
+      "path": "m/44'/1279'/0/0/0"
+    },
+    "id": 23
+  },
+  "filecoin.registerAddress.result": {
+    "jsonrpc:": "2.0",
+    "result": {
+      "path": "m/44'/1279'/0/0/0",
+      "chaintype": "FILECOIN",
+      "address": "f1o2ph66tg7o7obyrqa7eiwiinrltauzxitkuk4ay"
+    },
+    "id:": 23
   }
 }

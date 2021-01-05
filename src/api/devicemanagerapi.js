@@ -7,6 +7,45 @@ const crypto = require('./crypto')
 const fs = require('fs')
 const writeFileAtomic = require("write-file-atomic");
 
+export function initImKeyCore() {
+    const response = getUserPath();
+    if (response.isSuccess) {
+        //存储路径
+        const fileDir = response.result
+        const request = new apiPb.InitImKeyCoreXParam()
+        request.setFiledir(fileDir)
+        request.setXpubcommonkey(constants.XPubCommonKey128)
+        request.setXpubcommoniv(constants.XPubCommonIv)
+        request.setIsdebug(true)
+        const requestBytes = request.serializeBinary()
+        const any = new proto.google.protobuf.Any()
+        any.setValue(requestBytes)
+        const imKeyAction = new apiPb.ImkeyAction()
+        imKeyAction.setMethod('init_imkey_core_x')
+        imKeyAction.setParam(any)
+        const imKeyActionBytes = imKeyAction.serializeBinary()
+        const resBuffer = callImKeyCore.callImKeyApi(bytes2HexStr(imKeyActionBytes))
+        const error = callImKeyCore.getLastErrorMessage()
+        if (error === '' || error === null) {
+            const response = new apiPb.CommonResponse.deserializeBinary(hexStr2Bytes(resBuffer))
+            return {
+                isSuccess: true,
+                result: response.getResult()
+            }
+        } else {
+            const errorResponse = new apiPb.ErrorResponse.deserializeBinary(hexStr2Bytes(error))
+            return {
+                isSuccess: false,
+                result: errorResponse.getError()
+            }
+        }
+    }else {
+        return {
+            isSuccess: false,
+            result: 'initImKeyCore getUserPath fail'
+        }
+    }
+}
 export function connect(deviceModelName) {
     const request = new devicePb.DeviceConnectReq()
     request.setDeviceModelName(deviceModelName)
@@ -66,6 +105,9 @@ function getDeviceManageFunction(method_) {
         } else if (method_ === 'is_bl_status') {
             const response = new devicePb.IsBlStatusRes.deserializeBinary(hexStr2Bytes(resBuffer))
             result = response.getCheckResult()
+        }else if (method_ === 'bind_check') {
+            const response = new devicePb.BindCheckRes.deserializeBinary(hexStr2Bytes(resBuffer))
+            result = response.getBindStatus()
         } else { // method_ === "device_activate"||"device_secure_check"||"bind_display_code"
             const response = new apiPb.CommonResponse.deserializeBinary(hexStr2Bytes(resBuffer))
             result = response.getResult()
@@ -111,33 +153,6 @@ function appletManage(method_, appName) {
         return {
             isSuccess: true,
             result: response.getResult()
-        }
-    } else {
-        const errorResponse = new apiPb.ErrorResponse.deserializeBinary(hexStr2Bytes(error))
-        return {
-            isSuccess: false,
-            result: errorResponse.getError()
-        }
-    }
-}
-
-function bindCheck(filePath) {
-    const bindCheckReq = new devicePb.BindCheckReq()
-    bindCheckReq.setFilePath(filePath)
-    const bindCheckReqBytes = bindCheckReq.serializeBinary()
-    const any = new proto.google.protobuf.Any()
-    any.setValue(bindCheckReqBytes)
-    const imKeyAction = new apiPb.ImkeyAction()
-    imKeyAction.setMethod('bind_check')
-    imKeyAction.setParam(any)
-    const imKeyActionBytes = imKeyAction.serializeBinary()
-    const resBuffer = callImKeyCore.callImKeyApi(bytes2HexStr(imKeyActionBytes))
-    const error = callImKeyCore.getLastErrorMessage()
-    if (error === '' || error === null) {
-        const response = new devicePb.BindCheckRes.deserializeBinary(hexStr2Bytes(resBuffer))
-        return {
-            isSuccess: true,
-            result: response.getBindStatus()
         }
     } else {
         const errorResponse = new apiPb.ErrorResponse.deserializeBinary(hexStr2Bytes(error))
@@ -289,7 +304,7 @@ export function getFirmwareVersion() {
     if (response.isSuccess) {
         return {
             isSuccess: true,
-            result: response.result.substring(0, 1) + '.' + response.result.substring(1, 2) + '.' + response.result.substring(2)
+            result: response.result
         }
     } else {
         return {
@@ -339,8 +354,8 @@ export function deleteApplet(AppName) {
     return appletManage('app_delete', AppName)
 }
 
-export function deviceBindCheck(filePath) {
-    return bindCheck(filePath)
+export function deviceBindCheck() {
+    return getDeviceManageFunction('bind_check')
 }
 
 export function deviceBindAcquire(bindCode) {

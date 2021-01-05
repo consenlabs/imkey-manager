@@ -7,7 +7,7 @@
             <input type="text" :placeholder="$t('m.imKeyManager.search')" v-model="appName">
             <i class="el-icon-search"></i>
         </div>
-
+        <el-scrollbar style="height:430px;" :wrapStyle="[{'overflow-x':'hidden'}]">
         <div v-for="(item,index) in getApps" :key="item.id" class="appItem">
             <ul>
                 <li>
@@ -22,7 +22,7 @@
                         <a class="col" v-if="item.installed===true" href="javascript:;">{{$t('m.imKeyManager.installed')}}</a>
                         <a v-if="item.installDis===false" href="javascript:;" @click="installApp(item,index)">{{$t('m.imKeyManager.install')}}</a>
                         <a v-if="item.updateDis===false" href="javascript:;" @click="updateApp(item,index)">{{$t('m.imKeyManager.upgrade')}}</a>
-                        <!--                        <a v-if="item.deleteDis===false" href="javascript:;" @click="deleteApp(item,index)">{{$t('m.imKeyManager.delete')}}</a>-->
+<!--                                                <a v-if="item.deleteDis===false" href="javascript:;" @click="deleteApp(item,index)">{{$t('m.imKeyManager.delete')}}</a>-->
 
                         <el-tooltip class="item" :manual="true" v-if="item.installLoading===true"
                                     v-model="item.installLoading"
@@ -36,14 +36,15 @@
                                     placement="top-start">
                             <span v-if="item.updateLoading===true" class="fas fa-circle-notch fa-spin"></span>
                         </el-tooltip>
-                        <!--                        <el-tooltip class="item" :manual="true" v-if="item.deleteLoading===true" v-model="item.deleteLoading" :content="$t('m.imKeyManager.APP_deleting_do_not_disconnect_usb')" effect="dark" placement="top-start">-->
-                        <!--                            <span v-if="item.deleteLoading===true" class="fas fa-circle-notch fa-spin"></span>-->
-                        <!--                        </el-tooltip>-->
+<!--                                                <el-tooltip class="item" :manual="true" v-if="item.deleteLoading===true" v-model="item.deleteLoading" :content="$t('m.imKeyManager.APP_deleting_do_not_disconnect_usb')" effect="dark" placement="top-start">-->
+<!--                                                    <span v-if="item.deleteLoading===true" class="fas fa-circle-notch fa-spin"></span>-->
+<!--                                                </el-tooltip>-->
 
                     </div>
                 </li>
             </ul>
         </div>
+        </el-scrollbar>
         <div class="dioBox" v-if="tip">
             <div class="box">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -175,7 +176,7 @@ export default {
           this.$ipcRenderer.send('cosCheckUpdate')
           this.$ipcRenderer.on('cosCheckUpdate', (cosCheckUpdateResult) => {
             const cosCheckUpdateResponse = cosCheckUpdateResult.result
-            if (cosCheckUpdateResult.isSuccess && cosCheckUpdateResponse.isUpdateSuccess === true) {
+            if (cosCheckUpdateResult.isSuccess) {
               this.cosNewVersionData = cosCheckUpdateResponse.latestCosVersion
               this.isLatest = cosCheckUpdateResponse.isLatest
               this.updateType = cosCheckUpdateResponse.updateType
@@ -539,8 +540,10 @@ export default {
         font-weight: 500;
         font-size: 15px;
         color: #2C2842;
-        margin-bottom: 41px;
+        margin-bottom: 20px;
         margin-top: 11px;
+        margin-left: 2%;
+        margin-right: 2%;
     }
 
     .alert1 p {
@@ -552,6 +555,8 @@ export default {
         text-align: center;
         color: #2C2842;
         margin-bottom: 6px;
+        margin-left: 2%;
+        margin-right: 2%;
     }
 
     .alert2 svg, .alert3 svg {
@@ -570,6 +575,8 @@ export default {
         font-size: 13px;
         color: #2C2842;
         margin-top: 6px;
+        margin-left: 2%;
+        margin-right: 2%;
     }
 
     .alert2 button, .alert3 button, .alert5 button {
@@ -600,7 +607,10 @@ export default {
         background: #FAFBFC;
         border-radius: 12px;
         text-align: center;
-        height: 217px;
+        /*width: 33%;*/
+        /*height: 30%;*/
+        width: 450px;
+        height: 220px;
     }
 
     .dioBox svg {
@@ -612,6 +622,8 @@ export default {
         font-weight: 500;
         font-size: 15px;
         line-height: 30px;
+        margin-left: 2%;
+        margin-right: 2%;
         color: #2C2842;
     }
 
@@ -619,10 +631,12 @@ export default {
         color: #2C2842;
         font-weight: 300;
         font-size: 13px;
+        margin-left: 2%;
+        margin-right: 2%;
     }
 
     .dioBox button {
-        margin-top: 27px;
+        margin-top: 30px;
         background: #2E3035;
         box-shadow: 0px 2px 20px rgba(137, 101, 172, 0.30772);
         border-radius: 26.5px;
@@ -764,5 +778,13 @@ export default {
         line-height: 1.2;
         background: #2E3035;
         border-radius: 6px;
+    }
+    .el-scrollbar {
+        height: 100%;
+    }
+    .el-scrollbar__wrap {
+        overflow: scroll;
+        width: 110%;
+        height: 120%;
     }
 </style>
