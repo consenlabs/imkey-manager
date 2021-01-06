@@ -2,69 +2,68 @@
 const KOVAN_RPC_URL = 'https://kovan.infura.io'
 const ETHEREUM_MAIN_NET = 'https://kovan.infura.io'
 
-const {remote } = require('electron')
-const {dialog } = require('electron').remote
+const { remote } = require('electron')
+const { dialog } = require('electron').remote
 const provider = remote.app.provider
-// app.apirouter = remote.app.apirouter
 const apirouter = remote.app.apirouter
 
-// window.apirouter = dialog
-// const apirouter = remote.app.apirouter
-// const json = {
-//   jsonrpc: '2.0',
-//   method: 'btc.getXpub',
-//   params: {
-//     network: 'MAINNET',
-//     path: "m/44'/0'/0'/0/0"
-//   },
-//   id: 5
-// }
-// const res = apirouter.api(json)
-// if (res !== null || typeof (res) !== 'undefined') {
-//   const { dialog } = require('electron').remote
-//   dialog.showMessageBox({
-//     type: 'info',
-//     title: '访问说明',
-//     message: '你正在访问第三方DAPP' + res.result.xpub,
-//     buttons: ['OK', 'Cancel']
-//   }).then(result => {
-//     console.log('您的选择:', res.result.xpub)
-//     console.log(result)
-//   }).catch(err => {
-//     console.log(err)
-//   })
-// }
-// ipcRenderer.send('message-from-provider', {
-//     type: "getSeid",
-//     data: ""
-//   })
-// ipcRenderer.on('message-to-provider', (sender, msg) => {
-//  console.log("hhhhhhh:"+msg.data)
-//     // ipcRenderer.send('viewMessage',"你正在访问第三方DAPP")
-//
-// })
+const ImKeyProvider = require('../../../imkey-web3-provider').default
 
-// var ImKeyProvider = require('@imkey/web3-provider').default
-
-// const deviceManger = require('../api/devicemanagerapi')
-// const walletApi = require('../api/walletapi')
-// console.log('provider: ', JSON.stringify(ImKeyProvider))
-//
-const imkeyProvider = new provider({
+const imkeyProvider = new ImKeyProvider({
   rpcUrl: 'https://eth-mainnet.token.im',
   chainId: 1,
   headers: {
     agent: 'ios:2.4.2:2'
   },
-  apirouter :apirouter,
-  dialog:dialog
+  apirouter,
+  dialog,
 })
-imkeyProvider.enable()
+
 var Web3 = require('web3')
 const web3Window = new Web3(imkeyProvider)
 window.web3 = web3Window
-//
-// if (require('electron').remote) {
-//   window.web3 = web3Window
-//   console.log(window.web3)
-// }
+window.ethereum = imkeyProvider
+window.eth = imkeyProvider
+
+web3.eth.accounts = ['hhhh', '22']
+console.log(web3.eth.accounts)
+
+async function test(){
+  return 'ss'
+}
+
+const test33 = require('../../../imkey-web3-provider').test33
+// console.log(test33)
+
+async function test2 () {
+
+  try {
+    console.log('test2:')
+
+    const accounts = await window.ethereum.enable()
+    web3.eth.accounts = accounts
+    console.log('acc:', accounts)
+  } catch (err) {
+    console.log(err);
+  }
+}
+test2()
+
+// imkeyProvider.on("connect", (connectInfo) => {
+//   console.log(
+//     `Ethereum Provider connected success, chainId: ${connectInfo.chainId}`
+//   );
+// });
+
+// imkeyProvider.enable().then((ret) => {
+//   console.log('enable then')
+//   console.log(ret)
+//   // web3.eth.accounts = ret
+//   // window.web3.accounts = [ret]
+//   window.web3.eth.defaultAccount = ret
+//   window.web3.accounts = ['hahaha']
+//   console.log(web3.eth.accounts)
+// })
+//   .catch((error) => {
+//     console.log(error)
+//   })

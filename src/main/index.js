@@ -3,7 +3,7 @@ import { app, BrowserWindow, BrowserView, ipcMain, Menu, shell, Tray, dialog, cr
 import { autoUpdater } from 'electron-updater'
 // 崩溃报告
 import * as Sentry from '@sentry/electron'
-import ImKeyProvider from '@imkey/web3-provider'
+// import ImKeyProvider from '@imkey/web3-provider'
 // test.json
 import pkg from '../../package.json'
 import SensorsAnalytics from 'sa-sdk-node'
@@ -31,7 +31,7 @@ require('dotenv').config({ path: envPath })
 app.apirouter = require('../api/apirouter')
 app.devicemanagerapi = require('../api/devicemanagerapi')
 app.walletapi = require('../api/walletapi')
-app.provider = require('../../../imkey-web3-provider').default
+// app.provider = require('../../../imkey-web3-provider').default
 /**
  * Set `__static` path to static files in production
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
@@ -476,16 +476,16 @@ function crashReport () {
 //     // 根据需要做其他事情
 //   }
 // }
-const KOVAN_RPC_URL = 'https://kovan.infura.io'
-const ETHEREUM_MAIN_NET = 'https://kovan.infura.io'
-const imkeyProvider = new ImKeyProvider({
-  rpcUrl: 'https://eth-mainnet.token.im',
-  chainId: 1,
-  headers: {
-    agent: 'ios:2.4.2:2'
-  }
-})
-imkeyProvider.enable()
+// const KOVAN_RPC_URL = 'https://kovan.infura.io'
+// const ETHEREUM_MAIN_NET = 'https://kovan.infura.io'
+// const imkeyProvider = new ImKeyProvider({
+//   rpcUrl: 'https://eth-mainnet.token.im',
+//   chainId: 1,
+//   headers: {
+//     agent: 'ios:2.4.2:2'
+//   }
+// })
+// imkeyProvider.enable()
 function createBrowserView (url, isClose) {
   const view = new BrowserView({
     webPreferences: {
@@ -501,7 +501,8 @@ function createBrowserView (url, isClose) {
   view.setAutoResize({ width: true, height: true })
   // view.webContents.loadURL(url);
 
-  view.webContents.loadURL('https://danfinlay.github.io/js-eth-personal-sign-examples/')
+  // view.webContents.loadURL('https://danfinlay.github.io/js-eth-personal-sign-examples/')
+  view.webContents.loadURL('http://localhost:9999/index.html')
   view.webContents.openDevTools()
 
   //   view.webContents.once('dom-ready', () => {
