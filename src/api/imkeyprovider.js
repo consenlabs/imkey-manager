@@ -10,13 +10,11 @@ const apirouter = remote.app.apirouter
 const ImKeyProvider = require('../../../imkey-web3-provider').default
 
 const imkeyProvider = new ImKeyProvider({
-  rpcUrl: 'https://eth-mainnet.token.im',
-  chainId: 1,
-  headers: {
-    agent: 'ios:2.4.2:2'
-  },
+  rpcUrl: 'https://kovan.infura.io/v3/e35ac016a10548f1b4a835a1cd72d17a',
+  chainId: 42,
+  headers: null,
   apirouter,
-  dialog,
+  dialog
 })
 
 var Web3 = require('web3')
@@ -28,7 +26,7 @@ window.eth = imkeyProvider
 web3.eth.accounts = ['hhhh', '22']
 console.log(web3.eth.accounts)
 
-async function test(){
+async function test () {
   return 'ss'
 }
 
@@ -36,15 +34,15 @@ const test33 = require('../../../imkey-web3-provider').test33
 // console.log(test33)
 
 async function test2 () {
-
   try {
     console.log('test2:')
 
     const accounts = await window.ethereum.enable()
+    window.ethereum.isMetaMask = true
     web3.eth.accounts = accounts
     console.log('acc:', accounts)
   } catch (err) {
-    console.log(err);
+    console.log(err)
   }
 }
 test2()

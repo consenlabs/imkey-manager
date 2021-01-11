@@ -502,8 +502,16 @@ function createBrowserView (url, isClose) {
   // view.webContents.loadURL(url);
 
   // view.webContents.loadURL('https://danfinlay.github.io/js-eth-personal-sign-examples/')
-  view.webContents.loadURL('http://localhost:9999/index.html')
+  view.webContents.loadURL('https://www.myetherwallet.com/access-my-wallet')
+  // view.webContents.loadURL('https://tokenlon.dev.tokenlon.im/#/')
+  // view.webContents.loadURL('https://app.zerion.io/connect-wallet')
   view.webContents.openDevTools()
+  // view.webContents.on("did-frame-finish-load", () => {
+  //       view.webContents.once("devtools-opened", () => {
+  //         view.focus();
+  //   });
+  //   view.webContents.openDevTools();
+  // });
 
   //   view.webContents.once('dom-ready', () => {
   //     console.log('dom-ready')
