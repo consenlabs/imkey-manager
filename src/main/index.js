@@ -497,7 +497,14 @@ function createBrowserView (url, isClose) {
     view.destroy()
   }
   mainWindow.setBrowserView(view)
-  view.setBounds({ x: 300, y: 0, width: 1140, height: 820 })
+  if (process.platform === 'win32') {
+    view.setBounds({ x: 300, y: 0, width: 1050, height: 700 })
+  }else if (process.platform === 'darwin') {
+    view.setBounds({ x: 300, y: 0, width: 1140, height: 820 })
+  }else{
+    view.setBounds({ x: 300, y: 0, width: 1140, height: 820 })
+  }
+
   view.setAutoResize({ width: true, height: true })
   // view.webContents.loadURL(url);
 
