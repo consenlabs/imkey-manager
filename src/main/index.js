@@ -509,7 +509,8 @@ function createBrowserView (url, isClose) {
   // view.webContents.loadURL(url);
 
   // view.webContents.loadURL('https://danfinlay.github.io/js-eth-personal-sign-examples/')
-  view.webContents.loadURL('https://www.myetherwallet.com/access-my-wallet')
+      view.webContents.loadURL('https://polkadot.js.org/apps/#/accounts')
+  // view.webContents.loadURL('https://www.myetherwallet.com/access-my-wallet')
   // view.webContents.loadURL('https://tokenlon.dev.tokenlon.im/#/')
   // view.webContents.loadURL('https://app.zerion.io/connect-wallet')
   view.webContents.openDevTools()
