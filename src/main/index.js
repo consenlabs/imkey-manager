@@ -506,12 +506,40 @@ function createBrowserView (url, isClose) {
   // view.webContents.loadURL('https://tokenlon.dev.tokenlon.im/#/')
   // view.webContents.loadURL('https://app.zerion.io/connect-wallet')
   view.webContents.openDevTools()
-  // view.webContents.on("did-frame-finish-load", () => {
-  //       view.webContents.once("devtools-opened", () => {
-  //         view.focus();
-  //   });
-  //   view.webContents.openDevTools();
-  // });
+
+  view.webContents.on("context-menu", ({sender: webContents}, {editFlags}) => {
+    const template = [
+        ...(editFlags.canCut
+                ? [
+                    {role: "cut"},
+                    {label: "Cut (custom)", click: () => webContents.cut()},
+                ]
+                : []
+        ),
+        ...(editFlags.canCopy
+                ? [
+                    {role: "copy"},
+                    {label: "Copy (custom)", click: () => webContents.copy()},
+                ]
+                : []
+        ),
+        ...(editFlags.canPaste
+                ? [
+                    {role: "paste"},
+                    {label: "Paste (custom)", click: () => webContents.paste()},
+                ]
+                : []
+        ),
+    ];
+
+    if (!template.length) {
+        return;
+    }
+
+    Menu
+        .buildFromTemplate(template)
+        .popup({});
+});
 
   //   view.webContents.once('dom-ready', () => {
   //     console.log('dom-ready')

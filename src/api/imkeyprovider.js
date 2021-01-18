@@ -11,7 +11,11 @@ const ImKeyProvider = require('../../../imkey-web3-provider').default
 
 const imkeyProvider = new ImKeyProvider({
   rpcUrl: 'https://kovan.infura.io/v3/e35ac016a10548f1b4a835a1cd72d17a',
+  // rpcUrl: 'https://eth-mainnet.token.im',
   chainId: 42,
+  // headers: {
+  //   agent: 'ios:2.4.2:2',
+  // },
   headers: null,
   apirouter,
   dialog
