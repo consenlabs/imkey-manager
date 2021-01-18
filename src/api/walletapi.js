@@ -382,6 +382,8 @@ function filecoinSignTransactionCallImKeyApi (json) {
 }
 function substrateSignTransactionCallImKeyApi (json,chainType) {
   const substrateRawTxIn = new substratePb.SubstrateRawTxIn()
+  console.log(json)
+  console.log("json.rawdata:"+json.rawdata)
   substrateRawTxIn.setRawdata(json.rawdata)
   const substrateRawTxInBytes = substrateRawTxIn.serializeBinary()
   const substrateRawTxInAny = new proto.google.protobuf.Any()
@@ -390,10 +392,12 @@ function substrateSignTransactionCallImKeyApi (json,chainType) {
   signParam.setChaintype(chainType)
   signParam.setPath(json.path)
   signParam.setInput(substrateRawTxInAny)
-  signParam.setPayment(json.preview.payment)
-  signParam.setReceiver(json.preview.receiver)
-  signParam.setSender(json.preview.sender)
-  signParam.setFee(json.preview.fee)
+  if(json.preview!==null && (typeof json.preview !=='undefined')){
+    signParam.setPayment(json.preview.payment)
+    signParam.setReceiver(json.preview.receiver)
+    signParam.setSender(json.preview.sender)
+    signParam.setFee(json.preview.fee)
+  }
   const signParamBytes = signParam.serializeBinary()
   const signParamAny = new proto.google.protobuf.Any()
   signParamAny.setValue(signParamBytes)

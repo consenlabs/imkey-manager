@@ -703,14 +703,14 @@
     "jsonrpc": "2.0",
     "method": "dot.getAddress",
     "params": {
-      "path": "m/44'/461'/0/0/0"
+      "path": "m/44'/354'/0/0/0"
     },
     "id": 25
   },
   "dot.getAddress.result":{
     "jsonrpc:": "2.0",
     "result": {
-      "path": "m/44'/461'/0/0/0",
+      "path": "m/44'/354'/0/0/0",
       "chaintype": "POLKADOT",
       "address": "1HyP3DdxrWySNzss2vg954JX47PDyqL4WXJs139juUTrR6P"
     },
@@ -720,14 +720,14 @@
     "jsonrpc": "2.0",
     "method": "dot.registerAddress",
     "params": {
-      "path": "m/44'/461'/0/0/0"
+      "path": "m/44'/354'/0/0/0"
     },
     "id": 26
   },
   "dot.registerAddress.result": {
     "jsonrpc:": "2.0",
     "result": {
-      "path": "m/44'/461'/0/0/0",
+      "path": "m/44'/354'/0/0/0",
       "chaintype": "POLKADOT",
       "address": "1HyP3DdxrWySNzss2vg954JX47PDyqL4WXJs139juUTrR6P"
     },
