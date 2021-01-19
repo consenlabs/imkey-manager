@@ -16,7 +16,8 @@ let webConfig = {
     devtool: '#cheap-module-eval-source-map',
     entry: {
         web: path.join(__dirname, '../src/renderer/main.js'),
-        worker: path.join(__dirname, '../src/worker/worker.js')
+        worker: path.join(__dirname, '../src/worker/worker.js'),
+        imkeyprovider: path.join(__dirname, '../src/api/imkeyprovider.js')
     },
     module: {
         rules: [
@@ -125,6 +126,31 @@ let webConfig = {
             filename: 'worker.html',
             template: path.resolve(__dirname, '../src/worker.ejs'),
             chunks: ['worker', 'vendor'],
+            minify: {
+                collapseWhitespace: true,
+                removeAttributeQuotes: true,
+                removeComments: true
+            },
+            templateParameters(compilation, assets, options) {
+                return {
+                    compilation: compilation,
+                    webpack: compilation.getStats().toJson(),
+                    webpackConfig: compilation.options,
+                    htmlWebpackPlugin: {
+                        files: assets,
+                        options: options
+                    },
+                    process,
+                };
+            },
+            nodeModules: process.env.NODE_ENV !== 'production'
+                ? path.resolve(__dirname, '../node_modules')
+                : false
+        }),
+        new HtmlWebpackPlugin({
+            filename: 'imkeyprovider.html',
+            template: path.resolve(__dirname, '../src/imkeyprovider.ejs'),
+            chunks: ['imkeyprovider', 'vendor'],
             minify: {
                 collapseWhitespace: true,
                 removeAttributeQuotes: true,

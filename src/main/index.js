@@ -41,6 +41,10 @@ if (process.env.NODE_ENV !== 'development') {
 }
 
 let mainWindow, workerWindow
+const imkeyproviderURL = process.env.NODE_ENV === 'development'
+    ? require('path').resolve(__dirname, '../api/imkeyprovider.js')
+    : require('path').resolve(__dirname, 'imkeyprovider.js')
+console.log("imkeyproviderURL:"+imkeyproviderURL)
 const winURL = process.env.NODE_ENV === 'development'
   ? 'http://localhost:9080'
   : `file://${__dirname}/index.html`
@@ -490,7 +494,7 @@ function createBrowserView (url, isClose) {
   const view = new BrowserView({
     webPreferences: {
       nodeIntegration: true, // 设置开启nodejs环境
-      preload: require('path').resolve(__dirname, '../api/imkeyprovider.js')
+      preload: imkeyproviderURL
     }
   })
   if (isClose) {
@@ -499,9 +503,9 @@ function createBrowserView (url, isClose) {
   mainWindow.setBrowserView(view)
   if (process.platform === 'win32') {
     view.setBounds({ x: 300, y: 0, width: 1050, height: 700 })
-  }else if (process.platform === 'darwin') {
+  } else if (process.platform === 'darwin') {
     view.setBounds({ x: 300, y: 0, width: 1140, height: 820 })
-  }else{
+  } else {
     view.setBounds({ x: 300, y: 0, width: 1140, height: 820 })
   }
 
@@ -509,45 +513,45 @@ function createBrowserView (url, isClose) {
   // view.webContents.loadURL(url);
 
   // view.webContents.loadURL('https://danfinlay.github.io/js-eth-personal-sign-examples/')
-      view.webContents.loadURL('https://polkadot.js.org/apps/#/accounts')
-  // view.webContents.loadURL('https://www.myetherwallet.com/access-my-wallet')
+  // view.webContents.loadURL('https://polkadot.js.org/apps/#/accounts')
+  view.webContents.loadURL('https://www.myetherwallet.com/access-my-wallet')
   // view.webContents.loadURL('https://tokenlon.dev.tokenlon.im/#/')
   // view.webContents.loadURL('https://app.zerion.io/connect-wallet')
-  view.webContents.openDevTools()
+  // view.webContents.openDevTools()
 
-  view.webContents.on("context-menu", ({sender: webContents}, {editFlags}) => {
+  view.webContents.on('context-menu', ({ sender: webContents }, { editFlags }) => {
     const template = [
-        ...(editFlags.canCut
-                ? [
-                    {role: "cut"},
-                    {label: "Cut (custom)", click: () => webContents.cut()},
-                ]
-                : []
-        ),
-        ...(editFlags.canCopy
-                ? [
-                    {role: "copy"},
-                    {label: "Copy (custom)", click: () => webContents.copy()},
-                ]
-                : []
-        ),
-        ...(editFlags.canPaste
-                ? [
-                    {role: "paste"},
-                    {label: "Paste (custom)", click: () => webContents.paste()},
-                ]
-                : []
-        ),
-    ];
+      ...(editFlags.canCut
+        ? [
+          { role: 'cut' },
+          { label: 'Cut (custom)', click: () => webContents.cut() }
+        ]
+        : []
+      ),
+      ...(editFlags.canCopy
+        ? [
+          { role: 'copy' },
+          { label: 'Copy (custom)', click: () => webContents.copy() }
+        ]
+        : []
+      ),
+      ...(editFlags.canPaste
+        ? [
+          { role: 'paste' },
+          { label: 'Paste (custom)', click: () => webContents.paste() }
+        ]
+        : []
+      )
+    ]
 
     if (!template.length) {
-        return;
+      return
     }
 
     Menu
-        .buildFromTemplate(template)
-        .popup({});
-});
+      .buildFromTemplate(template)
+      .popup({})
+  })
 
   //   view.webContents.once('dom-ready', () => {
   //     console.log('dom-ready')
