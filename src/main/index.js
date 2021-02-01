@@ -31,7 +31,6 @@ require('dotenv').config({ path: envPath })
 app.apirouter = require('../api/apirouter')
 app.devicemanagerapi = require('../api/devicemanagerapi')
 app.walletapi = require('../api/walletapi')
-// app.provider = require('../../../imkey-web3-provider').default
 /**
  * Set `__static` path to static files in production
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
@@ -42,9 +41,8 @@ if (process.env.NODE_ENV !== 'development') {
 
 let mainWindow, workerWindow
 const imkeyproviderURL = process.env.NODE_ENV === 'development'
-    ? require('path').resolve(__dirname, '../api/imkeyprovider.js')
-    : require('path').resolve(__dirname, 'imkeyprovider.js')
-console.log("imkeyproviderURL:"+imkeyproviderURL)
+  ? require('path').resolve(__dirname, '../api/imkeyprovider.js')
+  : require('path').resolve(__dirname, 'imkeyprovider.js')
 const winURL = process.env.NODE_ENV === 'development'
   ? 'http://localhost:9080'
   : `file://${__dirname}/index.html`
@@ -513,11 +511,11 @@ function createBrowserView (url, isClose) {
   // view.webContents.loadURL(url);
 
   // view.webContents.loadURL('https://danfinlay.github.io/js-eth-personal-sign-examples/')
-  // view.webContents.loadURL('https://polkadot.js.org/apps/#/accounts')
-  view.webContents.loadURL('https://www.myetherwallet.com/access-my-wallet')
+  view.webContents.loadURL('https://polkadot.js.org/apps/#/accounts')
+  // view.webContents.loadURL('https://www.myetherwallet.com/access-my-wallet')
   // view.webContents.loadURL('https://tokenlon.dev.tokenlon.im/#/')
   // view.webContents.loadURL('https://app.zerion.io/connect-wallet')
-  // view.webContents.openDevTools()
+  view.webContents.openDevTools()
 
   view.webContents.on('context-menu', ({ sender: webContents }, { editFlags }) => {
     const template = [
