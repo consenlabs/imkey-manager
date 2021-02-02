@@ -106,66 +106,125 @@ ipcRenderer.on('message-from-main', (event, arg) => {
     if (arg.type === 'writeWalletAddress') {
       try {
         const coinNameArr = arg.data.name
-
+        const bindCheckRes = deviceManger.deviceBindCheck(arg.data.filePath)
+        if (bindCheckRes.isSuccess) {
+        } else {
+          response = {
+            isSuccess: false,
+            result: 'error'
+          }
+        }
         for (let i = 0; i < coinNameArr.length; i++) {
-          const bindCheckRes = deviceManger.deviceBindCheck(arg.data.filePath)
-          if (bindCheckRes.isSuccess) {
-            if (coinNameArr[i] === 'BTC') {
-              walletApi.registerBTCAddress({
-                network: 'MAINNET',
-                path: "m/44'/0'/0'"
-              })
+          if (coinNameArr[i] === 'BTC') {
+            response = walletApi.registerBTCAddress({
+              network: 'MAINNET',
+              path: "m/44'/0'/0'"
+            })
+            if (!response.isSuccess) {
+              response = {
+                isSuccess: false,
+                result: response.result
+              }
             }
-            if (coinNameArr[i] === 'ETH') {
-              walletApi.registerETHAddress({
-                path: "m/44'/60'/0'/0/0"
-              })
+          }
+          if (coinNameArr[i] === 'ETH') {
+            response = walletApi.registerETHAddress({
+              path: "m/44'/60'/0'/0/0"
+            })
+            if (!response.isSuccess) {
+              response = {
+                isSuccess: false,
+                result: response.result
+              }
             }
-            if (coinNameArr[i] === 'EOS') {
-              walletApi.registerEOSPubKey({
-                path: "m/44'/194'/0'/0/0"
-              })
+          }
+          if (coinNameArr[i] === 'EOS') {
+            response = walletApi.registerEOSPubKey({
+              path: "m/44'/194'/0'/0/0"
+            })
+            if (!response.isSuccess) {
+              response = {
+                isSuccess: false,
+                result: response.result
+              }
             }
-            if (coinNameArr[i] === 'COSMOS') {
-              walletApi.registerCOSMOSAddress({
-                path: "m/44'/118'/0'/0/0"
-              })
+          }
+          if (coinNameArr[i] === 'COSMOS') {
+            response = walletApi.registerCOSMOSAddress({
+              path: "m/44'/118'/0'/0/0"
+            })
+            if (!response.isSuccess) {
+              response = {
+                isSuccess: false,
+                result: response.result
+              }
             }
-            if (coinNameArr[i] === 'FILECOIN') {
-              walletApi.registerFILECOINAddress({
-                path: "m/44'/461'/0'/0/0"
-              })
+          }
+          if (coinNameArr[i] === 'FILECOIN') {
+            response = walletApi.registerFILECOINAddress({
+              path: "m/44'/461'/0'/0/0"
+            })
+            if (!response.isSuccess) {
+              response = {
+                isSuccess: false,
+                result: response.result
+              }
             }
-            if (coinNameArr[i] === 'POLKADOT') {
-              walletApi.registerDOTAddress({
-                path: "m/44'/354'/0'/0/0"
-              })
+          }
+          if (coinNameArr[i] === 'POLKADOT') {
+            response = walletApi.registerDOTAddress({
+              path: "m/44'/354'/0'/0/0"
+            })
+            if (!response.isSuccess) {
+              response = {
+                isSuccess: false,
+                result: response.result
+              }
             }
-            if (coinNameArr[i] === 'KUSAMA') {
-              walletApi.registerKSMAddress({
-                path: "m/44'/343'/0'/0/0"
-              })
+          }
+          if (coinNameArr[i] === 'KUSAMA') {
+            response = walletApi.registerKSMAddress({
+              path: "m/44'/343'/0'/0/0"
+            })
+            if (!response.isSuccess) {
+              response = {
+                isSuccess: false,
+                result: response.result
+              }
             }
-            if (coinNameArr[i] === 'TRON') {
-              walletApi.registerTRONAddress({
-                path: "m/44'/195'/0'/0/0"
-              })
+          }
+          if (coinNameArr[i] === 'TRON') {
+            response = walletApi.registerTRONAddress({
+              path: "m/44'/195'/0'/0/0"
+            })
+            if (!response.isSuccess) {
+              response = {
+                isSuccess: false,
+                result: response.result
+              }
             }
-            if (coinNameArr[i] === 'TEZOS') {
-              // walletApi.registerXTZAddress({
-              //   path: "m/44'/1279'/0'/0/0"
-              // })
-            }
-            if (coinNameArr[i] === 'NERVOS') {
-              // walletApi.registerCKBAddress({
-              //   path: "m/44'/1279'/0'/0/0"
-              // })
-            }
-          } else {
-            response = {
-              isSuccess: false,
-              result: 'error'
-            }
+          }
+          if (coinNameArr[i] === 'TEZOS') {
+            // response = walletApi.registerXTZAddress({
+            //   path: "m/44'/1279'/0'/0/0"
+            // })
+            // if (!response.isSuccess) {
+            //   response = {
+            //     isSuccess: false,
+            //     result: response.result
+            //   }
+            // }
+          }
+          if (coinNameArr[i] === 'NERVOS') {
+            // response = walletApi.registerCKBAddress({
+            //   path: "m/44'/1279'/0'/0/0"
+            // })
+            // if (!response.isSuccess) {
+            //   response = {
+            //     isSuccess: false,
+            //     result: response.result
+            //   }
+            // }
           }
         }
       } catch (error) {
