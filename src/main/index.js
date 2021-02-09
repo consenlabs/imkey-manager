@@ -510,10 +510,12 @@ function createBrowserView (url, isClose) {
   view.setAutoResize({ width: true, height: true })
   // view.webContents.loadURL(url);
 
+  const options = {userAgent: 'Android'}
   // view.webContents.loadURL('https://danfinlay.github.io/js-eth-personal-sign-examples/')
-  view.webContents.loadURL('https://polkadot.js.org/apps/#/accounts')
+  // view.webContents.loadURL('https://polkadot.js.org/apps/#/accounts')
+  view.webContents.loadURL('https://uniswap.token.im/#/swap',options)
   // view.webContents.loadURL('https://www.myetherwallet.com/access-my-wallet')
-  // view.webContents.loadURL('https://tokenlon.dev.tokenlon.im/#/')
+  // view.webContents.loadURL('https://sushiswap.fi/?locale=zh-CN&utm_source=imtoken')
   // view.webContents.loadURL('https://app.zerion.io/connect-wallet')
   view.webContents.openDevTools()
 
