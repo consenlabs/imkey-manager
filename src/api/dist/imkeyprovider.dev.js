@@ -65,17 +65,16 @@ function test2() {
 
         case 4:
           accounts = _context2.sent;
-          // window.ethereum.isImToken = true
-          // window.top.imToken = imkeyProvider
+          window.ethereum.isImToken = true; // window.top.imToken = imkeyProvider
           // window.imToken = imkeyProvider
           // window.user
+
           web3.eth.accounts = accounts;
           window.ethereum.selectedAddress = accounts[0];
           window.web3.eth.defaultAccount = accounts[0];
           window.ethereum = imkeyProvider;
           window.ethereum._isConnected = true; // ethereum.isMetaMask = true
-
-          ethereum.isMetaMask = true;
+          // ethereum.isMetaMask = true
 
           ethereum.isConnected = function () {
             return true;

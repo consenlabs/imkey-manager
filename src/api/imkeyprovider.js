@@ -41,7 +41,7 @@ async function test2 () {
     console.log('test2:')
 
     const accounts = await window.ethereum.enable()
-    // window.ethereum.isImToken = true
+    window.ethereum.isImToken = true
 
     // window.top.imToken = imkeyProvider
     // window.imToken = imkeyProvider
@@ -53,7 +53,7 @@ async function test2 () {
     window.ethereum = imkeyProvider
     window.ethereum._isConnected = true
     // ethereum.isMetaMask = true
-    ethereum.isMetaMask = true
+    // ethereum.isMetaMask = true
     ethereum.isConnected = () => { return true }
 
     // web3.currentProvider = imkeyProvider

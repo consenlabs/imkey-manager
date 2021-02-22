@@ -581,8 +581,10 @@ function createBrowserView(url, isClose) {
   // view.webContents.loadURL('https://danfinlay.github.io/js-eth-personal-sign-examples/')
   // view.webContents.loadURL('https://polkadot.js.org/apps/#/accounts')
   // view.webContents.loadURL('https://uniswap.token.im/#/swap', options)
+  // view.webContents.loadURL('https://tokenlon.im/instant', options)
 
-  view.webContents.loadURL('https://tokenlon.im/instant', options); //  view.webContents.loadURL('https://app.aave.com/markets', options)
+  view.webContents.loadURL('https://multisender.app/', options); // view.webContents.loadURL('https://wallet.gnosis.pm/#/wallets', options)
+  //  view.webContents.loadURL('https://app.aave.com/markets', options)
   //  view.webContents.loadURL('https://lite.sushiswap.fi/#/?locale=zh-CN&utm_source=imtoken', options)
   // view.webContents.loadURL('https://www.myetherwallet.com/access-my-wallet',options)
   // view.webContents.loadURL('https://sushiswap.fi/?locale=zh-CN&utm_source=imtoken')
