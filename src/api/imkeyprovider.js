@@ -42,19 +42,19 @@ async function test2 () {
 
     const accounts = await window.ethereum.enable()
     // window.ethereum.isImToken = true
-    
 
     // window.top.imToken = imkeyProvider
     // window.imToken = imkeyProvider
     // window.user
     web3.eth.accounts = accounts
     window.ethereum.selectedAddress = accounts[0]
-    
+    window.web3.eth.defaultAccount = accounts[0]
+
     window.ethereum = imkeyProvider
     window.ethereum._isConnected = true
     // ethereum.isMetaMask = true
     ethereum.isMetaMask = true
-    ethereum.isConnected = ()=>{return true}
+    ethereum.isConnected = () => { return true }
 
     // web3.currentProvider = imkeyProvider
     web3.currentProvider.selectedAddress = accounts[0]
@@ -66,4 +66,4 @@ async function test2 () {
 }
 test2()
 
-imkeyProvider.on('connect', (error, payload) => {console.log('connected..')})
+imkeyProvider.on('connect', (error, payload) => { console.log('connected..') })

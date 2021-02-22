@@ -576,11 +576,15 @@ function createBrowserView(url, isClose) {
   }); // view.webContents.loadURL(url);
 
   var options = {
-    userAgent: 'Android'
-  }; // view.webContents.loadURL('https://danfinlay.github.io/js-eth-personal-sign-examples/')
+    userAgent: 'Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19'
+  }; // const options = { userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 10_3 like Mac OS X) AppleWebKit/602.1.50 (KHTML, like Gecko) CriOS/56.0.2924.75 Mobile/14E5239e Safari/602.1' }
+  // view.webContents.loadURL('https://danfinlay.github.io/js-eth-personal-sign-examples/')
   // view.webContents.loadURL('https://polkadot.js.org/apps/#/accounts')
+  // view.webContents.loadURL('https://uniswap.token.im/#/swap', options)
 
-  view.webContents.loadURL('https://uniswap.token.im/#/swap', options); // view.webContents.loadURL('https://www.myetherwallet.com/access-my-wallet')
+  view.webContents.loadURL('https://tokenlon.im/instant', options); //  view.webContents.loadURL('https://app.aave.com/markets', options)
+  //  view.webContents.loadURL('https://lite.sushiswap.fi/#/?locale=zh-CN&utm_source=imtoken', options)
+  // view.webContents.loadURL('https://www.myetherwallet.com/access-my-wallet',options)
   // view.webContents.loadURL('https://sushiswap.fi/?locale=zh-CN&utm_source=imtoken')
   // view.webContents.loadURL('https://app.zerion.io/connect-wallet')
 

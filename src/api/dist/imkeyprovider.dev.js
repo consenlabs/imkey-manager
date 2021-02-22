@@ -71,6 +71,7 @@ function test2() {
           // window.user
           web3.eth.accounts = accounts;
           window.ethereum.selectedAddress = accounts[0];
+          window.web3.eth.defaultAccount = accounts[0];
           window.ethereum = imkeyProvider;
           window.ethereum._isConnected = true; // ethereum.isMetaMask = true
 
@@ -84,20 +85,20 @@ function test2() {
           web3.currentProvider.selectedAddress = accounts[0];
           web3.currentProvider.address = accounts[0];
           console.log('acc:', accounts);
-          _context2.next = 19;
+          _context2.next = 20;
           break;
 
-        case 16:
-          _context2.prev = 16;
+        case 17:
+          _context2.prev = 17;
           _context2.t0 = _context2["catch"](0);
           console.log(_context2.t0);
 
-        case 19:
+        case 20:
         case "end":
           return _context2.stop();
       }
     }
-  }, null, null, [[0, 16]]);
+  }, null, null, [[0, 17]]);
 }
 
 test2();
