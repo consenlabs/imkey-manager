@@ -16,7 +16,7 @@ export function initImKeyCore() {
         request.setFiledir(fileDir)
         request.setXpubcommonkey(constants.XPubCommonKey128)
         request.setXpubcommoniv(constants.XPubCommonIv)
-        request.setIsdebug(true)
+        request.setIsdebug(false)
         const requestBytes = request.serializeBinary()
         const any = new proto.google.protobuf.Any()
         any.setValue(requestBytes)
