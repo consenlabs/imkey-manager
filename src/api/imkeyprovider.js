@@ -1,32 +1,65 @@
-const { remote } = require('electron')
-const { dialog } = require('electron').remote
+const {remote} = require('electron')
+const {dialog} = require('electron').remote
 const provider = remote.app.provider
 const apirouter = remote.app.apirouter
+
+const PolkadotGenesisHash = '0x91b171bb158e2d3848fa23a9f1c25182fb8e20313b2c1eb49219da7a70ce90c3'
+const KusamaGenesisHash = '0xb0a8d493285c2df73290dfb7e61f870f17b41801197a149ca93654499ea3dafe'
+const PolkadotPath = "m/44'/354'/0'/0'/0'"
+const KusamaPath = "m/44'/434'/0'/0'/0'"
 
 const {
   web3Enable
 } = require('@polkadot/extension-dapp')
 
-const { Decimal } = require('decimal.js')
-const { u8aToHex, hexToU8a } = require('@polkadot/util')
-const { TypeRegistry } = require('@polkadot/types/create')
-const { GenericAccountId, UInt } = require('@polkadot/types')
-const { encodeAddress } = require('@polkadot/util-crypto')
+const {Decimal} = require('decimal.js')
+const {u8aToHex, hexToU8a} = require('@polkadot/util')
+const {TypeRegistry} = require('@polkadot/types/create')
+const {GenericAccountId, UInt, GenericExtrinsicPayload, GenericExtrinsicPayloadV4, GenericExtrinsicSignatureV4} = require('@polkadot/types')
+const {encodeAddress} = require('@polkadot/util-crypto')
+
+const REGISTRY = (() => {
+  // kusama runtime is 28
+  const ADDRESS_TYPES_KUSAMA = {
+    Address: 'MultiAddress',
+    LookupSource: 'MultiAddress',
+  }
+  const ADDRESS_TYPES_POLKADOT = ADDRESS_TYPES_KUSAMA
+
+  const registryKSM = new TypeRegistry()
+  const registryDOT = new TypeRegistry()
+  registryKSM.register(ADDRESS_TYPES_KUSAMA)
+  registryDOT.register(ADDRESS_TYPES_POLKADOT)
+  return {
+    KUSAMA: registryKSM,
+    POLKADOT: registryDOT,
+  }
+})()
 
 let id = 0
+
 class Signer {
-  constructor () {
-    this.registry = new TypeRegistry()
+  constructor() {
+    this.registry = REGISTRY["KUSAMA"]
+
   }
 
-  async signPayload (payload) {
+  async signPayload(payload) {
+    // const registry = REGISTRY[params.chainType]
     console.log('payload:')
     console.log(payload)
     console.log('payload.method:' + payload.method)
     console.log('payload.method hexToU8a:' + hexToU8a(payload.method))
     console.log('payload.address:' + payload.address)
 
-    const rawdata = u8aToHex(this.registry.createType('ExtrinsicPayload', payload, { version: payload.version }).toU8a({ method: true }))
+    // let extrinsicPayload = this.registry.createType('ExtrinsicPayload', payload, {version: payload.version});
+
+    this.registry.setSignedExtensions(payload.signedExtensions);
+
+    let extrinsicPayload = this.registry
+      .createType('ExtrinsicPayload', payload, { version: payload.version })
+    console.log("extrinsicPayload: ", extrinsicPayload);
+    const rawdata = u8aToHex(extrinsicPayload.toU8a(true));
     console.log('rawdata:')
     console.log(rawdata)
     const encodedAddress = new GenericAccountId(this.registry, hexToU8a('0x' + payload.method.substring(6, 70))).toString()
@@ -50,10 +83,10 @@ class Signer {
 
     const json = {
       jsonrpc: '2.0',
-      method: 'dot.signTransaction',
+      method: 'ksm.signTransaction',
       params: {
         rawdata: rawdata.substring(2, rawdata.length),
-        path: "m/44'/354'/0'/0'/0'",
+        path: KusamaPath,
         preview: {
           payment: payment + ' DOT',
           receiver: toAddress,
@@ -64,47 +97,65 @@ class Signer {
       id: 24
     }
     const signature = sign(json)
+
+    // const extrinsicSig = new GenericExtrinsicSignatureV4(this.registry, undefined);
+    // console.log("before addSignature");
+    // extrinsicSig.addSignature(
+    //   payload.address,
+    //   signature,
+    //   extrinsicPayload.toU8a(true)
+    // )
+    // let sig = u8aToHex(extrinsicSig.toU8a(true));
+    // console.log("sig: ", sig);
     return {
       id: ++id,
-      signature
+      signature: signature
     }
   }
 
-  async signRaw ({ address, data }) {
+  async signRaw({address, data}) {
     console.log(address)
     console.log(data)
     const json = {
       jsonrpc: '2.0',
-      method: 'dot.signTransaction',
+      method: 'ksm.signTransaction',
       params: {
         rawdata: data,
-        path: "m/44'/354'/0'/0'/0'"
+        path: KusamaPath
       },
       id: 24
     }
-    const signature = sign(json)
+    const signature = sign()
     return {
       id: ++id,
       signature
     }
   }
 }
-function sign (json) {
+
+function sign(json) {
   const request = apirouter.api(json)
   return request.result.signature
 }
-function getAddress () {
+
+function getAddress() {
   const json = {
     jsonrpc: '2.0',
-    method: 'dot.getAddress',
+    method: 'ksm.getAddress',
     params: {
-      path: "m/44'/354'/0'/0'/0'"
+      path: KusamaPath
     },
     id: 25
   }
-  const request = apirouter.api(json)
-  return transformAccounts([{ address: request.result.address }, { address: '12FcZrcthxtov2cQybpLGcuW2khkNbNy3WgUi2UEYgL5V9j1' }])
+  const request = apirouter.api(json);
+
+  return transformAccounts([{
+    address: request.result.address,
+    name: 'imKey KSM',
+    genesisHash: KusamaGenesisHash
+  }, {address: "J7Jnbiv5EZSTcD5qf2UdFcZVUY3x3S5r1VXNU3avaP4pqwE", name: 'Menglong', genesisHash: KusamaGenesisHash}]);
 }
+
 const accounts = getAddress()
 
 window.injectedWeb3 = {
@@ -121,13 +172,16 @@ window.injectedWeb3 = {
     })
   }
 }
-function transformAccounts (accounts) {
+
+function transformAccounts(accounts) {
   return accounts.map(({
+                         address,
+                         name,
+                         genesisHash
+                       }) => ({
     address,
-    name
-  }) => ({
-    address,
-    name
+    name,
+    genesisHash
   }))
 }
 
