@@ -502,7 +502,7 @@ function createBrowserView (url, isClose) {
   if (process.platform === 'win32') {
     view.setBounds({ x: 300, y: 0, width: 1050, height: 700 })
   } else if (process.platform === 'darwin') {
-    view.setBounds({ x: 300, y: 0, width: 1140, height: 820 })
+    view.setBounds({ x: 300, y: 62, width: 1140, height: 820 })
   } else {
     view.setBounds({ x: 300, y: 0, width: 1140, height: 820 })
   }

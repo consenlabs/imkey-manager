@@ -50,52 +50,6 @@
             </ul>
         </div>
         <div class="routerView">
-            <div class="tool-bar">
-                <div class="left-tools">
-                    <svg class="tool-dapp" style="margin-left:17px" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#191C1E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M2 12H22" stroke="#191C1E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M12 2C14.5013 4.73835 15.9228 8.29203 16 12C15.9228 15.708 14.5013 19.2616 12 22C9.49872 19.2616 8.07725 15.708 8 12C8.07725 8.29203 9.49872 4.73835 12 2V2Z" stroke="#191C1E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-
-                    <svg class="tool-line1" style="margin-left:17px" width="1" height="21" viewBox="0 0 1 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <line x1="0.5" y1="2.18557e-08" x2="0.499999" y2="21" stroke="#EAECF6"/>
-                    </svg>
-
-                    <svg class="tool-previous" style="margin-left:26px" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M14 20L6 12L14 4" stroke="#191C1E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-
-                    <svg class="tool-next" style="margin-left:18px" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M8 20L16 12L8 4" stroke="#191C1E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-
-                    <svg class="tool-line2" style="margin-left:26px" width="1" height="21" viewBox="0 0 1 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <line x1="0.5" y1="2.18557e-08" x2="0.499999" y2="21" stroke="#EAECF6"/>
-                    </svg>
-
-                    <svg class="tool-more" style="margin-left:15px" width="17" height="3" viewBox="0 0 17 3" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd" clip-rule="evenodd" d="M3 1.5C3 2.32843 2.32843 3 1.5 3C0.671573 3 0 2.32843 0 1.5C0 0.671573 0.671573 0 1.5 0C2.32843 0 3 0.671573 3 1.5ZM10 1.5C10 2.32843 9.32843 3 8.5 3C7.67157 3 7 2.32843 7 1.5C7 0.671573 7.67157 0 8.5 0C9.32843 0 10 0.671573 10 1.5ZM15.5 3C16.3284 3 17 2.32843 17 1.5C17 0.671573 16.3284 0 15.5 0C14.6716 0 14 0.671573 14 1.5C14 2.32843 14.6716 3 15.5 3Z" fill="#43454F"/>
-                    </svg>
-
-                    <svg class="tool-dapp" style="margin-left:15px" width="1" height="21" viewBox="0 0 1 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <line x1="0.5" y1="2.18557e-08" x2="0.499999" y2="21" stroke="#EAECF6"/>
-                    </svg>
-                </div>
-                <div class="right-tools">
-                    <img style="width:24px;height:24px;margin-left:19px" src="https://sushi.com/favicon.ico">
-                    <p>Sushiswap</p>
-
-                    <svg style="margin-left:15px" width="1" height="21" viewBox="0 0 1 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <line x1="0.5" y1="2.18557e-08" x2="0.499999" y2="21" stroke="#EAECF6"/>
-                    </svg>
-
-                    <svg style="margin-left:25px" width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M10.5 3.5L3.5 10.5" stroke="#9598AB" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M3.5 3.5L10.5 10.5" stroke="#9598AB" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </div>
-            </div>
             <router-view></router-view>
         </div>
         <div class="statusBox status4" v-if="status==4">
@@ -270,40 +224,6 @@ export default {
     .homeBox .routerView{
         flex: 1;
         box-shadow: 3px 0px 20px rgba(0, 0, 0, 0.06);
-    }
-    .homeBox .tool-bar{
-        display: flex;
-        background: #F7F7F7;
-        height: 62px;
-        width: calc(100vw - 300px);
-        justify-content: space-between;
-        visibility: hidden;
-    }
-    .tool-bar .left-tools{
-        display: flex;
-        width: calc(100vw - 500px);
-        align-items: center;
-    }
-    .tool-bar .right-tools{
-        display: flex;
-        align-items: center;
-        width: 200px;
-        height: 61px;
-        background-image: 
-        url("data:image/svg+xml;utf8,<svg width='197' height='62' viewBox='0 0 197 62' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M0 12C0 5.37258 5.37258 0 12 0H185C191.627 0 197 5.37258 197 12V62H0V12Z' fill='white'/></svg>");
-    }
-    .right-tools p{
-        font-family: PingFang SC;
-        font-style: normal;
-        font-weight: normal;
-        font-size: 16px;
-        line-height: 22px;
-        display: flex;
-        align-items: center;
-        margin-left: 15px;
-
-        /* Secondary text */
-        color: #43454F;
     }
     .homeBox .routerBar h1{
         font-family: SF Pro Text;
