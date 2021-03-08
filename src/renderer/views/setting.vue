@@ -15,7 +15,7 @@
                         <button>{{$t('m.imKeyManager.upgrade')}}</button>
                     </p>
                 </div>
-                <div class="rightUpdate"v-if="isCosUpdate==true">
+                <div class="rightUpdate" v-if="isCosUpdate==true">
                     <p>
                         {{$t('m.imKeyManager.found_new_cos_version')}}
                         <button @click="updateFirmware">{{$t('m.imKeyManager.upgrade')}}</button>

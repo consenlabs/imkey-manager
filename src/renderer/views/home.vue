@@ -32,6 +32,14 @@
                     </svg>
                     {{$t('m.imKeyManager.manager')}}
                 </router-link>
+                <router-link class="link" to="/home/dapp" tag="li">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="black" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 12H22" stroke="black" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12 2C14.5013 4.73835 15.9228 8.29203 16 12C15.9228 15.708 14.5013 19.2616 12 22C9.49872 19.2616 8.07725 15.708 8 12C8.07725 8.29203 9.49872 4.73835 12 2V2Z" stroke="black" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    DApp
+                </router-link>
                 <router-link class="link" to="/home/setting" tag="li">
                     <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M11 13.5C12.3807 13.5 13.5 12.3807 13.5 11C13.5 9.61929 12.3807 8.5 11 8.5C9.61929 8.5 8.5 9.61929 8.5 11C8.5 12.3807 9.61929 13.5 11 13.5Z" stroke="black"/>
@@ -39,16 +47,55 @@
                     </svg>
                     {{$t('m.imKeyManager.setting')}}
                 </router-link>
-                <router-link class="link" to="/home/dapp" tag="li">
-                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M11 13.5C12.3807 13.5 13.5 12.3807 13.5 11C13.5 9.61929 12.3807 8.5 11 8.5C9.61929 8.5 8.5 9.61929 8.5 11C8.5 12.3807 9.61929 13.5 11 13.5Z" stroke="black"/>
-                        <path d="M3.41 14.14C3.27108 13.782 3.05217 13.4605 2.77 13.2C2.56518 13.0065 2.33261 12.8448 2.08 12.72C1.64586 12.5187 1.19809 12.3483 0.74 12.21L0.5 12.13V9.87L0.75 9.79C1.2067 9.65303 1.6515 9.47912 2.08 9.27C2.6885 8.989 3.16498 8.48386 3.41 7.86C3.68088 7.24615 3.70594 6.55177 3.48 5.92C3.31413 5.46687 3.11699 5.02581 2.89 4.6L2.78 4.37L4.37 2.78L4.6 2.89C5.02379 3.1211 5.46516 3.31838 5.92 3.48C6.55177 3.70594 7.24615 3.68088 7.86 3.41C8.48386 3.16498 8.989 2.6885 9.27 2.08C9.47912 1.6515 9.65303 1.2067 9.79 0.75C9.82119 0.668182 9.84789 0.584725 9.87 0.5H12.13C12.1521 0.581437 12.1789 0.661564 12.21 0.74C12.3454 1.20372 12.5193 1.65529 12.73 2.09C13.0147 2.69351 13.519 3.16562 14.14 3.41C14.7585 3.67825 15.4562 3.69971 16.09 3.47C16.5405 3.30956 16.9784 3.11569 17.4 2.89L17.63 2.78L19.22 4.37L19.11 4.6C18.883 5.02581 18.6859 5.46687 18.52 5.92C18.2941 6.55177 18.3191 7.24615 18.59 7.86C18.8308 8.48318 19.304 8.98864 19.91 9.27C20.3438 9.47478 20.7916 9.64855 21.25 9.79L21.5 9.87V12.13L21.26 12.21C20.7995 12.3453 20.3512 12.5193 19.92 12.73C19.4598 12.957 19.0713 13.307 18.7978 13.7412C18.5242 14.1754 18.3761 14.6768 18.37 15.19C18.371 15.4961 18.4217 15.8001 18.52 16.09C18.6841 16.5406 18.8813 16.9785 19.11 17.4C19.1426 17.4786 19.1793 17.5553 19.22 17.63L17.63 19.22L17.39 19.1C16.9684 18.8743 16.5305 18.6804 16.08 18.52C15.4522 18.2956 14.7627 18.317 14.15 18.58C13.5245 18.8314 13.0172 19.3101 12.73 19.92C12.5209 20.352 12.347 20.8001 12.21 21.26C12.1789 21.3384 12.1521 21.4186 12.13 21.5H9.87C9.84786 21.4186 9.82115 21.3384 9.79 21.26C9.65289 20.7969 9.479 20.3454 9.27 19.91C8.98525 19.3065 8.48095 18.8344 7.86 18.59C7.24145 18.3244 6.546 18.2994 5.91 18.52C5.46112 18.6884 5.02355 18.8854 4.6 19.11L4.37 19.22L2.78 17.63C2.82072 17.5553 2.85743 17.4786 2.89 17.4C3.1137 16.9809 3.30751 16.5464 3.47 16.1C3.71 15.4508 3.68849 14.7337 3.41 14.1M3.41 14.14L2.77 13.2L3.41 14.14Z" stroke="black"/>
-                    </svg>
-                    DApp
-                </router-link>
             </ul>
         </div>
         <div class="routerView">
+            <div class="tool-bar">
+                <div class="left-tools">
+                    <svg class="tool-dapp" style="margin-left:17px" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#191C1E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 12H22" stroke="#191C1E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 2C14.5013 4.73835 15.9228 8.29203 16 12C15.9228 15.708 14.5013 19.2616 12 22C9.49872 19.2616 8.07725 15.708 8 12C8.07725 8.29203 9.49872 4.73835 12 2V2Z" stroke="#191C1E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+
+                    <svg class="tool-line1" style="margin-left:17px" width="1" height="21" viewBox="0 0 1 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <line x1="0.5" y1="2.18557e-08" x2="0.499999" y2="21" stroke="#EAECF6"/>
+                    </svg>
+
+                    <svg class="tool-previous" style="margin-left:26px" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M14 20L6 12L14 4" stroke="#191C1E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+
+                    <svg class="tool-next" style="margin-left:18px" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 20L16 12L8 4" stroke="#191C1E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+
+                    <svg class="tool-line2" style="margin-left:26px" width="1" height="21" viewBox="0 0 1 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <line x1="0.5" y1="2.18557e-08" x2="0.499999" y2="21" stroke="#EAECF6"/>
+                    </svg>
+
+                    <svg class="tool-more" style="margin-left:15px" width="17" height="3" viewBox="0 0 17 3" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M3 1.5C3 2.32843 2.32843 3 1.5 3C0.671573 3 0 2.32843 0 1.5C0 0.671573 0.671573 0 1.5 0C2.32843 0 3 0.671573 3 1.5ZM10 1.5C10 2.32843 9.32843 3 8.5 3C7.67157 3 7 2.32843 7 1.5C7 0.671573 7.67157 0 8.5 0C9.32843 0 10 0.671573 10 1.5ZM15.5 3C16.3284 3 17 2.32843 17 1.5C17 0.671573 16.3284 0 15.5 0C14.6716 0 14 0.671573 14 1.5C14 2.32843 14.6716 3 15.5 3Z" fill="#43454F"/>
+                    </svg>
+
+                    <svg class="tool-dapp" style="margin-left:15px" width="1" height="21" viewBox="0 0 1 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <line x1="0.5" y1="2.18557e-08" x2="0.499999" y2="21" stroke="#EAECF6"/>
+                    </svg>
+                </div>
+                <div class="right-tools">
+                    <img style="width:24px;height:24px;margin-left:19px" src="https://sushi.com/favicon.ico">
+                    <p>Sushiswap</p>
+
+                    <svg style="margin-left:15px" width="1" height="21" viewBox="0 0 1 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <line x1="0.5" y1="2.18557e-08" x2="0.499999" y2="21" stroke="#EAECF6"/>
+                    </svg>
+
+                    <svg style="margin-left:25px" width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10.5 3.5L3.5 10.5" stroke="#9598AB" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M3.5 3.5L10.5 10.5" stroke="#9598AB" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+            </div>
             <router-view></router-view>
         </div>
         <div class="statusBox status4" v-if="status==4">
@@ -223,6 +270,40 @@ export default {
     .homeBox .routerView{
         flex: 1;
         box-shadow: 3px 0px 20px rgba(0, 0, 0, 0.06);
+    }
+    .homeBox .tool-bar{
+        display: flex;
+        background: #F7F7F7;
+        height: 62px;
+        width: calc(100vw - 300px);
+        justify-content: space-between;
+        visibility: hidden;
+    }
+    .tool-bar .left-tools{
+        display: flex;
+        width: calc(100vw - 500px);
+        align-items: center;
+    }
+    .tool-bar .right-tools{
+        display: flex;
+        align-items: center;
+        width: 200px;
+        height: 61px;
+        background-image: 
+        url("data:image/svg+xml;utf8,<svg width='197' height='62' viewBox='0 0 197 62' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M0 12C0 5.37258 5.37258 0 12 0H185C191.627 0 197 5.37258 197 12V62H0V12Z' fill='white'/></svg>");
+    }
+    .right-tools p{
+        font-family: PingFang SC;
+        font-style: normal;
+        font-weight: normal;
+        font-size: 16px;
+        line-height: 22px;
+        display: flex;
+        align-items: center;
+        margin-left: 15px;
+
+        /* Secondary text */
+        color: #43454F;
     }
     .homeBox .routerBar h1{
         font-family: SF Pro Text;

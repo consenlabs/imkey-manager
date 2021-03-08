@@ -265,6 +265,9 @@ export const m = {
   noticeDialog: {
     info: '提示'
   },
+  dapp: {
+    newest_launched: '最新上架',
+  },
   imKeyCoreErrorInfo: {
     decoding_failed: '解析失败',
     imkey_publickey_mismatch_with_path: '公钥路径不匹配',

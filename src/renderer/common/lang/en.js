@@ -263,6 +263,9 @@ export const m = {
   noticeDialog: {
     info: 'info'
   },
+  dapp: {
+    newest_launched: 'Newest launched',
+  },
   imKeyCoreErrorInfo: {
     decoding_failed: 'Decoding failed',
     imkey_publickey_mismatch_with_path: 'publickey mismatch with path',
