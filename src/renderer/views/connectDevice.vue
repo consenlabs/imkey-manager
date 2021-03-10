@@ -249,7 +249,7 @@ export default {
     },
     inpFocus () {
       if (this.bindCode.length === 8) {
-
+        console.log('none')
       } else {
         event.srcElement.value = ''
       }
@@ -562,11 +562,13 @@ export default {
           this.$ipcRenderer.on('initImKeyCore', (result) => {
             const response = result.result
             if (result.isSuccess) {
+              console.log('none')
             } else {
               this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '初始化imkey core失败：' + response })
             }
           })
         } else {
+          console.log('none')
         }
       })
     }

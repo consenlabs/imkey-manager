@@ -308,14 +308,16 @@ export default {
                   if (deviceBindDisplayResult.isSuccess) {
                     this.bindViewFinish = true
                   } else {
+                    console.log('none')
                   }
                 })
               } else if (deviceBindCheckResult.result === constants.BIND_STATUS_STRING_BOUND_THIS) {
                 this.bindViewFinish = true
               } else {
+                console.log('none')
               }
             } else {
-
+              console.log('none')
             }
           })
         } else {
@@ -335,16 +337,20 @@ export default {
                       if (deviceBindDisplayResult.isSuccess) {
                         this.bindViewFinish = true
                       } else {
+                        console.log('none')
                       }
                     })
                   } else if (deviceBindCheckResult.result === constants.BIND_STATUS_STRING_BOUND_THIS) {
                     this.bindViewFinish = true
                   } else {
+                    console.log('none')
                   }
                 } else {
+                  console.log('none')
                 }
               })
             } else {
+              console.log('none')
             }
           })
         }
@@ -369,6 +375,7 @@ export default {
               // 去首页
               this.$router.push('/home/welcomeHome')
             } else {
+              console.log('none')
             }
           })
         }
@@ -412,6 +419,7 @@ export default {
                 this.active = active
                 this.page = page
               } else {
+                console.log('none')
               }
             })
           }
@@ -528,7 +536,7 @@ export default {
     },
     inpFocus () {
       if (this.bindCode.length === 8) {
-
+        console.log('none')
       } else {
         event.srcElement.value = ''
       }

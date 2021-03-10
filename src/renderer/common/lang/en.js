@@ -264,7 +264,7 @@ export const m = {
     info: 'info'
   },
   dapp: {
-    newest_launched: 'Newest launched',
+    newest_launched: 'Newest launched'
   },
   imKeyCoreErrorInfo: {
     decoding_failed: 'Decoding failed',

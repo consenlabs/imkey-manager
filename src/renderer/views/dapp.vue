@@ -22,7 +22,7 @@
 
             <svg class="tool-line2" style="margin-left:26px" width="1" height="21" viewBox="0 0 1 21" fill="none" xmlns="http://www.w3.org/2000/svg">
             <line x1="0.5" y1="2.18557e-08" x2="0.499999" y2="21" stroke="#EAECF6"/>
-            </svg> 
+            </svg>
 
             <svg class="tool-more" style="margin-left:15px" width="17" height="3" viewBox="0 0 17 3" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path fill-rule="evenodd" clip-rule="evenodd" d="M3 1.5C3 2.32843 2.32843 3 1.5 3C0.671573 3 0 2.32843 0 1.5C0 0.671573 0.671573 0 1.5 0C2.32843 0 3 0.671573 3 1.5ZM10 1.5C10 2.32843 9.32843 3 8.5 3C7.67157 3 7 2.32843 7 1.5C7 0.671573 7.67157 0 8.5 0C9.32843 0 10 0.671573 10 1.5ZM15.5 3C16.3284 3 17 2.32843 17 1.5C17 0.671573 16.3284 0 15.5 0C14.6716 0 14 0.671573 14 1.5C14 2.32843 14.6716 3 15.5 3Z" fill="#43454F"/>
@@ -115,7 +115,7 @@
                         </clipPath>
                         </defs>
                     </svg>
-                    <div class="dapp-info"> 
+                    <div class="dapp-info">
                         <p class="dapp-name">TokenLon</p>
                         <p class="dapp-desc">安全快速的去中心化交易所</p>
                     </div>
@@ -137,8 +137,7 @@
                         </defs>
                     </svg>
 
-
-                    <div class="dapp-info"> 
+                    <div class="dapp-info">
                         <p class="dapp-name">Sushiswap</p>
                         <p class="dapp-desc">Stake SushiSwap LP tokens to claim your very own yummy SUSHI!</p>
                     </div>
@@ -166,7 +165,7 @@
                         </defs>
                     </svg>
 
-                    <div class="dapp-info"> 
+                    <div class="dapp-info">
                         <p class="dapp-name">Uniswap</p>
                         <p class="dapp-desc">Guaranteed liquidity for millions of users and hundreds of Ethereum applications.</p>
                     </div>
@@ -185,7 +184,7 @@
                         </defs>
                     </svg>
 
-                    <div class="dapp-info"> 
+                    <div class="dapp-info">
                         <p class="dapp-name">PolkadotJS</p>
                         <p class="dapp-desc">Cryptocurrency Exchange | Simple Coin Conversion</p>
                     </div>
@@ -296,7 +295,7 @@ export default {
         align-items: center;
         width: 200px;
         height: 61px;
-        background-image: 
+        background-image:
         url("data:image/svg+xml;utf8,<svg width='197' height='62' viewBox='0 0 197 62' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M0 12C0 5.37258 5.37258 0 12 0H185C191.627 0 197 5.37258 197 12V62H0V12Z' fill='white'/></svg>");
     }
     .right-tools p{

@@ -403,7 +403,7 @@ export default {
           }
         })
       } else {
-
+        console.log('none')
       }
     },
 
@@ -455,7 +455,7 @@ export default {
           }
         })
       } else {
-
+        console.log('none')
       }
     },
 
@@ -501,6 +501,7 @@ export default {
           }
         })
       } else {
+        console.log('none')
       }
     }
   }

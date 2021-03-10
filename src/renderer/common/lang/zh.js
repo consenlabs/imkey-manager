@@ -266,7 +266,7 @@ export const m = {
     info: '提示'
   },
   dapp: {
-    newest_launched: '最新上架',
+    newest_launched: '最新上架'
   },
   imKeyCoreErrorInfo: {
     decoding_failed: '解析失败',

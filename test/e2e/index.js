@@ -1,6 +1,6 @@
 'use strict'
 
-// Set BABEL_ENV to use proper env config
+// Set BABEL_ENV to use proper .env config
 process.env.BABEL_ENV = 'test'
 
 // Enable use of ES6+ on required files

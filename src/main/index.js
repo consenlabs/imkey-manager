@@ -1,4 +1,4 @@
-import { app, BrowserWindow, BrowserView, ipcMain, Menu, shell, Tray, dialog, crashReporter, webFrame } from 'electron'
+import { app, BrowserWindow, BrowserView, ipcMain, Menu, shell, Tray, dialog, crashReporter } from 'electron'
 // 自动更新相关
 import { autoUpdater } from 'electron-updater'
 // 崩溃报告
@@ -7,7 +7,6 @@ import * as Sentry from '@sentry/electron'
 // test.json
 import pkg from '../../package.json'
 import SensorsAnalytics from 'sa-sdk-node'
-import Web3 from 'web3'
 const url = 'https://imtoken.datasink.sensorsdata.cn/sa?project=production&token=27d69b3e7fd25949'
 const sa = new SensorsAnalytics()
 const distinctId = 'imkey-manager'
@@ -25,7 +24,7 @@ if (process.platform === 'win32') {
     envPath = require('path').resolve('key.env')
   }
 } else {
-
+  console.log('none')
 }
 require('dotenv').config({ path: envPath })
 app.apirouter = require('../api/apirouter')
@@ -40,9 +39,12 @@ if (process.env.NODE_ENV !== 'development') {
 }
 
 let mainWindow, workerWindow
-const imkeyproviderURL = process.env.NODE_ENV === 'development'
-  ? require('path').resolve(__dirname, '../api/imkeyprovider.js')
-  : require('path').resolve(__dirname, 'imkeyprovider.js')
+const polkadotdappURL = process.env.NODE_ENV === 'development'
+  ? require('path').resolve(__dirname, '../api/polkadotdapp.js')
+  : require('path').resolve(__dirname, 'polkadotdapp.js')
+const ethereumdappURL = process.env.NODE_ENV === 'development'
+  ? require('path').resolve(__dirname, '../api/ethereumdapp.js')
+  : require('path').resolve(__dirname, 'ethereumdapp.js')
 const winURL = process.env.NODE_ENV === 'development'
   ? 'http://localhost:9080'
   : `file://${__dirname}/index.html`
@@ -73,7 +75,7 @@ if (process.platform === 'win32') {
 function createWorkerWindow () {
   workerWindow = new BrowserWindow({
     show: false,
-    webPreferences: { nodeIntegration: true }
+    webPreferences: { nodeIntegration: true, enableRemoteModule: true }
   })
   workerWindow.on('closed', () => {
     console.log('background window closed')
@@ -489,16 +491,27 @@ function crashReport () {
 // })
 // imkeyProvider.enable()
 function createBrowserView (url, isClose) {
+  let perloadjsPath
+  if (url === 'https://polkadot.js.org/apps/#/accounts') {
+    perloadjsPath = polkadotdappURL
+  } else {
+    perloadjsPath = ethereumdappURL
+  }
   const view = new BrowserView({
     webPreferences: {
       nodeIntegration: true, // 设置开启nodejs环境
-      preload: imkeyproviderURL
+      enableRemoteModule: true,
+      contextIsolation: false,
+      preload: perloadjsPath
     }
   })
-  if (isClose) {
-    view.destroy()
-  }
   mainWindow.setBrowserView(view)
+  if (isClose) {
+    mainWindow.removeBrowserView(view)
+    view.destroy()
+    return
+  }
+
   if (process.platform === 'win32') {
     view.setBounds({ x: 300, y: 0, width: 1050, height: 700 })
   } else if (process.platform === 'darwin') {
@@ -521,23 +534,23 @@ function createBrowserView (url, isClose) {
     const template = [
       ...(editFlags.canCut
         ? [
-          { role: 'cut' },
-          { label: 'Cut (custom)', click: () => webContents.cut() }
-        ]
+            { role: 'cut' },
+            { label: 'Cut (custom)', click: () => webContents.cut() }
+          ]
         : []
       ),
       ...(editFlags.canCopy
         ? [
-          { role: 'copy' },
-          { label: 'Copy (custom)', click: () => webContents.copy() }
-        ]
+            { role: 'copy' },
+            { label: 'Copy (custom)', click: () => webContents.copy() }
+          ]
         : []
       ),
       ...(editFlags.canPaste
         ? [
-          { role: 'paste' },
-          { label: 'Paste (custom)', click: () => webContents.paste() }
-        ]
+            { role: 'paste' },
+            { label: 'Paste (custom)', click: () => webContents.paste() }
+          ]
         : []
       )
     ]
@@ -612,9 +625,9 @@ function renderDeviceManagerHandler () {
   ipcMain.on('closeBrowserView', (event, url) => {
     shell.openExternal(url)
   })
-  ipcMain.on('zoomIn', (event, zoomParam) => {
-    webFrame.setZoomFactor(zoomParam)
-  })
+  // ipcMain.on('zoomIn', (event, zoomParam) => {
+  //   webFrame.setZoomFactor(zoomParam)
+  // })
 }
 function initSa () {
   sa.disableReNameOption()

@@ -201,6 +201,7 @@ export default {
         } else if (obj.action === 'updateNotAva') {
           this.status = 1
         } else {
+          console.log('none')
         }
       })
     }

@@ -23,17 +23,32 @@ const {VueLoaderPlugin} = require('vue-loader')
 let whiteListedModules = ['vue', 'element-ui']
 
 let rendererConfig = {
-    devtool: '#cheap-module-eval-source-map',
+    // devtool: '#cheap-module-eval-source-map',
     entry: {
         renderer: path.join(__dirname, '../src/renderer/main.js'),
         worker: path.join(__dirname, '../src/worker/worker.js'),
-        imkeyprovider: path.join(__dirname, '../src/api/imkeyprovider.js')
+        polkadotdapp: path.join(__dirname, '../src/api/polkadotdapp.js'),
+        ethereumdapp: path.join(__dirname, '../src/api/ethereumdapp.js')
     },
     externals: [
         ...Object.keys(dependencies || {}).filter(d => !whiteListedModules.includes(d))
     ],
     module: {
         rules: [
+            {
+                test: /\.vue$/,
+                use: {
+                    loader: 'vue-loader',
+                    options: {
+                        extractCSS: process.env.NODE_ENV === 'production',
+                        loaders: {
+                            sass: 'vue-style-loader!css-loader!sass-loader?indentedSyntax=1',
+                            scss: 'vue-style-loader!css-loader!sass-loader',
+                            less: 'vue-style-loader!css-loader!less-loader'
+                        }
+                    }
+                }
+            },
             {
                 test: /\.scss$/,
                 use: ['vue-style-loader', 'css-loader', 'sass-loader']
@@ -63,25 +78,12 @@ let rendererConfig = {
                 test: /\.node$/,
                 use: 'node-loader'
             },
-            {
-                test: /\.vue$/,
-                use: {
-                    loader: 'vue-loader',
-                    options: {
-                        extractCSS: process.env.NODE_ENV === 'production',
-                        loaders: {
-                            sass: 'vue-style-loader!css-loader!sass-loader?indentedSyntax=1',
-                            scss: 'vue-style-loader!css-loader!sass-loader',
-                            less: 'vue-style-loader!css-loader!less-loader'
-                        }
-                    }
-                }
-            },
+
             {
                 test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
                 use: {
                     loader: 'url-loader',
-                    query: {
+                    options: {
                         limit: 10000,
                         name: 'imgs/[name]--[folder].[ext]'
                     }
@@ -99,7 +101,7 @@ let rendererConfig = {
                 test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/,
                 use: {
                     loader: 'url-loader',
-                    query: {
+                    options: {
                         limit: 10000,
                         name: 'fonts/[name]--[folder].[ext]'
                     }
@@ -122,7 +124,7 @@ let rendererConfig = {
         //     removeAttributeQuotes: true,
         //     removeComments: true
         //   },
-        //   nodeModules: process.env.NODE_ENV !== 'production'
+        //   nodeModules: process..env.NODE_ENV !== 'production'
         //     ? path.resolve(__dirname, '../node_modules')
         //     : false
         // }),
@@ -177,9 +179,34 @@ let rendererConfig = {
                 : false
         }),
         new HtmlWebpackPlugin({
-            filename: 'imkeyprovider.html',
-            template: path.resolve(__dirname, '../src/imkeyprovider.ejs'),
-            chunks: ['imkeyprovider', 'vendor'],
+            filename: 'polkadotdapp.html',
+            template: path.resolve(__dirname, '../src/polkadotdapp.ejs'),
+            chunks: ['polkadotdapp', 'vendor'],
+            minify: {
+                collapseWhitespace: true,
+                removeAttributeQuotes: true,
+                removeComments: true
+            },
+            templateParameters(compilation, assets, options) {
+                return {
+                    compilation: compilation,
+                    webpack: compilation.getStats().toJson(),
+                    webpackConfig: compilation.options,
+                    htmlWebpackPlugin: {
+                        files: assets,
+                        options: options
+                    },
+                    process,
+                };
+            },
+            nodeModules: process.env.NODE_ENV !== 'production'
+                ? path.resolve(__dirname, '../node_modules')
+                : false
+        }),
+        new HtmlWebpackPlugin({
+            filename: 'ethereumdapp.html',
+            template: path.resolve(__dirname, '../src/ethereumdapp.ejs'),
+            chunks: ['ethereumdapp', 'vendor'],
             minify: {
                 collapseWhitespace: true,
                 removeAttributeQuotes: true,
@@ -207,7 +234,8 @@ let rendererConfig = {
     output: {
         filename: '[name].js',
         libraryTarget: 'commonjs2',
-        path: path.join(__dirname, '../dist/electron')
+        path: path.join(__dirname, '../dist/electron'),
+        publicPath: './'
     },
     resolve: {
         alias: {
@@ -235,17 +263,17 @@ if (process.env.NODE_ENV !== 'production') {
  * Adjust rendererConfig for production settings
  */
 if (process.env.NODE_ENV === 'production') {
-    rendererConfig.devtool = ''
+    // rendererConfig.devtool = ''
 
     rendererConfig.plugins.push(
         new BabiliWebpackPlugin(),
-        new CopyWebpackPlugin([
+        new CopyWebpackPlugin(
             {
-                from: path.join(__dirname, '../static'),
-                to: path.join(__dirname, '../dist/electron/static'),
-                ignore: ['.*']
-            }
-        ]),
+                patterns: [
+                    {  from: path.join(__dirname, '../static'),
+                        to: path.join(__dirname, '../dist/electron/static')},
+                ]
+            }),
         new webpack.DefinePlugin({
             'process.env.NODE_ENV': '"production"'
         }),
