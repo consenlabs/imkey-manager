@@ -5,7 +5,7 @@ const { remote } = require('electron')
 const { dialog } = require('electron').remote
 const provider = remote.app.provider
 const apirouter = remote.app.apirouter
-
+const Web3 = remote.app.web3
 const ImKeyProvider = require('../../../imkey-web3-provider').default
 
 const imkeyProvider = new ImKeyProvider({
@@ -20,7 +20,7 @@ const imkeyProvider = new ImKeyProvider({
   dialog
 })
 
-const Web3 = require('web3')
+// const Web3 = require('web3')
 const web3Window = new Web3(imkeyProvider)
 window.web3 = web3Window
 window.ethereum = imkeyProvider
@@ -34,7 +34,7 @@ async function test () {
 }
 
 const test33 = require('../../../imkey-web3-provider').test33
-// console.log(test33)
+console.log(test33)
 
 async function test2 () {
   try {

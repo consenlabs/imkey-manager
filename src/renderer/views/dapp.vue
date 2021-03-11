@@ -252,7 +252,8 @@ export default {
     openUrl (urlType) {
       let url
       if (urlType === 'TokenLon') {
-        url = 'https://tokenlon.im'
+        // url = 'https://tokenlon.im'
+        url = 'https://tokenlon.dev.tokenlon.im/#/'
       }
       if (urlType === 'Sushiswap') {
         url = 'https://app.sushi.com/'
