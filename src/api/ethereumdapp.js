@@ -20,7 +20,7 @@ const imkeyProvider = new ImKeyProvider({
   dialog
 })
 
-var Web3 = require('web3')
+const Web3 = require('web3')
 const web3Window = new Web3(imkeyProvider)
 window.web3 = web3Window
 window.ethereum = imkeyProvider

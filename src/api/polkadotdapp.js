@@ -10,9 +10,21 @@ const { encodeAddress } = require('@polkadot/util-crypto')
 
 const { remote } = require('electron')
 const { dialog } = require('electron').remote
-const provider = remote.app.provider
+const locale = remote.app.locale
 const apirouter = remote.app.apirouter
-
+let title
+let message
+let buttons
+console.log('locale:' + locale)
+if (locale !== 'zh-CN') {
+  title: 'Tips'
+  message = 'Please confirm on imkey'
+  buttons = ['OK', 'Cancel']
+} else {
+  title = '提示'
+  message = '请在imkey上确认'
+  buttons = ['确认', '取消']
+}
 const PolkadotGenesisHash = '0x91b171bb158e2d3848fa23a9f1c25182fb8e20313b2c1eb49219da7a70ce90c3'
 const KusamaGenesisHash = '0xb0a8d493285c2df73290dfb7e61f870f17b41801197a149ca93654499ea3dafe'
 const PolkadotPath = "m/44'/354'/0'/0'/0'"
@@ -164,8 +176,19 @@ class Signer {
 }
 
 function sign (json) {
-  const request = apirouter.api(json)
-  return request.result.signature
+  const ret = dialog.showMessageBoxSync({
+    type: 'info',
+    title: title,
+    message: message,
+    buttons: buttons
+  })
+  console.log('ret:' + ret)
+  if (ret === 0) {
+    const request = apirouter.api(json)
+    return request.result.signature
+  } else {
+
+  }
 }
 let addressKSM
 let addressDOT

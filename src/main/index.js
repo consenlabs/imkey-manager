@@ -120,6 +120,7 @@ function createMainWindow () {
     mainWindow.show()
     // 启动http server
     sendWindowMessage(workerWindow, 'start-http-server', '')
+    app.locale = app.getLocale()
   })
 
   /**
