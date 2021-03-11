@@ -524,8 +524,9 @@ function createBrowserView (url, isClose) {
   view.setAutoResize({ width: true, height: true })
   // view.webContents.loadURL(url);
 
+  const options = { userAgent: 'Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19' }
   // view.webContents.loadURL('https://danfinlay.github.io/js-eth-personal-sign-examples/')
-  view.webContents.loadURL(url)
+  view.webContents.loadURL(url, options)
   // view.webContents.loadURL('https://www.myetherwallet.com/access-my-wallet')
   // view.webContents.loadURL('https://tokenlon.dev.tokenlon.im/#/')
   // view.webContents.loadURL('https://app.zerion.io/connect-wallet')
