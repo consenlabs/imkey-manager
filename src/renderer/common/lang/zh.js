@@ -266,7 +266,12 @@ export const m = {
     info: '提示'
   },
   dapp: {
-    newest_launched: '最新上架'
+    newest_launched: '最新上架',
+    tokenlon_desc: '安全快速的去中心化交易所',
+    sushiswap_desc: '锁定SushiSwap LP代币，领取属于您的美味SUSHI!',
+    uniswap_desc: '保证数百万用户和数百个Ethereum应用的流动性。',
+    polkadotJS_desc: '加密货币交易所｜简单的硬币兑换方式',
+    multisender_desc: '将ERC20代币或ETH发送到成千上万的地址，只需一次交易......。',
   },
   imKeyCoreErrorInfo: {
     decoding_failed: '解析失败',

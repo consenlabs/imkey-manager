@@ -37,7 +37,7 @@
                             <path d="M20.2384 15.3312C19.5233 17.3755 18.1695 19.1297 16.3812 20.3295C14.5929 21.5293 12.467 22.1096 10.3237 21.9829C8.18044 21.8563 6.13597 21.0296 4.4984 19.6275C2.86084 18.2253 1.71888 16.3236 1.24462 14.209C0.770363 12.0944 0.989494 9.88138 1.86899 7.90347C2.74849 5.92556 4.24071 4.28991 6.12079 3.243C8.00087 2.19608 10.1669 1.79462 12.2926 2.09912C14.4183 2.40361 16.3883 3.39755 17.906 4.93118L23 9.77562" stroke="#191C1E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                             <p style="padding-left:19px">
-                                Refresh 
+                                Refresh
                             </p>
                         </div>
 
@@ -47,7 +47,7 @@
                             <path d="M5 15H4C3.46957 15 2.96086 14.7893 2.58579 14.4142C2.21071 14.0391 2 13.5304 2 13V4C2 3.46957 2.21071 2.96086 2.58579 2.58579C2.96086 2.21071 3.46957 2 4 2H13C13.5304 2 14.0391 2.21071 14.4142 2.58579C14.7893 2.96086 15 3.46957 15 4V5" stroke="#191C1E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                             <p style="padding-left:19px">
-                                Copy Link 
+                                Copy Link
                             </p>
                         </div>
 
@@ -63,14 +63,13 @@
                     </div>
                 </div>
 
-
-                <svg class="tool-line3" style="margin-left:15px" width="1" height="21" viewBox="0 0 1 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg class="tool-line3" style="margin-left:15px;display:none" width="1" height="21" viewBox="0 0 1 21" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <line x1="0.5" y1="2.18557e-08" x2="0.499999" y2="21" stroke="#EAECF6"/>
                 </svg>
             </div>
 
-            <div class="right-tools">
-                <img style="width:24px;height:24px;margin-left:19px" v-bind:src="iconUrl">
+            <div class="right-tools" v-if="showRightTools">
+                <img style="width:24px;height:24px;margin-left:19px" v-bind:src="iconUrl" >
                 <p>{{ title }}</p>
 
                 <svg style="margin-left:15px" width="1" height="21" viewBox="0 0 1 21" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -156,7 +155,7 @@
                     </svg>
                     <div class="dapp-info">
                         <p class="dapp-name">TokenLon</p>
-                        <p class="dapp-desc">安全快速的去中心化交易所</p>
+                        <p class="dapp-desc">{{$t('m.dapp.tokenlon_desc')}}</p>
                     </div>
                 </a>
 
@@ -178,7 +177,7 @@
 
                     <div class="dapp-info">
                         <p class="dapp-name">Sushiswap</p>
-                        <p class="dapp-desc">Stake SushiSwap LP tokens to claim your very own yummy SUSHI!</p>
+                        <p class="dapp-desc">{{$t('m.dapp.sushiswap_desc')}}</p>
                     </div>
                 </a>
 
@@ -206,7 +205,7 @@
 
                     <div class="dapp-info">
                         <p class="dapp-name">Uniswap</p>
-                        <p class="dapp-desc">Guaranteed liquidity for millions of users and hundreds of Ethereum applications.</p>
+                        <p class="dapp-desc">{{$t('m.dapp.uniswap_desc')}}</p>
                     </div>
                 </a>
 
@@ -224,7 +223,7 @@
                     </svg>
                     <div class="dapp-info">
                         <p class="dapp-name">PolkadotJS</p>
-                        <p class="dapp-desc">Cryptocurrency Exchange | Simple Coin Conversion</p>
+                        <p class="dapp-desc">{{$t('m.dapp.polkadotJS_desc')}}</p>
                     </div>
                 </a>
 
@@ -239,7 +238,7 @@
 
                     <div class="dapp-info">
                         <p class="dapp-name">Multisender</p>
-                        <p class="dapp-desc">Send ERC20 Token or ETH to thousands of addresses out in 1 single transaction...</p>
+                        <p class="dapp-desc">{{$t('m.dapp.multisender_desc')}}</p>
                     </div>
                 </a>
         </div>
@@ -263,7 +262,7 @@
 <script>
 import { ipcRenderer } from 'electron'
 const { dialog } = require('electron').remote
-var url
+let url
 export default {
   name: 'welcomeHome',
   data () {
@@ -273,7 +272,8 @@ export default {
       viewInfo: '正在访问你的地址请确认,注意财产安全',
       showToolBar: false,
       iconUrl: 'https://tokenlon.im/images/favico.png',
-      title: 'xxxxxxx'
+      title: 'xxxxxxx',
+      showRightTools: true
     }
   },
   mounted () {
@@ -341,12 +341,15 @@ export default {
       }
       ipcRenderer.send('openBrowserView', url, false)
       this.showToolBar = true
+      this.showRightTools = true
     },
     closeDapp () {
       ipcRenderer.send('openBrowserView', 'close', true)
+      this.showRightTools = false
     },
     showDapps () {
       ipcRenderer.send('openBrowserView', 'close', true)
+      this.showToolBar = false
     },
     goForward () {
       ipcRenderer.send('goForward')
@@ -358,13 +361,13 @@ export default {
       ipcRenderer.send('refresh')
       document.getElementById('container2').blur()
     },
-    copyLink (){
-        ipcRenderer.send('copyLink', url)
-        document.getElementById('container2').blur()
+    copyLink () {
+      ipcRenderer.send('copyLink', url)
+      document.getElementById('container2').blur()
     },
-    openInSafari(){
-        ipcRenderer.send('openInSafari', url)
-        document.getElementById('container2').blur()
+    openInSafari () {
+      ipcRenderer.send('openInSafari', url)
+      document.getElementById('container2').blur()
     }
   }
 }
@@ -389,6 +392,7 @@ export default {
   top: -5px;
   /* width: 120px;
   margin: 100px auto; */
+  display: none;
 }
 .container2:focus {
   outline: none;

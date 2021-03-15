@@ -53,8 +53,8 @@ const workerURL = process.env.NODE_ENV === 'development'
   ? 'worker.html'
   : `file://${__dirname}/worker.html`
 const loadFailPagePath = process.env.NODE_ENV === 'development'
-? require('path').resolve(__dirname, '../api/loadFail.html')
-: require('path').resolve(__dirname, 'loadFail.html')
+  ? require('path').resolve(__dirname, '../api/loadFail.html')
+  : require('path').resolve(__dirname, 'loadFail.html')
 // const path = require('path')
 const ApplicationName = pkg.name
 // 托盘对象
@@ -572,12 +572,12 @@ function createBrowserView (url, isClose) {
       .popup({})
   })
 
-  view.webContents.on("did-fail-load", function() {
-    console.log("did-fail-load");
+  view.webContents.on('did-fail-load', function () {
+    console.log('did-fail-load')
 
     const loadingPagePath = require('path').resolve(__dirname, '../api/loadFailPagePath.html')
     view.loadURL(loadingPagePath)
-  });
+  })
 
   //   view.webContents.once('dom-ready', () => {
   //     console.log('dom-ready')

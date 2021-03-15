@@ -264,7 +264,12 @@ export const m = {
     info: 'info'
   },
   dapp: {
-    newest_launched: 'Newest launched'
+    newest_launched: 'Newest launched',
+    tokenlon_desc: 'Secure and fast decentralized exchange',
+    sushiswap_desc: 'Stake SushiSwap LP tokens to claim your very own yummy SUSHI!',
+    uniswap_desc: 'Guaranteed liquidity for millions of users and hundreds of Ethereum applications.',
+    polkadotJS_desc: 'Cryptocurrency Exchange | Simple Coin Conversion',
+    multisender_desc: 'Send ERC20 Token or ETH to thousands of addresses out in 1 single transaction...',
   },
   imKeyCoreErrorInfo: {
     decoding_failed: 'Decoding failed',
