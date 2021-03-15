@@ -52,6 +52,9 @@ const winURL = process.env.NODE_ENV === 'development'
 const workerURL = process.env.NODE_ENV === 'development'
   ? 'worker.html'
   : `file://${__dirname}/worker.html`
+const loadFailPagePath = process.env.NODE_ENV === 'development'
+? require('path').resolve(__dirname, '../api/loadFail.html')
+: require('path').resolve(__dirname, 'loadFail.html')
 // const path = require('path')
 const ApplicationName = pkg.name
 // 托盘对象
@@ -492,6 +495,7 @@ function crashReport () {
 //   }
 // })
 // imkeyProvider.enable()
+let view
 function createBrowserView (url, isClose) {
   let perloadjsPath
   if (url === 'https://polkadot.js.org/apps/#/accounts') {
@@ -499,7 +503,7 @@ function createBrowserView (url, isClose) {
   } else {
     perloadjsPath = ethereumdappURL
   }
-  const view = new BrowserView({
+  view = new BrowserView({
     webPreferences: {
       nodeIntegration: true, // 设置开启nodejs环境
       enableRemoteModule: true,
@@ -524,9 +528,10 @@ function createBrowserView (url, isClose) {
 
   view.setAutoResize({ width: true, height: true })
   // view.webContents.loadURL(url);
-
   const options = { userAgent: 'Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19' }
   // view.webContents.loadURL('https://danfinlay.github.io/js-eth-personal-sign-examples/')
+  // const loadingPagePath = require('path').resolve(__dirname, '../api/test.html')
+  // view.webContents.loadURL('file://' + loadingPagePath)
   view.webContents.loadURL(url, options)
   // view.webContents.loadURL('https://www.myetherwallet.com/access-my-wallet')
   // view.webContents.loadURL('https://tokenlon.dev.tokenlon.im/#/')
@@ -566,6 +571,13 @@ function createBrowserView (url, isClose) {
       .buildFromTemplate(template)
       .popup({})
   })
+
+  view.webContents.on("did-fail-load", function() {
+    console.log("did-fail-load");
+
+    const loadingPagePath = require('path').resolve(__dirname, '../api/loadFailPagePath.html')
+    view.loadURL(loadingPagePath)
+  });
 
   //   view.webContents.once('dom-ready', () => {
   //     console.log('dom-ready')
@@ -626,6 +638,23 @@ function renderDeviceManagerHandler () {
     createBrowserView(url, isClose)
   })
   ipcMain.on('closeBrowserView', (event, url) => {
+    shell.openExternal(url)
+  })
+  ipcMain.on('goForward', (event, url) => {
+    view.webContents.goForward()
+  })
+  ipcMain.on('goBack', (event, url) => {
+    view.webContents.goBack()
+  })
+  ipcMain.on('refresh', (event, url) => {
+    view.webContents.reload()
+  })
+  ipcMain.on('copyLink', (event, url) => {
+    // view.webContents.reload()
+    const clipboard = require('electron').clipboard
+    clipboard.writeText(url)
+  })
+  ipcMain.on('openInSafari', (event, url) => {
     shell.openExternal(url)
   })
   // ipcMain.on('zoomIn', (event, zoomParam) => {
