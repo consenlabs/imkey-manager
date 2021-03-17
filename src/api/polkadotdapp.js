@@ -101,8 +101,8 @@ class Signer {
         preview: {
           payment: payment + ' DOT',
           receiver: toAddress,
-          sender: payload.address,
-          fee: '15.4000 milli DOT'
+          sender: payload.address
+          // fee: '15.4000 milli DOT'
         }
       },
       id: 24
@@ -118,8 +118,8 @@ class Signer {
           preview: {
             payment: payment + ' DOT',
             receiver: toAddress,
-            sender: payload.address,
-            fee: '15.4000 milli DOT'
+            sender: payload.address
+            // fee: '15.4000 milli DOT'
           }
         },
         id: 24

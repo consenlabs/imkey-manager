@@ -174,7 +174,7 @@ ipcRenderer.on('message-from-main', (event, arg) => {
           }
           if (coinNameArr[i] === 'POLKADOT') {
             response = walletApi.registerDOTAddress({
-              path: "m/44'/354'/0'/0/0"
+              path: "m/44'/354'/0'/0'/0'"
             })
             if (!response.isSuccess) {
               response = {
@@ -185,7 +185,7 @@ ipcRenderer.on('message-from-main', (event, arg) => {
           }
           if (coinNameArr[i] === 'KUSAMA') {
             response = walletApi.registerKSMAddress({
-              path: "m/44'/343'/0'/0/0"
+              path: "m/44'/434'/0'/0'/0'"
             })
             if (!response.isSuccess) {
               response = {
@@ -219,6 +219,28 @@ ipcRenderer.on('message-from-main', (event, arg) => {
           if (coinNameArr[i] === 'NERVOS') {
             // response = walletApi.registerCKBAddress({
             //   path: "m/44'/1279'/0'/0/0"
+            // })
+            // if (!response.isSuccess) {
+            //   response = {
+            //     isSuccess: false,
+            //     result: response.result
+            //   }
+            // }
+          }
+          if (coinNameArr[i] === 'BCH') {
+            // response = walletApi.registerBCHAddress({
+            //   path: "m/44'/145'/0'"
+            // })
+            // if (!response.isSuccess) {
+            //   response = {
+            //     isSuccess: false,
+            //     result: response.result
+            //   }
+            // }
+          }
+          if (coinNameArr[i] === 'LTC') {
+            // response = walletApi.registerLTCAddress({
+            //   path: "m/44'/2'/0'"
             // })
             // if (!response.isSuccess) {
             //   response = {

@@ -359,8 +359,8 @@ export default {
   },
   methods: {
     openUrl () {
-      this.$sa.track('im_onboarding$guide', { name: 'onboardingGuideClick', url: this.$t('m.imKeyManager.operating_tutorial_url') })
       ipcRenderer.send('openUrl', this.$t('m.imKeyManager.operating_tutorial_url'))
+      this.$sa.track('im_onboarding$guide', { name: 'onboardingGuideClick', url: this.$t('m.imKeyManager.operating_tutorial_url') })
     },
     openUrlReset () {
       ipcRenderer.send('openUrl', 'https://support.imkey.im/hc/zh-cn/articles/360019787533-%E5%A6%82%E4%BD%95%E9%87%8D%E7%BD%AEimKey-')
@@ -371,9 +371,9 @@ export default {
           this.$ipcRenderer.send('connectDevice')
           this.$ipcRenderer.on('connectDevice', (connectResult) => {
             if (connectResult.isSuccess) {
-              this.$sa.track('im_onboarding_complete$finish', { name: 'onboardingCompleteClick', to: 'im_homepage' })
               // 去首页
               this.$router.push('/home/welcomeHome')
+              this.$sa.track('im_onboarding_complete$finish', { name: 'onboardingCompleteClick', to: 'im_homepage' })
             } else {
               console.log('none')
             }
@@ -436,27 +436,27 @@ export default {
                 if (getBTCXpubResult.isSuccess) {
                   if (response !== '' || response != null) {
                     if (response.search('xpu') !== -1) {
-                      this.$sa.track('im_onboarding_wallet_next$success', { name: 'onboardingWalletNextSuccess' })
                       this.active = active
                       this.page = page
+                      this.$sa.track('im_onboarding_wallet_next$success', { name: 'onboardingWalletNextSuccess' })
                     } else {
-                      this.$sa.track('im_onboarding_wallet_next$error', { name: 'onboardingWalletNextError', message: response })
                       this.checkWalletTip = true
+                      this.$sa.track('im_onboarding_wallet_next$error', { name: 'onboardingWalletNextError', message: response })
                     }
                   } else {
-                    this.$sa.track('im_onboarding_wallet_next$error', { name: 'onboardingWalletNextError', message: response })
                     this.checkWalletTip = true
+                    this.$sa.track('im_onboarding_wallet_next$error', { name: 'onboardingWalletNextError', message: response })
                   }
                 } else {
-                  this.$sa.track('im_onboarding_wallet_next$error', { name: 'onboardingWalletNextError', message: response })
                   // 提示
                   this.checkWalletTip = true
+                  this.$sa.track('im_onboarding_wallet_next$error', { name: 'onboardingWalletNextError', message: response })
                 }
               })
             } else {
-              this.$sa.track('im_onboarding_wallet_next$error', { name: 'onboardingWalletNextError', message: connectResult.result })
               // 提示
               this.checkWalletTip = true
+              this.$sa.track('im_onboarding_wallet_next$error', { name: 'onboardingWalletNextError', message: connectResult.result })
             }
           })
         }
@@ -489,23 +489,23 @@ export default {
                           this.bindFinish = true
                           this.$sa.track('im_onboarding_code$input', { name: 'onboardingCodeInput', status: 1 })
                         } else {
-                          this.$sa.track('im_onboarding_code$input', { name: 'onboardingCodeInput', status: 0 })
                           this.bindingStatus = 0
                           this.codeIsTrue = false
                           this.bindFinish = false
+                          this.$sa.track('im_onboarding_code$input', { name: 'onboardingCodeInput', status: 0 })
                         }
                       })
                     } else {
-                      this.$sa.track('im_onboarding_code$input', { name: 'onboardingCodeInput', status: 0 })
                       this.bindingStatus = 0
                       this.codeIsTrue = false
                       this.bindFinish = false
+                      this.$sa.track('im_onboarding_code$input', { name: 'onboardingCodeInput', status: 0 })
                     }
                   } else {
-                    this.$sa.track('im_onboarding_code$input', { name: 'onboardingCodeInput', status: 0 })
                     this.bindingStatus = 0
                     this.codeIsTrue = false
                     this.bindFinish = false
+                    this.$sa.track('im_onboarding_code$input', { name: 'onboardingCodeInput', status: 0 })
                   }
                 })
               } else {

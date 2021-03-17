@@ -425,13 +425,13 @@ export default {
           this.$ipcRenderer.on('writeWalletAddress', (result) => {
             if (result.isSuccess) {
               // wallet地址写入成功，开始再次检查
-              this.$sa.track('im_setting_firmware$upgrade', { status: 1 })
               this.isCosUpdate = false
               this.cosOldVersionData = this.cosNewVersionData
               this.$store.state.isCosUpdate = false
               this.$store.state.cosOldVersionData = this.cosNewVersionData
               this.$store.state.cosNewVersionData = this.cosNewVersionData
               this.changeCode(2)
+              this.$sa.track('im_setting_firmware$upgrade', { status: 1 })
             } else {
               this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级写wallet地址失败：' + result.result })
             }
@@ -465,18 +465,18 @@ export default {
                         if (importBindResult.isSuccess) {
                           this.cosUpdateWalletAddress()
                         } else {
-                          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码存储失败：' + importBindResponse })
                           this.errorInfo = importBindResponse
                           this.changeCode(3)
+                          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码存储失败：' + importBindResponse })
                         }
                       })
                     } else {
-                      this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
                       this.changeCode(3)
+                      this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
                     }
                   } else {
-                    this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
                     this.changeCode(3)
+                    this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
                   }
                 })
 
@@ -486,20 +486,20 @@ export default {
                 //   this.changeCode(2)
                 // }, 200)
               } else {
-                this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级失败：' + response })
                 this.isCosUpdate = true
                 this.changeCode(3)
+                this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级失败：' + response })
               }
             } else {
-              this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级失败：' + response })
               this.isCosUpdate = true
               this.changeCode(3)
+              this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级失败：' + response })
             }
           })
         } else {
-          this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级失败：' + connectResult.result })
           this.isCosUpdate = true
           this.changeCode(3)
+          this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级失败：' + connectResult.result })
         }
       })
     },

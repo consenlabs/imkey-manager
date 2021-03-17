@@ -22,7 +22,7 @@
               <a class="col" v-if="item.installed===true" href="javascript:;">{{$t('m.imKeyManager.installed')}}</a>
               <a v-if="item.installDis===false" href="javascript:;" @click="installApp(item,index)">{{$t('m.imKeyManager.install')}}</a>
               <a v-if="item.updateDis===false" href="javascript:;" @click="updateApp(item,index)">{{$t('m.imKeyManager.upgrade')}}</a>
-<!--              <a v-if="item.deleteDis===false" href="javascript:;" @click="deleteApp(item,index)">{{$t('m.imKeyManager.delete')}}</a>-->
+              <a v-if="item.deleteDis===false" href="javascript:;" @click="deleteApp(item,index)">{{$t('m.imKeyManager.delete')}}</a>
 
               <el-tooltip class="item" :manual="true" v-if="item.installLoading===true"
                           v-model="item.installLoading"
@@ -36,9 +36,9 @@
                           placement="top-start">
                 <span v-if="item.updateLoading===true" class="fas fa-circle-notch fa-spin"></span>
               </el-tooltip>
-<!--               <el-tooltip class="item" :manual="true" v-if="item.deleteLoading===true" v-model="item.deleteLoading" :content="$t('m.imKeyManager.APP_deleting_do_not_disconnect_usb')" effect="dark" placement="top-start">-->
-<!--               <span v-if="item.deleteLoading===true" class="fas fa-circle-notch fa-spin"></span>-->
-<!--               </el-tooltip>-->
+               <el-tooltip class="item" :manual="true" v-if="item.deleteLoading===true" v-model="item.deleteLoading" :content="$t('m.imKeyManager.APP_deleting_do_not_disconnect_usb')" effect="dark" placement="top-start">
+               <span v-if="item.deleteLoading===true" class="fas fa-circle-notch fa-spin"></span>
+               </el-tooltip>
 
             </div>
           </li>
@@ -230,7 +230,6 @@ export default {
           this.$ipcRenderer.on('writeWalletAddress', (result) => {
             if (result.isSuccess) {
               // wallet地址写入成功，开始再次检查
-              this.$sa.track('im_manage_firmware$upgrade', { status: 1 })
               this.isCosUpdate = false
               this.cosUpdateStatus = '0'
               this.cosOldVersionData = this.cosNewVersionData
@@ -238,6 +237,7 @@ export default {
               this.$store.state.cosOldVersionData = this.cosNewVersionData
               this.$store.state.cosNewVersionData = this.cosNewVersionData
               this.changeCode(2)
+              this.$sa.track('im_manage_firmware$upgrade', { status: 1 })
             } else {
               this.$sa.track('im_manage_firmware$upgrade', { status: 0, message: '固件升级写wallet地址失败：' + result.result })
             }
@@ -271,18 +271,18 @@ export default {
                         if (importBindResult.isSuccess) {
                           this.cosUpdateWalletAddress()
                         } else {
-                          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码存储失败：' + importBindResponse })
                           this.errorInfo = importBindResponse
                           this.changeCode(3)
+                          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码存储失败：' + importBindResponse })
                         }
                       })
                     } else {
-                      this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
                       this.changeCode(3)
+                      this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
                     }
                   } else {
-                    this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
                     this.changeCode(3)
+                    this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
                   }
                 })
                 // 更新完cos之后需要清除缓存重新加载数据刷新页面
@@ -291,20 +291,20 @@ export default {
                 //   this.changeCode(2)
                 // }, 200)
               } else {
-                this.$sa.track('im_manage_firmware$upgrade', { status: 0, message: '固件升级失败：' + response })
                 this.isCosUpdate = true
                 this.changeCode(3)
+                this.$sa.track('im_manage_firmware$upgrade', { status: 0, message: '固件升级失败：' + response })
               }
             } else {
-              this.$sa.track('im_manage_firmware$upgrade', { status: 0, message: '固件升级失败：' + response })
               this.isCosUpdate = true
               this.changeCode(3)
+              this.$sa.track('im_manage_firmware$upgrade', { status: 0, message: '固件升级失败：' + response })
             }
           })
         } else {
-          this.$sa.track('im_manage_firmware$upgrade', { status: 0, message: '固件升级失败：' + connectResult.result })
           this.isCosUpdate = true
           this.changeCode(3)
+          this.$sa.track('im_manage_firmware$upgrade', { status: 0, message: '固件升级失败：' + connectResult.result })
         }
       })
     },
@@ -413,28 +413,33 @@ export default {
             this.$ipcRenderer.on('downloadApplet', (downloadAppletResult) => {
               const response = downloadAppletResult.result
               if (downloadAppletResult.isSuccess) {
-                if (response === constants.RESULT_STATUS_SUCCESS) {
-                  this.$sa.track('im_manage$install', { symbol: name, status: 1 })
-                  this.apps[index].installed = true
-                  this.apps[index].deleteDis = false
-                  this.apps[index].installLoading = false
-                  this.apps[index].desc = this.apps[index].lastVersion
-                } else {
-                  this.$sa.track('im_manage$install', { symbol: name, status: 0, message: response })
-                  this.apps[index].installLoading = false
-                  this.tip = true
-                  this.apps[index].installDis = false
-                }
+                // 写wallet地址
+                this.$ipcRenderer.send('writeWalletAddress', { name: response, filePath: this.$store.state.userPath })
+                this.$ipcRenderer.on('writeWalletAddress', (result) => {
+                  if (result.isSuccess) {
+                    // if (response === constants.RESULT_STATUS_SUCCESS) {
+                    this.apps[index].installed = true
+                    this.apps[index].deleteDis = false
+                    this.apps[index].installLoading = false
+                    this.apps[index].desc = this.apps[index].lastVersion
+                    this.$sa.track('im_manage$install', { symbol: name, status: 1 })
+                  } else {
+                    this.apps[index].installLoading = false
+                    this.tip = true
+                    this.apps[index].installDis = false
+                    this.$sa.track('im_manage$install', { symbol: name, status: 0, message: response })
+                  }
+                })
               } else {
-                this.$sa.track('im_manage$install', { symbol: name, status: 0, message: response })
                 this.apps[index].installLoading = false
                 this.apps[index].installDis = false
                 this.tip = true
+                this.$sa.track('im_manage$install', { symbol: name, status: 0, message: response })
               }
             })
           } else {
-            this.$sa.track('im_manage$install', { symbol: name, status: 0, message: connectResult.result })
             this.tip = true
+            this.$sa.track('im_manage$install', { symbol: name, status: 0, message: connectResult.result })
           }
         })
       } else {
@@ -463,30 +468,35 @@ export default {
             this.$ipcRenderer.on('updateApplet', (updateAppletResult) => {
               const response = updateAppletResult.result
               if (updateAppletResult.isSuccess) {
-                if (response === constants.RESULT_STATUS_SUCCESS) {
-                  this.$sa.track('im_manage$upgrade', { symbol: name, status: 1 })
-                  this.apps[index].deleteDis = false
-                  this.apps[index].installed = true
-                  this.apps[index].updateLoading = false
-                  this.apps[index].installDis = true
-                  this.apps[index].installLoading = false
-                  this.apps[index].desc = this.apps[index].lastVersion
-                } else {
-                  this.$sa.track('im_manage$upgrade', { symbol: name, status: 0, message: response })
-                  this.apps[index].installLoading = false
-                  this.apps[index].updateDis = false
-                  this.tip = true
-                }
+                // 写wallet地址
+                this.$ipcRenderer.send('writeWalletAddress', { name: response, filePath: this.$store.state.userPath })
+                this.$ipcRenderer.on('writeWalletAddress', (result) => {
+                  if (result.isSuccess) {
+                    // if (response === constants.RESULT_STATUS_SUCCESS) {
+                    this.apps[index].deleteDis = false
+                    this.apps[index].installed = true
+                    this.apps[index].updateLoading = false
+                    this.apps[index].installDis = true
+                    this.apps[index].installLoading = false
+                    this.apps[index].desc = this.apps[index].lastVersion
+                    this.$sa.track('im_manage$upgrade', { symbol: name, status: 1 })
+                  } else {
+                    this.apps[index].installLoading = false
+                    this.apps[index].updateDis = false
+                    this.tip = true
+                    this.$sa.track('im_manage$upgrade', { symbol: name, status: 0, message: response })
+                  }
+                })
               } else {
-                this.$sa.track('im_manage$upgrade', { symbol: name, status: 0, message: response })
                 this.apps[index].updateDis = false
                 this.apps[index].installLoading = false
                 this.tip = true
+                this.$sa.track('im_manage$upgrade', { symbol: name, status: 0, message: response })
               }
             })
           } else {
-            this.$sa.track('im_manage$upgrade', { symbol: name, status: 0, message: connectResult.result })
             this.tip = true
+            this.$sa.track('im_manage$upgrade', { symbol: name, status: 0, message: connectResult.result })
           }
         })
       } else {
