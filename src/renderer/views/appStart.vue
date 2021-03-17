@@ -40,6 +40,8 @@ export default {
   },
   methods: {
     next () {
+
+        // this.$router.push('/home/welcomeHome')
       this.router.replace('/connectDevice')
     },
     openUrl () {
