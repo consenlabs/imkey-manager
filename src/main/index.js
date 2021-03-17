@@ -536,7 +536,15 @@ function createBrowserView (url, isClose) {
   // view.webContents.loadURL('https://www.myetherwallet.com/access-my-wallet')
   // view.webContents.loadURL('https://tokenlon.dev.tokenlon.im/#/')
   // view.webContents.loadURL('https://app.zerion.io/connect-wallet')
-  view.webContents.openDevTools()
+  // view.webContents.on('did-frame-finish-load', () => {
+  //   // if (isDev) {
+  //     view.webContents.openDevTools();
+  //     view.webContents.on('devtools-opened', () => {
+  //       view.focus();
+  //     });
+  //   // }
+  // });
+  // view.webContents.openDevTools()
 
   view.webContents.on('context-menu', ({ sender: webContents }, { editFlags }) => {
     const template = [
@@ -572,11 +580,21 @@ function createBrowserView (url, isClose) {
       .popup({})
   })
 
-  view.webContents.on('did-fail-load', function () {
-    console.log('did-fail-load')
+  view.webContents.on('did-fail-load', function (event, errorCode, errorDescription, url) {
+    
+    console.log('did-fail-load: ', event, errorCode, errorDescription, url);
 
     const loadingPagePath = require('path').resolve(__dirname, '../api/loadFailPagePath.html')
     view.loadURL(loadingPagePath)
+  })
+
+  view.webContents.on('will-navigate', function(event, url) {
+    console.log("will-navigate: ", event, url);
+  })
+
+  view.webContents.on('new-window', (event, url) => {
+    event.preventDefault()
+    shell.openExternal(url);
   })
 
   //   view.webContents.once('dom-ready', () => {

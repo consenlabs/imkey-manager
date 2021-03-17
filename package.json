@@ -197,7 +197,7 @@
     "require-dir": "^1.2.0",
     "sass-loader": "^11.0.1",
     "should": "^13.2.3",
-    "spectron": "^13.0.0",
+    "spectron": "^14.0.0",
     "style-loader": "^2.0.0",
     "url-loader": "^4.1.1",
     "utf-8-validate": "^5.0.4",

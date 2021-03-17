@@ -120,7 +120,7 @@
                         <span class="comingsoon">{{$t('m.imKeyManager.coming_soon')}}</span>
                         <span class="rightLine">——</span>
                 </div> -->
-                <a class="dapp" @click="openUrl('TokenLon')">
+                <a class="dapp" @click="openUrl('Tokenlon')">
                     <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <g clip-path="url(#clip0-tokenlon)">
                         <rect width="64" height="64" fill="white"/>
@@ -154,7 +154,7 @@
                         </defs>
                     </svg>
                     <div class="dapp-info">
-                        <p class="dapp-name">TokenLon</p>
+                        <p class="dapp-name">Tokenlon</p>
                         <p class="dapp-desc">{{$t('m.dapp.tokenlon_desc')}}</p>
                     </div>
                 </a>
@@ -307,10 +307,10 @@ export default {
       this.status = 1
     },
     openUrl (urlType) {
-      if (urlType === 'TokenLon') {
+      if (urlType === 'Tokenlon') {
         // url = 'https://tokenlon.im'
-        url = 'https://tokenlon.dev.tokenlon.im/#/'
-        this.title = 'TokenLon'
+        url = 'https://tokenlon.dev.tokenlon.im/instant'
+        this.title = 'Tokenlon'
         this.iconUrl = 'https://tokenlon.im/images/favico.png'
       }
       if (urlType === 'Sushiswap') {
