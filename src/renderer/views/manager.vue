@@ -324,11 +324,11 @@ export default {
             const response = connectResult.result
             if (connectResult.isSuccess) {
               if (response === constants.RESULT_STATUS_SUCCESS) {
-                if(this.$store.state.isFirstGoToManagerPage === true){
+                if (this.$store.state.isFirstGoToManagerPage === true) {
                   // 加载应用
                   this.getAppsList()
                   this.$store.state.isFirstGoToManagerPage = false
-                }else{
+                } else {
                   if (this.isEmptyObject(this.$store.state.apps) || JSON.stringify(this.$store.state.apps) === '[]') {
                     // 加载应用
                     this.getAppsList()

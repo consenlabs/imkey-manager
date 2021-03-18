@@ -1,4 +1,15 @@
-import { app, BrowserWindow, BrowserView, ipcMain, Menu, shell, Tray, dialog, crashReporter } from 'electron'
+import {
+  app,
+  BrowserWindow,
+  BrowserView,
+  ipcMain,
+  Menu,
+  shell,
+  Tray,
+  dialog,
+  crashReporter,
+  ipcRenderer
+} from 'electron'
 // 自动更新相关
 import { autoUpdater } from 'electron-updater'
 // 崩溃报告
@@ -7,19 +18,25 @@ import * as Sentry from '@sentry/electron'
 // test.json
 import pkg from '../../package.json'
 import SensorsAnalytics from 'sa-sdk-node'
-const url = 'https://imtoken.datasink.sensorsdata.cn/sa?project=production&token=27d69b3e7fd25949'
+
+const url =
+  'https://imtoken.datasink.sensorsdata.cn/sa?project=production&token=27d69b3e7fd25949'
 const sa = new SensorsAnalytics()
 const distinctId = 'imkey-manager'
 let envPath
 if (process.platform === 'win32') {
   if (process.env.NODE_ENV === 'production') {
-    envPath = require('path').resolve(__dirname, 'key.env').replace('\\resources\\app.asar\\dist\\electron', '')
+    envPath = require('path')
+      .resolve(__dirname, 'key.env')
+      .replace('\\resources\\app.asar\\dist\\electron', '')
   } else {
     envPath = require('path').resolve('key.env')
   }
 } else if (process.platform === 'darwin') {
   if (process.env.NODE_ENV === 'production') {
-    envPath = require('path').resolve(__dirname, 'key.env').replace('/app.asar/dist/electron', '')
+    envPath = require('path')
+      .resolve(__dirname, 'key.env')
+      .replace('/app.asar/dist/electron', '')
   } else {
     envPath = require('path').resolve('key.env')
   }
@@ -36,25 +53,32 @@ app.web3 = require('web3')
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
  */
 if (process.env.NODE_ENV !== 'development') {
-  global.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
+  global.__static = require('path')
+    .join(__dirname, '/static')
+    .replace(/\\/g, '\\\\')
 }
 
 let mainWindow, workerWindow
-const polkadotdappURL = process.env.NODE_ENV === 'development'
-  ? require('path').resolve(__dirname, '../api/polkadotdapp.js')
-  : require('path').resolve(__dirname, 'polkadotdapp.js')
-const ethereumdappURL = process.env.NODE_ENV === 'development'
-  ? require('path').resolve(__dirname, '../api/ethereumdapp.js')
-  : require('path').resolve(__dirname, 'ethereumdapp.js')
-const winURL = process.env.NODE_ENV === 'development'
-  ? 'http://localhost:9080'
-  : `file://${__dirname}/index.html`
-const workerURL = process.env.NODE_ENV === 'development'
-  ? 'worker.html'
-  : `file://${__dirname}/worker.html`
-const loadFailPagePath = process.env.NODE_ENV === 'development'
-  ? require('path').resolve(__dirname, '../api/loadFail.html')
-  : require('path').resolve(__dirname, 'loadFail.html')
+const polkadotdappURL =
+  process.env.NODE_ENV === 'development'
+    ? require('path').resolve(__dirname, '../api/polkadotdapp.js')
+    : require('path').resolve(__dirname, 'polkadotdapp.js')
+const ethereumdappURL =
+  process.env.NODE_ENV === 'development'
+    ? require('path').resolve(__dirname, '../api/ethereumdapp.js')
+    : require('path').resolve(__dirname, 'ethereumdapp.js')
+const winURL =
+  process.env.NODE_ENV === 'development'
+    ? 'http://localhost:9080'
+    : `file://${__dirname}/index.html`
+const workerURL =
+  process.env.NODE_ENV === 'development'
+    ? 'worker.html'
+    : `file://${__dirname}/worker.html`
+const loadFailPagePath =
+  process.env.NODE_ENV === 'development'
+    ? require('path').resolve(__dirname, '../api/loadFail.html')
+    : require('path').resolve(__dirname, 'loadFail.html')
 // const path = require('path')
 const ApplicationName = pkg.name
 // 托盘对象
@@ -86,9 +110,9 @@ function createWorkerWindow () {
     sa.track(distinctId, 'im_app$end', { name: 'appEnd' })
   })
   if (process.env.NODE_ENV === 'development') {
-    workerWindow.loadFile(workerURL)// 调试时的加载方式
+    workerWindow.loadFile(workerURL) // 调试时的加载方式
   } else {
-    workerWindow.loadURL(workerURL)// 打包后的加载方式
+    workerWindow.loadURL(workerURL) // 打包后的加载方式
   }
 }
 /**
@@ -100,8 +124,8 @@ function createMainWindow () {
   }
 
   /**
-     * Initial window options
-     */
+   * Initial window options
+   */
   mainWindow = new BrowserWindow({
     show: false,
     height: 820,
@@ -116,7 +140,6 @@ function createMainWindow () {
       nodeIntegration: true,
       enableRemoteModule: true
     }
-
   })
   Menu.setApplicationMenu(Menu.buildFromTemplate([]))
   mainWindow.loadURL(winURL)
@@ -128,8 +151,8 @@ function createMainWindow () {
   })
 
   /**
-     * 监听
-     */
+   * 监听
+   */
   mainWindow.on('close', (event) => {
     if (process.platform === 'win32') {
       if (!trayClose) {
@@ -146,9 +169,7 @@ function createMainWindow () {
     mainWindow = null
   })
 
-  mainWindow.on('maximize', () => {
-
-  })
+  mainWindow.on('maximize', () => {})
 }
 
 /**
@@ -342,12 +363,12 @@ function autoUpdate () {
   })
 
   /**
-     * event Event
-     * releaseNotes String - 新版本更新公告
-     * releaseName String - 新的版本号
-     * releaseDate Date - 新版本发布的日期
-     * updateUrl String - 更新地址
-     */
+   * event Event
+   * releaseNotes String - 新版本更新公告
+   * releaseName String - 新的版本号
+   * releaseDate Date - 新版本发布的日期
+   * updateUrl String - 更新地址
+   */
   autoUpdater.on('update-downloaded', (info) => {
     // 下载太快可能无法触发downloadProgress事件，所以手动通知一下
     mainWindow.webContents.send('downloadProgress', { percent: 100 })
@@ -375,7 +396,8 @@ function autoUpdate () {
 function crashReport () {
   // 报告常规错误
   Sentry.init({
-    dsn: 'https://36dc1ad5111d44e1ae447e324a4d0141@o359184.ingest.sentry.io/5199393'
+    dsn:
+      'https://36dc1ad5111d44e1ae447e324a4d0141@o359184.ingest.sentry.io/5199393'
   })
 
   // 报告系统错误
@@ -383,7 +405,8 @@ function crashReport () {
     companyName: 'imKey',
     productName: 'imKeyDesktop',
     ignoreSystemCrashHandler: true,
-    submitURL: 'https://o359184.ingest.sentry.io/api/5199393/security/?sentry_key=36dc1ad5111d44e1ae447e324a4d0141'
+    submitURL:
+      'https://o359184.ingest.sentry.io/api/5199393/security/?sentry_key=36dc1ad5111d44e1ae447e324a4d0141'
   })
 
   // 渲染进程崩溃事件
@@ -394,21 +417,23 @@ function crashReport () {
       message: '这个进程已经崩溃.',
       buttons: ['重载', '退出']
     }
-    recordCrash().then(() => {
-      dialog.showMessageBox(options, (index) => {
-        if (index === 0) {
-          reloadWindow(mainWindow)
-        } else {
-          app.quit()
-        }
+    recordCrash()
+      .then(() => {
+        dialog.showMessageBox(options, (index) => {
+          if (index === 0) {
+            reloadWindow(mainWindow)
+          } else {
+            app.quit()
+          }
+        })
       })
-    }).catch((e) => {
-      console.log('err', e)
-    })
+      .catch((e) => {
+        console.log('err', e)
+      })
   })
 
   function recordCrash () {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       sa.track(distinctId, 'im_app$crash', { name: 'appCrash' })
       // 崩溃日志请求成功....
       resolve()
@@ -527,15 +552,12 @@ function createBrowserView (url, isClose) {
   }
 
   view.setAutoResize({ width: true, height: true })
-  // view.webContents.loadURL(url);
-  const options = { userAgent: 'Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19' }
-  // view.webContents.loadURL('https://danfinlay.github.io/js-eth-personal-sign-examples/')
-  // const loadingPagePath = require('path').resolve(__dirname, '../api/test.html')
-  // view.webContents.loadURL('file://' + loadingPagePath)
+  const options = {
+    userAgent:
+      'Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19'
+  }
   view.webContents.loadURL(url, options)
-  // view.webContents.loadURL('https://www.myetherwallet.com/access-my-wallet')
-  // view.webContents.loadURL('https://tokenlon.dev.tokenlon.im/#/')
-  // view.webContents.loadURL('https://app.zerion.io/connect-wallet')
+
   // view.webContents.on('did-frame-finish-load', () => {
   //   // if (isDev) {
   //     view.webContents.openDevTools();
@@ -546,44 +568,50 @@ function createBrowserView (url, isClose) {
   // });
   // view.webContents.openDevTools()
 
-  view.webContents.on('context-menu', ({ sender: webContents }, { editFlags }) => {
-    const template = [
-      ...(editFlags.canCut
-        ? [
-            { role: 'cut' },
-            { label: 'Cut (custom)', click: () => webContents.cut() }
-          ]
-        : []
-      ),
-      ...(editFlags.canCopy
-        ? [
-            { role: 'copy' },
-            { label: 'Copy (custom)', click: () => webContents.copy() }
-          ]
-        : []
-      ),
-      ...(editFlags.canPaste
-        ? [
-            { role: 'paste' },
-            { label: 'Paste (custom)', click: () => webContents.paste() }
-          ]
-        : []
-      )
-    ]
+  view.webContents.on(
+    'context-menu',
+    ({ sender: webContents }, { editFlags }) => {
+      const template = [
+        ...(editFlags.canCut
+          ? [
+              { role: 'cut' },
+              { label: 'Cut (custom)', click: () => webContents.cut() }
+            ]
+          : []),
+        ...(editFlags.canCopy
+          ? [
+              { role: 'copy' },
+              { label: 'Copy (custom)', click: () => webContents.copy() }
+            ]
+          : []),
+        ...(editFlags.canPaste
+          ? [
+              { role: 'paste' },
+              { label: 'Paste (custom)', click: () => webContents.paste() }
+            ]
+          : [])
+      ]
 
-    if (!template.length) {
-      return
+      if (!template.length) {
+        return
+      }
+
+      Menu.buildFromTemplate(template).popup({})
     }
+  )
 
-    Menu
-      .buildFromTemplate(template)
-      .popup({})
-  })
-
-  view.webContents.on('did-fail-load', function (event, errorCode, errorDescription, url) {
+  view.webContents.on('did-fail-load', function (
+    event,
+    errorCode,
+    errorDescription,
+    url
+  ) {
     console.log('did-fail-load: ', event, errorCode, errorDescription, url)
 
-    const loadingPagePath = require('path').resolve(__dirname, '../api/loadFailPagePath.html')
+    const loadingPagePath = require('path').resolve(
+      __dirname,
+      '../api/loadFailPagePath.html'
+    )
     view.loadURL(loadingPagePath)
   })
 
@@ -594,6 +622,12 @@ function createBrowserView (url, isClose) {
   view.webContents.on('new-window', (event, url) => {
     event.preventDefault()
     shell.openExternal(url)
+  })
+
+  view.webContents.on('did-finish-load', (event, input) => {
+    console.log('did finish load: ', event, input)
+
+    mainWindow.webContents.send('loading-status', false)
   })
 
   //   view.webContents.once('dom-ready', () => {
@@ -674,10 +708,16 @@ function renderDeviceManagerHandler () {
   ipcMain.on('openInSafari', (event, url) => {
     shell.openExternal(url)
   })
+  ipcMain.on('message-forwarding', (data) => {
+    debugger
+    console.log('receive message-forwarding: ', data)
+    mainWindow.webContents.send(data.event, data.data)
+  })
   // ipcMain.on('zoomIn', (event, zoomParam) => {
   //   webFrame.setZoomFactor(zoomParam)
   // })
 }
+
 function initSa () {
   sa.disableReNameOption()
   sa.submitTo(url)
