@@ -546,7 +546,7 @@ function createBrowserView (url, isClose) {
   if (process.platform === 'win32') {
     view.setBounds({ x: 300, y: 0, width: 1050, height: 700 })
   } else if (process.platform === 'darwin') {
-    view.setBounds({ x: 300, y: 62, width: 1140, height: 820 })
+    view.setBounds({ x: 300, y: 62, width: 1200, height: 758 })
   } else {
     view.setBounds({ x: 300, y: 0, width: 1140, height: 820 })
   }
@@ -566,7 +566,7 @@ function createBrowserView (url, isClose) {
   //     });
   //   // }
   // });
-  // view.webContents.openDevTools()
+  view.webContents.openDevTools()
 
   view.webContents.on(
     'context-menu',
@@ -709,7 +709,6 @@ function renderDeviceManagerHandler () {
     shell.openExternal(url)
   })
   ipcMain.on('message-forwarding', (data) => {
-    debugger
     console.log('receive message-forwarding: ', data)
     mainWindow.webContents.send(data.event, data.data)
   })

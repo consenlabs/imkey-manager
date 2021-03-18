@@ -229,7 +229,7 @@
       </div>
 
       <div class="right-tools" v-if="showRightTools">
-        <span v-if="isLoading" class="fas fa-circle-notch fa-spin"></span>
+        <span v-if="isLoading" class="fas fa-circle-notch fa-spin" style="margin-left: 19px"></span>
         <img
           v-else="isLoading"
           style="width: 24px; height: 24px; margin-left: 19px"
@@ -819,6 +819,7 @@ export default {
 .container {
   padding-left: 38px;
   font-family: PingFang SC;
+  bottom: 0;
 }
 .container h2 {
   font-family: PingFang SC;
@@ -834,7 +835,6 @@ export default {
 .container .appBox {
   margin-top: 33px;
   width: 900px;
-  height: 99px;
   display: flex;
   flex-wrap: wrap;
 }
