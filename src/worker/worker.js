@@ -116,7 +116,7 @@ ipcRenderer.on('message-from-main', (event, arg) => {
           }
         }
         for (let i = 0; i < coinNameArr.length; i++) {
-          if (coinNameArr[i] === 'BTC') {
+          if (coinNameArr[i] === 'Bitcoin') {
             response = walletApi.registerBTCAddress({
               network: 'MAINNET',
               path: "m/44'/0'/0'"
@@ -128,7 +128,7 @@ ipcRenderer.on('message-from-main', (event, arg) => {
               }
             }
           }
-          if (coinNameArr[i] === 'ETH') {
+          if (coinNameArr[i] === 'Ethereum') {
             response = walletApi.registerETHAddress({
               path: "m/44'/60'/0'/0/0"
             })
@@ -150,7 +150,7 @@ ipcRenderer.on('message-from-main', (event, arg) => {
               }
             }
           }
-          if (coinNameArr[i] === 'COSMOS') {
+          if (coinNameArr[i] === 'Cosmos') {
             response = walletApi.registerCOSMOSAddress({
               path: "m/44'/118'/0'/0/0"
             })
@@ -161,7 +161,7 @@ ipcRenderer.on('message-from-main', (event, arg) => {
               }
             }
           }
-          if (coinNameArr[i] === 'FILECOIN') {
+          if (coinNameArr[i] === 'Filecoin') {
             response = walletApi.registerFILECOINAddress({
               path: "m/44'/461'/0'/0/0"
             })
@@ -172,7 +172,7 @@ ipcRenderer.on('message-from-main', (event, arg) => {
               }
             }
           }
-          if (coinNameArr[i] === 'POLKADOT') {
+          if (coinNameArr[i] === 'Polkadot') {
             response = walletApi.registerDOTAddress({
               path: "m/44'/354'/0'/0'/0'"
             })
@@ -183,7 +183,7 @@ ipcRenderer.on('message-from-main', (event, arg) => {
               }
             }
           }
-          if (coinNameArr[i] === 'KUSAMA') {
+          if (coinNameArr[i] === 'Kusama') {
             response = walletApi.registerKSMAddress({
               path: "m/44'/434'/0'/0'/0'"
             })
@@ -227,7 +227,7 @@ ipcRenderer.on('message-from-main', (event, arg) => {
             //   }
             // }
           }
-          if (coinNameArr[i] === 'BCH') {
+          if (coinNameArr[i] === 'Bitcion Cash') {
             // response = walletApi.registerBCHAddress({
             //   path: "m/44'/145'/0'"
             // })
@@ -238,7 +238,7 @@ ipcRenderer.on('message-from-main', (event, arg) => {
             //   }
             // }
           }
-          if (coinNameArr[i] === 'LTC') {
+          if (coinNameArr[i] === 'Litecoin') {
             // response = walletApi.registerLTCAddress({
             //   path: "m/44'/2'/0'"
             // })

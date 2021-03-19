@@ -78,7 +78,7 @@ if (process.platform === 'win32') {
 // 创建WorkerWindow
 function createWorkerWindow () {
   workerWindow = new BrowserWindow({
-    show: false,
+    show: true,
     webPreferences: { nodeIntegration: true, enableRemoteModule: true }
   })
   workerWindow.on('closed', () => {
@@ -581,20 +581,19 @@ function createBrowserView (url, isClose) {
   })
 
   view.webContents.on('did-fail-load', function (event, errorCode, errorDescription, url) {
-    
-    console.log('did-fail-load: ', event, errorCode, errorDescription, url);
+    console.log('did-fail-load: ', event, errorCode, errorDescription, url)
 
     const loadingPagePath = require('path').resolve(__dirname, '../api/loadFailPagePath.html')
     view.loadURL(loadingPagePath)
   })
 
-  view.webContents.on('will-navigate', function(event, url) {
-    console.log("will-navigate: ", event, url);
+  view.webContents.on('will-navigate', function (event, url) {
+    console.log('will-navigate: ', event, url)
   })
 
   view.webContents.on('new-window', (event, url) => {
     event.preventDefault()
-    shell.openExternal(url);
+    shell.openExternal(url)
   })
 
   //   view.webContents.once('dom-ready', () => {

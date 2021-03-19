@@ -942,5 +942,87 @@
       "address": "f1o2ph66tg7o7obyrqa7eiwiinrltauzxitkuk4ay"
     },
     "id:": 23
-  }
+  },
+  "bch.getAddress": {
+    "jsonrpc": "2.0",
+    "method": "bch.getAddress",
+    "params": {
+      "network": "MAINNET",
+      "path": "m/44'/145'/0'"
+    },
+    "id": 24
+  },
+  "bch.getAddress.result":{
+  "jsonrpc:": "2.0",
+  "result": {
+    "path": "m/44'/145'/0'",
+    "chaintype": "BITCOINCASH",
+    "address": "qqpp825c98yjll7uaasz2hgz6s566xehnsjk5fser8"
+  },
+  "id:": 7
+},
+  "ltc.getAddress": {
+    "jsonrpc": "2.0",
+    "method": "ltc.getAddress",
+    "params": {
+      "network": "MAINNET",
+      "path": "m/44'/2'/0'"
+    },
+    "id": 24
+  },
+  "ltc.getAddress.result":{
+  "jsonrpc:": "2.0",
+  "result": {
+    "path": "m/44'/2'/0'",
+    "chaintype": "LITECOIN",
+    "address": "LMvgpYesXUJaCeeQp5a1Lu1gnFW5qeAgJp"
+  },
+  "id:": 24
+},
+  "ltc.getSegWitAddress": {
+    "jsonrpc": "2.0",
+    "method": "ltc.getSegWitAddress",
+    "params": {
+      "network": "MAINNET",
+      "path": "m/44'/2'/0'"
+    },
+    "id": 24
+  },
+  "ltc.getSegWitAddress.result":{
+    "jsonrpc:": "2.0",
+    "result": {
+      "path": "m/44'/2'/0'",
+      "chaintype": "LITECOIN",
+      "address": "MLrJ1FikzGRhvKZNRcUU3KummZqzSheSmx"
+    },
+    "id:": 24
+  },
+  "bch.signTransaction": {
+  "jsonrpc": "2.0",
+  "method": "bch.signTransaction",
+  "params": {
+    "utxo": [
+      {
+        "txHash": "09c3a49c1d01f6341c43ea43dd0de571664a45b4e7d9211945cb3046006a98e2",
+        "vout": 0,
+        "amount": 100000,
+        "address": "qzld7dav7d2sfjdl6x9snkvf6raj8lfxjcj5fa8y2r",
+        "scriptPubkey": "76a914118c3123196e030a8a607c22bafc1577af61497d88ac",
+        "derivedPath": "0/0",
+        "sequence": 0
+      }
+    ],
+    "to": "qq40fskqshxem2gvz0xkf34ww3h6zwv4dcr7pm0z6s",
+    "changeAddressIndex": 93454,
+    "amount": 93454,
+    "fee": 6000,
+    "segWit": "",
+    "changeAddressIndex": 0,
+    "changeAddress": "qq5jyy9vmsznss93gmt8m2v2fep7wvpdwsn2hrjgsg",
+    "path": "m/44'/145'/0'/",
+    "network": "MAINET",
+    "txHash": "d40ceeecbb1ad07e7a19d4c807808ad7b5c78854cfebd7f25e2f79fcc43055f4"
+  },
+  "id": 1
+}
 }

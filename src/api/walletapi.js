@@ -815,10 +815,10 @@ export function btcUsdtSegWitSignTransaction (json) {
   return btcSignTransactionCallImKeyApi(json )
 }
 export function bchSignTransaction (json) {
-  return btcForkSignTransactionCallImKeyApi(json,'')
+  return btcForkSignTransactionCallImKeyApi(json,'BITCOINCASH')
 }
 export function ltcSignTransaction (json) {
-  return btcForkSignTransactionCallImKeyApi(json,'')
+  return btcForkSignTransactionCallImKeyApi(json,'LITECOIN')
 }
 export function ethSignTransaction (json) {
   return ethSignTransactionCallImKeyApi(json)
