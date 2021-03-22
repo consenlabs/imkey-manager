@@ -1,6 +1,9 @@
 // sdk version
-const version = '1.2.00'
-
+const sdkVersion = '2.3.0'
+// serverurl
+const serverUrl = 'https://imkeyserver.com:10443/imkey'
+// Terminaltype
+const terminalType = 'PC'
 // Battery is charging sign
 const BATTERY_CHARGING_SIGN = 'FF'
 
@@ -84,7 +87,9 @@ const XPubCommonKey128 = 'B888D25EC8C12BD5043777B1AC49F872'
 const XPubCommonIv = '9C0C30889CBCC5E01AB5B2BB88715799'
 
 module.exports = {
-  version,
+  sdkVersion,
+  serverUrl,
+  terminalType,
   BATTERY_CHARGING_SIGN,
   LIFE_TIME_DEVICE_INITED,
   LIFE_TIME_DEVICE_ACTIVATED,
