@@ -22,7 +22,7 @@
               <a class="col" v-if="item.installed===true" href="javascript:;">{{$t('m.imKeyManager.installed')}}</a>
               <a v-if="item.installDis===false" href="javascript:;" @click="installApp(item,index)">{{$t('m.imKeyManager.install')}}</a>
               <a v-if="item.updateDis===false" href="javascript:;" @click="updateApp(item,index)">{{$t('m.imKeyManager.upgrade')}}</a>
-              <a v-if="item.deleteDis===false" href="javascript:;" @click="deleteApp(item,index)">{{$t('m.imKeyManager.delete')}}</a>
+<!--              <a v-if="item.deleteDis===false" href="javascript:;" @click="deleteApp(item,index)">{{$t('m.imKeyManager.delete')}}</a>-->
 
               <el-tooltip class="item" :manual="true" v-if="item.installLoading===true"
                           v-model="item.installLoading"
@@ -36,9 +36,9 @@
                           placement="top-start">
                 <span v-if="item.updateLoading===true" class="fas fa-circle-notch fa-spin"></span>
               </el-tooltip>
-               <el-tooltip class="item" :manual="true" v-if="item.deleteLoading===true" v-model="item.deleteLoading" :content="$t('m.imKeyManager.APP_deleting_do_not_disconnect_usb')" effect="dark" placement="top-start">
-               <span v-if="item.deleteLoading===true" class="fas fa-circle-notch fa-spin"></span>
-               </el-tooltip>
+<!--               <el-tooltip class="item" :manual="true" v-if="item.deleteLoading===true" v-model="item.deleteLoading" :content="$t('m.imKeyManager.APP_deleting_do_not_disconnect_usb')" effect="dark" placement="top-start">-->
+<!--               <span v-if="item.deleteLoading===true" class="fas fa-circle-notch fa-spin"></span>-->
+<!--               </el-tooltip>-->
 
             </div>
           </li>
@@ -324,13 +324,19 @@ export default {
             const response = connectResult.result
             if (connectResult.isSuccess) {
               if (response === constants.RESULT_STATUS_SUCCESS) {
-                if (this.isEmptyObject(this.$store.state.apps) || JSON.stringify(this.$store.state.apps) === '[]') {
+                if(this.$store.state.isFirstGoToManagerPage === true){
                   // 加载应用
                   this.getAppsList()
-                } else {
-                  this.apps = this.$store.state.apps
-                  // TODO 检测COS升级
-                  this.checkFirmwareVersion()
+                  this.$store.state.isFirstGoToManagerPage = false
+                }else{
+                  if (this.isEmptyObject(this.$store.state.apps) || JSON.stringify(this.$store.state.apps) === '[]') {
+                    // 加载应用
+                    this.getAppsList()
+                  } else {
+                    this.apps = this.$store.state.apps
+                    // TODO 检测COS升级
+                    this.checkFirmwareVersion()
+                  }
                 }
               } else {
                 this.tip1 = true

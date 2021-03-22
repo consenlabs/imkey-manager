@@ -13,7 +13,8 @@ export default new Vuex.Store({
     cosOldVersionData: '',
     cosNewVersionData: '',
     buttonTexts: '',
-    userPath: ''
+    userPath: '',
+    isFirstGoToManagerPage:true
   },
   mutations: {},
   actions: {},

@@ -176,7 +176,8 @@ export default {
       code5: '',
       code6: '',
       code7: '',
-      code8: ''
+      code8: '',
+      isUpdateIMK:false
     }
   },
   mounted () {
@@ -305,6 +306,10 @@ export default {
                   for (let i = 0; i < tempAppList.length; i++) {
                     if (tempAppList[i].name === 'IMK') {
                       tempAppList[i].name = this.$t('m.imKeyManager.imKey_soft')
+                      //判断IMK应用是否要升级
+                      if(tempAppList[i].updateDis===false){
+                        this.isUpdateIMK = true
+                      }
                     }
                     const collection = {
                       name: tempAppList[i].name,
@@ -324,6 +329,15 @@ export default {
                   }
                   this.$store.state.apps = appList
                   this.connectText = this.$t('m.connectDevice.active_success')
+                  //检查绑定之前，如果IMK有升级强制升级应用
+                  if(this.isUpdateIMK === true){
+                    this.$ipcRenderer.send('updateApplet', 'IMK')
+                    this.$ipcRenderer.on('updateApplet', (updateAppletResult) => {
+                      if (updateAppletResult.isSuccess) {
+                        this.isUpdateIMK = false
+                      }
+                    })
+                  }
                   this.checkIsBind()
                 } else {
                   this.toCosUpdate()

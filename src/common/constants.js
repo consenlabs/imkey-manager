@@ -1,7 +1,7 @@
 // sdk version
 const sdkVersion = '2.3.0'
 // serverurl
-const serverUrl = 'https://imkeyserver.com:10443/imkey'
+const serverUrl = 'https://imkeyserver.com:10444/imkey'
 // Terminaltype
 const terminalType = 'PC'
 // Battery is charging sign

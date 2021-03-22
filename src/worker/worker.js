@@ -1,7 +1,10 @@
 
 const { ipcRenderer, remote } = require('electron')
-const deviceManger = remote.app.devicemanagerapi
-const walletApi = remote.app.walletapi
+// const deviceManger = remote.app.devicemanagerapi
+// const walletApi = remote.app.walletapi
+const deviceManger = require('../api/devicemanagerapi')
+const walletApi = require('../api/walletapi')
+const apiRouter = require('../api/apirouter')
 let handleType = ''
 ipcRenderer.on('message-from-main', (event, arg) => {
   console.log('arg', arg)
@@ -103,6 +106,10 @@ ipcRenderer.on('message-from-main', (event, arg) => {
     if (arg.type === 'exportBindCode') {
       response = deviceManger.exportBindCode()
       handleType = 'exportBindCode'
+    }
+    if (arg.type === 'api') {
+      response = apiRouter.api(arg.data)
+      handleType = 'api'
     }
     if (arg.type === 'writeWalletAddress') {
       try {
@@ -280,7 +287,7 @@ ipcRenderer.on('start-http-server', (event, arg) => {
   const app = express()
   const cors = require('cors')
   const bodyParser = require('body-parser')
-  const apiRouter = remote.app.apirouter
+  // const apiRouter = remote.app.apirouter
   // 配置cors解决跨域请求的问题
   app.use(cors())
   // 给app配置bodyParser中间件
