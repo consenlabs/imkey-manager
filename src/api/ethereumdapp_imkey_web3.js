@@ -17,7 +17,6 @@ const fs = require('fs')
 
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
-console.log('file path: ', path.resolve(__dirname))
 contextBridge.exposeInMainWorld(
   'imKeyManager',
   {
@@ -25,7 +24,6 @@ contextBridge.exposeInMainWorld(
       return ipcRenderer.sendSync('imkey-accounts')
     },
     callNativeApi: async (data) => {
-      console.log('call Native Api before ipcRender')
       return await ipcRenderer.invoke('imkey-api', data)
     }
   }
@@ -41,7 +39,7 @@ const imkeyWeb3ProviderSrc =
     : require('path').resolve(__dirname, 'imkey-web3-provider.js')
 
 const scriptContent = fs.readFileSync(imkeyWeb3ProviderSrc, { encoding: 'utf-8' })
-console.log(scriptContent)
+// console.log(scriptContent)
 // let pathToInjectScript = `file://${imkeyWeb3ProviderSrc}`
 
 // window.accounts = store.accounts;
@@ -56,6 +54,18 @@ process.on('document-start', () => {
   // script.src = "http://localhost:8000/imkey-web3-provider.js";
   // document.documentElement.appendChild(script);
 })
+
+// process.on('document-start', () => {
+//   // var script = document.createElement("script");
+//   // script.type = "text/javascript";
+//   // script.src = "http://localhost:8000/main.imkey-web3-provider.js";
+//   // document.documentElement.appendChild(script);
+//   var script = document.createElement("script");
+//   script.type = "text/javascript";
+//   script.src = "http://localhost:8000/imkey-web3-provider.js";
+//   document.documentElement.appendChild(script);
+// })
+
 
 // document.addEventListener(
 //   "DOMContentLoaded",

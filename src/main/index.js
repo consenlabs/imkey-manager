@@ -8,7 +8,8 @@ import {
   Tray,
   dialog,
   crashReporter,
-  ipcRenderer
+  ipcRenderer,
+  screen
 } from 'electron'
 // 自动更新相关
 import { autoUpdater } from 'electron-updater'
@@ -542,21 +543,31 @@ function createBrowserView (url, isClose) {
   if (isClose) {
     if (view) {
       mainWindow.removeBrowserView(view)
+      view = null;
       // view.destroy()
     }
 
     return
   }
 
-  if (process.platform === 'win32') {
-    view.setBounds({ x: 300, y: 0, width: 1050, height: 700 })
-  } else if (process.platform === 'darwin') {
-    view.setBounds({ x: 300, y: 62, width: 1200, height: 758 })
-  } else {
-    view.setBounds({ x: 300, y: 0, width: 1140, height: 820 })
+  
+  mainWindow.on('resized', resetBounds);
+
+  function resetBounds() {
+    let mainWindowBounds = mainWindow.getBounds()
+    if (process.platform === 'win32') {
+      view.setBounds({ x: 300, y: 0, width: 1050, height: 700 })
+    } else if (process.platform === 'darwin') {
+      view.setBounds({ x: 300, y: 62, width: mainWindowBounds.width - 300, height: mainWindowBounds.height -62 })
+    } else {
+      view.setBounds({ x: 300, y: 0, width: 1140, height: 820 })
+    }
   }
 
-  view.setAutoResize({ width: true, height: true })
+  resetBounds();
+  
+
+  // view.setAutoResize({ horizontal: true, vertical: true })
   const options = {
     userAgent:
       'Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19'
@@ -740,7 +751,7 @@ if (!gotTheLock) {
     createWorkerWindow()
     createTray()
     autoUpdate()
-    // crashReport()
+    crashReport()
     // protocalHandler()
     initimKeyMessageHandler()
     renderDeviceManagerHandler()
@@ -751,7 +762,7 @@ if (!gotTheLock) {
 
 function initimKeyMessageHandler () {
   ipcMain.handle('imkey-api', async (event, json) => {
-    console.log('receive imkey-api in mainnet')
+    console.log("receive imkey-api in mainnet");
     return new Promise((resolve, reject) => {
       try {
         const rsp = api(json)
@@ -764,8 +775,9 @@ function initimKeyMessageHandler () {
 
   ipcMain.on('imkey-accounts', (event, arg) => {
     console.log(arg) // prints "ping"
-    event.returnValue = ['0xa6c82cf246f820f70d3c11b1b518b2d0eaca3258']
+    event.returnValue = ["0xa6c82cf246f820f70d3c11b1b518b2d0eaca3258"]
   })
+
 }
 
 app.on('window-all-closed', () => {

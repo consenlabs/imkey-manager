@@ -23,7 +23,6 @@
     "release": "node .electron-vue/build.js && electron-builder"
   },
   "build": {
-    "afterSign": "build/notarize.js",
     "productName": "imKey Manager",
     "appId": "com.imkey.imkey-manager",
     "copyright": "Copyright © 2020 imkey",

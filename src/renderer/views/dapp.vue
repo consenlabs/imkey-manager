@@ -686,7 +686,7 @@ export default {
         this.iconUrl = 'https://app.sushi.com/favicon.ico'
       }
       if (urlType === 'Uniswap') {
-        url = 'http://localhost:3000'
+        url = 'https://app.uniswap.org'
         this.title = 'Uniswap'
         this.iconUrl = 'https://app.uniswap.org/favicon.png'
       }
@@ -756,7 +756,6 @@ export default {
 }
 .container2 {
   position: relative;
-  top: -5px;
   /* width: 120px;
   margin: 100px auto; */
   display: none;
