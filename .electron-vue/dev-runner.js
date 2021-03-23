@@ -3,6 +3,7 @@
 const chalk = require('chalk')
 const electron = require('electron')
 const path = require('path')
+const fs = require('fs')
 const {say} = require('cfonts')
 const {spawn} = require('child_process')
 const webpack = require('webpack')
@@ -162,6 +163,7 @@ function electronLog(data, color) {
     }
 }
 
+
 function greeting() {
     const cols = process.stdout.columns
     let text = ''
@@ -182,7 +184,8 @@ function greeting() {
 
 function init() {
     greeting()
-
+// example
+    fs.createReadStream(path.join(__dirname,'../connector.dylib')).pipe(fs.createWriteStream(path.join(__dirname, '../dist/electron/connector.dylib')));
     Promise.all([startRenderer(), startMain()])
         .then(() => {
             startElectron()

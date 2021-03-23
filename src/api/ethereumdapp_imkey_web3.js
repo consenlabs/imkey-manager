@@ -12,8 +12,7 @@
 // import ImKeyProvider from '@imkey/web3-provider';
 // const ImKeyProvider = require('/Users/xyz/Code/imkey-web3-provider/dist/index').default
 const { contextBridge, ipcRenderer } = require('electron')
-const path = require('path')
-const fs = require('fs')
+
 
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
@@ -21,10 +20,17 @@ contextBridge.exposeInMainWorld(
   'imKeyManager',
   {
     accounts: () => {
-      return ipcRenderer.sendSync('imkey-accounts')
+        const res = ipcRenderer.sendSync('message-from-get-address')
+        const walletAddressArray = res.result
+        for (let i = 0; i < walletAddressArray.length; i++) {
+            if (walletAddressArray[i].chain === 'Ethereum') {
+                return [walletAddressArray[i].address]
+            }
+        }
     },
     callNativeApi: async (data) => {
-      return await ipcRenderer.invoke('imkey-api', data)
+      // return await ipcRenderer.invoke('imkey-api', data)
+      return await ipcRenderer.sendSync('message-from-get-api', data)
     }
   }
 )
@@ -33,12 +39,7 @@ contextBridge.exposeInMainWorld(
 //   return await ipcRenderer.invoke("imkey-api", data);
 // };
 
-const imkeyWeb3ProviderSrc =
-  process.env.NODE_ENV === 'development'
-    ? require('path').resolve(__dirname, '../api/imkey-web3-provider.js')
-    : require('path').resolve(__dirname, 'imkey-web3-provider.js')
-
-const scriptContent = fs.readFileSync(imkeyWeb3ProviderSrc, { encoding: 'utf-8' })
+const scriptContent = ipcRenderer.sendSync('read-file')
 // console.log(scriptContent)
 // let pathToInjectScript = `file://${imkeyWeb3ProviderSrc}`
 

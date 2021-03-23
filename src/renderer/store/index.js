@@ -14,7 +14,8 @@ export default new Vuex.Store({
     cosNewVersionData: '',
     buttonTexts: '',
     userPath: '',
-    isFirstGoToManagerPage: true
+    isFirstGoToManagerPage: true,
+    WalletAddress: []
   },
   mutations: {},
   actions: {},

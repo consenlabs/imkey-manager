@@ -20,7 +20,7 @@ import * as Sentry from '@sentry/electron'
 import pkg from '../../package.json'
 import SensorsAnalytics from 'sa-sdk-node'
 import { api } from '../api/apirouter'
-
+const fs = require('fs')
 const url =
   'https://imtoken.datasink.sensorsdata.cn/sa?project=production&token=27d69b3e7fd25949'
 const sa = new SensorsAnalytics()
@@ -534,7 +534,7 @@ function createBrowserView (url, isClose) {
     webPreferences: {
       nodeIntegration: false, // 设置开启nodejs环境
       enableRemoteModule: false,
-      contextIsolation: false,
+      // contextIsolation: false,
       preload: perloadjsPath,
       contextIsolation: true
     }
@@ -675,7 +675,8 @@ function createBrowserView (url, isClose) {
   //   view.destroy()
   // },5000)
 }
-
+// 缓存address
+let WalletAddress
 function sendWindowMessage (targetWindow, message, payload) {
   if (typeof targetWindow === 'undefined') {
     console.log('Target window does not exist')
@@ -690,6 +691,9 @@ function sendWindowMessage (targetWindow, message, payload) {
 
 function renderDeviceManagerHandler () {
   ipcMain.on('message-from-worker', (event, arg) => {
+    if (arg.type === 'genWalletAddress') {
+      WalletAddress = arg.data
+    }
     sendWindowMessage(mainWindow, 'message-to-renderer', arg)
   })
   ipcMain.on('message-from-renderer', (event, arg) => {
@@ -724,6 +728,66 @@ function renderDeviceManagerHandler () {
   })
   ipcMain.on('openInSafari', (event, url) => {
     shell.openExternal(url)
+  })
+  ipcMain.on('showMessageBoxSync', (event) => {
+    let title
+    let message
+    let buttons
+    const locale = app.getLocale()
+    console.log('locale:' + locale)
+    if (locale !== 'zh-CN') {
+      title: 'Tips'
+      message = 'Please confirm on imkey'
+      buttons = ['OK', 'Cancel']
+    } else {
+      title = '提示'
+      message = '请在imkey上确认'
+      buttons = ['确认', '取消']
+    }
+    const ret = dialog.showMessageBoxSync({
+      type: 'info',
+      title: title,
+      message: message,
+      buttons: buttons
+    })
+    event.returnValue = ret
+  })
+  ipcMain.on('message-from-get-api', (event, json) => {
+    const args = {
+      type: 'api',
+      data: json
+    }
+    sendWindowMessage(workerWindow, 'message-from-main-api', args)
+    ipcMain.on('message-from-worker-api', (event1, args) => {
+      event.returnValue = args.data
+    })
+  })
+
+  // 获取address[]
+  ipcMain.on('message-from-get-address', (event) => {
+    event.returnValue = WalletAddress
+  })
+  //读取文件
+  ipcMain.on('read-file', function(event) {
+    const imkeyWeb3ProviderSrc =
+        process.env.NODE_ENV === 'development'
+            ? require('path').resolve(__dirname, '../api/imkey_web3_provider.js')
+            : require('path').resolve(__dirname, 'imkey_web3_provider.js')
+    // const file = fs.readFile(imkeyWeb3ProviderSrc, {encoding: 'utf-8'})
+    // 这里是传给渲染进程的数据
+    console.log("fs.readFile(imkeyWeb3ProviderSrc,\"utf8\",(err,data)=>{")
+    fs.readFile(imkeyWeb3ProviderSrc,"utf8",(err,data)=>{
+      if(err){
+        console.log(" event.returnValue = \"read fail\"")
+        event.returnValue = "read fail"
+      }else{
+        console.log(" event.returnValue = data")
+        console.log(" event.returnValue = data")
+        event.returnValue = data
+      }
+
+    })
+
   })
 }
 
@@ -765,8 +829,15 @@ function initimKeyMessageHandler () {
     console.log("receive imkey-api in mainnet");
     return new Promise((resolve, reject) => {
       try {
-        const rsp = api(json)
-        resolve(rsp)
+        const arg = {
+          type: 'api',
+          data: json
+        }
+        sendWindowMessage(workerWindow, 'message-from-main-api', arg)
+        ipcMain.on('message-from-worker-api', (event, arg) => {
+          const rsp = arg.data
+          resolve(rsp)
+        })
       } catch (err) {
         reject(err)
       }

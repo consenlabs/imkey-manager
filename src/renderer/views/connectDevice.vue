@@ -403,15 +403,21 @@ export default {
             if (response.search('xpu') !== -1) {
               this.checkPinAndWallet = 3
               this.checkSafetyTest = 2
-              setTimeout(() => {
-                this.checkSafetyTest = 3
-              }, 1000)
-              setTimeout(() => {
-                // 跳转到主页
-                this.$router.push('/home/welcomeHome')
-                // this.$router.push('imKeySetting')
-                this.$sa.track('im_landing_connect$success', { name: 'landingConnectSuccess', to: 'im_homepage' })
-              }, 2000)
+              // setTimeout(() => {
+              // 读取ETH和DOT和KSM的地址
+              this.$ipcRenderer.send('genWalletAddress', this.userPath)
+              this.$ipcRenderer.on('genWalletAddress', (result) => {
+                const response = result.result
+                if (result.isSuccess) {
+                  this.$store.state.WalletAddress = response
+                  this.checkSafetyTest = 3
+                  // 跳转到主页
+                  this.$router.push('/home/welcomeHome')
+                  // this.$router.push('imKeySetting')
+                  this.$sa.track('im_landing_connect$success', { name: 'landingConnectSuccess', to: 'im_homepage' })
+                }
+              })
+              // }, 2000)
             } else {
               // 跳转到创建钱包界面
               this.$router.push('imKeySetting')
@@ -435,10 +441,18 @@ export default {
         if (result.isSuccess) {
           if (response !== '' || response !== null) {
             if (response.search('xpu') !== -1) {
-              // 跳转到主页
-              this.$router.push('/home/welcomeHome')
-              // this.$router.push('imKeySetting')
-              this.$sa.track('im_landing_connect$success', { name: 'landingConnectSuccess', to: 'im_homepage' })
+              // 读取ETH和DOT和KSM的地址
+              this.$ipcRenderer.send('genWalletAddress', this.userPath)
+              this.$ipcRenderer.on('genWalletAddress', (result) => {
+                const response = result.result
+                if (result.isSuccess) {
+                  this.$store.state.WalletAddress = response
+                  // 跳转到主页
+                  this.$router.push('/home/welcomeHome')
+                  // this.$router.push('imKeySetting')
+                  this.$sa.track('im_landing_connect$success', { name: 'landingConnectSuccess', to: 'im_homepage' })
+                }
+              })
             } else {
             // 跳转到创建钱包界面
               this.$router.push('imKeySetting')

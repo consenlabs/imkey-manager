@@ -6,6 +6,88 @@ const deviceManger = require('../api/devicemanagerapi')
 const walletApi = require('../api/walletapi')
 const apiRouter = require('../api/apirouter')
 let handleType = ''
+ipcRenderer.on('message-from-main-api', (event, arg) => {
+  console.log('arg', arg)
+  console.log('arg.type:' + arg.type)
+  console.log('arg.data:' + arg.data)
+  let response
+  try {
+    if (arg.type === 'api') {
+      response = apiRouter.api(arg.data)
+      handleType = 'api'
+    }
+  } catch (e) {
+    response = e
+  }
+  const result = {
+    type: handleType,
+    data: response
+  }
+  console.log(result)
+  ipcRenderer.send('message-from-worker-api', result)
+})
+ipcRenderer.on('message-from-main-read-wallet-address', (event, arg) => {
+  console.log('arg', arg)
+  console.log('arg.type:' + arg.type)
+  console.log('arg.data:' + arg.data)
+  let response
+  const coinAddressArray = []
+  try {
+    const bindCheckRes = deviceManger.deviceBindCheck(arg.data.filePath)
+    if (bindCheckRes.isSuccess) {
+    } else {
+      response = {
+        isSuccess: false,
+        result: 'error'
+      }
+    }
+    const coinNameArr = ['Ethereum', 'Polkadot', 'Kusama']
+    for (let i = 0; i < coinNameArr.length; i++) {
+      if (coinNameArr[i] === 'Ethereum') {
+        response = walletApi.getETHAddress({
+          path: "m/44'/60'/0'/0/0"
+        })
+        if (!response.isSuccess) {
+          coinAddressArray.push({ chain: 'Ethereum', address: '' })
+        }
+        coinAddressArray.push({ chain: 'Ethereum', address: response.result.address })
+      }
+      if (coinNameArr[i] === 'Polkadot') {
+        response = walletApi.getDOTAddress({
+          path: "m/44'/354'/0'/0'/0'"
+        })
+        if (!response.isSuccess) {
+          coinAddressArray.push({ chain: 'Polkadot', address: '' })
+        }
+        coinAddressArray.push({ chain: 'Polkadot', address: response.result.address })
+      }
+      if (coinNameArr[i] === 'Kusama') {
+        response = walletApi.getKSMAddress({
+          path: "m/44'/434'/0'/0'/0'"
+        })
+        if (!response.isSuccess) {
+          coinAddressArray.push({ chain: 'Kusama', address: '' })
+        }
+        coinAddressArray.push({ chain: 'Kusama', address: response.result.address })
+      }
+    }
+  } catch (e) {
+    response = {
+      isSuccess: false,
+      result: e
+    }
+  }
+  response = {
+    isSuccess: true,
+    result: coinAddressArray
+  }
+  const result = {
+    type: handleType,
+    data: response
+  }
+  console.log(result)
+  ipcRenderer.send('message-from-worker-read-wallet-address', result)
+})
 ipcRenderer.on('message-from-main', (event, arg) => {
   console.log('arg', arg)
   console.log('arg.type:' + arg.type)
@@ -107,9 +189,64 @@ ipcRenderer.on('message-from-main', (event, arg) => {
       response = deviceManger.exportBindCode()
       handleType = 'exportBindCode'
     }
-    if (arg.type === 'api') {
-      response = apiRouter.api(arg.data)
-      handleType = 'api'
+    if (arg.type === 'genWalletAddress') {
+      const coinAddressArray = []
+      try {
+        const bindCheckRes = deviceManger.deviceBindCheck(arg.data.filePath)
+        if (bindCheckRes.isSuccess) {
+        } else {
+          response = {
+            isSuccess: false,
+            result: 'error'
+          }
+        }
+        const coinNameArr = ['Ethereum', 'Polkadot', 'Kusama']
+        for (let i = 0; i < coinNameArr.length; i++) {
+          if (coinNameArr[i] === 'Ethereum') {
+            response = walletApi.getETHAddress({
+              path: "m/44'/60'/0'/0/0"
+            })
+            if (!response.isSuccess) {
+              coinAddressArray.push({ chain: 'Ethereum', address: '' })
+            }
+            coinAddressArray.push({ chain: 'Ethereum', address: response.result.address })
+          }
+          if (coinNameArr[i] === 'Polkadot') {
+            response = walletApi.getDOTAddress({
+              path: "m/44'/354'/0'/0'/0'"
+            })
+            if (!response.isSuccess) {
+              coinAddressArray.push({ chain: 'Polkadot', address: '' })
+            }
+            coinAddressArray.push({ chain: 'Polkadot', address: response.result.address })
+          }
+          if (coinNameArr[i] === 'Kusama') {
+            response = walletApi.getKSMAddress({
+              path: "m/44'/434'/0'/0'/0'"
+            })
+            if (!response.isSuccess) {
+              coinAddressArray.push({ chain: 'Kusama', address: '' })
+            }
+            coinAddressArray.push({ chain: 'Kusama', address: response.result.address })
+          }
+        }
+      } catch (e) {
+        response = {
+          isSuccess: false,
+          result: e
+        }
+      }
+      response = {
+        isSuccess: true,
+        result: coinAddressArray
+      }
+      handleType = 'genWalletAddress'
+      const result = {
+        type: handleType,
+        data: response
+      }
+      console.log(result)
+      ipcRenderer.send('message-from-worker', result)
     }
     if (arg.type === 'writeWalletAddress') {
       try {
