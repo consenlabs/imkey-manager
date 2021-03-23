@@ -18,7 +18,8 @@ let webConfig = {
         web: path.join(__dirname, '../src/renderer/main.js'),
         worker: path.join(__dirname, '../src/worker/worker.js'),
         polkadotdapp: path.join(__dirname, '../src/api/polkadotdapp.js'),
-        ethereumdapp: path.join(__dirname, '../src/api/ethereumdapp.js')
+        ethereumdapp: path.join(__dirname, '../src/api/ethereumdapp.js'),
+        imkeyWeb3Provider: path.join(__dirname, '../src/api/imkey-web3-provider.js')
     },
     module: {
         rules: [

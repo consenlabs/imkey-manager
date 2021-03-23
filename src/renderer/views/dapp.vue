@@ -676,17 +676,17 @@ export default {
       this.isLoading = true
       if (urlType === 'Tokenlon') {
         // url = 'https://tokenlon.im'
-        url = 'https://tokenlon.dev.tokenlon.im/instant'
+        url = 'https://tokenlon.dev.tokenlon.im'
         this.title = 'Tokenlon'
         this.iconUrl = 'https://tokenlon.im/images/favico.png'
       }
       if (urlType === 'Sushiswap') {
-        url = 'https://app.sushi.com/'
+        url = 'https://app.sushi.com'
         this.title = 'Sushiswap'
         this.iconUrl = 'https://app.sushi.com/favicon.ico'
       }
       if (urlType === 'Uniswap') {
-        url = 'https://app.uniswap.org/#/'
+        url = 'http://localhost:3000'
         this.title = 'Uniswap'
         this.iconUrl = 'https://app.uniswap.org/favicon.png'
       }

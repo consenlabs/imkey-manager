@@ -18,6 +18,7 @@ import * as Sentry from '@sentry/electron'
 // test.json
 import pkg from '../../package.json'
 import SensorsAnalytics from 'sa-sdk-node'
+import { api } from '../api/apirouter'
 
 const url =
   'https://imtoken.datasink.sensorsdata.cn/sa?project=production&token=27d69b3e7fd25949'
@@ -65,8 +66,8 @@ const polkadotdappURL =
     : require('path').resolve(__dirname, 'polkadotdapp.js')
 const ethereumdappURL =
   process.env.NODE_ENV === 'development'
-    ? require('path').resolve(__dirname, '../api/ethereumdapp.js')
-    : require('path').resolve(__dirname, 'ethereumdapp.js')
+    ? require('path').resolve(__dirname, '../api/ethereumdapp_imkey_web3.js')
+    : require('path').resolve(__dirname, 'ethereumdapp_imkey_web3.js')
 const winURL =
   process.env.NODE_ENV === 'development'
     ? 'http://localhost:9080'
@@ -530,16 +531,20 @@ function createBrowserView (url, isClose) {
   }
   view = new BrowserView({
     webPreferences: {
-      nodeIntegration: true, // 设置开启nodejs环境
-      enableRemoteModule: true,
+      nodeIntegration: false, // 设置开启nodejs环境
+      enableRemoteModule: false,
       contextIsolation: false,
-      preload: perloadjsPath
+      preload: perloadjsPath,
+      contextIsolation: true
     }
   })
   mainWindow.setBrowserView(view)
   if (isClose) {
-    mainWindow.removeBrowserView(view)
-    view.destroy()
+    if (view) {
+      mainWindow.removeBrowserView(view)
+      // view.destroy()
+    }
+
     return
   }
 
@@ -556,6 +561,7 @@ function createBrowserView (url, isClose) {
     userAgent:
       'Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19'
   }
+  // view.webContents.loadURL(url)
   view.webContents.loadURL(url, options)
 
   // view.webContents.on('did-frame-finish-load', () => {
@@ -615,19 +621,17 @@ function createBrowserView (url, isClose) {
     view.loadURL(loadingPagePath)
   })
 
-  view.webContents.on('will-navigate', function (event, url) {
-    console.log('will-navigate: ', event, url)
-  })
-
   view.webContents.on('new-window', (event, url) => {
     event.preventDefault()
     shell.openExternal(url)
   })
 
   view.webContents.on('did-finish-load', (event, input) => {
-    console.log('did finish load: ', event, input)
-
     mainWindow.webContents.send('loading-status', false)
+  })
+
+  view.webContents.on('render-process-gone', (event, details) => {
+    console.log('app crashed: ', JSON.stringify(details))
   })
 
   //   view.webContents.once('dom-ready', () => {
@@ -660,6 +664,7 @@ function createBrowserView (url, isClose) {
   //   view.destroy()
   // },5000)
 }
+
 function sendWindowMessage (targetWindow, message, payload) {
   if (typeof targetWindow === 'undefined') {
     console.log('Target window does not exist')
@@ -671,6 +676,7 @@ function sendWindowMessage (targetWindow, message, payload) {
   console.log(payload.data)
   targetWindow.webContents.send(message, payload)
 }
+
 function renderDeviceManagerHandler () {
   ipcMain.on('message-from-worker', (event, arg) => {
     sendWindowMessage(mainWindow, 'message-to-renderer', arg)
@@ -708,13 +714,6 @@ function renderDeviceManagerHandler () {
   ipcMain.on('openInSafari', (event, url) => {
     shell.openExternal(url)
   })
-  ipcMain.on('message-forwarding', (data) => {
-    console.log('receive message-forwarding: ', data)
-    mainWindow.webContents.send(data.event, data.data)
-  })
-  // ipcMain.on('zoomIn', (event, zoomParam) => {
-  //   webFrame.setZoomFactor(zoomParam)
-  // })
 }
 
 function initSa () {
@@ -741,11 +740,31 @@ if (!gotTheLock) {
     createWorkerWindow()
     createTray()
     autoUpdate()
-    crashReport()
+    // crashReport()
     // protocalHandler()
+    initimKeyMessageHandler()
     renderDeviceManagerHandler()
     initSa()
     // startHttpServer()
+  })
+}
+
+function initimKeyMessageHandler () {
+  ipcMain.handle('imkey-api', async (event, json) => {
+    console.log('receive imkey-api in mainnet')
+    return new Promise((resolve, reject) => {
+      try {
+        const rsp = api(json)
+        resolve(rsp)
+      } catch (err) {
+        reject(err)
+      }
+    })
+  })
+
+  ipcMain.on('imkey-accounts', (event, arg) => {
+    console.log(arg) // prints "ping"
+    event.returnValue = ['0xa6c82cf246f820f70d3c11b1b518b2d0eaca3258']
   })
 }
 
