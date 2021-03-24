@@ -405,7 +405,7 @@ export default {
               this.checkSafetyTest = 2
               // setTimeout(() => {
               // 读取ETH和DOT和KSM的地址
-              this.$ipcRenderer.send('genWalletAddress', this.userPath)
+              this.$ipcRenderer.send('genWalletAddress', { filePath: this.userPath })
               this.$ipcRenderer.on('genWalletAddress', (result) => {
                 const response = result.result
                 if (result.isSuccess) {
@@ -442,11 +442,12 @@ export default {
           if (response !== '' || response !== null) {
             if (response.search('xpu') !== -1) {
               // 读取ETH和DOT和KSM的地址
-              this.$ipcRenderer.send('genWalletAddress', this.userPath)
+              this.$ipcRenderer.send('genWalletAddress', { filePath: this.userPath })
               this.$ipcRenderer.on('genWalletAddress', (result) => {
                 const response = result.result
                 if (result.isSuccess) {
                   this.$store.state.WalletAddress = response
+                  this.bindingStatus = 2
                   // 跳转到主页
                   this.$router.push('/home/welcomeHome')
                   // this.$router.push('imKeySetting')
@@ -600,7 +601,6 @@ export default {
             this.$ipcRenderer.on('importBindCode', (importBindResult) => {
               const importBindResponse = importBindResult.result
               if (importBindResult.isSuccess) {
-                this.bindingStatus = 2
                 this.bindOtherCheckIsCreateWallet()
               } else {
                 this.errorInfo = importBindResponse

@@ -600,21 +600,28 @@
           </div>
         </a>
       </div>
-      <div class="statusBox status5" v-if="status == 1">
-        <div class="status5Alert">
-          <div class="status5AlertBox">
-            <h4>{{ $t("m.imKeyManager.found_dapp_access") }}</h4>
-            <p>{{ viewInfo }}</p>
+<!--      <div class="statusBox status5" v-if="status == 1">-->
+<!--        <div class="status5Alert">-->
+<!--          <div class="status5AlertBox">-->
+<!--            <h4>{{ $t("m.imKeyManager.found_dapp_access") }}</h4>-->
+<!--            <p>{{ viewInfo }}</p>-->
 
-            <div class="view_button" style="display: inline-block; float: left">
-              <button class="cancel" @click="cancel">
-                {{ $t("m.imKeyManager.cancel") }}
-              </button>
-              <button class="ok" @click="confirm">
-                {{ $t("m.imKeyManager.ok") }}
-              </button>
-            </div>
-          </div>
+<!--            <div class="view_button" style="display: inline-block; float: left">-->
+<!--              <button class="cancel" @click="cancel">-->
+<!--                {{ $t("m.imKeyManager.cancel") }}-->
+<!--              </button>-->
+<!--              <button class="ok" @click="confirm">-->
+<!--                {{ $t("m.imKeyManager.ok") }}-->
+<!--              </button>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--        </div>-->
+<!--      </div>-->
+      <div class="tip1 tip" v-if="status==1">
+        <div class="tipBox">
+          <h3>{{$t('m.imKeyManager.found_dapp_access')}}</h3>
+          <p>{{$t('m.imKeyManager.installing_dot_ksm_coin')}}</p>
+          <button @click="changeState(0)">{{$t('m.imKeyManager.ok')}}</button>
         </div>
       </div>
     </div>
@@ -646,6 +653,9 @@ export default {
     })
   },
   methods: {
+    changeState (index) {
+      this.status = index
+    },
     ShowMessageDialog () {
       dialog
         .showMessageBox({
@@ -673,6 +683,41 @@ export default {
       this.status = 1
     },
     openUrl (urlType) {
+      if (urlType === 'PolkadotJS') {
+        // 判断是否有dot地址没有提示下载应用
+        let addressKSM
+        let addressDOT
+        const walletAddressArray = this.$store.state.WalletAddress
+        if (walletAddressArray.length === 0) {
+          // 提示安装DOT和KSM应用
+          this.changeState(1)
+          return
+        }
+        console.log(walletAddressArray)
+        for (let i = 0; i < walletAddressArray.length; i++) {
+          if (walletAddressArray[i].chain === 'Polkadot') {
+            addressDOT = walletAddressArray[i].address
+          }
+          if (walletAddressArray[i].chain === 'Kusama') {
+            addressKSM = walletAddressArray[i].address
+          }
+        }
+        console.log('addressDOT:')
+        console.log(addressDOT)
+        console.log('addressKSM:')
+        console.log(addressKSM)
+        if (addressKSM === '' || addressDOT === '' ||
+            typeof addressKSM === 'undefined' || typeof addressDOT === 'undefined' ||
+           addressKSM == null || addressDOT == null) {
+          // 提示安装DOT和KSM应用
+          this.changeState(1)
+          return
+        } else {
+          url = 'https://polkadot.js.org/apps/#/accounts'
+          this.title = 'PolkadotJS'
+          this.iconUrl = 'https://polkadot.js.org/favicon.ico'
+        }
+      }
       this.isLoading = true
       if (urlType === 'Tokenlon') {
         // url = 'https://tokenlon.im'
@@ -690,11 +735,7 @@ export default {
         this.title = 'Uniswap'
         this.iconUrl = 'https://app.uniswap.org/favicon.png'
       }
-      if (urlType === 'PolkadotJS') {
-        url = 'https://polkadot.js.org/apps/#/accounts'
-        this.title = 'PolkadotJS'
-        this.iconUrl = 'https://polkadot.js.org/favicon.ico'
-      }
+
       if (urlType === 'Multisender') {
         url = 'https://multisender.app/'
         this.title = 'Multisender'
@@ -741,6 +782,74 @@ export default {
 </script>
 
 <style scoped>
+
+.tip {
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.2);
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+.tipBox {
+  background: #FAFBFC;
+  border-radius: 12px;
+  width: 400px;
+  height: 217px;
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  margin-left: -240px;
+  margin-top: -140px;
+  text-align: center;
+  padding: 0 44px;
+}
+.tipBox {
+  background: #FAFBFC;
+  border-radius: 12px;
+  width: 400px;
+  height: 217px;
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  margin-left: -240px;
+  margin-top: -140px;
+  text-align: center;
+  padding: 0 44px;
+}
+
+.tipBox h3 {
+  margin-top: 40px;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 30px;
+  color: #2C2842;
+}
+
+.tipBox p {
+  margin-top: 14px;
+  font-style: normal;
+  font-weight: 300;
+  font-size: 13px;
+  line-height: 20px;
+  color: #2C2842;
+  margin-left: 2%;
+  margin-right: 2%;
+}
+
+.tipBox button {
+  background: #2E3035;
+  box-shadow: 0px 2px 20px rgba(137, 101, 172, 0.30772);
+  border-radius: 26.5px;
+  width: 90px;
+  height: 36px;
+  color: #fff;
+  margin-top: 30px;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 32px;
+}
 .tool-bar {
   display: flex;
   background: #f7f7f7;

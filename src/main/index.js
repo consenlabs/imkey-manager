@@ -527,45 +527,52 @@ function createBrowserView (url, isClose) {
   let perloadjsPath
   if (url === 'https://polkadot.js.org/apps/#/accounts') {
     perloadjsPath = polkadotdappURL
+    view = new BrowserView({
+      webPreferences: {
+        nodeIntegration: false, // 设置开启nodejs环境
+        enableRemoteModule: false,
+        // contextIsolation: false,
+        preload: perloadjsPath,
+        contextIsolation: false
+      }
+    })
   } else {
     perloadjsPath = ethereumdappURL
+    view = new BrowserView({
+      webPreferences: {
+        nodeIntegration: false, // 设置开启nodejs环境
+        enableRemoteModule: false,
+        // contextIsolation: false,
+        preload: perloadjsPath,
+        contextIsolation: true
+      }
+    })
   }
-  view = new BrowserView({
-    webPreferences: {
-      nodeIntegration: false, // 设置开启nodejs环境
-      enableRemoteModule: false,
-      // contextIsolation: false,
-      preload: perloadjsPath,
-      contextIsolation: true
-    }
-  })
   mainWindow.setBrowserView(view)
   if (isClose) {
     if (view) {
       mainWindow.removeBrowserView(view)
-      view = null;
+      view = null
       // view.destroy()
     }
 
     return
   }
 
-  
-  mainWindow.on('resized', resetBounds);
+  mainWindow.on('resized', resetBounds)
 
-  function resetBounds() {
-    let mainWindowBounds = mainWindow.getBounds()
+  function resetBounds () {
+    const mainWindowBounds = mainWindow.getBounds()
     if (process.platform === 'win32') {
       view.setBounds({ x: 300, y: 0, width: 1050, height: 700 })
     } else if (process.platform === 'darwin') {
-      view.setBounds({ x: 300, y: 62, width: mainWindowBounds.width - 300, height: mainWindowBounds.height -62 })
+      view.setBounds({ x: 300, y: 62, width: mainWindowBounds.width - 300, height: mainWindowBounds.height - 62 })
     } else {
       view.setBounds({ x: 300, y: 0, width: 1140, height: 820 })
     }
   }
 
-  resetBounds();
-  
+  resetBounds()
 
   // view.setAutoResize({ horizontal: true, vertical: true })
   const options = {
@@ -573,6 +580,12 @@ function createBrowserView (url, isClose) {
       'Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19'
   }
   // view.webContents.loadURL(url)
+  // url  = "https://tokenlon.im/imbtc"//需要打开imtoken
+  // url  = "https://balancer.exchange/#/swap"//可以
+  // url  = "https://app.defisaver.com/"//imtoken 主网
+  // url= "https://murall.art/home"//imtoken 主网
+  // url= "https://play.decentraland.org/" //主网
+  // url = "https://trade.dydx.exchange/margin"//连接有问题一直转圈
   view.webContents.loadURL(url, options)
 
   // view.webContents.on('did-frame-finish-load', () => {
@@ -583,7 +596,7 @@ function createBrowserView (url, isClose) {
   //     });
   //   // }
   // });
-  view.webContents.openDevTools()
+  // view.webContents.openDevTools()
 
   view.webContents.on(
     'context-menu',
@@ -767,27 +780,25 @@ function renderDeviceManagerHandler () {
   ipcMain.on('message-from-get-address', (event) => {
     event.returnValue = WalletAddress
   })
-  //读取文件
-  ipcMain.on('read-file', function(event) {
+  // 读取文件
+  ipcMain.on('read-file', function (event) {
     const imkeyWeb3ProviderSrc =
         process.env.NODE_ENV === 'development'
-            ? require('path').resolve(__dirname, '../api/imkey_web3_provider.js')
-            : require('path').resolve(__dirname, 'imkey_web3_provider.js')
+          ? require('path').resolve(__dirname, '../api/imkey_web3_provider.js')
+          : require('path').resolve(__dirname, 'imkey_web3_provider.js')
+    // const imkeyWeb3ProviderSrc =
+    //     process.env.NODE_ENV === 'development'
+    //         ? require('path').resolve(__dirname, '../../dist/electron/imkey_web3_provider.js')
+    //         : require('path').resolve(__dirname, 'imkey_web3_provider.js')
+    console.log(imkeyWeb3ProviderSrc)
     // const file = fs.readFile(imkeyWeb3ProviderSrc, {encoding: 'utf-8'})
-    // 这里是传给渲染进程的数据
-    console.log("fs.readFile(imkeyWeb3ProviderSrc,\"utf8\",(err,data)=>{")
-    fs.readFile(imkeyWeb3ProviderSrc,"utf8",(err,data)=>{
-      if(err){
-        console.log(" event.returnValue = \"read fail\"")
-        event.returnValue = "read fail"
-      }else{
-        console.log(" event.returnValue = data")
-        console.log(" event.returnValue = data")
+    fs.readFile(imkeyWeb3ProviderSrc, 'utf8', (err, data) => {
+      if (err) {
+        event.returnValue = 'read fail'
+      } else {
         event.returnValue = data
       }
-
     })
-
   })
 }
 
@@ -826,7 +837,7 @@ if (!gotTheLock) {
 
 function initimKeyMessageHandler () {
   ipcMain.handle('imkey-api', async (event, json) => {
-    console.log("receive imkey-api in mainnet");
+    console.log('receive imkey-api in mainnet')
     return new Promise((resolve, reject) => {
       try {
         const arg = {
@@ -846,9 +857,8 @@ function initimKeyMessageHandler () {
 
   ipcMain.on('imkey-accounts', (event, arg) => {
     console.log(arg) // prints "ping"
-    event.returnValue = ["0xa6c82cf246f820f70d3c11b1b518b2d0eaca3258"]
+    event.returnValue = ['0xa6c82cf246f820f70d3c11b1b518b2d0eaca3258']
   })
-
 }
 
 app.on('window-all-closed', () => {

@@ -19,7 +19,7 @@ let webConfig = {
         worker: path.join(__dirname, '../src/worker/worker.js'),
         polkadotdapp: path.join(__dirname, '../src/api/polkadotdapp.js'),
         ethereumdapp: path.join(__dirname, '../src/api/ethereumdapp.js'),
-        imkey_web3_provider: path.join(__dirname, '../src/api/imkey_web3_provider.js')
+        // imkey_web3_provider: path.join(__dirname, '../src/api/imkey_web3_provider.js')
     },
     module: {
         rules: [
@@ -89,16 +89,6 @@ let webConfig = {
     plugins: [
         new VueLoaderPlugin(),
         new MiniCssExtractPlugin({filename: 'styles.css'}),
-        // new HtmlWebpackPlugin({
-        //   filename: 'index.html',
-        //   template: path.resolve(__dirname, '../src/index.ejs'),
-        //   minify: {
-        //     collapseWhitespace: true,
-        //     removeAttributeQuotes: true,
-        //     removeComments: true
-        //   },
-        //   nodeModules: false
-        // }),
         new HtmlWebpackPlugin({
             filename: 'index.html',
             template: path.resolve(__dirname, '../src/index.ejs'),
@@ -129,81 +119,6 @@ let webConfig = {
             filename: 'worker.html',
             template: path.resolve(__dirname, '../src/worker.ejs'),
             chunks: ['worker', 'vendor'],
-            minify: {
-                collapseWhitespace: true,
-                removeAttributeQuotes: true,
-                removeComments: true
-            },
-            templateParameters(compilation, assets, options) {
-                return {
-                    compilation: compilation,
-                    webpack: compilation.getStats().toJson(),
-                    webpackConfig: compilation.options,
-                    htmlWebpackPlugin: {
-                        files: assets,
-                        options: options
-                    },
-                    process,
-                };
-            },
-            nodeModules: process.env.NODE_ENV !== 'production'
-                ? path.resolve(__dirname, '../node_modules')
-                : false
-        }),
-        new HtmlWebpackPlugin({
-            filename: 'polkadotdapp.html',
-            template: path.resolve(__dirname, '../src/polkadotdapp.ejs'),
-            chunks: ['polkadotdapp', 'vendor'],
-            minify: {
-                collapseWhitespace: true,
-                removeAttributeQuotes: true,
-                removeComments: true
-            },
-            templateParameters(compilation, assets, options) {
-                return {
-                    compilation: compilation,
-                    webpack: compilation.getStats().toJson(),
-                    webpackConfig: compilation.options,
-                    htmlWebpackPlugin: {
-                        files: assets,
-                        options: options
-                    },
-                    process,
-                };
-            },
-            nodeModules: process.env.NODE_ENV !== 'production'
-                ? path.resolve(__dirname, '../node_modules')
-                : false
-        }),
-        new HtmlWebpackPlugin({
-            filename: 'imkey_web3_provider.html',
-            template: path.resolve(__dirname, '../src/imkey_web3_provider.ejs'),
-            chunks: ['imkey_web3_provider', 'vendor'],
-            minify: {
-                collapseWhitespace: true,
-                removeAttributeQuotes: true,
-                removeComments: true
-            },
-            templateParameters(compilation, assets, options) {
-                return {
-                    compilation: compilation,
-                    webpack: compilation.getStats().toJson(),
-                    webpackConfig: compilation.options,
-                    htmlWebpackPlugin: {
-                        files: assets,
-                        options: options
-                    },
-                    process,
-                };
-            },
-            nodeModules: process.env.NODE_ENV !== 'production'
-                ? path.resolve(__dirname, '../node_modules')
-                : false
-        }),
-        new HtmlWebpackPlugin({
-            filename: 'ethereumdapp.html',
-            template: path.resolve(__dirname, '../src/ethereumdapp.ejs'),
-            chunks: ['ethereumdapp', 'vendor'],
             minify: {
                 collapseWhitespace: true,
                 removeAttributeQuotes: true,
@@ -256,6 +171,8 @@ if (process.env.NODE_ENV === 'production') {
                 patterns: [
                     {  from: path.join(__dirname, '../static'),
                         to: path.join(__dirname, '../dist/web/static')},
+                    {  from: path.join(__dirname, '../src/api/imkey_web3_provider.js'),
+                        to: path.join(__dirname, '../dist/electron/imkey_web3_provider.js')},
                 ]
             }),
         new webpack.DefinePlugin({

@@ -1,6 +1,5 @@
 const {
-  web3Enable,
-    web3Accounts
+  web3Enable
 } = require('@polkadot/extension-dapp')
 
 const { Decimal } = require('decimal.js')
@@ -163,8 +162,6 @@ function getAddress () {
     genesisHash: PolkadotGenesisHash
   }])
 }
-// const accounts =[{ address: 'J7Jnbiv5EZSTcD5qf2UdFcZVUY3x3S5r1VXNU3avaP4pqwE', name: 'Menglong', genesisHash: KusamaGenesisHash }]
-
 const accounts = getAddress()
 
 window.injectedWeb3 = {
@@ -200,7 +197,7 @@ web3Enable('imkey')
 
 // returns an array of { address, meta: { name, source } }
 // meta.source contains the name of the extension that provides this account
-const allAccounts = web3Accounts()
+// const allAccounts = web3Accounts()
 
 // the address we use to use for signing, as injected
 // const SENDER = '5DgzZQE9FS7G5CJLrLgVq2YNa4LM3oYdPh4DFfpp4cMRcWeM'

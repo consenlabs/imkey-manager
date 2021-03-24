@@ -22,7 +22,7 @@
               <a class="col" v-if="item.installed===true" href="javascript:;">{{$t('m.imKeyManager.installed')}}</a>
               <a v-if="item.installDis===false" href="javascript:;" @click="installApp(item,index)">{{$t('m.imKeyManager.install')}}</a>
               <a v-if="item.updateDis===false" href="javascript:;" @click="updateApp(item,index)">{{$t('m.imKeyManager.upgrade')}}</a>
-<!--              <a v-if="item.deleteDis===false" href="javascript:;" @click="deleteApp(item,index)">{{$t('m.imKeyManager.delete')}}</a>-->
+              <a v-if="item.deleteDis===false" href="javascript:;" @click="deleteApp(item,index)">{{$t('m.imKeyManager.delete')}}</a>
 
               <el-tooltip class="item" :manual="true" v-if="item.installLoading===true"
                           v-model="item.installLoading"
@@ -36,9 +36,9 @@
                           placement="top-start">
                 <span v-if="item.updateLoading===true" class="fas fa-circle-notch fa-spin"></span>
               </el-tooltip>
-<!--               <el-tooltip class="item" :manual="true" v-if="item.deleteLoading===true" v-model="item.deleteLoading" :content="$t('m.imKeyManager.APP_deleting_do_not_disconnect_usb')" effect="dark" placement="top-start">-->
-<!--               <span v-if="item.deleteLoading===true" class="fas fa-circle-notch fa-spin"></span>-->
-<!--               </el-tooltip>-->
+               <el-tooltip class="item" :manual="true" v-if="item.deleteLoading===true" v-model="item.deleteLoading" :content="$t('m.imKeyManager.APP_deleting_do_not_disconnect_usb')" effect="dark" placement="top-start">
+               <span v-if="item.deleteLoading===true" class="fas fa-circle-notch fa-spin"></span>
+               </el-tooltip>
 
             </div>
           </li>
@@ -423,12 +423,29 @@ export default {
                 this.$ipcRenderer.send('writeWalletAddress', { name: response, filePath: this.$store.state.userPath })
                 this.$ipcRenderer.on('writeWalletAddress', (result) => {
                   if (result.isSuccess) {
-                    // if (response === constants.RESULT_STATUS_SUCCESS) {
-                    this.apps[index].installed = true
-                    this.apps[index].deleteDis = false
-                    this.apps[index].installLoading = false
-                    this.apps[index].desc = this.apps[index].lastVersion
-                    this.$sa.track('im_manage$install', { symbol: name, status: 1 })
+                    if (name === 'Polkadot' || name === 'Kusama' || name === 'Ethereum') {
+                      // 读取ETH和DOT和KSM的地址
+                      this.$ipcRenderer.send('genWalletAddress', { filePath: this.$store.state.userPath })
+                      this.$ipcRenderer.on('genWalletAddress', (genWalletAddressResult) => {
+                        const genWalletAddressResponse = genWalletAddressResult.result
+                        if (genWalletAddressResult.isSuccess) {
+                          this.$store.state.WalletAddress = genWalletAddressResponse
+                        }
+                        // if (response === constants.RESULT_STATUS_SUCCESS) {
+                        this.apps[index].installed = true
+                        this.apps[index].deleteDis = false
+                        this.apps[index].installLoading = false
+                        this.apps[index].desc = this.apps[index].lastVersion
+                        this.$sa.track('im_manage$install', { symbol: name, status: 1 })
+                      })
+                    } else {
+                      // if (response === constants.RESULT_STATUS_SUCCESS) {
+                      this.apps[index].installed = true
+                      this.apps[index].deleteDis = false
+                      this.apps[index].installLoading = false
+                      this.apps[index].desc = this.apps[index].lastVersion
+                      this.$sa.track('im_manage$install', { symbol: name, status: 1 })
+                    }
                   } else {
                     this.apps[index].installLoading = false
                     this.tip = true
@@ -478,14 +495,33 @@ export default {
                 this.$ipcRenderer.send('writeWalletAddress', { name: response, filePath: this.$store.state.userPath })
                 this.$ipcRenderer.on('writeWalletAddress', (result) => {
                   if (result.isSuccess) {
-                    // if (response === constants.RESULT_STATUS_SUCCESS) {
-                    this.apps[index].deleteDis = false
-                    this.apps[index].installed = true
-                    this.apps[index].updateLoading = false
-                    this.apps[index].installDis = true
-                    this.apps[index].installLoading = false
-                    this.apps[index].desc = this.apps[index].lastVersion
-                    this.$sa.track('im_manage$upgrade', { symbol: name, status: 1 })
+                    if (name === 'Polkadot' || name === 'Kusama' || name === 'Ethereum') {
+                      // 读取ETH和DOT和KSM的地址
+                      this.$ipcRenderer.send('genWalletAddress', { filePath: this.$store.state.userPath })
+                      this.$ipcRenderer.on('genWalletAddress', (genWalletAddressResult) => {
+                        const genWalletAddressResponse = genWalletAddressResult.result
+                        if (genWalletAddressResult.isSuccess) {
+                          this.$store.state.WalletAddress = genWalletAddressResponse
+                        }
+                        // if (response === constants.RESULT_STATUS_SUCCESS) {
+                        this.apps[index].deleteDis = false
+                        this.apps[index].installed = true
+                        this.apps[index].updateLoading = false
+                        this.apps[index].installDis = true
+                        this.apps[index].installLoading = false
+                        this.apps[index].desc = this.apps[index].lastVersion
+                        this.$sa.track('im_manage$upgrade', { symbol: name, status: 1 })
+                      })
+                    } else {
+                      // if (response === constants.RESULT_STATUS_SUCCESS) {
+                      this.apps[index].deleteDis = false
+                      this.apps[index].installed = true
+                      this.apps[index].updateLoading = false
+                      this.apps[index].installDis = true
+                      this.apps[index].installLoading = false
+                      this.apps[index].desc = this.apps[index].lastVersion
+                      this.$sa.track('im_manage$upgrade', { symbol: name, status: 1 })
+                    }
                   } else {
                     this.apps[index].installLoading = false
                     this.apps[index].updateDis = false

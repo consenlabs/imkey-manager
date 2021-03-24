@@ -208,8 +208,9 @@ ipcRenderer.on('message-from-main', (event, arg) => {
             })
             if (!response.isSuccess) {
               coinAddressArray.push({ chain: 'Ethereum', address: '' })
+            } else {
+              coinAddressArray.push({ chain: 'Ethereum', address: response.result.address })
             }
-            coinAddressArray.push({ chain: 'Ethereum', address: response.result.address })
           }
           if (coinNameArr[i] === 'Polkadot') {
             response = walletApi.getDOTAddress({
@@ -217,8 +218,9 @@ ipcRenderer.on('message-from-main', (event, arg) => {
             })
             if (!response.isSuccess) {
               coinAddressArray.push({ chain: 'Polkadot', address: '' })
+            } else {
+              coinAddressArray.push({ chain: 'Polkadot', address: response.result.address })
             }
-            coinAddressArray.push({ chain: 'Polkadot', address: response.result.address })
           }
           if (coinNameArr[i] === 'Kusama') {
             response = walletApi.getKSMAddress({
@@ -226,8 +228,9 @@ ipcRenderer.on('message-from-main', (event, arg) => {
             })
             if (!response.isSuccess) {
               coinAddressArray.push({ chain: 'Kusama', address: '' })
+            } else {
+              coinAddressArray.push({ chain: 'Kusama', address: response.result.address })
             }
-            coinAddressArray.push({ chain: 'Kusama', address: response.result.address })
           }
         }
       } catch (e) {

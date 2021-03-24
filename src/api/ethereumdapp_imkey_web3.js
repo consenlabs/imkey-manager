@@ -13,20 +13,19 @@
 // const ImKeyProvider = require('/Users/xyz/Code/imkey-web3-provider/dist/index').default
 const { contextBridge, ipcRenderer } = require('electron')
 
-
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld(
   'imKeyManager',
   {
     accounts: () => {
-        const res = ipcRenderer.sendSync('message-from-get-address')
-        const walletAddressArray = res.result
-        for (let i = 0; i < walletAddressArray.length; i++) {
-            if (walletAddressArray[i].chain === 'Ethereum') {
-                return [walletAddressArray[i].address]
-            }
+      const res = ipcRenderer.sendSync('message-from-get-address')
+      const walletAddressArray = res.result
+      for (let i = 0; i < walletAddressArray.length; i++) {
+        if (walletAddressArray[i].chain === 'Ethereum') {
+          return [walletAddressArray[i].address]
         }
+      }
     },
     callNativeApi: async (data) => {
       // return await ipcRenderer.invoke('imkey-api', data)
@@ -40,7 +39,7 @@ contextBridge.exposeInMainWorld(
 // };
 
 const scriptContent = ipcRenderer.sendSync('read-file')
-// console.log(scriptContent)
+console.log(scriptContent)
 // let pathToInjectScript = `file://${imkeyWeb3ProviderSrc}`
 
 // window.accounts = store.accounts;
@@ -66,7 +65,6 @@ process.on('document-start', () => {
 //   script.src = "http://localhost:8000/imkey-web3-provider.js";
 //   document.documentElement.appendChild(script);
 // })
-
 
 // document.addEventListener(
 //   "DOMContentLoaded",
