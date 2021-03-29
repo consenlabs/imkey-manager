@@ -7,9 +7,7 @@ import {
   shell,
   Tray,
   dialog,
-  crashReporter,
-  ipcRenderer,
-  screen
+  crashReporter
 } from 'electron'
 // 自动更新相关
 import { autoUpdater } from 'electron-updater'
@@ -19,7 +17,6 @@ import * as Sentry from '@sentry/electron'
 // test.json
 import pkg from '../../package.json'
 import SensorsAnalytics from 'sa-sdk-node'
-import { api } from '../api/apirouter'
 const fs = require('fs')
 const url =
   'https://imtoken.datasink.sensorsdata.cn/sa?project=production&token=27d69b3e7fd25949'
@@ -586,6 +583,7 @@ function createBrowserView (url, isClose) {
   // url= "https://murall.art/home"//imtoken 主网
   // url= "https://play.decentraland.org/" //主网
   // url = "https://trade.dydx.exchange/margin"//连接有问题一直转圈
+  // url = "https://danfinlay.github.io/js-eth-personal-sign-examples/"
   view.webContents.loadURL(url, options)
 
   // view.webContents.on('did-frame-finish-load', () => {

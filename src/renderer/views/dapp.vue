@@ -489,7 +489,6 @@
           </div>
         </a>
 
-
         <a class="dapp" @click="openUrl('Sushiswap')">
           <svg
             width="64"
@@ -675,7 +674,7 @@
 
 <script>
 import { ipcRenderer } from 'electron'
-import {DAPPS} from '../store/dapps'
+import { DAPPS } from '../store/dapps'
 const { dialog } = require('electron').remote
 let url
 
@@ -729,6 +728,7 @@ export default {
       this.status = 1
     },
     openUrl (urlType) {
+      let url = ''
       if (urlType === 'PolkadotJS') {
         // 判断是否有dot地址没有提示下载应用
         let addressKSM
@@ -763,15 +763,20 @@ export default {
           this.title = 'PolkadotJS'
           this.iconUrl = 'https://polkadot.js.org/favicon.ico'
         }
+        this.isLoading = true
+        ipcRenderer.send('openBrowserView', url, false)
+        this.showToolBar = true
+        this.showRightTools = true
+        return
       }
       this.isLoading = true
-      
-      let dapp = DAPPS.find(x => x.urlType.toLowerCase() == urlType.toLowerCase());
-      let url = "";
+
+      const dapp = DAPPS.find(x => x.urlType.toLowerCase() === urlType.toLowerCase())
+
       if (dapp) {
-        url = dapp.url;
-        this.title = dapp.title;
-        this.iconUrl = dapp.iconUrl;
+        url = dapp.url
+        this.title = dapp.title
+        this.iconUrl = dapp.iconUrl
       }
       ipcRenderer.send('openBrowserView', url, false)
       this.showToolBar = true
