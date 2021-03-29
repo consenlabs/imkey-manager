@@ -275,10 +275,10 @@ export const m = {
     multisender_desc: '将ERC20代币或ETH发送到成千上万的地址，只需一次交易......。',
     rarible_desc: 'Create and sell digital collectibles',
     murall_desc: '在线创作加密艺术作品',
-    zksync_desc: "安全、去信任化的以太坊二层网络",
-    zkswap_desc: "基于 zkRollup Layer2 并采用 AMM 的去中心化交易所",
-    compound_desc: "能够同时管理 MakerDAO 与 Compound 的理财神器",
-    aave_desc: "去中心化理财, 抵押 DAI 获取稳定收益",
+    zksync_desc: '安全、去信任化的以太坊二层网络',
+    zkswap_desc: '基于 zkRollup Layer2 并采用 AMM 的去中心化交易所',
+    compound_desc: '能够同时管理 MakerDAO 与 Compound 的理财神器',
+    aave_desc: '去中心化理财, 抵押 DAI 获取稳定收益'
   },
   imKeyCoreErrorInfo: {
     decoding_failed: '解析失败',

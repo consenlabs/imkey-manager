@@ -29,12 +29,12 @@ const createEthereumProviderScript = function () {
     return response
   }
 
-  function createJsonrpcError (payload, error) {
-    const response = payload
-    response.error = error
-    response.result = null
-    return response
-  }
+  // function createJsonrpcError (payload, error) {
+  //   const response = payload
+  //   response.error = error
+  //   response.result = null
+  //   return response
+  // }
 
   function inherits (ctor, superCtor) {
     ctor.super_ = superCtor

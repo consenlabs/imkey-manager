@@ -274,9 +274,9 @@ export const m = {
     rarible_desc: 'Create and sell digital collectibles',
     murall_desc: 'A digital, immutable, collaborative mural that anyone anywhere can draw on.',
     zksync_desc: "Ethereum's first and most user-centric ZK rollup.",
-    zkswap_desc: "A ZK-Rollups based layer-2 DEX with AMM model.",
-    compound_desc: "An autonomous interest rate protocol to unlock open financial applications.",
-    aave_desc: "An protocol to earn interest on deposits and borrow assets.",
+    zkswap_desc: 'A ZK-Rollups based layer-2 DEX with AMM model.',
+    compound_desc: 'An autonomous interest rate protocol to unlock open financial applications.',
+    aave_desc: 'An protocol to earn interest on deposits and borrow assets.'
   },
   imKeyCoreErrorInfo: {
     decoding_failed: 'Decoding failed',

@@ -1,12 +1,12 @@
 
 const { contextBridge, ipcRenderer } = require('electron')
 
-// https://chainid.network/ 
+// https://chainid.network/
 // const MAINNET_RPC_URL = "https://mainnet.infura.io/v3/819049aeadbe494c80bdb815cf41242e"
-const MAINNET_RPC_URL = "https://mainnet-eth.token.im"
-const MAINNET_CHAIN_ID = 1;
-const KOVAN_RPC_URL = "https://kovan.infura.io/v3/e35ac016a10548f1b4a835a1cd72d17a"
-const KOVAN_CHAIN_ID = 42;
+const MAINNET_RPC_URL = 'https://mainnet-eth.token.im'
+const MAINNET_CHAIN_ID = 1
+// const KOVAN_RPC_URL = 'https://kovan.infura.io/v3/e35ac016a10548f1b4a835a1cd72d17a'
+// const KOVAN_CHAIN_ID = 42
 
 contextBridge.exposeInMainWorld('imKeyManager', {
   accounts: () => {
@@ -21,9 +21,9 @@ contextBridge.exposeInMainWorld('imKeyManager', {
       chainId: MAINNET_CHAIN_ID,
       rpcUrl: MAINNET_RPC_URL,
       headers: {
-            agent: "ios:2.4.2:2",
-          }
-    };
+        agent: 'ios:2.4.2:2'
+      }
+    }
   },
   callNativeApi: async (data) => {
     return await ipcRenderer.sendSync('message-from-get-api', data)
