@@ -1,222 +1,297 @@
 {
-  "name": "imKeyManager",
-  "version": "2.0.0-beta",
-  "author": "imkey <weiqiang@imkey.im>",
-  "description": "imKey Manager @2020",
-  "license": "MIT",
-  "main": "./dist/electron/main.js",
+  "name": "electron-react-boilerplate",
+  "productName": "ElectronReact",
+  "description": "Electron application boilerplate based on React, React Router, Webpack, React Fast Refresh for rapid application development",
   "scripts": {
-    "build": "node .electron-vue/build.js && electron-builder",
-    "build:dir": "node .electron-vue/build.js && electron-builder --dir",
-    "build:clean": "cross-env BUILD_TARGET=clean node .electron-vue/build.js",
-    "build:web": "cross-env BUILD_TARGET=web node .electron-vue/build.js",
-    "lint": "eslint --ext .js,.vue -f ./node_modules/eslint-friendly-formatter src test",
-    "lint:fix": "eslint --ext .js,.vue -f ./node_modules/eslint-friendly-formatter --fix src test",
-    "dev": "node .electron-vue/dev-runner.js",
-    "e2e": "mocha test/e2e",
-    "pack": "npm run pack:main && npm run pack:renderer",
-    "pack:main": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.main.config.js",
-    "pack:renderer": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.renderer.config.js",
-    "test": "npm run unit && npm run e2e",
-    "unit": "karma start test/unit/karma.conf.js",
-    "postinstall": "npm run lint:fix && electron-builder install-app-deps",
-    "release": "node .electron-vue/build.js && electron-builder"
+    "build": "concurrently \"yarn build:main\" \"yarn build:renderer\"",
+    "build:main": "cross-env NODE_ENV=production webpack --config ./.erb/configs/webpack.config.main.prod.babel.js",
+    "build:renderer": "cross-env NODE_ENV=production webpack --config ./.erb/configs/webpack.config.renderer.prod.babel.js",
+    "rebuild": "electron-rebuild --parallel --types prod,dev,optional --module-dir src",
+    "lint": "cross-env NODE_ENV=development eslint . --cache --ext .js,.jsx,.ts,.tsx",
+    "package": "rm -rf src/dist && yarn build && electron-builder build --publish never",
+    "postinstall": "node -r @babel/register .erb/scripts/CheckNativeDep.js && electron-builder install-app-deps && yarn cross-env NODE_ENV=development webpack --config ./.erb/configs/webpack.config.renderer.dev.dll.babel.js && opencollective-postinstall && yarn-deduplicate yarn.lock",
+    "start": "node -r @babel/register ./.erb/scripts/CheckPortInUse.js && cross-env yarn start:renderer",
+    "start:main": "cross-env NODE_ENV=development electron -r ./.erb/scripts/BabelRegister ./src/main.dev.ts",
+    "start:renderer": "cross-env NODE_ENV=development webpack serve --config ./.erb/configs/webpack.config.renderer.dev.babel.js",
+    "test": "jest"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "cross-env NODE_ENV=development eslint --cache"
+    ],
+    "{*.json,.{babelrc,eslintrc,prettierrc}}": [
+      "prettier --ignore-path .eslintignore --parser json --write"
+    ],
+    "*.{css,scss}": [
+      "prettier --ignore-path .eslintignore --single-quote --write"
+    ],
+    "*.{html,md,yml}": [
+      "prettier --ignore-path .eslintignore --single-quote --write"
+    ]
   },
   "build": {
-    "afterSign": "build/notarize.js",
-    "productName": "imKey Manager",
-    "appId": "com.imkey.imkey-manager",
-    "copyright": "Copyright © 2020 imkey",
-    "directories": {
-      "output": "build"
-    },
-    "publish": {
-      "provider": "generic",
-      "url": "https://files.imkey.im/downloads/imKeyManager"
-    },
-    "releaseInfo": {
-      "releaseNotes": "[{id:1,info:\"解决卡死问题\"},{id:2,info:\"优化UI问题\"},{id:3,info:\"修改安装应用时的提示显示问题\"},{id:4,info:\"修改连接设备的问题\"},{id:5,info:\"解决公证的问题\"}]"
-    },
+    "productName": "ElectronReact",
+    "appId": "org.erb.ElectronReact",
     "files": [
-      "dist/electron/**/*"
+      "dist/",
+      "node_modules/",
+      "index.html",
+      "main.prod.js",
+      "main.prod.js.map",
+      "package.json"
     ],
+    "afterSign": ".erb/scripts/Notarize.js",
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "type": "distribution",
+      "hardenedRuntime": true,
+      "entitlements": "assets/entitlements.mac.plist",
+      "entitlementsInherit": "assets/entitlements.mac.plist",
+      "gatekeeperAssess": false
+    },
     "dmg": {
-      "sign": false,
       "contents": [
         {
+          "x": 130,
+          "y": 220
+        },
+        {
           "x": 410,
-          "y": 150,
+          "y": 220,
           "type": "link",
           "path": "/Applications"
-        },
-        {
-          "x": 130,
-          "y": 150,
-          "type": "file"
-        }
-      ]
-    },
-    "mac": {
-      "hardenedRuntime": true,
-      "gatekeeperAssess": false,
-      "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.plist",
-      "icon": "build/icons/icon.icns",
-      "extraResources": [
-        {
-          "from": "./connector.dylib",
-          "to": "./"
-        },
-        {
-          "from": "./key.env",
-          "to": "./"
         }
       ]
     },
     "win": {
-      "icon": "build/icons/icon.ico",
-      "requestedExecutionLevel": "highestAvailable",
-      "target": "nsis",
-      "extraResources": [
-        {
-          "from": "./connector.dll",
-          "to": "../"
-        },
-        {
-          "from": "./key.env",
-          "to": "../"
-        }
+      "target": [
+        "nsis"
       ]
     },
-    "nsis": {
-      "oneClick": false,
-      "perMachine": true,
-      "allowElevation": true,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "runAfterFinish": true
-    },
     "linux": {
-      "icon": "build/icons/icon.icns"
+      "target": [
+        "AppImage"
+      ],
+      "category": "Development"
+    },
+    "directories": {
+      "app": "src",
+      "buildResources": "assets",
+      "output": "release"
+    },
+    "extraResources": [
+      "./assets/**"
+    ],
+    "publish": {
+      "provider": "github",
+      "owner": "electron-react-boilerplate",
+      "repo": "electron-react-boilerplate"
     }
-  },
-  "dependencies": {
-    "@fortawesome/fontawesome-free": "^5.15.2",
-    "@polkadot/api": "^4.0.3",
-    "@imkey/web3-provider": "file:../imkey-web3-provider",
-    "@polkadot/extension-dapp": "^0.37.2",
-    "@polkadot/types": "^4.0.3",
-    "@polkadot/util": "^6.0.5",
-    "@polkadot/util-crypto": "^6.0.5",
-    "@sentry/electron": "^2.4.0",
-    "body-parser": "^1.19.0",
-    "copy-to-clipboard": "^3.3.1",
-    "cors": "^2.8.5",
-    "decimal.js": "^10.2.1",
-    "dotenv": "^8.2.0",
-    "electron-updater": "^4.3.8",
-    "element-ui": "^2.15.1",
-    "express": "^4.17.1",
-    "ffi-napi": "^4.0.1",
-    "fs-extra": "^9.1.0",
-    "is-online": "^9.0.0",
-    "lodash": "^4.17.21",
-    "lodash-id": "^0.14.0",
-    "ref-napi": "^3.0.1",
-    "sa-sdk-javascript": "^1.16.6",
-    "sa-sdk-node": "^1.2.3",
-    "vue": "^2.6.12",
-    "vue-cookies": "^1.7.4",
-    "vue-electron": "^1.0.6",
-    "vue-i18n": "^8.24.0",
-    "vue-router": "^3.5.1",
-    "vuex": "^3.6.2",
-    "vuex-electron": "^1.0.3",
-    "web3": "^1.3.4",
-    "write-file-atomic": "^3.0.3"
-  },
-  "devDependencies": {
-    "@babel/core": "^7.13.10",
-    "@babel/plugin-transform-runtime": "^7.13.10",
-    "@babel/preset-env": "^7.13.10",
-    "@babel/register": "^7.13.8",
-    "@babel/runtime": "^7.13.10",
-    "@polkadot/api-cli": "^0.30.1",
-    "@sentry/cli": "^1.63.1",
-    "@vue/devtools": "^6.0.0-beta.6",
-    "ajv": "^7.2.1",
-    "babel-eslint": "^10.1.0",
-    "babel-loader": "^8.2.2",
-    "babel-minify-webpack-plugin": "^0.3.1",
-    "babel-plugin-istanbul": "^6.0.0",
-    "bufferutil": "^4.0.3",
-    "cfonts": "^2.9.1",
-    "chai": "^4.3.3",
-    "chai-http": "^4.3.0",
-    "chalk": "^4.1.0",
-    "copy-webpack-plugin": "^8.0.0",
-    "cross-env": "^7.0.3",
-    "css-loader": "^5.1.1",
-    "del": "^6.0.0",
-    "devtron": "^1.4.0",
-    "electron": "^11.3.0",
-    "electron-builder": "22.9.1",
-    "electron-debug": "^3.2.0",
-    "electron-devtools-installer": "^3.1.1",
-    "electron-download": "^4.1.1",
-    "electron-notarize": "^1.0.0",
-    "eslint": "^7.21.0",
-    "eslint-config-standard": "^16.0.2",
-    "eslint-friendly-formatter": "^4.0.1",
-    "eslint-loader": "^4.0.2",
-    "eslint-plugin-html": "^6.1.2",
-    "eslint-plugin-import": "^2.22.1",
-    "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^4.3.1",
-    "eslint-plugin-standard": "^5.0.0",
-    "eslint-plugin-vue": "^7.7.0",
-    "file-loader": "^6.2.0",
-    "google-protobuf": "3.15.5",
-    "html-webpack-plugin": "^5.3.0",
-    "inject-loader": "^4.0.1",
-    "karma": "^6.1.2",
-    "karma-chai": "^0.1.0",
-    "karma-coverage": "^2.0.3",
-    "karma-electron": "^6.3.3",
-    "karma-mocha": "^2.0.1",
-    "karma-sourcemap-loader": "^0.3.8",
-    "karma-spec-reporter": "^0.0.32",
-    "karma-webpack": "^5.0.0",
-    "less": "^4.1.1",
-    "less-loader": "^8.0.0",
-    "mini-css-extract-plugin": "^1.3.9",
-    "mocha": "^8.3.1",
-    "multispinner": "^0.2.1",
-    "node-loader": "^1.0.2",
-    "node-sass": "^5.0.0",
-    "require-dir": "^1.2.0",
-    "sass-loader": "^11.0.1",
-    "should": "^13.2.3",
-    "spectron": "^14.0.0",
-    "style-loader": "^2.0.0",
-    "url-loader": "^4.1.1",
-    "utf-8-validate": "^5.0.4",
-    "vue-html-loader": "^1.2.4",
-    "vue-loader": "^15.9.6",
-    "vue-style-loader": "^4.1.3",
-    "vue-template-compiler": "^2.6.12",
-    "webpack": "^5.24.4",
-    "webpack-cli": "^4.5.0",
-    "webpack-dev-server": "^3.11.2",
-    "webpack-hot-middleware": "^2.25.0",
-    "webpack-merge": "^5.7.3"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/consenlabs/imkey-manager.git"
+    "url": "git+https://github.com/electron-react-boilerplate/electron-react-boilerplate.git"
   },
+  "author": {
+    "name": "Electron React Boilerplate Maintainers",
+    "email": "electronreactboilerplate@gmail.com",
+    "url": "https://electron-react-boilerplate.js.org"
+  },
+  "contributors": [
+    {
+      "name": "Amila Welihinda",
+      "email": "amilajack@gmail.com",
+      "url": "https://github.com/amilajack"
+    },
+    {
+      "name": "John Tran",
+      "email": "jptran318@gmail.com",
+      "url": "https://github.com/jooohhn"
+    }
+  ],
+  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/consenlabs/imkey-manager/issues"
+    "url": "https://github.com/electron-react-boilerplate/electron-react-boilerplate/issues"
   },
-  "homepage": "https://github.com/consenlabs/imkey-manager#readme"
+  "keywords": [
+    "electron",
+    "boilerplate",
+    "react",
+    "typescript",
+    "ts",
+    "sass",
+    "webpack",
+    "hot",
+    "reload"
+  ],
+  "homepage": "https://github.com/electron-react-boilerplate/electron-react-boilerplate#readme",
+  "jest": {
+    "testURL": "http://localhost/",
+    "moduleNameMapper": {
+      "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/.erb/mocks/fileMock.js",
+      "\\.(css|less|sass|scss)$": "identity-obj-proxy"
+    },
+    "moduleFileExtensions": [
+      "js",
+      "jsx",
+      "ts",
+      "tsx",
+      "json"
+    ],
+    "moduleDirectories": [
+      "node_modules",
+      "src/node_modules"
+    ],
+    "setupFiles": [
+      "./.erb/scripts/CheckBuildsExist.js"
+    ]
+  },
+  "devDependencies": {
+    "@babel/core": "^7.12.9",
+    "@babel/plugin-proposal-class-properties": "^7.12.1",
+    "@babel/plugin-proposal-decorators": "^7.12.1",
+    "@babel/plugin-proposal-do-expressions": "^7.12.1",
+    "@babel/plugin-proposal-export-default-from": "^7.12.1",
+    "@babel/plugin-proposal-export-namespace-from": "^7.12.1",
+    "@babel/plugin-proposal-function-bind": "^7.12.1",
+    "@babel/plugin-proposal-function-sent": "^7.12.1",
+    "@babel/plugin-proposal-json-strings": "^7.12.1",
+    "@babel/plugin-proposal-logical-assignment-operators": "^7.12.1",
+    "@babel/plugin-proposal-nullish-coalescing-operator": "^7.12.1",
+    "@babel/plugin-proposal-optional-chaining": "^7.12.7",
+    "@babel/plugin-proposal-pipeline-operator": "^7.12.1",
+    "@babel/plugin-proposal-throw-expressions": "^7.12.1",
+    "@babel/plugin-syntax-dynamic-import": "^7.8.3",
+    "@babel/plugin-syntax-import-meta": "^7.10.4",
+    "@babel/plugin-transform-react-constant-elements": "^7.12.1",
+    "@babel/plugin-transform-react-inline-elements": "^7.12.1",
+    "@babel/plugin-transform-runtime": "^7.12.1",
+    "@babel/preset-env": "^7.12.7",
+    "@babel/preset-react": "^7.12.7",
+    "@babel/preset-typescript": "^7.12.7",
+    "@babel/register": "^7.12.1",
+    "@pmmmwh/react-refresh-webpack-plugin": "^0.4.3",
+    "@teamsupercell/typings-for-css-modules-loader": "^2.4.0",
+    "@testing-library/jest-dom": "^5.11.6",
+    "@testing-library/react": "^11.2.2",
+    "@types/enzyme": "^3.10.5",
+    "@types/enzyme-adapter-react-16": "^1.0.6",
+    "@types/history": "4.7.6",
+    "@types/jest": "^26.0.15",
+    "@types/node": "14.14.10",
+    "@types/react": "^16.9.44",
+    "@types/react-dom": "^16.9.9",
+    "@types/react-router-dom": "^5.1.6",
+    "@types/react-test-renderer": "^16.9.3",
+    "@types/webpack-env": "^1.15.2",
+    "@typescript-eslint/eslint-plugin": "^4.8.1",
+    "@typescript-eslint/parser": "^4.8.1",
+    "babel-eslint": "^10.1.0",
+    "babel-jest": "^26.1.0",
+    "babel-loader": "^8.2.2",
+    "babel-plugin-dev-expression": "^0.2.2",
+    "babel-plugin-transform-react-remove-prop-types": "^0.4.24",
+    "browserslist-config-erb": "^0.0.1",
+    "chalk": "^4.1.0",
+    "concurrently": "^5.3.0",
+    "core-js": "^3.6.5",
+    "cross-env": "^7.0.2",
+    "css-loader": "^5.0.1",
+    "css-minimizer-webpack-plugin": "^1.1.5",
+    "detect-port": "^1.3.0",
+    "electron": "^11.0.1",
+    "electron-builder": "^22.3.6",
+    "electron-devtools-installer": "^3.1.1",
+    "electron-notarize": "^1.0.0",
+    "electron-rebuild": "^2.3.2",
+    "enzyme": "^3.11.0",
+    "enzyme-adapter-react-16": "^1.15.3",
+    "enzyme-to-json": "^3.5.0",
+    "eslint": "^7.5.0",
+    "eslint-config-airbnb": "^18.2.0",
+    "eslint-config-airbnb-typescript": "^12.0.0",
+    "eslint-config-erb": "^2.0.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-import-resolver-webpack": "^0.13.0",
+    "eslint-plugin-compat": "^3.8.0",
+    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-jest": "^24.1.3",
+    "eslint-plugin-jsx-a11y": "6.4.1",
+    "eslint-plugin-prettier": "^3.1.4",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-react": "^7.20.6",
+    "eslint-plugin-react-hooks": "^4.0.8",
+    "file-loader": "^6.0.0",
+    "husky": "^4.2.5",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^26.1.0",
+    "lint-staged": "^10.2.11",
+    "mini-css-extract-plugin": "^1.3.1",
+    "node-sass": "^5.0.0",
+    "opencollective-postinstall": "^2.0.3",
+    "prettier": "^2.0.5",
+    "react-refresh": "^0.9.0",
+    "react-test-renderer": "^17.0.1",
+    "rimraf": "^3.0.0",
+    "sass-loader": "^10.1.0",
+    "style-loader": "^2.0.0",
+    "terser-webpack-plugin": "^5.0.3",
+    "typescript": "^4.0.5",
+    "url-loader": "^4.1.0",
+    "webpack": "^5.5.1",
+    "webpack-bundle-analyzer": "^4.1.0",
+    "webpack-cli": "^4.2.0",
+    "webpack-dev-server": "^3.11.0",
+    "webpack-merge": "^5.4.0",
+    "yarn-deduplicate": "^3.1.0"
+  },
+  "dependencies": {
+    "electron-debug": "^3.1.0",
+    "electron-log": "^4.2.4",
+    "electron-updater": "^4.3.4",
+    "history": "^5.0.0",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1",
+    "react-router-dom": "^5.2.0",
+    "regenerator-runtime": "^0.13.5",
+    "source-map-support": "^0.5.19"
+  },
+  "devEngines": {
+    "node": ">=10.x",
+    "npm": ">=6.x",
+    "yarn": ">=1.21.3"
+  },
+  "collective": {
+    "url": "https://opencollective.com/electron-react-boilerplate-594"
+  },
+  "browserslist": [],
+  "prettier": {
+    "overrides": [
+      {
+        "files": [
+          ".prettierrc",
+          ".babelrc",
+          ".eslintrc"
+        ],
+        "options": {
+          "parser": "json"
+        }
+      }
+    ],
+    "singleQuote": true
+  },
+  "renovate": {
+    "extends": [
+      "bliss"
+    ],
+    "baseBranches": [
+      "next"
+    ]
+  },
+  "husky": {
+    "hooks": {
+    }
+  }
 }
