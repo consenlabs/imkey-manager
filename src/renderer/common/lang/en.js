@@ -270,7 +270,13 @@ export const m = {
     sushiswap_desc: 'Stake SushiSwap LP tokens to claim your very own yummy SUSHI!',
     uniswap_desc: 'Guaranteed liquidity for millions of users and hundreds of Ethereum applications.',
     polkadotJS_desc: 'Cryptocurrency Exchange | Simple Coin Conversion',
-    multisender_desc: 'Send ERC20 Token or ETH to thousands of addresses out in 1 single transaction...'
+    multisender_desc: 'Send ERC20 Token or ETH to thousands of addresses out in 1 single transaction...',
+    rarible_desc: 'Create and sell digital collectibles',
+    murall_desc: 'A digital, immutable, collaborative mural that anyone anywhere can draw on.',
+    zksync_desc: "Ethereum's first and most user-centric ZK rollup.",
+    zkswap_desc: "A ZK-Rollups based layer-2 DEX with AMM model.",
+    compound_desc: "An autonomous interest rate protocol to unlock open financial applications.",
+    aave_desc: "An protocol to earn interest on deposits and borrow assets.",
   },
   imKeyCoreErrorInfo: {
     decoding_failed: 'Decoding failed',
