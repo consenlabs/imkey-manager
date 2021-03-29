@@ -186,6 +186,7 @@ function init() {
     greeting()
 // example
     fs.createReadStream(path.join(__dirname,'../connector.dylib')).pipe(fs.createWriteStream(path.join(__dirname, '../dist/electron/connector.dylib')));
+    fs.createReadStream(path.join(__dirname,'../connector.dll')).pipe(fs.createWriteStream(path.join(__dirname, '../dist/electron/connector.dll')));
     Promise.all([startRenderer(), startMain()])
         .then(() => {
             startElectron()

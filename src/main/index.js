@@ -564,7 +564,7 @@ function createBrowserView (url, isClose) {
   function resetBounds () {
     const mainWindowBounds = mainWindow.getBounds()
     if (process.platform === 'win32') {
-      view.setBounds({ x: 300, y: 0, width: 1050, height: 700 })
+      view.setBounds({ x: 300, y: 62, width: mainWindowBounds.width - 300, height: mainWindowBounds.height - 102 })
     } else if (process.platform === 'darwin') {
       view.setBounds({ x: 300, y: 62, width: mainWindowBounds.width - 300, height: mainWindowBounds.height - 62 })
     } else {
@@ -596,7 +596,7 @@ function createBrowserView (url, isClose) {
   //     });
   //   // }
   // });
-  view.webContents.openDevTools()
+  // view.webContents.openDevTools()
 
   view.webContents.on(
     'context-menu',

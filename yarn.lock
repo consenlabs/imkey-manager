@@ -1097,16 +1097,14 @@
   integrity sha1-IYzXJ2q0+atXzD0u+iaX5qV58l0=
 
 "@imkey/web3-provider@file:../imkey-web3-provider":
-  version "1.0.4"
+  version "1.0.0"
   dependencies:
     "@types/event-emitter-es6" "^1.1.0"
-    eth-sig-util "^3.0.1"
-    ethereumjs-util "^5.1.1"
     ethjs "^0.4.0"
     ethjs-query "^0.3.8"
     event-emitter-es6 "^1.1.5"
     rlp "^2.2.5"
-    web3 "^1.3.4"
+    web3 "^1.2.9"
 
 "@istanbuljs/load-nyc-config@^1.0.0":
   version "1.1.0"
@@ -3209,7 +3207,7 @@ bn.js@4.11.6:
   resolved "https://registry.npm.taobao.org/bn.js/download/bn.js-4.11.6.tgz#53344adb14617a13f6e8dd2ce28905d1c0ba3215"
   integrity sha1-UzRK2xRhehP26N0s4okF0cC6MhU=
 
-bn.js@^4.0.0, bn.js@^4.1.0, bn.js@^4.11.0, bn.js@^4.11.1, bn.js@^4.11.6, bn.js@^4.11.8, bn.js@^4.11.9, bn.js@^4.4.0:
+bn.js@^4.0.0, bn.js@^4.1.0, bn.js@^4.11.0, bn.js@^4.11.1, bn.js@^4.11.6, bn.js@^4.11.9, bn.js@^4.4.0:
   version "4.12.0"
   resolved "https://registry.npm.taobao.org/bn.js/download/bn.js-4.12.0.tgz#775b3f278efbb9718eec7361f483fb36fbbfea88"
   integrity sha1-d1s/J477uXGO7HNh9IP7Nvu/6og=
@@ -5781,16 +5779,6 @@ eth-lib@^0.1.26:
     ws "^3.0.0"
     xhr-request-promise "^0.1.2"
 
-eth-sig-util@^3.0.1:
-  version "3.0.1"
-  resolved "https://registry.npm.taobao.org/eth-sig-util/download/eth-sig-util-3.0.1.tgz#8753297c83a3f58346bd13547b59c4b2cd110c96"
-  integrity sha1-h1MpfIOj9YNGvRNUe1nEss0RDJY=
-  dependencies:
-    ethereumjs-abi "^0.6.8"
-    ethereumjs-util "^5.1.1"
-    tweetnacl "^1.0.3"
-    tweetnacl-util "^0.15.0"
-
 ethereum-bloom-filters@^1.0.6:
   version "1.0.9"
   resolved "https://registry.npm.taobao.org/ethereum-bloom-filters/download/ethereum-bloom-filters-1.0.9.tgz#4a59dead803af0c9e33834170bd7695df67061ec"
@@ -5819,14 +5807,6 @@ ethereum-cryptography@^0.1.3:
     secp256k1 "^4.0.1"
     setimmediate "^1.0.5"
 
-ethereumjs-abi@^0.6.8:
-  version "0.6.8"
-  resolved "https://registry.npm.taobao.org/ethereumjs-abi/download/ethereumjs-abi-0.6.8.tgz#71bc152db099f70e62f108b7cdfca1b362c6fcae"
-  integrity sha1-cbwVLbCZ9w5i8Qi3zfyhs2LG/K4=
-  dependencies:
-    bn.js "^4.11.8"
-    ethereumjs-util "^6.0.0"
-
 ethereumjs-common@^1.3.2, ethereumjs-common@^1.5.0:
   version "1.5.2"
   resolved "https://registry.npm.taobao.org/ethereumjs-common/download/ethereumjs-common-1.5.2.tgz#2065dbe9214e850f2e955a80e650cb6999066979"
@@ -5839,19 +5819,6 @@ ethereumjs-tx@^2.1.1:
   dependencies:
     ethereumjs-common "^1.5.0"
     ethereumjs-util "^6.0.0"
-
-ethereumjs-util@^5.1.1:
-  version "5.2.1"
-  resolved "https://registry.npm.taobao.org/ethereumjs-util/download/ethereumjs-util-5.2.1.tgz#a833f0e5fca7e5b361384dc76301a721f537bf65"
-  integrity sha1-qDPw5fyn5bNhOE3HYwGnIfU3v2U=
-  dependencies:
-    bn.js "^4.11.0"
-    create-hash "^1.1.2"
-    elliptic "^6.5.2"
-    ethereum-cryptography "^0.1.3"
-    ethjs-util "^0.1.3"
-    rlp "^2.0.0"
-    safe-buffer "^5.1.1"
 
 ethereumjs-util@^6.0.0:
   version "6.2.1"
@@ -5957,7 +5924,7 @@ ethjs-util@0.1.3:
     is-hex-prefixed "1.0.0"
     strip-hex-prefix "1.0.0"
 
-ethjs-util@0.1.6, ethjs-util@^0.1.3:
+ethjs-util@0.1.6:
   version "0.1.6"
   resolved "https://registry.npm.taobao.org/ethjs-util/download/ethjs-util-0.1.6.tgz#f308b62f185f9fe6237132fb2a9818866a5cd536"
   integrity sha1-8wi2Lxhfn+YjcTL7KpgYhmpc1TY=
@@ -6253,16 +6220,16 @@ fecha@^4.2.0:
   resolved "https://registry.npm.taobao.org/fecha/download/fecha-4.2.0.tgz#3ffb6395453e3f3efff850404f0a59b6747f5f41"
   integrity sha1-P/tjlUU+Pz7/+FBATwpZtnR/X0E=
 
-ffi-napi@^4.0.1:
-  version "4.0.1"
-  resolved "https://registry.npm.taobao.org/ffi-napi/download/ffi-napi-4.0.1.tgz#550c748cb43c6ff8785e77e4e87d32da10d74ad9"
-  integrity sha1-VQx0jLQ8b/h4Xnfk6H0y2hDXStk=
+ffi-napi@^4.0.3:
+  version "4.0.3"
+  resolved "https://registry.npm.taobao.org/ffi-napi/download/ffi-napi-4.0.3.tgz#27a8d42a8ea938457154895c59761fbf1a10f441"
+  integrity sha1-J6jUKo6pOEVxVIlcWXYfvxoQ9EE=
   dependencies:
     debug "^4.1.1"
     get-uv-event-loop-napi-h "^1.0.5"
     node-addon-api "^3.0.0"
     node-gyp-build "^4.2.1"
-    ref-napi "^2.0.1"
+    ref-napi "^2.0.1 || ^3.0.2"
     ref-struct-di "^1.1.0"
 
 figures@^1.4.0:
@@ -10728,20 +10695,10 @@ redent@^1.0.0:
     indent-string "^2.1.0"
     strip-indent "^1.0.1"
 
-ref-napi@^2.0.1:
-  version "2.1.2"
-  resolved "https://registry.npm.taobao.org/ref-napi/download/ref-napi-2.1.2.tgz#5986069d7b0ea83e1fef48239a2bd75318ce341b"
-  integrity sha1-WYYGnXsOqD4f70gjmivXUxjONBs=
-  dependencies:
-    debug "^4.1.1"
-    get-symbol-from-current-process-h "^1.0.2"
-    node-addon-api "^2.0.0"
-    node-gyp-build "^4.2.1"
-
-ref-napi@^3.0.1:
-  version "3.0.1"
-  resolved "https://registry.npm.taobao.org/ref-napi/download/ref-napi-3.0.1.tgz#442c0b266c14620a3c3b5a1d9c8d8d997f33a86d"
-  integrity sha1-RCwLJmwUYgo8O1odnI2NmX8zqG0=
+"ref-napi@^2.0.1 || ^3.0.2", ref-napi@^3.0.2:
+  version "3.0.2"
+  resolved "https://registry.npm.taobao.org/ref-napi/download/ref-napi-3.0.2.tgz#fe71c2a09df654baa66649d783c6e5ab182c19cb"
+  integrity sha1-/nHCoJ32VLqmZknXg8blqxgsGcs=
   dependencies:
     debug "^4.1.1"
     get-symbol-from-current-process-h "^1.0.2"
@@ -11088,7 +11045,7 @@ ripemd160@^2.0.0, ripemd160@^2.0.1:
     hash-base "^3.0.0"
     inherits "^2.0.1"
 
-rlp@^2.0.0, rlp@^2.2.3, rlp@^2.2.5:
+rlp@^2.2.3, rlp@^2.2.5:
   version "2.2.6"
   resolved "https://registry.npm.taobao.org/rlp/download/rlp-2.2.6.tgz#c80ba6266ac7a483ef1e69e8e2f056656de2fb2c"
   integrity sha1-yAumJmrHpIPvHmno4vBWZW3i+yw=
@@ -12536,11 +12493,6 @@ tunnel@^0.0.6:
   resolved "https://registry.npm.taobao.org/tunnel/download/tunnel-0.0.6.tgz#72f1314b34a5b192db012324df2cc587ca47f92c"
   integrity sha1-cvExSzSlsZLbASMk3yzFh8pH+Sw=
 
-tweetnacl-util@^0.15.0:
-  version "0.15.1"
-  resolved "https://registry.npm.taobao.org/tweetnacl-util/download/tweetnacl-util-0.15.1.tgz#b80fcdb5c97bcc508be18c44a4be50f022eea00b"
-  integrity sha1-uA/Ntcl7zFCL4YxEpL5Q8CLuoAs=
-
 tweetnacl@^0.14.3, tweetnacl@~0.14.0:
   version "0.14.5"
   resolved "https://registry.npm.taobao.org/tweetnacl/download/tweetnacl-0.14.5.tgz#5ae68177f192d4456269d108afa93ff8743f4f64"
@@ -13304,7 +13256,7 @@ web3-utils@1.3.4:
     underscore "1.9.1"
     utf8 "3.0.0"
 
-web3@^1.3.4:
+web3@^1.2.9, web3@^1.3.4:
   version "1.3.4"
   resolved "https://registry.npm.taobao.org/web3/download/web3-1.3.4.tgz#31e014873360aa5840eb17f9f171190c967cffb7"
   integrity sha1-MeAUhzNgqlhA6xf58XEZDJZ8/7c=
