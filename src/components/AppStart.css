@@ -1,0 +1,48 @@
+.link0:hover,
+    hover {
+        cursor: pointer;
+    }
+    .appStart{
+        height: 100%;
+        text-align: center;
+    }
+    .appStart h1{
+        /*width: 74px;*/
+        /*height: 74px;*/
+        /*background: #000;*/
+        /*border-radius: 50%;*/
+        text-align: center;
+        margin: 10% auto 0;
+    }
+    .appStart h1 svg{
+        margin-top: 14px;
+    }
+    .appStart h2{
+        font-family: SF Pro Text;
+        font-weight: 600;
+        font-size: 41.9294px;
+        margin-bottom: 0;
+        margin-top: 2%;
+    }
+    .appStart p{
+        margin-top: 1%;
+        font-weight: 200;
+        font-size: 17.745px;
+        line-height: 25px;
+    }
+    .appStart button{
+        width: 400px;
+        height: 44px;
+        background: #2E3035;
+        border-radius: 44px;
+        font-weight: 500;
+        font-size: 14px;
+        line-height: 20px;
+        color: #FFFFFF;
+        margin-top: 5%;
+    }
+    .appStart p span{
+        font-size: 13px;
+        line-height: 18px;
+        color: #A8A8A8;
+    }
