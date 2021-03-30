@@ -60,6 +60,7 @@ a:hover {
 } */
 
 
+
 *{
   padding: 0;
   margin: 0;
@@ -67,14 +68,9 @@ a:hover {
 html{
   font-family: PingFang SC;
 }
-html,body,#app{
+html,body,#root{
   height: 100%;
   overflow: hidden;
-  min-width: 1440px;
-  min-height: 862px;
+
 }
-button{
-  outline: none;
-  border: none;
-  cursor: pointer;
-}
+

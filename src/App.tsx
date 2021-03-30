@@ -1,8 +1,12 @@
 import React from 'react';
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 import icon from '../assets/icon.svg';
+
 import './App.global.css';
 import AppStart from './components/AppStart';
+import DeviceConnection from './components/DeviceConnection';
+import { GeistProvider, CssBaseline } from '@geist-ui/react'
+
 
 const Hello = () => {
   return (
@@ -43,10 +47,15 @@ const Hello = () => {
 
 export default function App() {
   return (
+    <GeistProvider>
+    <CssBaseline />
     <Router>
       <Switch>
+        <Route path="/deviceConnection" component={DeviceConnection} />
         <Route path="/" component={AppStart} />
       </Switch>
     </Router>
+  </GeistProvider>
+    
   );
 }
