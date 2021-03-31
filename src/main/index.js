@@ -594,7 +594,7 @@ function createBrowserView (url, isClose) {
   //     });
   //   // }
   // });
-  view.webContents.openDevTools()
+  // view.webContents.openDevTools()
 
   view.webContents.on(
     'context-menu',
