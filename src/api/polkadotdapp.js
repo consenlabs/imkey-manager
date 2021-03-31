@@ -129,7 +129,7 @@ class Signer {
 }
 
 function sign (json) {
-  const ret = ipcRenderer.sendSync('showMessageBoxSync',JSON.stringify(json))
+  const ret = ipcRenderer.sendSync('showMessageBoxSync', JSON.stringify(json))
   if (ret === 0) {
     const result = ipcRenderer.sendSync('message-from-get-api', json)
     return result.result.signature

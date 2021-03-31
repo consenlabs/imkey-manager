@@ -349,25 +349,25 @@ export default {
       let res
       if (tab === 'ETH') {
         res = ipcRenderer.sendSync('message-from-set-address', DAPPS_Config.ETH)
-        console.log("res:"+res)
+        console.log('res:' + res)
         console.log(res)
         return DAPPS_ETH
       }
       if (tab === 'BSC') {
         res = ipcRenderer.sendSync('message-from-set-address', DAPPS_Config.BSC)
-        console.log("res:"+res)
+        console.log('res:' + res)
         console.log(res)
         return DAPPS_BSC
       }
       if (tab === 'HECO') {
         res = ipcRenderer.sendSync('message-from-set-address', DAPPS_Config.HECO)
-        console.log("res:"+res)
+        console.log('res:' + res)
         console.log(res)
         return DAPPS_HECO
       }
       if (tab === 'Polkadot') {
         res = ipcRenderer.sendSync('message-from-set-address', DAPPS_Config.Polkadot)
-        console.log("res:"+res)
+        console.log('res:' + res)
         console.log(res)
         return DAPPS_Polkadot
       }
@@ -401,8 +401,7 @@ export default {
     confirm () {
       this.status = 1
     },
-    openUrl (urlType,url,title,iconUrl) {
-
+    openUrl (urlType, url, title, iconUrl) {
       if (urlType === 'PolkadotJS') {
         // 判断是否有dot地址没有提示下载应用
         let addressKSM
@@ -445,8 +444,8 @@ export default {
       }
       this.isLoading = true
       // const dapp = DAPPS.find(x => x.urlType.toLowerCase() === urlType.toLowerCase())
-        this.title = title
-        this.iconUrl = iconUrl
+      this.title = title
+      this.iconUrl = iconUrl
       ipcRenderer.send('openBrowserView', url, false)
       this.showToolBar = true
       this.showRightTools = true

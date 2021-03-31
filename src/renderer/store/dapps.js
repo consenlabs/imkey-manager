@@ -195,8 +195,7 @@ export const DAPPS_HECO = [
     title: 'CoinWind',
     iconUrl: 'https://www.defibox.com/media/20210222114531-d0dcdedc1f9c.png',
     desc: 'm.dapp.CoinWind_desc'
-  }
-  ,
+  },
   {
     id: 4,
     urlType: 'Lendhub',
@@ -204,8 +203,7 @@ export const DAPPS_HECO = [
     title: 'Lendhub',
     iconUrl: 'https://defigogo.s3-ap-northeast-1.amazonaws.com/media/960f016e-98ac-404a-8541-9f7989086b30.jpeg',
     desc: 'm.dapp.Lendhub_desc'
-  }
-  // ,
+  }, // ,
   // {
   //   id: 5,
   //   urlType: 'Pilot Protocol',
@@ -214,7 +212,7 @@ export const DAPPS_HECO = [
   //   iconUrl: 'https://www.defibox.com/media/20210311140656-af0715d5f927.png',
   //   desc: 'm.dapp.sushiswap_desc'
   // }
-  ,
+
   {
     id: 5,
     urlType: 'FilDA',
@@ -222,8 +220,7 @@ export const DAPPS_HECO = [
     title: 'FilDA',
     iconUrl: 'https://www.defibox.com/media/900edc7c-bea6-4051-a73b-02d71a1c84da.jpeg',
     desc: 'm.dapp.FilDA_desc'
-  }
-  ,
+  },
   {
     id: 6,
     urlType: 'EarnDefi',
@@ -231,8 +228,7 @@ export const DAPPS_HECO = [
     title: 'EarnDefi',
     iconUrl: 'https://www.defibox.com/media/3ed20046-0a5d-4a93-bcbe-8823d483147e.png',
     desc: 'm.dapp.EarnDefi_desc'
-  }
-  ,
+  },
   {
     id: 7,
     urlType: 'Channels',
@@ -240,8 +236,7 @@ export const DAPPS_HECO = [
     title: 'Channels',
     iconUrl: 'https://defigogo.s3-ap-northeast-1.amazonaws.com/media/f7938d8a-df16-4936-9c0e-9d430512787a.png',
     desc: 'm.dapp.Channels_desc'
-  }
-  ,
+  },
   {
     id: 8,
     urlType: 'HFI.one',
@@ -249,8 +244,7 @@ export const DAPPS_HECO = [
     title: 'HFI.one',
     iconUrl: 'https://www.defibox.com/media/20210212183358-d5414d9f1240.jpg',
     desc: 'm.dapp.HFI_one_desc'
-  }
-  ,
+  },
   {
     id: 9,
     urlType: 'Pippi Shrimp Swap',
@@ -258,8 +252,8 @@ export const DAPPS_HECO = [
     title: 'Pippi Shrimp Swap',
     iconUrl: 'https://www.defibox.com/media/20210317165637-ae1c5eab7535.png',
     desc: 'm.dapp.Pippi_Shrimp_Swap_desc'
-  }
-,{
+  },
+  {
     id: 10,
     urlType: 'HashBridge',
     url: 'https://hboracle.org/#/',

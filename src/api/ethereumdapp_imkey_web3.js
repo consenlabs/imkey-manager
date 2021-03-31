@@ -16,11 +16,11 @@ contextBridge.exposeInMainWorld('imKeyManager', {
       .filter((x) => x.chain === 'Ethereum')
       .map((x) => x.address)
     const ethchainId = allAccounts
-        .filter((x) => x.chain === 'Ethereum')
-        .map((x) => x.chainId)
+      .filter((x) => x.chain === 'Ethereum')
+      .map((x) => x.chainId)
     const ethrpcUrl = allAccounts
-        .filter((x) => x.chain === 'Ethereum')
-        .map((x) => x.rpcUrl)
+      .filter((x) => x.chain === 'Ethereum')
+      .map((x) => x.rpcUrl)
     return {
       accounts: ethAccounts,
       chainId: ethchainId[0],
@@ -31,13 +31,12 @@ contextBridge.exposeInMainWorld('imKeyManager', {
     }
   },
   callNativeApi: async (data) => {
-    const ret = ipcRenderer.sendSync('showMessageBoxSync',JSON.stringify(data))
+    const ret = ipcRenderer.sendSync('showMessageBoxSync', JSON.stringify(data))
     if (ret === 0) {
       return await ipcRenderer.sendSync('message-from-get-api', data)
     } else {
 
     }
-
   }
 })
 
