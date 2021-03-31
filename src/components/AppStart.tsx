@@ -1,29 +1,12 @@
 /** @jsx jsx */
-
+import { jsx } from '@emotion/react';
 import React, { useState } from 'react';
 import { ipcRenderer } from 'electron';
 import './AppStart.css';
 import logo from '../../assets/images/imkey_logo.svg';
 import { useTranslation } from 'react-i18next';
 import { Button, Spacer, Text } from '@geist-ui/react';
-import styled, { css } from 'styled-components';
-import {
-  useHistory
-} from "react-router-dom";
-
-const OutWrapper = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-`;
-
-const InnerWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`;
+import { useHistory } from 'react-router-dom';
 
 export default function AppStart() {
   const { t, i18n } = useTranslation();
@@ -31,7 +14,7 @@ export default function AppStart() {
 
   // Declare a new state variable, which we'll call "count"
   function connect() {
-    history.replace("/deviceConnection");
+    history.replace('/deviceConnection');
   }
 
   function openUrl(e) {
@@ -39,9 +22,21 @@ export default function AppStart() {
   }
 
   return (
-    <OutWrapper>
-      <InnerWrapper>
-          <img src={logo} />
+    <div
+      css={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: "100%",
+        height: "100%"
+      }}
+    >
+      <div css={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center'
+      }}>
+        <img src={logo} />
         <Spacer y={1} />
         <Text size={42} b>
           {t('imKeyManager.imKey_manager')}
@@ -49,20 +44,20 @@ export default function AppStart() {
         <Spacer y={0.4} />
         <Text size={18}>{t('imKeyManager.your_imKey_manager')}</Text>
         <Spacer y={5} />
-        <Button shadow type="secondary" className="red-txt" onClick={connect} >
+        <Button shadow type="secondary" className="red-txt" onClick={connect}>
           {t('imKeyManager.use_now')}
         </Button>
-   
+
         <div
-      css={{
-        color: 'hotpink'
-      }}
-    />
+          css={{
+            color: 'hotpink',
+          }}
+        />
 
         <Text style={{ color: '#A8A8A8' }}>
           {t('imKeyManager.no_have_imKey_pro')}
         </Text>
-      </InnerWrapper>
-    </OutWrapper>
+      </div>
+    </div>
   );
 }
