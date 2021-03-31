@@ -12,8 +12,6 @@ contextBridge.exposeInMainWorld('imKeyManager', {
   accounts: () => {
     const res = ipcRenderer.sendSync('message-from-get-address')
     const allAccounts = res.result
-    console.log("allAccounts:")
-    console.log(allAccounts)
     const ethAccounts = allAccounts
       .filter((x) => x.chain === 'Ethereum')
       .map((x) => x.address)
@@ -23,12 +21,6 @@ contextBridge.exposeInMainWorld('imKeyManager', {
     const ethrpcUrl = allAccounts
         .filter((x) => x.chain === 'Ethereum')
         .map((x) => x.rpcUrl)
-    console.log("ethAccounts")
-    console.log(ethAccounts)
-    console.log("ethrpcUrl：")
-    console.log(ethrpcUrl)
-    console.log("ethchainId：")
-    console.log(ethchainId)
     return {
       accounts: ethAccounts,
       chainId: ethchainId[0],
