@@ -594,7 +594,7 @@ function createBrowserView (url, isClose) {
   //     });
   //   // }
   // });
-  // view.webContents.openDevTools()
+  view.webContents.openDevTools()
 
   view.webContents.on(
     'context-menu',
@@ -687,7 +687,7 @@ function createBrowserView (url, isClose) {
   // },5000)
 }
 // 缓存address
-let WalletAddress
+let WalletAddress = []
 function sendWindowMessage (targetWindow, message, payload) {
   if (typeof targetWindow === 'undefined') {
     console.log('Target window does not exist')
@@ -740,7 +740,7 @@ function renderDeviceManagerHandler () {
   ipcMain.on('openInSafari', (event, url) => {
     shell.openExternal(url)
   })
-  ipcMain.on('showMessageBoxSync', (event) => {
+  ipcMain.on('showMessageBoxSync', (event,data) => {
     let title
     let message
     let buttons
@@ -748,11 +748,11 @@ function renderDeviceManagerHandler () {
     console.log('locale:' + locale)
     if (locale !== 'zh-CN') {
       title: 'Tips'
-      message = 'Please confirm on imkey'
+      message = 'Please confirm on imkey'+'\n'+data
       buttons = ['OK', 'Cancel']
     } else {
       title = '提示'
-      message = '请在imkey上确认'
+      message = '请在imkey上确认'+'\n'+data
       buttons = ['确认', '取消']
     }
     const ret = dialog.showMessageBoxSync({
@@ -776,6 +776,17 @@ function renderDeviceManagerHandler () {
 
   // 获取address[]
   ipcMain.on('message-from-get-address', (event) => {
+    event.returnValue = WalletAddress
+  })
+  // 修改address[]
+  ipcMain.on('message-from-set-address', (event, args) => {
+
+      for (let i = 0; i < WalletAddress.result.length; i++) {
+        if (WalletAddress.result[i].chain === 'Ethereum') {
+          WalletAddress.result[i].chainId = args.chainId
+          WalletAddress.result[i].rpcUrl = args.rpcUrl
+        }
+      }
     event.returnValue = WalletAddress
   })
   // 读取文件
