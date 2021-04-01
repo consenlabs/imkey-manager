@@ -2,22 +2,18 @@
 import { jsx } from '@emotion/react';
 import React, { useState } from 'react';
 import { ipcRenderer } from 'electron';
-import './AppStart.css';
-import logo from '../../assets/images/imkey_logo.svg';
-import device from '../../assets/images/imkey_device.svg';
+import logo from '../../images/imkey_logo.svg';
+import device from '../../images/imkey_device.svg';
 import { useTranslation } from 'react-i18next';
-import { Button, Spacer, Text, Grid } from '@geist-ui/react';
+import ConnectingDialog from './ConnectingDialog';
+import { Button, Spacer, Text, Grid, useModal, Modal } from '@geist-ui/react';
 
 export default function DeviceConnection() {
   const { t, i18n } = useTranslation();
 
-  // Declare a new state variable, which we'll call "count"
-  function next(e) {}
+  const { visible, setVisible, bindings } = useModal();
 
-  function openUrl(e) {
-    ipcRenderer.send('openUrl', 'https://imkey.im/');
-  }
-
+  const dialog = <div></div>;
   return (
     <Grid.Container
       justify="center"
@@ -54,10 +50,10 @@ export default function DeviceConnection() {
                   fontSize: '14px',
                   lineHeight: '1.2em',
                   listStyleType: 'none',
-                  color: "#888",
+                  color: '#888',
                   '&:before': {
-                    content: '"*"'
-                  }
+                    content: '"*"',
+                  },
                 },
               }}
             >
@@ -68,10 +64,18 @@ export default function DeviceConnection() {
             </ul>
           </div>
         </div>
-        <Button shadow type="secondary" style={{ marginTop: '66px' }}>
+        <Button
+          shadow
+          type="secondary"
+          css={{ marginTop: '66px' }}
+          onClick={() => setVisible(true)}
+        >
           {t('imKeyManager.connect')}
         </Button>
       </Grid.Container>
+      <Modal style={{ borderRadius: '30px' }}>
+        <Modal.Content style={{ padding: '30px 36px' }}>{dialog}</Modal.Content>
+      </Modal>
     </Grid.Container>
   );
 }

@@ -2,8 +2,7 @@
 import { jsx } from '@emotion/react';
 import React, { useState } from 'react';
 import { ipcRenderer } from 'electron';
-import './AppStart.css';
-import logo from '../../assets/images/imkey_logo.svg';
+import logo from '../images/imkey_logo.svg';
 import { useTranslation } from 'react-i18next';
 import { Button, Spacer, Text } from '@geist-ui/react';
 import { useHistory } from 'react-router-dom';

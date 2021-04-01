@@ -1,10 +1,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
-import icon from '../assets/icon.svg';
+import icon from '../../assets/icon.svg';
 
 import './App.global.css';
-import AppStart from './components/AppStart';
-import DeviceConnection from './components/DeviceConnection';
+import AppStart from './screens/AppStart';
+import DeviceConnection from './screens/DeviceConnection';
 import { GeistProvider, CssBaseline } from '@geist-ui/react'
 
 
