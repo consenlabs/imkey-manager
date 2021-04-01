@@ -13,7 +13,7 @@ export default function DeviceConnection() {
 
   const { visible, setVisible, bindings } = useModal();
 
-  const dialog = <div></div>;
+  const dialog = <ConnectingDialog />;
   return (
     <Grid.Container
       justify="center"
@@ -73,8 +73,8 @@ export default function DeviceConnection() {
           {t('imKeyManager.connect')}
         </Button>
       </Grid.Container>
-      <Modal style={{ borderRadius: '30px' }}>
-        <Modal.Content style={{ padding: '30px 36px' }}>{dialog}</Modal.Content>
+      <Modal open>
+        <Modal.Content style={{ padding: '0 36px' }}>{dialog}</Modal.Content>
       </Modal>
     </Grid.Container>
   );
