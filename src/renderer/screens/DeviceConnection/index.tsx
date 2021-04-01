@@ -6,6 +6,9 @@ import logo from '../../images/imkey_logo.svg';
 import device from '../../images/imkey_device.svg';
 import { useTranslation } from 'react-i18next';
 import ConnectingDialog from './ConnectingDialog';
+import FirmwareUpdatingDialog from './FirmwareUpdatingDialog';
+import FirmwareNeedUpdateDialog from './FirmwareNeedUpdateDialog';
+import BindingCodeDialog from './BindingCodeDialog';
 import { Button, Spacer, Text, Grid, useModal, Modal } from '@geist-ui/react';
 
 export default function DeviceConnection() {
@@ -13,7 +16,7 @@ export default function DeviceConnection() {
 
   const { visible, setVisible, bindings } = useModal();
 
-  const dialog = <ConnectingDialog />;
+  const dialog = <BindingCodeDialog />;
   return (
     <Grid.Container
       justify="center"
@@ -73,7 +76,7 @@ export default function DeviceConnection() {
           {t('imKeyManager.connect')}
         </Button>
       </Grid.Container>
-      <Modal open>
+      <Modal open style={{width: "420px"}}>
         <Modal.Content style={{ padding: '0 36px' }}>{dialog}</Modal.Content>
       </Modal>
     </Grid.Container>
