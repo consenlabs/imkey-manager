@@ -276,18 +276,22 @@ export const DAPPS_Polkadot = [
 export const DAPPS_Config = {
   ETH: {
     chainId: 1,
-    rpcUrl: 'https://mainnet-eth.token.im'
+    rpcUrl: 'https://mainnet-eth.token.im',
+    symbol: 'ETH'
   },
   BSC: {
     chainId: 56,
-    rpcUrl: 'https://bsc-dataseed1.ninicoin.io'
+    rpcUrl: 'https://bsc-dataseed1.ninicoin.io',
+    symbol: 'BNB'
   },
   HECO: {
     chainId: 128,
-    rpcUrl: 'https://http-mainnet.Hecochain.com'
+    rpcUrl: 'https://http-mainnet.Hecochain.com',
+    symbol: 'HT'
   },
   Polkadot: {
     chainId: '',
-    rpcUrl: ''
+    rpcUrl: '',
+    symbol: ''
   }
 }

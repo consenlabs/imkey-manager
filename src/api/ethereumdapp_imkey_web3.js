@@ -10,24 +10,15 @@ const MAINNET_CHAIN_ID = 1
 
 contextBridge.exposeInMainWorld('imKeyManager', {
   accounts: () => {
-    const res = ipcRenderer.sendSync('message-from-get-address')
-    const allAccounts = res.result
-    const ethAccounts = allAccounts
-      .filter((x) => x.chain === 'Ethereum')
-      .map((x) => x.address)
-    const ethchainId = allAccounts
-      .filter((x) => x.chain === 'Ethereum')
-      .map((x) => x.chainId)
-    const ethrpcUrl = allAccounts
-      .filter((x) => x.chain === 'Ethereum')
-      .map((x) => x.rpcUrl)
+    let account = allAccounts.find((x) => x.chain === 'Ethereum')
     return {
-      accounts: ethAccounts,
-      chainId: ethchainId[0],
-      rpcUrl: ethrpcUrl[0],
+      accounts: [account.address],
+      chainId: account.chainId,
+      rpcUrl: account.rpcUrl,
       headers: {
         agent: 'ios:2.4.2:2'
-      }
+      },
+      symbol: account.symbol
     }
   },
   callNativeApi: async (data) => {
@@ -35,7 +26,7 @@ contextBridge.exposeInMainWorld('imKeyManager', {
     if (ret === 0) {
       return await ipcRenderer.sendSync('message-from-get-api', data)
     } else {
-
+      
     }
   }
 })

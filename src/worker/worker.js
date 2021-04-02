@@ -207,9 +207,9 @@ ipcRenderer.on('message-from-main', (event, arg) => {
               path: "m/44'/60'/0'/0/0"
             })
             if (!response.isSuccess) {
-              coinAddressArray.push({ chain: 'Ethereum', address: '', chainId: 1, rpcUrl: 'https://mainnet-eth.token.im' })
+              coinAddressArray.push({ chain: 'Ethereum', address: '', chainId: 1, rpcUrl: 'https://mainnet-eth.token.im', symbol:'ETH'})
             } else {
-              coinAddressArray.push({ chain: 'Ethereum', address: response.result.address, chainId: 1, rpcUrl: 'https://mainnet-eth.token.im' })
+              coinAddressArray.push({ chain: 'Ethereum', address: response.result.address, chainId: 1, rpcUrl: 'https://mainnet-eth.token.im', symbol:'ETH' })
             }
           }
           if (coinNameArr[i] === 'Polkadot') {
@@ -217,9 +217,9 @@ ipcRenderer.on('message-from-main', (event, arg) => {
               path: "m/44'/354'/0'/0'/0'"
             })
             if (!response.isSuccess) {
-              coinAddressArray.push({ chain: 'Polkadot', address: '', chainId: 'Polkadot', rpcUrl: '' })
+              coinAddressArray.push({ chain: 'Polkadot', address: '', chainId: 'Polkadot', rpcUrl: '', symbol:'' })
             } else {
-              coinAddressArray.push({ chain: 'Polkadot', address: response.result.address, chainId: 'Polkadot', rpcUrl: '' })
+              coinAddressArray.push({ chain: 'Polkadot', address: response.result.address, chainId: 'Polkadot', rpcUrl: '', symbol:''})
             }
           }
           if (coinNameArr[i] === 'Kusama') {
@@ -227,9 +227,9 @@ ipcRenderer.on('message-from-main', (event, arg) => {
               path: "m/44'/434'/0'/0'/0'"
             })
             if (!response.isSuccess) {
-              coinAddressArray.push({ chain: 'Kusama', address: '', chainId: 'Kusama', rpcUrl: '' })
+              coinAddressArray.push({ chain: 'Kusama', address: '', chainId: 'Kusama', rpcUrl: '', symbol:'' })
             } else {
-              coinAddressArray.push({ chain: 'Kusama', address: response.result.address, chainId: 'Kusama', rpcUrl: '' })
+              coinAddressArray.push({ chain: 'Kusama', address: response.result.address, chainId: 'Kusama', rpcUrl: '', symbol:'' })
             }
           }
         }

@@ -784,6 +784,7 @@ function renderDeviceManagerHandler () {
       if (WalletAddress.result[i].chain === 'Ethereum') {
         WalletAddress.result[i].chainId = args.chainId
         WalletAddress.result[i].rpcUrl = args.rpcUrl
+        WalletAddress.result[i].symbol = args.symbol
       }
     }
     event.returnValue = WalletAddress
