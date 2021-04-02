@@ -76,7 +76,7 @@ export default function DeviceConnection() {
           {t('imKeyManager.connect')}
         </Button>
       </Grid.Container>
-      <Modal open style={{width: "420px"}}>
+      <Modal style={{width: "420px"}} open>
         <Modal.Content style={{ padding: '0 36px' }}>{dialog}</Modal.Content>
       </Modal>
     </Grid.Container>
