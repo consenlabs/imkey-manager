@@ -28,7 +28,7 @@ export default function App() {
       <CssBaseline />
       <Router>
         <Switch>
-          <Route exact path="/" component={AppStart} />
+          <Route path="/" component={AppStart} />
           <Route exact path="/deviceConnection" component={DeviceConnection} />
           <WithNavRoutes exact path="/home" component={Home} />
         </Switch>
