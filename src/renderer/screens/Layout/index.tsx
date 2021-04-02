@@ -58,9 +58,6 @@ export default function Layout(props: any) {
                 ':hover  svg, .selected svg': {
                   color: '#2979fe !important',
                 },
-                ':before': {
-                  content: '""',
-                },
                 '&.selected': {
                   backgroundColor: '#ebf0fd',
                 },
@@ -106,7 +103,7 @@ export default function Layout(props: any) {
           height: '100%',
         }}
       >
-       {props.children}
+        {props.children}
       </Grid.Container>
     </Grid.Container>
   );
