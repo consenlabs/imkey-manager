@@ -87,6 +87,7 @@ export default function BindingCodeDialog() {
           return (
             <input
               type="text"
+              key={index}
               ref={refInput}
               onKeyUp={(e) => keyUpHandler(e, index)}
               maxLength={1}

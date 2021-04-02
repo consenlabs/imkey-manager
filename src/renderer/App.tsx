@@ -5,6 +5,7 @@ import icon from '../../assets/icon.svg';
 import './App.global.css';
 import AppStart from './screens/AppStart';
 import DeviceConnection from './screens/DeviceConnection';
+import Home from './screens/Home';
 import { GeistProvider, CssBaseline } from '@geist-ui/react'
 
 
@@ -52,6 +53,7 @@ export default function App() {
     <Router>
       <Switch>
         <Route path="/deviceConnection" component={DeviceConnection} />
+        <Route path="/home" component={Home} />
         <Route path="/" component={AppStart} />
       </Switch>
     </Router>
