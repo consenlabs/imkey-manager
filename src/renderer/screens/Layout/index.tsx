@@ -9,12 +9,18 @@ import SettingIcon from '../../images/icon_setting.svg';
 import { useTranslation } from 'react-i18next';
 import { Button, Grid, Spacer, Text } from '@geist-ui/react';
 import { useHistory } from 'react-router-dom';
-import { Home as HomeIcon, Globe, Settings, Box } from '@geist-ui/react-icons';
+import { Home as HomeIcon, Globe, Settings, Box, DollarSign } from '@geist-ui/react-icons';
 
 export default function Layout(props: any) {
   const { t, i18n } = useTranslation();
-  const [selected, select] = useState<string>('home');
   let history = useHistory();
+  let selected = history.location.pathname.replace('/', '');
+  // const [selected, select] = useState<string>(props.selectedTab);
+  
+  function select(path: string) {
+    history.replace("/" + path);
+  }
+  
 
   return (
     <Grid.Container
@@ -26,10 +32,11 @@ export default function Layout(props: any) {
         style={{
           height: '100%',
           boxShadow: '3px 0px 20px rgba(0, 0, 0, 0.06)',
+          width: '240px'
         }}
         alignItems="flex-start"
         alignContent="flex-start"
-        xs={5}
+        
       >
         <Grid.Container direction="row" justify="center" alignItems="center">
           <Spacer y={5} x={0} />
@@ -60,6 +67,9 @@ export default function Layout(props: any) {
                 },
                 '&.selected': {
                   backgroundColor: '#ebf0fd',
+                  'svg': {
+                    color: '#2979fe !important',
+                  },
                 },
                 '& svg': {
                   marginRight: '16px',
@@ -72,6 +82,12 @@ export default function Layout(props: any) {
               onClick={() => select('home')}
             >
               <HomeIcon /> {t('imKeyManager.home')}
+            </li>
+            <li
+              className={selected === 'accounts' ? 'selected' : ''}
+              onClick={() => select('accounts')}
+            >
+              <DollarSign /> 钱包
             </li>
             <li
               className={selected === 'management' ? 'selected' : ''}
@@ -94,17 +110,14 @@ export default function Layout(props: any) {
           </ul>
         </Grid.Container>
       </Grid.Container>
-      <Grid.Container
-        justify="center"
-        alignItems="center"
-        alignContent="center"
-        xs
-        css={{
+      <div
+        style={{
           height: '100%',
+          width: 'calc(100% - 240px)'
         }}
       >
         {props.children}
-      </Grid.Container>
+      </div>
     </Grid.Container>
   );
 }
