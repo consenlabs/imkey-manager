@@ -53,11 +53,11 @@
                         <p>{{$t('m.imKeyManager.tokenlon_info')}}</p>
                     </div>
                 </a>
-                <div class="dbox" >
+                <!-- <div class="dbox" >
                         <span class="leftLine">——</span>
                         <span class="comingsoon">{{$t('m.imKeyManager.coming_soon')}}</span>
                         <span class="rightLine">——</span>
-                </div>
+                </div> -->
         </div>
         </div>
 </template>
