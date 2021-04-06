@@ -290,7 +290,7 @@ export const m = {
     Alpaca_Finance_desc: '基于 Binance Smart Chain 的杠杆式收益挖矿协议',
     Goose_Finance_desc: 'Binance Smart Chain 上第一个删除迁移器代码的收益挖矿项目',
     MDEX_desc: '融合多种基础公链的差异化优势，打造高性能复合型 DEX 生态',
-    BXH_desc: 'DEX 创新交易平台，是⼀个社区⾃治、⾃动做 市(AMM)的去中⼼化交易所',
+    BXH_desc: 'DEX 创新交易平台，是⼀个社区⾃治、⾃动做 市（AMM）的去中⼼化交易所',
     CoinWind_desc: 'DeFi 智能挖矿金融平台',
     Lendhub_desc: '基于火币生态链的去中心化借贷平台',
     FilDA_desc: '全球首个基于 HECO 的跨链借贷 DeFi 项目',
