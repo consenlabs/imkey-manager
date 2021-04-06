@@ -24,7 +24,8 @@ contextBridge.exposeInMainWorld('imKeyManager', {
     }
   },
   callNativeApi: async (data) => {
-    const ret = ipcRenderer.sendSync('showMessageBoxSync', JSON.stringify(data))
+    // const ret = ipcRenderer.sendSync('showMessageBoxSync', JSON.stringify(data))
+    const ret = ipcRenderer.sendSync('showMessageBoxSync', '')
     if (ret === 0) {
       return await ipcRenderer.sendSync('message-from-get-api', data)
     } else {
