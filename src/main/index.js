@@ -144,6 +144,19 @@ function createMainWindow () {
   mainWindow.loadURL(winURL)
   mainWindow.once('ready-to-show', () => {
     mainWindow.show()
+    if (process.platform === 'darwin') {
+      const contents = mainWindow.webContents
+      const localShortcut = require('electron-localshortcut')
+      localShortcut.register(mainWindow, 'CommandOrControl+A', () => {
+        contents.selectAll()
+      })
+      localShortcut.register(mainWindow, 'CommandOrControl+C', () => {
+        contents.copy()
+      })
+      localShortcut.register(mainWindow, 'CommandOrControl+V', () => {
+        contents.paste()
+      })
+    }
     // 启动http server
     sendWindowMessage(workerWindow, 'start-http-server', '')
     app.locale = app.getLocale()
@@ -650,6 +663,7 @@ function createBrowserView (url, isClose) {
 
   view.webContents.on('did-finish-load', (event, input) => {
     mainWindow.webContents.send('loading-status', false)
+    view.setBackgroundColor("white")
   })
 
   view.webContents.on('render-process-gone', (event, details) => {

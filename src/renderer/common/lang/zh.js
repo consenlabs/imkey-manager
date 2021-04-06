@@ -299,7 +299,11 @@ export const m = {
     HFI_one_desc: '基于 Heco 生态链的去中心化聚合挖矿平台',
     Pippi_Shrimp_Swap_desc: '基于火币智能链（Heco）的去中心化交易平台',
     HashBridge_desc: '提供一整套完善的数据服务方案',
-    JulSwap_desc: '提供与 Uniswap 相同的交易引擎和分析功能，以及Sushiswap的一些其他功能'
+    JulSwap_desc: '币安智能链上的AMM',
+    Etherscan_desc: '以太坊交易浏览器',
+    OpenSea_desc: '全球知名加密收藏品交易平台',
+    Nifty_Gateway_desc: '独一无二的NFT 交易管理平台',
+    SuperRare_desc: '收集超级珍稀（Super Rare）的数字艺术品'
   },
   imKeyCoreErrorInfo: {
     decoding_failed: '解析失败',

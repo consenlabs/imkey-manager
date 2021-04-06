@@ -72,12 +72,44 @@ export const DAPPS_ETH = [
   //   desc: 'm.dapp.zksync_desc'
   // },
   {
-    id: 10,
+    id: 9,
     urlType: 'ZKSwap',
     url: 'https://zks.app/zh/wallet',
     title: 'ZKSwap',
     iconUrl: 'https://zks.app/favicon.ico',
     desc: 'm.dapp.zkswap_desc'
+  },
+  {
+    id: 10,
+    urlType: 'Etherscan',
+    url: 'https://cn.etherscan.com',
+    title: 'Etherscan',
+    iconUrl: 'https://aws-v2-cdn.token.im/app-production/dapps/app_icons/276/etherscanDapp_3x.png',
+    desc: 'm.dapp.Etherscan_desc'
+  },
+  {
+    id: 11,
+    urlType: 'OpenSea',
+    url: 'https://opensea.io/?ref=0xb9e29984fe50602e7a619662ebed4f90d93824c7"',
+    title: 'OpenSea',
+    iconUrl: 'https://aws-v2-cdn.token.im/app-production/dapps/app_icons/78/OpenSea_2_162-162.png',
+    desc: 'm.dapp.OpenSea_desc'
+  },
+  {
+    id: 12,
+    urlType: 'Nifty Gateway',
+    url: 'https://niftygateway.com/',
+    title: 'Nifty Gateway',
+    iconUrl: 'https://aws-v2-cdn.token.im/app-production/dapps/app_icons/382/nifty.jpg',
+    desc: 'm.dapp.Nifty_Gateway_desc'
+  },
+  {
+    id: 13,
+    urlType: 'SuperRare',
+    url: 'https://superrare.co/',
+    title: 'SuperRare',
+    iconUrl: 'https://aws-v2-cdn.token.im/app-production/dapps/app_icons/293/SuperRare126.jpg',
+    desc: 'm.dapp.SuperRare_desc'
   }
 
 ]
@@ -165,9 +197,9 @@ export const DAPPS_BSC = [
   {
     id: 10,
     urlType: 'JulSwap',
-    url: 'https://julswap.com/',
+    url: 'https://julswap.com/#/swap',
     title: 'JulSwap',
-    iconUrl: 'https://www.defibox.com/media/20210308123559-2b91429b0cb9.png',
+    iconUrl: 'https://aws-v2-cdn.token.im/app-production/dapps/app_icons/416/julswap.jpg',
     desc: 'm.dapp.JulSwap_desc'
   }
 ]
