@@ -364,15 +364,15 @@ export default {
       this.DAppUrl = item.value
     },
     selectChangeChainType (value) {
-      this.DAppUrl=this.state
+      this.DAppUrl = this.state
       this.getDApps(value)
       this.serchOpenUrl(this.DAppUrl)
     },
-    selectCloseBrowserView(){
+    selectCloseBrowserView () {
       ipcRenderer.send('openBrowserView', 'url', true)
     },
     handleClick (tab) {
-      this.state=''
+      this.state = ''
       this.changeChain(tab.label)
       this.getDApps(tab.label)
     },
@@ -439,7 +439,7 @@ export default {
       this.status = 1
     },
     openUrl (urlType, url, title, iconUrl) {
-      this.state=url
+      this.state = url
       if (urlType === 'PolkadotJS') {
         // 判断是否有dot地址没有提示下载应用
         let addressKSM
@@ -492,9 +492,9 @@ export default {
       this.changeStyle('none', '.el-autocomplete-suggestion')
 
       if (url !== '') {
-        if(url.indexOf('https://') === -1){
-          url = "https://"+url
-          this.state=url
+        if (url.indexOf('https://') === -1) {
+          url = 'https://' + url
+          this.state = url
         }
         this.isLoading = true
         ipcRenderer.send('openBrowserView', url, false)

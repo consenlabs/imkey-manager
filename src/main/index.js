@@ -663,7 +663,7 @@ function createBrowserView (url, isClose) {
 
   view.webContents.on('did-finish-load', (event, input) => {
     mainWindow.webContents.send('loading-status', false)
-    view.setBackgroundColor("white")
+    view.setBackgroundColor('white')
   })
 
   view.webContents.on('render-process-gone', (event, details) => {
