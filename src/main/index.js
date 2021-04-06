@@ -156,18 +156,6 @@ function createMainWindow () {
       localShortcut.register(mainWindow, 'CommandOrControl+V', () => {
         contents.paste()
       })
-    } else {
-      const contents = mainWindow.webContents
-      const localShortcut = require('electron-localshortcut')
-      localShortcut.register(mainWindow, 'Ctrl+A', () => {
-        contents.selectAll()
-      })
-      localShortcut.register(mainWindow, 'Ctrl+C', () => {
-        contents.copy()
-      })
-      localShortcut.register(mainWindow, 'Ctrl+V', () => {
-        contents.paste()
-      })
     }
     // 启动http server
     sendWindowMessage(workerWindow, 'start-http-server', '')
@@ -675,6 +663,7 @@ function createBrowserView (url, isClose) {
 
   view.webContents.on('did-finish-load', (event, input) => {
     mainWindow.webContents.send('loading-status', false)
+    view.setBackgroundColor("white")
   })
 
   view.webContents.on('render-process-gone', (event, details) => {

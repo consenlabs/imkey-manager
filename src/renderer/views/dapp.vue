@@ -241,7 +241,7 @@
         >
         </el-autocomplete>
 
-      <el-select v-model="value" placeholder="请选择" @change="selectChangeChainType">
+      <el-select v-model="value" placeholder="请选择" @click.native="selectCloseBrowserView" @change="selectChangeChainType">
         <el-option
             v-for="item in options"
             :key="item.value"
@@ -286,7 +286,6 @@
 import { ipcRenderer } from 'electron'
 import { DAPPS_ETH, DAPPS_BSC, DAPPS_HECO, DAPPS_Polkadot, DAPPS_Config } from '../store/dapps'
 import { urls } from '../store/url'
-const clipboard = require('electron').clipboard
 const { dialog } = require('electron').remote
 let url
 
@@ -365,8 +364,12 @@ export default {
       this.DAppUrl = item.value
     },
     selectChangeChainType (value) {
+      this.DAppUrl=this.state
       this.getDApps(value)
       this.serchOpenUrl(this.DAppUrl)
+    },
+    selectCloseBrowserView(){
+      ipcRenderer.send('openBrowserView', 'url', true)
     },
     handleClick (tab) {
       this.state=''
