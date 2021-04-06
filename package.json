@@ -114,6 +114,7 @@
     "decimal.js": "^10.2.1",
     "dotenv": "^8.2.0",
     "electron-updater": "^4.3.8",
+    "electron-localshortcut": "^3.2.1",
     "element-ui": "^2.15.1",
     "express": "^4.17.1",
     "ffi-napi": "^4.0.3",

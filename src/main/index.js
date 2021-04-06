@@ -144,6 +144,31 @@ function createMainWindow () {
   mainWindow.loadURL(winURL)
   mainWindow.once('ready-to-show', () => {
     mainWindow.show()
+    if (process.platform === 'darwin') {
+      const contents = mainWindow.webContents
+      const localShortcut = require('electron-localshortcut')
+      localShortcut.register(mainWindow, 'CommandOrControl+A', () => {
+        contents.selectAll()
+      })
+      localShortcut.register(mainWindow, 'CommandOrControl+C', () => {
+        contents.copy()
+      })
+      localShortcut.register(mainWindow, 'CommandOrControl+V', () => {
+        contents.paste()
+      })
+    } else {
+      const contents = mainWindow.webContents
+      const localShortcut = require('electron-localshortcut')
+      localShortcut.register(mainWindow, 'Ctrl+A', () => {
+        contents.selectAll()
+      })
+      localShortcut.register(mainWindow, 'Ctrl+C', () => {
+        contents.copy()
+      })
+      localShortcut.register(mainWindow, 'Ctrl+V', () => {
+        contents.paste()
+      })
+    }
     // 启动http server
     sendWindowMessage(workerWindow, 'start-http-server', '')
     app.locale = app.getLocale()

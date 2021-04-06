@@ -227,61 +227,30 @@
           />
         </svg>
       </div>
-
-      <div class="right-tools" v-if="showRightTools">
-        <span v-if="isLoading" class="fas fa-circle-notch fa-spin" style="margin-left: 19px"></span>
-        <img
-          v-else="isLoading"
-          style="width: 24px; height: 24px; margin-left: 19px"
-          v-bind:src="iconUrl"
-        />
-        <p>{{ title }}</p>
-
-        <svg
-          style="margin-left: 15px"
-          width="1"
-          height="21"
-          viewBox="0 0 1 21"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
+      <div class="searchBox">
+        <el-autocomplete
+            :popper-append-to-body="false"
+            v-model="state"
+            :fetch-suggestions="querySearchAsync"
+            :trigger-on-focus="true"
+            placeholder="请输入DApp网址"
+            @keyup.enter.native="serchOpenUrl(DAppUrl)"
+            @select="handleSelect"
+            @input="changeStyle('block', '.el-autocomplete-suggestion')"
+            @keyup="changeStyle('block', '.el-autocomplete-suggestion')"
         >
-          <line
-            x1="0.5"
-            y1="2.18557e-08"
-            x2="0.499999"
-            y2="21"
-            stroke="#EAECF6"
-          />
-        </svg>
+        </el-autocomplete>
 
-        <svg
-          class="tool"
-          @click="closeDapp"
-          style="margin-left: 25px"
-          width="14"
-          height="14"
-          viewBox="0 0 14 14"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M10.5 3.5L3.5 10.5"
-            stroke="#9598AB"
-            stroke-width="0.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-          <path
-            d="M3.5 3.5L10.5 10.5"
-            stroke="#9598AB"
-            stroke-width="0.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
+      <el-select v-model="value" placeholder="请选择" @change="selectChangeChainType">
+        <el-option
+            v-for="item in options"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value">
+        </el-option>
+      </el-select>
       </div>
     </div>
-    <!-- </div> -->
     <div style="background: #eaecf6; height: 1px"></div>
     <el-tabs v-model="activeName" type="card" @tab-click="handleClick">
       <el-tab-pane label="ETH" name="ETH"></el-tab-pane>
@@ -316,6 +285,8 @@
 <script>
 import { ipcRenderer } from 'electron'
 import { DAPPS_ETH, DAPPS_BSC, DAPPS_HECO, DAPPS_Polkadot, DAPPS_Config } from '../store/dapps'
+import { urls } from '../store/url'
+const clipboard = require('electron').clipboard
 const { dialog } = require('electron').remote
 let url
 
@@ -326,49 +297,112 @@ export default {
       status: 0, // 0显示 1不显示
       name: this.$t('m.setting.info'),
       viewInfo: '正在访问你的地址请确认,注意财产安全',
-      showToolBar: false,
+      showToolBar: true,
       iconUrl: '',
       title: '',
       showRightTools: true,
       isLoading: false,
-      activeName: 'ETH'
+      activeName: 'ETH',
+      options: [{
+        value: 'ETH',
+        label: 'ETH'
+      }, {
+        value: 'BSC',
+        label: 'BSC'
+      }, {
+        value: 'HECO',
+        label: 'HECO'
+      }, {
+        value: 'Polkadot',
+        label: 'Polkadot'
+      }],
+      value: 'ETH',
+      DAppUrl: '',
+      DAppUrls: [],
+      state: '',
+      timeout: null
     }
   },
   mounted: function () {
-    this.getDApps()
+    this.DAppUrls = this.loadAll()
+    this.getDApps('ETH')
     ipcRenderer.on('loading-status', (event, isLoading) => {
       this.isLoading = isLoading
     })
   },
   methods: {
-    handleClick (tab, event) {
-      console.log(tab, event)
-      this.getDApps(tab)
+    // 根据传进来的状态改变建议输入框的状态（展开|隐藏）
+    changeStyle (status, className) {
+      const dom = document.querySelectorAll(className)
+      dom[0].style.display = status
     },
-    getDApps (tab) {
+    loadAll () {
+      const urlArr = []
+      for (let i = 0; i < urls.result.length; i++) {
+        for (let y = 0; y < urls.result[i].dapps.length; y++) {
+          urlArr.push({ value: urls.result[i].dapps[y].url })
+        }
+      }
+      return urlArr
+    },
+    querySearchAsync (queryString, cb) {
+      ipcRenderer.send('openBrowserView', 'url', true)
+      this.DAppUrl = queryString
+      const DAppUrls = this.DAppUrls
+      const results = queryString ? DAppUrls.filter(this.createStateFilter(queryString)) : DAppUrls
+
+      clearTimeout(this.timeout)
+      this.timeout = setTimeout(() => {
+        cb(results)
+      }, 30 * Math.random())
+    },
+    createStateFilter (queryString) {
+      return (state) => {
+        return (state.value.toLowerCase().search(queryString.toLowerCase()) !== -1)
+      }
+    },
+    handleSelect (item) {
+      this.DAppUrl = item.value
+    },
+    selectChangeChainType (value) {
+      this.getDApps(value)
+      this.serchOpenUrl(this.DAppUrl)
+    },
+    handleClick (tab) {
+      this.state=''
+      this.changeChain(tab.label)
+      this.getDApps(tab.label)
+    },
+    changeChain (label) {
+      if (label === 'ETH') {
+        this.value = label
+      }
+      if (label === 'HECO') {
+        this.value = label
+      }
+      if (label === 'BSC') {
+        this.value = label
+      }
+      if (label === 'Polkadot') {
+        this.value = label
+      }
+    },
+    getDApps (label) {
       let res
-      if (tab === 'ETH') {
+      if (label === 'ETH') {
         res = ipcRenderer.sendSync('message-from-set-address', DAPPS_Config.ETH)
-        console.log('res:' + res)
-        console.log(res)
         return DAPPS_ETH
       }
-      if (tab === 'BSC') {
+      if (label === 'BSC') {
         res = ipcRenderer.sendSync('message-from-set-address', DAPPS_Config.BSC)
-        console.log('res:' + res)
-        console.log(res)
         return DAPPS_BSC
       }
-      if (tab === 'HECO') {
+      if (label === 'HECO') {
         res = ipcRenderer.sendSync('message-from-set-address', DAPPS_Config.HECO)
-        console.log('res:' + res)
-        console.log(res)
         return DAPPS_HECO
       }
-      if (tab === 'Polkadot') {
+      if (label === 'Polkadot') {
         res = ipcRenderer.sendSync('message-from-set-address', DAPPS_Config.Polkadot)
-        console.log('res:' + res)
-        console.log(res)
         return DAPPS_Polkadot
       }
     },
@@ -402,6 +436,7 @@ export default {
       this.status = 1
     },
     openUrl (urlType, url, title, iconUrl) {
+      this.state=url
       if (urlType === 'PolkadotJS') {
         // 判断是否有dot地址没有提示下载应用
         let addressKSM
@@ -450,13 +485,27 @@ export default {
       this.showToolBar = true
       this.showRightTools = true
     },
+    serchOpenUrl (url) {
+      this.changeStyle('none', '.el-autocomplete-suggestion')
+
+      if (url !== '') {
+        if(url.indexOf('https://') === -1){
+          url = "https://"+url
+          this.state=url
+        }
+        this.isLoading = true
+        ipcRenderer.send('openBrowserView', url, false)
+        this.showToolBar = true
+        this.showRightTools = true
+      }
+    },
     closeDapp () {
       ipcRenderer.send('openBrowserView', 'close', true)
       this.showRightTools = false
     },
     showDapps () {
       ipcRenderer.send('openBrowserView', 'close', true)
-      this.showToolBar = false
+      this.showToolBar = true
     },
     goForward () {
       ipcRenderer.send('goForward')
@@ -481,7 +530,12 @@ export default {
 </script>
 
 <style scoped>
-
+/deep/ .el-autocomplete-suggestion{
+  width: 490px!important;
+}
+/deep/ .el-autocomplete{
+  width: 490px!important;
+}
 .tip {
   width: 100%;
   height: 100%;
@@ -623,6 +677,54 @@ export default {
   /* Secondary text */
   color: #43454f;
 }
+.searchBox {
+  display: flex;
+  align-items: center;
+  width: calc(100vw - 10px);
+  /*margin-right:300px;*/
+  /*margin-top: 15px;*/
+}
+.searchBox i {
+  position: absolute;
+  left: 16px;
+  top: 9px;
+}
+.searchBox input {
+  border: none;
+  width: 400px;
+  height: 40px;
+  box-shadow: 0px 0px 6px rgba(0, 0, 0, 0.1);
+  /*border-radius: 147px;*/
+  padding-left: 38px;
+  font-family: PingFang SC;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 13px;
+  line-height: 18px;
+  display: flex;
+  align-items: center;
+  color: #c8cad0;
+}
+.selectBox{
+  display: flex;
+  align-items: center;
+}
+.buttondiv button {
+  width: 100px;
+  height: 40px;
+  background: #2E3035;
+  border-radius: 44px;
+  color: #fff;
+  margin-top: 10px;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
+}
+/*.el-select{*/
+/*  border-radius: 147px;*/
+/*  font-family: PingFang SC;*/
+/*  color: #C8CAD0;*/
+/*}*/
 .container {
   padding-left: 38px;
   font-family: PingFang SC;
