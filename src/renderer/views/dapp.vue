@@ -260,7 +260,7 @@
     </el-tabs>
     <div v-loading="isLoading" element-loading-background="white" class="container">
 <!--    d0d9dd  <h2>{{ $t("m.dapp.newest_launched") }}</h2>-->
-      <el-scrollbar style="height:650px;" :wrapStyle="[{'overflow-x':'hidden'}]">
+      <el-scrollbar style="height:590px;" :wrapStyle="[{'overflow-x':'hidden'}]">
       <div v-for="item in getDApps(activeName)" :key="item.id" class="appBox">
             <a class="dapp" @click="openUrl(item.urlType,item.url,item.title,item.iconUrl)">
               <img :src="item.iconUrl"  />
