@@ -122,7 +122,7 @@
 </template>
 
 <script>
-import constants from '../../common/constants'
+import constants from '../../config/constants'
 
 export default {
   name: 'manager',

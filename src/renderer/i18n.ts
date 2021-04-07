@@ -466,13 +466,13 @@ i18n
             use_now: '立刻使用',
             no_have_imKey_pro: '还未拥有 imKey Pro ?',
             use_imKey_connected: '使用 imKey Pro 完成连接',
-            use_imKey_connect_computer: '1. 使用 USB 将 imKey Pro 连接至电脑',
-            click_connect_button: '2. 点击「连接」按钮',
-            enter_pin_on_imKey: '3. 在 imKey Pro 中输入 PIN 码',
+            use_imKey_connect_computer: '使用 USB 将 imKey Pro 连接至电脑',
+            click_connect_button: '点击「连接」按钮',
+            enter_pin_on_imKey: '在 imKey Pro 中输入 PIN 码',
             if_no_set_pin_can_jump_step3:
-              '* 如果你尚未在 imKey Pro 中设置 PIN 码，可以跳过第 3 步',
+              '如果你尚未在 imKey Pro 中设置 PIN 码，可以跳过第 3 步',
             if_bind_device_disconnect_bluetooth:
-              '* 请确保当前处于imKey Pro首页，并断开蓝牙连接',
+              '请确保当前处于imKey Pro首页，并断开蓝牙连接',
             connect: '连接',
             imKey_connecting_wait: 'imKey 连接中，请耐心等待',
             check_firmware_version_update: '检查固件版本升级',

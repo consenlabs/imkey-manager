@@ -11,7 +11,7 @@ const filecoinPb = require('../proto/filecoin_pb')
 const tronPb = require('../proto/tron_pb')
 const substratePb = require('../proto/substrate_pb')
 const callImKeyCore = require('./callimkeycore')
-const constants = require('../common/constants')
+const constants = require('../config/constants')
 
 function btcSignTransactionCallImKeyApi (json) {
   let utxos = []

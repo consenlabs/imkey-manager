@@ -231,7 +231,7 @@
 
 <script>
 import { ipcRenderer } from 'electron'
-import constants from '../../common/constants'
+import constants from '../../config/constants'
 const copy = require('copy-to-clipboard')
 const packagejson = require('../../../package.json')
 const isOnline = require('is-online')

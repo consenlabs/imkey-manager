@@ -1,5 +1,5 @@
 const walletApi = require('./walletapi')
-const constants = require('../common/constants')
+const constants = require('../config/constants')
 const deviceManger = require('./devicemanagerapi')
 
 export function api (reqJson) {

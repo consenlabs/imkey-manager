@@ -9,8 +9,9 @@ if (
   Object.keys(dependencies || {}).length > 0 &&
   fs.existsSync(nodeModulesPath)
 ) {
+  // fixme: https://github.com/electron-react-boilerplate/electron-react-boilerplate/issues/2588
   const electronRebuildCmd =
-    '../node_modules/.bin/electron-rebuild --parallel --force --types prod,dev,optional --module-dir .';
+    '../node_modules/.bin/electron-rebuild --sequential --force --types prod,dev,optional --module-dir .';
   const cmd =
     process.platform === 'win32'
       ? electronRebuildCmd.replace(/\//g, '\\')

@@ -14,7 +14,7 @@ export default function AppStart() {
   // Declare a new state variable, which we'll call "count"
   function connect() {
     // history.replace('/deviceConnection');
-    history.replace('/home');
+    history.replace('/deviceConnection');
   }
 
   function openUrl(e) {

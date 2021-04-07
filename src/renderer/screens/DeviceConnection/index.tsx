@@ -1,7 +1,8 @@
 /** @jsx jsx */
 import { jsx } from '@emotion/react';
 import React, { useState } from 'react';
-import { ipcRenderer } from 'electron';
+// import { ipcRenderer } from 'electron';
+import { apiIpc } from '../../../api/apiIpc';
 import logo from '../../images/imkey_logo.svg';
 import device from '../../images/imkey_device.svg';
 import { useTranslation } from 'react-i18next';
@@ -15,6 +16,35 @@ export default function DeviceConnection() {
   const { t, i18n } = useTranslation();
 
   const { visible, setVisible, bindings } = useModal();
+
+  const connectHandler = () => {
+    apiIpc.send('connectDevice');
+    apiIpc.on('connectDevice', (result) => {
+      const response = result.result;
+      //   if (result.isSuccess) {
+      //     if (response === constants.RESULT_STATUS_SUCCESS) {
+      //       this.changeState(3)
+      //       this.checkIsBL()
+      //     } else {
+      //       this.errorInfo = response
+      //       this.changeState(4)
+      //       // 连接失败
+      //       this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '连接设备失败：' + response })
+      //     }
+      //   } else {
+      //     this.errorInfo = response
+      //     this.changeState(4)
+      //     // 连接失败
+      //     this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '连接设备失败：' + response })
+      //   }
+      // })
+      // // setTimeout(() => {
+      // if (this.status === 1) {
+      //   this.changeState(8)
+      // }
+      console.log('connect response: ', JSON.stringify(result.result));
+    });
+  };
 
   const dialog = <BindingCodeDialog />;
   return (
@@ -71,12 +101,12 @@ export default function DeviceConnection() {
           shadow
           type="secondary"
           css={{ marginTop: '66px' }}
-          onClick={() => setVisible(true)}
+          onClick={connectHandler}
         >
           {t('imKeyManager.connect')}
         </Button>
       </Grid.Container>
-      <Modal style={{width: "420px"}} open>
+      <Modal style={{ width: '420px' }}>
         <Modal.Content style={{ padding: '0 36px' }}>{dialog}</Modal.Content>
       </Modal>
     </Grid.Container>

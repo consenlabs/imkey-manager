@@ -258,7 +258,7 @@
 <script>
 
 import { ipcRenderer } from 'electron'
-import constants from '../../common/constants'
+import constants from '../../config/constants'
 
 export default {
   name: 'imKeySetting',
