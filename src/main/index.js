@@ -1,47 +1,83 @@
-import { app, BrowserWindow, ipcMain, Menu, shell, Tray, dialog, crashReporter, webFrame } from 'electron'
+import {
+  app,
+  BrowserWindow,
+  BrowserView,
+  ipcMain,
+  Menu,
+  shell,
+  Tray,
+  dialog,
+  crashReporter
+} from 'electron'
 // 自动更新相关
 import { autoUpdater } from 'electron-updater'
 // 崩溃报告
 import * as Sentry from '@sentry/electron'
+// import ImKeyProvider from '@imkey/web3-provider'
 // test.json
 import pkg from '../../package.json'
 import SensorsAnalytics from 'sa-sdk-node'
-const url = 'https://imtoken.datasink.sensorsdata.cn/sa?project=production&token=27d69b3e7fd25949'
+const fs = require('fs')
+const url =
+  'https://imtoken.datasink.sensorsdata.cn/sa?project=production&token=27d69b3e7fd25949'
 const sa = new SensorsAnalytics()
 const distinctId = 'imkey-manager'
 let envPath
 if (process.platform === 'win32') {
   if (process.env.NODE_ENV === 'production') {
-    envPath = require('path').resolve(__dirname, 'key.env').replace('\\resources\\app.asar\\dist\\electron', '')
+    envPath = require('path')
+      .resolve(__dirname, 'key.env')
+      .replace('\\resources\\app.asar\\dist\\electron', '')
   } else {
     envPath = require('path').resolve('key.env')
   }
 } else if (process.platform === 'darwin') {
   if (process.env.NODE_ENV === 'production') {
-    envPath = require('path').resolve(__dirname, 'key.env').replace('/app.asar/dist/electron', '')
+    envPath = require('path')
+      .resolve(__dirname, 'key.env')
+      .replace('/app.asar/dist/electron', '')
   } else {
     envPath = require('path').resolve('key.env')
   }
 } else {
-
+  console.log('none')
 }
 require('dotenv').config({ path: envPath })
-
+app.apirouter = require('../api/apirouter')
+app.devicemanagerapi = require('../api/devicemanagerapi')
+app.walletapi = require('../api/walletapi')
+app.web3 = require('web3')
 /**
  * Set `__static` path to static files in production
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
  */
 if (process.env.NODE_ENV !== 'development') {
-  global.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
+  global.__static = require('path')
+    .join(__dirname, '/static')
+    .replace(/\\/g, '\\\\')
 }
 
 let mainWindow, workerWindow
-const winURL = process.env.NODE_ENV === 'development'
-  ? 'http://localhost:9080'
-  : `file://${__dirname}/index.html`
-const workerURL = process.env.NODE_ENV === 'development'
-  ? 'worker.html'
-  : `file://${__dirname}/worker.html`
+const polkadotdappURL =
+  process.env.NODE_ENV === 'development'
+    ? require('path').resolve(__dirname, '../api/polkadotdapp.js')
+    : require('path').resolve(__dirname, 'polkadotdapp.js')
+const ethereumdappURL =
+  process.env.NODE_ENV === 'development'
+    ? require('path').resolve(__dirname, '../api/ethereumdapp_imkey_web3.js')
+    : require('path').resolve(__dirname, 'ethereumdapp_imkey_web3.js')
+const winURL =
+  process.env.NODE_ENV === 'development'
+    ? 'http://localhost:9080'
+    : `file://${__dirname}/index.html`
+const workerURL =
+  process.env.NODE_ENV === 'development'
+    ? 'worker.html'
+    : `file://${__dirname}/worker.html`
+const loadFailPagePath =
+  process.env.NODE_ENV === 'development'
+    ? require('path').resolve(__dirname, '../api/loadFail.html')
+    : require('path').resolve(__dirname, 'loadFail.html')
 // const path = require('path')
 const ApplicationName = pkg.name
 // 托盘对象
@@ -66,16 +102,16 @@ if (process.platform === 'win32') {
 function createWorkerWindow () {
   workerWindow = new BrowserWindow({
     show: false,
-    webPreferences: { nodeIntegration: true }
+    webPreferences: { nodeIntegration: true, enableRemoteModule: true }
   })
   workerWindow.on('closed', () => {
     console.log('background window closed')
     sa.track(distinctId, 'im_app$end', { name: 'appEnd' })
   })
   if (process.env.NODE_ENV === 'development') {
-    workerWindow.loadFile(workerURL)// 调试时的加载方式
+    workerWindow.loadFile(workerURL) // 调试时的加载方式
   } else {
-    workerWindow.loadURL(workerURL)// 打包后的加载方式
+    workerWindow.loadURL(workerURL) // 打包后的加载方式
   }
 }
 /**
@@ -87,8 +123,8 @@ function createMainWindow () {
   }
 
   /**
-     * Initial window options
-     */
+   * Initial window options
+   */
   mainWindow = new BrowserWindow({
     show: false,
     height: 820,
@@ -100,21 +136,35 @@ function createMainWindow () {
     transparent: false, // 透明
     // fullscreen: true, // 全屏
     webPreferences: {
-      nodeIntegration: true
+      nodeIntegration: true,
+      enableRemoteModule: true
     }
-
   })
   Menu.setApplicationMenu(Menu.buildFromTemplate([]))
   mainWindow.loadURL(winURL)
   mainWindow.once('ready-to-show', () => {
     mainWindow.show()
+    if (process.platform === 'darwin') {
+      const contents = mainWindow.webContents
+      const localShortcut = require('electron-localshortcut')
+      localShortcut.register(mainWindow, 'CommandOrControl+A', () => {
+        contents.selectAll()
+      })
+      localShortcut.register(mainWindow, 'CommandOrControl+C', () => {
+        contents.copy()
+      })
+      localShortcut.register(mainWindow, 'CommandOrControl+V', () => {
+        contents.paste()
+      })
+    }
     // 启动http server
     sendWindowMessage(workerWindow, 'start-http-server', '')
+    app.locale = app.getLocale()
   })
 
   /**
-     * 监听
-     */
+   * 监听
+   */
   mainWindow.on('close', (event) => {
     if (process.platform === 'win32') {
       if (!trayClose) {
@@ -131,9 +181,7 @@ function createMainWindow () {
     mainWindow = null
   })
 
-  mainWindow.on('maximize', () => {
-
-  })
+  mainWindow.on('maximize', () => {})
 }
 
 /**
@@ -327,12 +375,12 @@ function autoUpdate () {
   })
 
   /**
-     * event Event
-     * releaseNotes String - 新版本更新公告
-     * releaseName String - 新的版本号
-     * releaseDate Date - 新版本发布的日期
-     * updateUrl String - 更新地址
-     */
+   * event Event
+   * releaseNotes String - 新版本更新公告
+   * releaseName String - 新的版本号
+   * releaseDate Date - 新版本发布的日期
+   * updateUrl String - 更新地址
+   */
   autoUpdater.on('update-downloaded', (info) => {
     // 下载太快可能无法触发downloadProgress事件，所以手动通知一下
     mainWindow.webContents.send('downloadProgress', { percent: 100 })
@@ -360,7 +408,8 @@ function autoUpdate () {
 function crashReport () {
   // 报告常规错误
   Sentry.init({
-    dsn: 'https://36dc1ad5111d44e1ae447e324a4d0141@o359184.ingest.sentry.io/5199393'
+    dsn:
+      'https://36dc1ad5111d44e1ae447e324a4d0141@o359184.ingest.sentry.io/5199393'
   })
 
   // 报告系统错误
@@ -368,7 +417,8 @@ function crashReport () {
     companyName: 'imKey',
     productName: 'imKeyDesktop',
     ignoreSystemCrashHandler: true,
-    submitURL: 'https://o359184.ingest.sentry.io/api/5199393/security/?sentry_key=36dc1ad5111d44e1ae447e324a4d0141'
+    submitURL:
+      'https://o359184.ingest.sentry.io/api/5199393/security/?sentry_key=36dc1ad5111d44e1ae447e324a4d0141'
   })
 
   // 渲染进程崩溃事件
@@ -379,21 +429,23 @@ function crashReport () {
       message: '这个进程已经崩溃.',
       buttons: ['重载', '退出']
     }
-    recordCrash().then(() => {
-      dialog.showMessageBox(options, (index) => {
-        if (index === 0) {
-          reloadWindow(mainWindow)
-        } else {
-          app.quit()
-        }
+    recordCrash()
+      .then(() => {
+        dialog.showMessageBox(options, (index) => {
+          if (index === 0) {
+            reloadWindow(mainWindow)
+          } else {
+            app.quit()
+          }
+        })
       })
-    }).catch((e) => {
-      console.log('err', e)
-    })
+      .catch((e) => {
+        console.log('err', e)
+      })
   })
 
   function recordCrash () {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       sa.track(distinctId, 'im_app$crash', { name: 'appCrash' })
       // 崩溃日志请求成功....
       resolve()
@@ -470,6 +522,186 @@ function crashReport () {
 //     // 根据需要做其他事情
 //   }
 // }
+// const KOVAN_RPC_URL = 'https://kovan.infura.io'
+// const ETHEREUM_MAIN_NET = 'https://kovan.infura.io'
+// const imkeyProvider = new ImKeyProvider({
+//   rpcUrl: 'https://eth-mainnet.token.im',
+//   chainId: 1,
+//   headers: {
+//     agent: 'ios:2.4.2:2'
+//   }
+// })
+// imkeyProvider.enable()
+let view
+function createBrowserView (url, isClose) {
+  let perloadjsPath
+  if (url === 'https://polkadot.js.org/apps/#/accounts') {
+    perloadjsPath = polkadotdappURL
+    view = new BrowserView({
+      webPreferences: {
+        nodeIntegration: false, // 设置开启nodejs环境
+        enableRemoteModule: false,
+        // contextIsolation: false,
+        preload: perloadjsPath,
+        contextIsolation: false
+      }
+    })
+  } else {
+    perloadjsPath = ethereumdappURL
+    view = new BrowserView({
+      webPreferences: {
+        nodeIntegration: false, // 设置开启nodejs环境
+        enableRemoteModule: false,
+        // contextIsolation: false,
+        preload: perloadjsPath,
+        contextIsolation: true
+      }
+    })
+  }
+  mainWindow.setBrowserView(view)
+  if (isClose) {
+    if (view) {
+      mainWindow.removeBrowserView(view)
+      view = null
+      // view.destroy()
+    }
+
+    return
+  }
+
+  mainWindow.on('resized', resetBounds)
+
+  function resetBounds () {
+    const mainWindowBounds = mainWindow.getBounds()
+    if (process.platform === 'win32') {
+      view.setBounds({ x: 300, y: 62, width: mainWindowBounds.width - 300, height: mainWindowBounds.height - 102 })
+    } else if (process.platform === 'darwin') {
+      view.setBounds({ x: 300, y: 62, width: mainWindowBounds.width - 300, height: mainWindowBounds.height - 62 })
+    } else {
+      view.setBounds({ x: 300, y: 0, width: 1140, height: 820 })
+    }
+  }
+
+  resetBounds()
+
+  // view.setAutoResize({ horizontal: true, vertical: true })
+  const options = {
+    userAgent:
+      'Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19'
+  }
+  // view.webContents.loadURL(url)
+  // url  = "https://tokenlon.im/imbtc"//需要打开imtoken
+  // url  = "https://balancer.exchange/#/swap"//可以
+  // url  = "https://app.defisaver.com/"//imtoken 主网
+  // url= "https://murall.art/home"//imtoken 主网
+  // url= "https://play.decentraland.org/" //主网
+  // url = "https://trade.dydx.exchange/margin"//连接有问题一直转圈
+  // url = "https://danfinlay.github.io/js-eth-personal-sign-examples/"
+  view.webContents.loadURL(url, options)
+
+  // view.webContents.on('did-frame-finish-load', () => {
+  //   // if (isDev) {
+  //     view.webContents.openDevTools();
+  //     view.webContents.on('devtools-opened', () => {
+  //       view.focus();
+  //     });
+  //   // }
+  // });
+  // view.webContents.openDevTools()
+
+  view.webContents.on(
+    'context-menu',
+    ({ sender: webContents }, { editFlags }) => {
+      const template = [
+        ...(editFlags.canCut
+          ? [
+              { role: 'cut' },
+              { label: 'Cut (custom)', click: () => webContents.cut() }
+            ]
+          : []),
+        ...(editFlags.canCopy
+          ? [
+              { role: 'copy' },
+              { label: 'Copy (custom)', click: () => webContents.copy() }
+            ]
+          : []),
+        ...(editFlags.canPaste
+          ? [
+              { role: 'paste' },
+              { label: 'Paste (custom)', click: () => webContents.paste() }
+            ]
+          : [])
+      ]
+
+      if (!template.length) {
+        return
+      }
+
+      Menu.buildFromTemplate(template).popup({})
+    }
+  )
+
+  view.webContents.on('did-fail-load', function (
+    event,
+    errorCode,
+    errorDescription,
+    url
+  ) {
+    console.log('did-fail-load: ', event, errorCode, errorDescription, url)
+
+    const loadingPagePath = require('path').resolve(
+      __dirname,
+      '../api/loadFailPagePath.html'
+    )
+    view.loadURL(loadingPagePath)
+  })
+
+  view.webContents.on('new-window', (event, url) => {
+    event.preventDefault()
+    shell.openExternal(url)
+  })
+
+  view.webContents.on('did-finish-load', (event, input) => {
+    mainWindow.webContents.send('loading-status', false)
+    view.setBackgroundColor('white')
+  })
+
+  view.webContents.on('render-process-gone', (event, details) => {
+    console.log('app crashed: ', JSON.stringify(details))
+  })
+
+  //   view.webContents.once('dom-ready', () => {
+  //     console.log('dom-ready')
+  //     view.webContents.executeJavaScript(`
+  //   console.log("This loads no problem!");
+  //   window.ethereum = 'test'
+  //   console.log(window.ethereum);
+  //   console.log(window.web3);
+  //   // const ImKeyProvider = require('@imkey/web3-provider‘);
+  //   // window.web3 = "ImKeyProvider";
+  //   // console.log(window.web3);
+  //   const KOVAN_RPC_URL = 'https://kovan.infura.io';
+  //   const ETHEREUM_MAIN_NET = 'https://kovan.infura.io';
+  //   // const imkeyProvider = new ${ImKeyProvider}({
+  //   //  rpcUrl: "https://eth-mainnet.token.im",
+  //   //   chainId: 1,
+  //   //   headers: {
+  //   //       agent: "ios:2.4.2:2",
+  //   //   },
+  //   // });
+  //   // imkeyProvider.enable();
+  //   window.web3 = new Web3(${ImKeyProvider})
+  //   console.log(window.web3)
+  // `)
+  //   })
+
+  console.log(url)
+  // setTimeout(()=>{
+  //   view.destroy()
+  // },5000)
+}
+// 缓存address
+let WalletAddress = []
 function sendWindowMessage (targetWindow, message, payload) {
   if (typeof targetWindow === 'undefined') {
     console.log('Target window does not exist')
@@ -481,8 +713,12 @@ function sendWindowMessage (targetWindow, message, payload) {
   console.log(payload.data)
   targetWindow.webContents.send(message, payload)
 }
+
 function renderDeviceManagerHandler () {
   ipcMain.on('message-from-worker', (event, arg) => {
+    if (arg.type === 'genWalletAddress') {
+      WalletAddress = arg.data
+    }
     sendWindowMessage(mainWindow, 'message-to-renderer', arg)
   })
   ipcMain.on('message-from-renderer', (event, arg) => {
@@ -495,10 +731,100 @@ function renderDeviceManagerHandler () {
   ipcMain.on('openUrl', (event, url) => {
     shell.openExternal(url)
   })
-  ipcMain.on('zoomIn', (event, zoomParam) => {
-    webFrame.setZoomFactor(zoomParam)
+  ipcMain.on('openBrowserView', (event, url, isClose) => {
+    createBrowserView(url, isClose)
+  })
+  ipcMain.on('closeBrowserView', (event, url) => {
+    shell.openExternal(url)
+  })
+  ipcMain.on('goForward', (event, url) => {
+    view.webContents.goForward()
+  })
+  ipcMain.on('goBack', (event, url) => {
+    view.webContents.goBack()
+  })
+  ipcMain.on('refresh', (event, url) => {
+    view.webContents.reload()
+  })
+  ipcMain.on('copyLink', (event, url) => {
+    // view.webContents.reload()
+    const clipboard = require('electron').clipboard
+    clipboard.writeText(url)
+  })
+  ipcMain.on('openInSafari', (event, url) => {
+    shell.openExternal(url)
+  })
+  ipcMain.on('showMessageBoxSync', (event, data) => {
+    let title
+    let message
+    let buttons
+    const locale = app.getLocale()
+    console.log('locale:' + locale)
+    if (locale !== 'zh-CN') {
+      title: 'Tips'
+      message = 'Please confirm on imkey' + '\n' + data
+      buttons = ['OK', 'Cancel']
+    } else {
+      title = '提示'
+      message = '请在imkey上确认' + '\n' + data
+      buttons = ['确认', '取消']
+    }
+    const ret = dialog.showMessageBoxSync({
+      type: 'info',
+      title: title,
+      message: message,
+      buttons: buttons
+    })
+    event.returnValue = ret
+  })
+  ipcMain.on('message-from-get-api', (event, json) => {
+    const args = {
+      type: 'api',
+      data: json
+    }
+    sendWindowMessage(workerWindow, 'message-from-main-api', args)
+    ipcMain.on('message-from-worker-api', (event1, args) => {
+      event.returnValue = args.data
+    })
+  })
+
+  // 获取address[]
+  ipcMain.on('message-from-get-address', (event) => {
+    event.returnValue = WalletAddress
+  })
+  // 修改address[]
+  ipcMain.on('message-from-set-address', (event, args) => {
+    for (let i = 0; i < WalletAddress.result.length; i++) {
+      if (WalletAddress.result[i].chain === 'Ethereum') {
+        WalletAddress.result[i].chainId = args.chainId
+        WalletAddress.result[i].rpcUrl = args.rpcUrl
+        WalletAddress.result[i].symbol = args.symbol
+      }
+    }
+    event.returnValue = WalletAddress
+  })
+  // 读取文件
+  ipcMain.on('read-file', function (event) {
+    const imkeyWeb3ProviderSrc =
+        process.env.NODE_ENV === 'development'
+          ? require('path').resolve(__dirname, '../api/imkey_web3_provider.js')
+          : require('path').resolve(__dirname, 'imkey_web3_provider.js')
+    // const imkeyWeb3ProviderSrc =
+    //     process.env.NODE_ENV === 'development'
+    //         ? require('path').resolve(__dirname, '../../dist/electron/imkey_web3_provider.js')
+    //         : require('path').resolve(__dirname, 'imkey_web3_provider.js')
+    console.log(imkeyWeb3ProviderSrc)
+    // const file = fs.readFile(imkeyWeb3ProviderSrc, {encoding: 'utf-8'})
+    fs.readFile(imkeyWeb3ProviderSrc, 'utf8', (err, data) => {
+      if (err) {
+        event.returnValue = 'read fail'
+      } else {
+        event.returnValue = data
+      }
+    })
   })
 }
+
 function initSa () {
   sa.disableReNameOption()
   sa.submitTo(url)
@@ -525,9 +851,36 @@ if (!gotTheLock) {
     autoUpdate()
     crashReport()
     // protocalHandler()
+    initimKeyMessageHandler()
     renderDeviceManagerHandler()
     initSa()
     // startHttpServer()
+  })
+}
+
+function initimKeyMessageHandler () {
+  ipcMain.handle('imkey-api', async (event, json) => {
+    console.log('receive imkey-api in mainnet')
+    return new Promise((resolve, reject) => {
+      try {
+        const arg = {
+          type: 'api',
+          data: json
+        }
+        sendWindowMessage(workerWindow, 'message-from-main-api', arg)
+        ipcMain.on('message-from-worker-api', (event, arg) => {
+          const rsp = arg.data
+          resolve(rsp)
+        })
+      } catch (err) {
+        reject(err)
+      }
+    })
+  })
+
+  ipcMain.on('imkey-accounts', (event, arg) => {
+    console.log(arg) // prints "ping"
+    event.returnValue = ['0xa6c82cf246f820f70d3c11b1b518b2d0eaca3258']
   })
 }
 

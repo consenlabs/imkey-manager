@@ -16,7 +16,10 @@ export function initImKeyCore() {
         request.setFiledir(fileDir)
         request.setXpubcommonkey(constants.XPubCommonKey128)
         request.setXpubcommoniv(constants.XPubCommonIv)
-        request.setIsdebug(true)
+        request.setIsdebug(false)
+        request.setTerminaltype(constants.terminalType)
+        request.setSdkversion(constants.sdkVersion)
+        request.setServerurl(constants.serverUrl)
         const requestBytes = request.serializeBinary()
         const any = new proto.google.protobuf.Any()
         any.setValue(requestBytes)
@@ -149,10 +152,24 @@ function appletManage(method_, appName) {
     const resBuffer = callImKeyCore.callImKeyApi(bytes2HexStr(imKeyActionBytes))
     const error = callImKeyCore.getLastErrorMessage()
     if (error === '' || error === null) {
-        const response = new apiPb.CommonResponse.deserializeBinary(hexStr2Bytes(resBuffer))
-        return {
-            isSuccess: true,
-            result: response.getResult()
+        if (method_ === 'app_download') {
+            const response = new devicePb.AppDownloadRes.deserializeBinary(hexStr2Bytes(resBuffer))
+            return {
+                isSuccess: true,
+                result:  response.getAddressRegisterListList()
+            }
+        }else if (method_ === 'app_update') {
+            const response = new devicePb.AppUpdateRes.deserializeBinary(hexStr2Bytes(resBuffer))
+            return {
+                isSuccess: true,
+                result:  response.getAddressRegisterListList()
+            }
+        }else {
+            const response = new apiPb.CommonResponse.deserializeBinary(hexStr2Bytes(resBuffer))
+            return {
+                isSuccess: true,
+                result: response.getResult()
+            }
         }
     } else {
         const errorResponse = new apiPb.ErrorResponse.deserializeBinary(hexStr2Bytes(error))

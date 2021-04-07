@@ -30,6 +30,11 @@ export function api (reqJson) {
     }
     return result
   }
+
+  const initImKeyCore = deviceManger.initImKeyCore()
+  if (!initImKeyCore.isSuccess) {
+    return initImKeyCore.result
+  }
   const connectRes = deviceManger.connect(constants.DEVICE_NAME_IMKEY_PRO)
   if (connectRes.isSuccess) {
     if (connectRes.result !== constants.RESULT_STATUS_SUCCESS) {
@@ -162,6 +167,44 @@ export function api (reqJson) {
     return result
   } else if (method === constants.API_NAME_TRANSACTION_BTC_USDT_SEGWIT) {
     const response = walletApi.btcUsdtSegWitSignTransaction(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_TRANSACTION_BCH) {
+    const response = walletApi.bchSignTransaction(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_TRANSACTION_LTC) {
+    const response = walletApi.ltcSignTransaction(params)
     if (!response.isSuccess) {
       result = {
         'jsonrpc:': jsonrpc,
@@ -478,6 +521,120 @@ export function api (reqJson) {
     return result
   } else if (method === constants.API_NAME_REGISTER_ADDRESS_BTC_SEGWIT) {
     const response = walletApi.registerBTCSegWitAddress(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_GET_ADDRESS_BCH) {
+    const response = walletApi.getBCHAddress(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_REGISTER_ADDRESS_BCH) {
+    const response = walletApi.registerBCHAddress(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_GET_ADDRESS_LTC) {
+    const response = walletApi.getLTCAddress(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_REGISTER_ADDRESS_LTC) {
+    const response = walletApi.registerLTCAddress(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_GET_ADDRESS_LTC_SEGWIT) {
+    const response = walletApi.getLTCSegWitAddress(params)
+    if (!response.isSuccess) {
+      result = {
+        'jsonrpc:': jsonrpc,
+        error: {
+          code: -32604,
+          message: response.result
+        },
+        'id:': id
+      }
+    } else {
+      result = {
+        'jsonrpc:': jsonrpc,
+        result: response.result,
+        'id:': id
+      }
+    }
+    return result
+  } else if (method === constants.API_NAME_REGISTER_ADDRESS_LTC_SEGWIT) {
+    const response = walletApi.registerLTCSegWitAddress(params)
     if (!response.isSuccess) {
       result = {
         'jsonrpc:': jsonrpc,

@@ -3,6 +3,7 @@
 const chalk = require('chalk')
 const electron = require('electron')
 const path = require('path')
+const fs = require('fs')
 const {say} = require('cfonts')
 const {spawn} = require('child_process')
 const webpack = require('webpack')
@@ -48,13 +49,17 @@ function startRenderer() {
             heartbeat: 2500
         })
 
-        compiler.hooks.compilation.tap('compilation', compilation => {
-            compilation.hooks.htmlWebpackPluginAfterEmit.tapAsync('html-webpack-plugin-after-emit', (data, cb) => {
-                hotMiddleware.publish({action: 'reload'})
-                cb()
-            })
-        })
-
+        // compiler.hooks.compilation.tap('compilation', compilation => {
+        //     compilation.hooks.htmlWebpackPluginAfterEmit.tapAsync('html-webpack-plugin-after-emit', (data, cb) => {
+        //         hotMiddleware.publish({action: 'reload'})
+        //         cb()
+        //     })
+        // })
+        compiler.hooks.compilation.tap('html-webpack-plugin-after-emit', () => {
+            hotMiddleware.publish({
+                action: 'reload'
+            });
+        });
         compiler.hooks.done.tap('done', stats => {
             logStats('Renderer', stats)
         })
@@ -158,6 +163,7 @@ function electronLog(data, color) {
     }
 }
 
+
 function greeting() {
     const cols = process.stdout.columns
     let text = ''
@@ -178,7 +184,9 @@ function greeting() {
 
 function init() {
     greeting()
-
+// example
+    fs.createReadStream(path.join(__dirname,'../connector.dylib')).pipe(fs.createWriteStream(path.join(__dirname, '../dist/electron/connector.dylib')));
+    fs.createReadStream(path.join(__dirname,'../connector.dll')).pipe(fs.createWriteStream(path.join(__dirname, '../dist/electron/connector.dll')));
     Promise.all([startRenderer(), startMain()])
         .then(() => {
             startElectron()
