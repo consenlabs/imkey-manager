@@ -2,7 +2,7 @@
 import { jsx } from '@emotion/react';
 import React, { useState } from 'react';
 // import { ipcRenderer } from 'electron';
-import { apiIpc } from '../../../api/apiIpc';
+import { requestImkeyCore } from '../../../api/apiIpc';
 import logo from '../../images/imkey_logo.svg';
 import device from '../../images/imkey_device.svg';
 import { useTranslation } from 'react-i18next';
@@ -12,38 +12,41 @@ import FirmwareNeedUpdateDialog from './FirmwareNeedUpdateDialog';
 import BindingCodeDialog from './BindingCodeDialog';
 import { Button, Spacer, Text, Grid, useModal, Modal } from '@geist-ui/react';
 
+type ConnectedStatus = 'success' | 'failed' 
+
 export default function DeviceConnection() {
   const { t, i18n } = useTranslation();
 
   const { visible, setVisible, bindings } = useModal();
 
-  const connectHandler = () => {
-    apiIpc.send('connectDevice');
-    apiIpc.on('connectDevice', (result) => {
-      const response = result.result;
-      //   if (result.isSuccess) {
-      //     if (response === constants.RESULT_STATUS_SUCCESS) {
-      //       this.changeState(3)
-      //       this.checkIsBL()
-      //     } else {
-      //       this.errorInfo = response
-      //       this.changeState(4)
-      //       // 连接失败
-      //       this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '连接设备失败：' + response })
-      //     }
-      //   } else {
-      //     this.errorInfo = response
-      //     this.changeState(4)
-      //     // 连接失败
-      //     this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '连接设备失败：' + response })
-      //   }
-      // })
-      // // setTimeout(() => {
-      // if (this.status === 1) {
-      //   this.changeState(8)
-      // }
-      console.log('connect response: ', JSON.stringify(result.result));
-    });
+  const connectHandler = async () => {
+    let result = await requestImkeyCore('connectDevice');
+    console.log('connect response: ', JSON.stringify(result));
+    // apiIpc.on('connectDevice', (result) => {
+    //   const response = result.result;
+    //   //   if (result.isSuccess) {
+    //   //     if (response === constants.RESULT_STATUS_SUCCESS) {
+    //   //       this.changeState(3)
+    //   //       this.checkIsBL()
+    //   //     } else {
+    //   //       this.errorInfo = response
+    //   //       this.changeState(4)
+    //   //       // 连接失败
+    //   //       this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '连接设备失败：' + response })
+    //   //     }
+    //   //   } else {
+    //   //     this.errorInfo = response
+    //   //     this.changeState(4)
+    //   //     // 连接失败
+    //   //     this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '连接设备失败：' + response })
+    //   //   }
+    //   // })
+    //   // // setTimeout(() => {
+    //   // if (this.status === 1) {
+    //   //   this.changeState(8)
+    //   // }
+    //   console.log('connect response: ', JSON.stringify(result.result));
+    // });
   };
 
   const dialog = <BindingCodeDialog />;

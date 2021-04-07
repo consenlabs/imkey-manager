@@ -1,23 +1,25 @@
 import { ipcRenderer } from 'electron';
 
-let callbackCache: { type: string; callback: (data: object) => void };
-export const apiIpc = {
-  send: (msgType: string, msgData?: object) => {
-    ipcRenderer.send('message-from-renderer', {
-      type: msgType,
-      data: msgData,
-    });
-  },
-  on: (type: string, callback: (data: object) => void) => {
-    callbackCache = {
-      type,
-      callback,
-    };
-  },
+export const requestImkeyCore = (type: string, data?: object) => {
+  return new Promise((resolve, reject) => {
+    try {
+      ipcRenderer.on(
+        'message-to-renderer',
+        (_, msg: { type: string; data: object }) => {
+          console.log('message-to-renderer', JSON.stringify(msg));
+          if (msg.type === type) {
+            ipcRenderer.removeAllListeners('message-to-renderer');
+            resolve(msg.data);
+          }
+        }
+      );
+      ipcRenderer.send('message-from-renderer', {
+        type,
+        data,
+      });
+    } catch (err) {
+      reject(err);
+    }
+  });
 };
 
-ipcRenderer.on('message-to-renderer', (_, msg) => {
-  if (callbackCache.type === msg.type) {
-    callbackCache.callback(msg.data);
-  }
-});
