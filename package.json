@@ -107,7 +107,7 @@
     "ffi-napi": "^3.1.0",
     "fs-extra": "^9.0.0",
     "is-online": "^8.4.0",
-    "lodash": "^4.17.19",
+    "lodash": "^4.17.21",
     "lodash-id": "^0.14.0",
     "ref-napi": "^3.0.1",
     "sa-sdk-javascript": "^1.15.16",
