@@ -427,9 +427,10 @@ export default {
             this.$router.push('imKeySetting')
           }
         } else {
+          this.$router.push('imKeySetting')
           // 错误界面
-          this.errorInfo = response
-          this.changeState(4)
+          // this.errorInfo = response
+          // this.changeState(4)
           this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否创建wallet失败：' + response })
         }
       })

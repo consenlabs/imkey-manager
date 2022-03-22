@@ -365,7 +365,7 @@ ipcRenderer.on('message-from-main', (event, arg) => {
           }
           if (coinNameArr[i] === 'NERVOS') {
             // response = walletApi.registerCKBAddress({
-            //   path: "m/44'/1279'/0'/0/0"
+            //   path: "m/44'/309'/0'/0/0"
             // })
             // if (!response.isSuccess) {
             //   response = {

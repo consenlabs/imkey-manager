@@ -397,7 +397,7 @@ export function importBindCode(bindCode) {
     const response = getUserPath();
     if (response.isSuccess) {
         //存储路径
-        const bindCodePath = response.result + "bindCode.json"
+        const bindCodePath = response.result +getSeid().result+ "bindCode.json"
         //加密绑定码
         const enBindCode ={
             bindCode:crypto.encryptData(bindCode.toUpperCase(), process.env.bindCode_encryptionKey)
@@ -422,7 +422,7 @@ export function exportBindCode() {
     const response = getUserPath();
     if (response.isSuccess) {
         //存储路径
-        const bindCodePath = response.result + "bindCode.json"
+        const bindCodePath = response.result +getSeid().result+ "bindCode.json"
         try {
             const data = fs.readFileSync(bindCodePath, 'utf-8')
             const dataString = data.toString()// 将二进制的数据转换为字符串
