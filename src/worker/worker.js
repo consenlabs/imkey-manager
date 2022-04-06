@@ -189,6 +189,10 @@ ipcRenderer.on('message-from-main', (event, arg) => {
       response = deviceManger.exportBindCode()
       handleType = 'exportBindCode'
     }
+    if (arg.type === 'isExistBindCodeFile') {
+      response = deviceManger.isExistBindCodeFile()
+      handleType = 'isExistBindCodeFile'
+    }
     if (arg.type === 'genWalletAddress') {
       const coinAddressArray = []
       try {
@@ -365,7 +369,7 @@ ipcRenderer.on('message-from-main', (event, arg) => {
           }
           if (coinNameArr[i] === 'NERVOS') {
             // response = walletApi.registerCKBAddress({
-            //   path: "m/44'/1279'/0'/0/0"
+            //   path: "m/44'/309'/0'/0/0"
             // })
             // if (!response.isSuccess) {
             //   response = {

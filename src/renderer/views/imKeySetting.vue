@@ -182,8 +182,8 @@
                 </div>
                 <div class="btnBox">
                     <p class="codeTit" v-if="checkWalletTip" style="display:inline-block;float: left;"><span class="el-icon-warning"></span>{{$t('m.imKeyManager.done_setting_select_next')}}</p>
-                    <button class="nextBtn" @click="send({page:4,active:2,isNext:true})">下一步</button>
-                    <button class="prevBtn" @click="send({page:2,active:0,isNext:false})">上一步</button>
+                    <button class="nextBtn" @click="send({page:4,active:2,isNext:true})">{{$t('m.imKeyManager.next')}}</button>
+                    <button class="prevBtn" @click="send({page:2,active:0,isNext:false})">{{$t('m.imKeyManager.previous')}}</button>
                 </div>
             </div>
             <div class="set4" v-if="page==4">
@@ -371,9 +371,17 @@ export default {
           this.$ipcRenderer.send('connectDevice')
           this.$ipcRenderer.on('connectDevice', (connectResult) => {
             if (connectResult.isSuccess) {
-              // 去首页
-              this.$router.push('/home/welcomeHome')
-              this.$sa.track('im_onboarding_complete$finish', { name: 'onboardingCompleteClick', to: 'im_homepage' })
+              // 读取ETH和DOT和KSM的地址
+              this.$ipcRenderer.send('genWalletAddress', { filePath: this.userPath })
+              this.$ipcRenderer.on('genWalletAddress', (result) => {
+                const response = result.result
+                if (result.isSuccess) {
+                  this.$store.state.WalletAddress = response
+                  // 去首页
+                  this.$router.push('/home/welcomeHome')
+                  this.$sa.track('im_onboarding_complete$finish', { name: 'onboardingCompleteClick', to: 'im_homepage' })
+                }
+              })
             } else {
               console.log('none')
             }
@@ -399,15 +407,15 @@ export default {
           // 连接设备，
           // 检查是否激活，如果未激活，就激活。
           // 检查是否绑定，如果未绑定，就再imkey上显示绑定码
-          this.$ipcRenderer.send('connectDevice')
-          this.$ipcRenderer.on('connectDevice', (connectResult) => {
-            if (connectResult.isSuccess) {
-              this.active = active
-              this.page = page
-            } else {
-              // 检查绑定失败
-            }
-          })
+          // this.$ipcRenderer.send('connectDevice')
+          // this.$ipcRenderer.on('connectDevice', (connectResult) => {
+          //   if (connectResult.isSuccess) {
+          this.active = active
+          this.page = page
+          // } else {
+          //   // 检查绑定失败
+          // }
+          // })
         }
         if (page === 3 && isNext === true) {
           // 连接设备，

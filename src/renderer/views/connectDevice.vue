@@ -377,9 +377,17 @@ export default {
               // 跳转到绑定界面
               this.$router.push('imKeySetting')
             } else if (response === constants.BIND_STATUS_STRING_BOUND_THIS) {
-              // 成功绑定 继续
-              this.checkDeviceBindingCode = 3
-              this.checkIsCreateWallet()
+              this.$ipcRenderer.send('isExistBindCodeFile')
+              this.$ipcRenderer.on('isExistBindCodeFile', (isExistBindCodeFileResult) => {
+                if (isExistBindCodeFileResult.result) {
+                  // 成功绑定 继续
+                  this.checkDeviceBindingCode = 3
+                  this.checkIsCreateWallet()
+                } else {
+                  // 弹出绑定码输入框，输入绑定码，输入完成后，检查是否创建钱包,重新保存绑定码
+                  this.changeState(7)
+                }
+              })
             } else {
               this.errorInfo = response
               this.changeState(4)
@@ -427,9 +435,10 @@ export default {
             this.$router.push('imKeySetting')
           }
         } else {
+          this.$router.push('imKeySetting')
           // 错误界面
-          this.errorInfo = response
-          this.changeState(4)
+          // this.errorInfo = response
+          // this.changeState(4)
           this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否创建wallet失败：' + response })
         }
       })
