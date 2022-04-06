@@ -442,6 +442,29 @@ export function exportBindCode() {
     }
 
 }
+
+export function isExistBindCodeFile() {
+    const response = getUserPath();
+    if (response.isSuccess) {
+        //存储路径
+        const bindCodePath = response.result +getSeid().result+ "bindCode.json"
+        try {
+            return {
+                isSuccess: true,
+                //返回是否存在当前设备的绑定码文件
+                result: fs.existsSync(bindCodePath)
+            }
+        } catch (error) {
+            console.log(error)
+            return {
+                isSuccess: false,
+                result: error
+            }
+        }
+    }
+
+}
+
 // module.exports = {
 //     connect,
 //     getSeid,

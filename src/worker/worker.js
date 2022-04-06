@@ -189,6 +189,10 @@ ipcRenderer.on('message-from-main', (event, arg) => {
       response = deviceManger.exportBindCode()
       handleType = 'exportBindCode'
     }
+    if (arg.type === 'isExistBindCodeFile') {
+      response = deviceManger.isExistBindCodeFile()
+      handleType = 'isExistBindCodeFile'
+    }
     if (arg.type === 'genWalletAddress') {
       const coinAddressArray = []
       try {
