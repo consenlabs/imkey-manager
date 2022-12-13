@@ -103,7 +103,7 @@
     "dotenv": "^8.2.0",
     "electron-updater": "^4.3.1",
     "element-ui": "^2.13.1",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "ffi-napi": "^3.1.0",
     "fs-extra": "^9.0.0",
     "is-online": "^8.4.0",
