@@ -16,7 +16,10 @@ export function initImKeyCore() {
         request.setFiledir(fileDir)
         request.setXpubcommonkey(constants.XPubCommonKey128)
         request.setXpubcommoniv(constants.XPubCommonIv)
-        request.setIsdebug(true)
+        request.setIsdebug(false)
+        request.setTerminaltype(constants.terminalType)
+        request.setSdkversion(constants.sdkVersion)
+        request.setServerurl(constants.serverUrl)
         const requestBytes = request.serializeBinary()
         const any = new proto.google.protobuf.Any()
         any.setValue(requestBytes)
@@ -149,10 +152,24 @@ function appletManage(method_, appName) {
     const resBuffer = callImKeyCore.callImKeyApi(bytes2HexStr(imKeyActionBytes))
     const error = callImKeyCore.getLastErrorMessage()
     if (error === '' || error === null) {
-        const response = new apiPb.CommonResponse.deserializeBinary(hexStr2Bytes(resBuffer))
-        return {
-            isSuccess: true,
-            result: response.getResult()
+        if (method_ === 'app_download') {
+            const response = new devicePb.AppDownloadRes.deserializeBinary(hexStr2Bytes(resBuffer))
+            return {
+                isSuccess: true,
+                result:  response.getAddressRegisterListList()
+            }
+        }else if (method_ === 'app_update') {
+            const response = new devicePb.AppUpdateRes.deserializeBinary(hexStr2Bytes(resBuffer))
+            return {
+                isSuccess: true,
+                result:  response.getAddressRegisterListList()
+            }
+        }else {
+            const response = new apiPb.CommonResponse.deserializeBinary(hexStr2Bytes(resBuffer))
+            return {
+                isSuccess: true,
+                result: response.getResult()
+            }
         }
     } else {
         const errorResponse = new apiPb.ErrorResponse.deserializeBinary(hexStr2Bytes(error))
@@ -380,7 +397,7 @@ export function importBindCode(bindCode) {
     const response = getUserPath();
     if (response.isSuccess) {
         //存储路径
-        const bindCodePath = response.result + "bindCode.json"
+        const bindCodePath = response.result +getSeid().result+ "bindCode.json"
         //加密绑定码
         const enBindCode ={
             bindCode:crypto.encryptData(bindCode.toUpperCase(), process.env.bindCode_encryptionKey)
@@ -405,7 +422,7 @@ export function exportBindCode() {
     const response = getUserPath();
     if (response.isSuccess) {
         //存储路径
-        const bindCodePath = response.result + "bindCode.json"
+        const bindCodePath = response.result +getSeid().result+ "bindCode.json"
         try {
             const data = fs.readFileSync(bindCodePath, 'utf-8')
             const dataString = data.toString()// 将二进制的数据转换为字符串
@@ -425,6 +442,29 @@ export function exportBindCode() {
     }
 
 }
+
+export function isExistBindCodeFile() {
+    const response = getUserPath();
+    if (response.isSuccess) {
+        //存储路径
+        const bindCodePath = response.result +getSeid().result+ "bindCode.json"
+        try {
+            return {
+                isSuccess: true,
+                //返回是否存在当前设备的绑定码文件
+                result: fs.existsSync(bindCodePath)
+            }
+        } catch (error) {
+            console.log(error)
+            return {
+                isSuccess: false,
+                result: error
+            }
+        }
+    }
+
+}
+
 // module.exports = {
 //     connect,
 //     getSeid,

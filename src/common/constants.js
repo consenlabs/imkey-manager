@@ -1,6 +1,10 @@
 // sdk version
-const version = '1.2.00'
-
+const sdkVersion = '2.3.0'
+// serverurl
+// const serverUrl = 'https://imkeyserver.com:10444/imkey'
+const serverUrl = 'https://imkey.online:1000/imkey'
+// Terminaltype
+const terminalType = 'PC'
 // Battery is charging sign
 const BATTERY_CHARGING_SIGN = 'FF'
 
@@ -40,6 +44,8 @@ const API_NAME_TRANSACTION_BTC = 'btc.signTransaction'
 const API_NAME_TRANSACTION_BTC_SEGWIT = 'btc.signSegWitTransaction'
 const API_NAME_TRANSACTION_BTC_USDT = 'btc.signUsdtTransaction'
 const API_NAME_TRANSACTION_BTC_USDT_SEGWIT = 'btc.signUsdtSegWitTransaction'
+const API_NAME_TRANSACTION_BCH = 'bch.signTransaction'
+const API_NAME_TRANSACTION_LTC = 'ltc.signTransaction'
 const API_NAME_TRANSACTION_SIGNTX_ETH = 'eth.signTransaction'
 const API_NAME_TRANSACTION_SIGNMSG_ETH = 'eth.signMessage'
 const API_NAME_TRANSACTION_SIGNTX_EOS = 'eos.signTransaction'
@@ -56,6 +62,12 @@ const API_NAME_GET_ADDRESS_BTC = 'btc.getAddress'
 const API_NAME_GET_ADDRESS_BTC_SEGWIT = 'btc.getSegWitAddress'
 const API_NAME_REGISTER_ADDRESS_BTC = 'btc.registerAddress'
 const API_NAME_REGISTER_ADDRESS_BTC_SEGWIT = 'btc.registerSegWitAddress'
+const API_NAME_GET_ADDRESS_BCH = 'bch.getAddress'
+const API_NAME_REGISTER_ADDRESS_BCH = 'bch.registerAddress'
+const API_NAME_GET_ADDRESS_LTC = 'ltc.getAddress'
+const API_NAME_REGISTER_ADDRESS_LTC = 'ltc.registerAddress'
+const API_NAME_GET_ADDRESS_LTC_SEGWIT = 'ltc.getSegWitAddress'
+const API_NAME_REGISTER_ADDRESS_LTC_SEGWIT = 'ltc.registerSegWitAddress'
 const API_NAME_GET_ADDRESS_ETH = 'eth.getAddress'
 const API_NAME_REGISTER_ADDRESS_ETH = 'eth.registerAddress'
 const API_NAME_GET_PUBKEY_EOS = 'eos.getPubKey'
@@ -76,7 +88,9 @@ const XPubCommonKey128 = 'B888D25EC8C12BD5043777B1AC49F872'
 const XPubCommonIv = '9C0C30889CBCC5E01AB5B2BB88715799'
 
 module.exports = {
-  version,
+  sdkVersion,
+  serverUrl,
+  terminalType,
   BATTERY_CHARGING_SIGN,
   LIFE_TIME_DEVICE_INITED,
   LIFE_TIME_DEVICE_ACTIVATED,
@@ -100,6 +114,8 @@ module.exports = {
   API_NAME_TRANSACTION_BTC_SEGWIT,
   API_NAME_TRANSACTION_BTC_USDT,
   API_NAME_TRANSACTION_BTC_USDT_SEGWIT,
+  API_NAME_TRANSACTION_BCH,
+  API_NAME_TRANSACTION_LTC,
   API_NAME_TRANSACTION_SIGNTX_ETH,
   API_NAME_TRANSACTION_SIGNMSG_ETH,
   API_NAME_TRANSACTION_SIGNTX_EOS,
@@ -116,6 +132,12 @@ module.exports = {
   API_NAME_GET_ADDRESS_BTC_SEGWIT,
   API_NAME_REGISTER_ADDRESS_BTC,
   API_NAME_REGISTER_ADDRESS_BTC_SEGWIT,
+  API_NAME_GET_ADDRESS_BCH,
+  API_NAME_REGISTER_ADDRESS_BCH,
+  API_NAME_GET_ADDRESS_LTC,
+  API_NAME_REGISTER_ADDRESS_LTC,
+  API_NAME_GET_ADDRESS_LTC_SEGWIT,
+  API_NAME_REGISTER_ADDRESS_LTC_SEGWIT,
   API_NAME_GET_ADDRESS_ETH,
   API_NAME_REGISTER_ADDRESS_ETH,
   API_NAME_GET_PUBKEY_EOS,

@@ -176,7 +176,8 @@ export default {
       code5: '',
       code6: '',
       code7: '',
-      code8: ''
+      code8: '',
+      isUpdateIMK: false
     }
   },
   mounted () {
@@ -249,7 +250,7 @@ export default {
     },
     inpFocus () {
       if (this.bindCode.length === 8) {
-
+        console.log('none')
       } else {
         event.srcElement.value = ''
       }
@@ -277,9 +278,9 @@ export default {
             this.checkIsActive()
           }
         } else {
-          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否处于BL状态失败：' + response })
           this.errorInfo = response
           this.changeState(4)
+          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否处于BL状态失败：' + response })
         }
       })
     },
@@ -305,6 +306,10 @@ export default {
                   for (let i = 0; i < tempAppList.length; i++) {
                     if (tempAppList[i].name === 'IMK') {
                       tempAppList[i].name = this.$t('m.imKeyManager.imKey_soft')
+                      // 判断IMK应用是否要升级
+                      if (tempAppList[i].updateDis === false) {
+                        this.isUpdateIMK = true
+                      }
                     }
                     const collection = {
                       name: tempAppList[i].name,
@@ -324,14 +329,23 @@ export default {
                   }
                   this.$store.state.apps = appList
                   this.connectText = this.$t('m.connectDevice.active_success')
+                  // 检查绑定之前，如果IMK有升级强制升级应用
+                  if (this.isUpdateIMK === true) {
+                    this.$ipcRenderer.send('updateApplet', 'IMK')
+                    this.$ipcRenderer.on('updateApplet', (updateAppletResult) => {
+                      if (updateAppletResult.isSuccess) {
+                        this.isUpdateIMK = false
+                      }
+                    })
+                  }
                   this.checkIsBind()
                 } else {
                   this.toCosUpdate()
                 }
               } else {
-                this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否升级COS失败：' + cosCheckUpdateResponse })
                 this.errorInfo = cosCheckUpdateResponse
                 this.changeState(4)
+                this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否升级COS失败：' + cosCheckUpdateResponse })
               }
             })
           } else {
@@ -339,9 +353,9 @@ export default {
             this.$router.push('imKeySetting')
           }
         } else {
-          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否激活失败：' + checkUpdateResponse })
           this.errorInfo = checkUpdateResponse
           this.changeState(4)
+          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否激活失败：' + checkUpdateResponse })
         }
       })
     },
@@ -352,9 +366,9 @@ export default {
         if (result.isSuccess) {
           if (response === '' || response === null) {
             // 失败的话
-            this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否绑定失败：' + response })
             this.errorInfo = response
             this.changeState(4)
+            this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否绑定失败：' + response })
           } else {
             if (response === constants.BIND_STATUS_STRING_BOUND_OTHER) {
               // 弹出绑定码输入框，输入绑定码，输入完成后，检查是否创建钱包
@@ -363,19 +377,27 @@ export default {
               // 跳转到绑定界面
               this.$router.push('imKeySetting')
             } else if (response === constants.BIND_STATUS_STRING_BOUND_THIS) {
-              // 成功绑定 继续
-              this.checkDeviceBindingCode = 3
-              this.checkIsCreateWallet()
+              this.$ipcRenderer.send('isExistBindCodeFile')
+              this.$ipcRenderer.on('isExistBindCodeFile', (isExistBindCodeFileResult) => {
+                if (isExistBindCodeFileResult.result) {
+                  // 成功绑定 继续
+                  this.checkDeviceBindingCode = 3
+                  this.checkIsCreateWallet()
+                } else {
+                  // 弹出绑定码输入框，输入绑定码，输入完成后，检查是否创建钱包,重新保存绑定码
+                  this.changeState(7)
+                }
+              })
             } else {
-              this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否绑定失败：' + response })
               this.errorInfo = response
               this.changeState(4)
+              this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否绑定失败：' + response })
             }
           }
         } else {
-          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否绑定失败：' + response })
           this.errorInfo = response
           this.changeState(4)
+          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否绑定失败：' + response })
         }
       })
     },
@@ -389,15 +411,21 @@ export default {
             if (response.search('xpu') !== -1) {
               this.checkPinAndWallet = 3
               this.checkSafetyTest = 2
-              setTimeout(() => {
-                this.checkSafetyTest = 3
-              }, 1000)
-              setTimeout(() => {
-                this.$sa.track('im_landing_connect$success', { name: 'landingConnectSuccess', to: 'im_homepage' })
-                // 跳转到主页
-                this.$router.push('/home/welcomeHome')
-                // this.$router.push('imKeySetting')
-              }, 2000)
+              // setTimeout(() => {
+              // 读取ETH和DOT和KSM的地址
+              this.$ipcRenderer.send('genWalletAddress', { filePath: this.userPath })
+              this.$ipcRenderer.on('genWalletAddress', (result) => {
+                const response = result.result
+                if (result.isSuccess) {
+                  this.$store.state.WalletAddress = response
+                  this.checkSafetyTest = 3
+                  // 跳转到主页
+                  this.$router.push('/home/welcomeHome')
+                  // this.$router.push('imKeySetting')
+                  this.$sa.track('im_landing_connect$success', { name: 'landingConnectSuccess', to: 'im_homepage' })
+                }
+              })
+              // }, 2000)
             } else {
               // 跳转到创建钱包界面
               this.$router.push('imKeySetting')
@@ -407,10 +435,11 @@ export default {
             this.$router.push('imKeySetting')
           }
         } else {
+          this.$router.push('imKeySetting')
           // 错误界面
+          // this.errorInfo = response
+          // this.changeState(4)
           this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否创建wallet失败：' + response })
-          this.errorInfo = response
-          this.changeState(4)
         }
       })
     },
@@ -421,10 +450,19 @@ export default {
         if (result.isSuccess) {
           if (response !== '' || response !== null) {
             if (response.search('xpu') !== -1) {
-              this.$sa.track('im_landing_connect$success', { name: 'landingConnectSuccess', to: 'im_homepage' })
-              // 跳转到主页
-              this.$router.push('/home/welcomeHome')
-              // this.$router.push('imKeySetting')
+              // 读取ETH和DOT和KSM的地址
+              this.$ipcRenderer.send('genWalletAddress', { filePath: this.userPath })
+              this.$ipcRenderer.on('genWalletAddress', (result) => {
+                const response = result.result
+                if (result.isSuccess) {
+                  this.$store.state.WalletAddress = response
+                  this.bindingStatus = 2
+                  // 跳转到主页
+                  this.$router.push('/home/welcomeHome')
+                  // this.$router.push('imKeySetting')
+                  this.$sa.track('im_landing_connect$success', { name: 'landingConnectSuccess', to: 'im_homepage' })
+                }
+              })
             } else {
             // 跳转到创建钱包界面
               this.$router.push('imKeySetting')
@@ -434,10 +472,10 @@ export default {
             this.$router.push('imKeySetting')
           }
         } else {
-          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否创建wallet失败：' + response })
           // 错误界面
           this.errorInfo = response
           this.changeState(4)
+          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否创建wallet失败：' + response })
         }
       })
     },
@@ -450,16 +488,16 @@ export default {
             this.changeState(3)
             this.checkIsBL()
           } else {
-            // 连接失败
-            this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '连接设备失败：' + response })
             this.errorInfo = response
             this.changeState(4)
+            // 连接失败
+            this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '连接设备失败：' + response })
           }
         } else {
-          // 连接失败
-          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '连接设备失败：' + response })
           this.errorInfo = response
           this.changeState(4)
+          // 连接失败
+          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '连接设备失败：' + response })
         }
       })
       // setTimeout(() => {
@@ -503,18 +541,60 @@ export default {
         const response = result.result
         if (result.isSuccess) {
           if (response === constants.RESULT_STATUS_SUCCESS) {
-            // cos 更新完成需要写wallet地址
-            this.cosUpdateWalletAddress()
-            // cos更新成功检查是否激活
+            this.$ipcRenderer.send('deviceBindCheck', this.userPath)
+            this.$ipcRenderer.on('deviceBindCheck', (bindCheckResult) => {
+              if (bindCheckResult.isSuccess) {
+                // 获取绑定码，绑定设备之后再写入地址
+                this.$ipcRenderer.send('exportBindCode')
+                this.$ipcRenderer.on('exportBindCode', (result) => {
+                  const bindCode = result.result
+                  if (result.isSuccess) {
+                    // 升级完成之后，需要重新绑定设备
+                    this.$ipcRenderer.send('deviceBindAcquire', bindCode)
+                    this.$ipcRenderer.on('deviceBindAcquire', (deviceBindResult) => {
+                      // const deviceBindResult = ipcRenderer.sendSync('deviceBindAcquire', bindCode)
+                      const response = deviceBindResult.result
+                      if (deviceBindResult.isSuccess) {
+                        if (response === constants.RESULT_STATUS_SUCCESS) {
+                          // 绑定成功后存储绑定码
+                          this.$ipcRenderer.send('importBindCode', bindCode)
+                          this.$ipcRenderer.on('importBindCode', (importBindResult) => {
+                            const importBindResponse = importBindResult.result
+                            if (importBindResult.isSuccess) {
+                              // cos 更新完成需要写wallet地址
+                              this.cosUpdateWalletAddress()
+                            } else {
+                              this.errorInfo = importBindResponse
+                              this.changeCode(5)
+                              this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码存储失败：' + importBindResponse })
+                            }
+                          })
+                        } else {
+                          this.changeCode(5)
+                          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
+                        }
+                      } else {
+                        this.changeCode(5)
+                        this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
+                      }
+                    })
+                  }
+                })
+              } else {
+                this.errorInfo = response
+                this.changeState(4)
+                this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否绑定失败：' + response })
+              }
+            })
           } else {
-            this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '固件升级失败：' + response })
             // 固件升级失败
             this.changeState(5)
+            this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '固件升级失败：' + response })
           }
         } else {
-          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '固件升级失败：' + response })
           // 固件升级失败
           this.changeState(5)
+          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '固件升级失败：' + response })
         }
       })
     },
@@ -530,23 +610,22 @@ export default {
             this.$ipcRenderer.on('importBindCode', (importBindResult) => {
               const importBindResponse = importBindResult.result
               if (importBindResult.isSuccess) {
-                this.bindingStatus = 2
                 this.bindOtherCheckIsCreateWallet()
               } else {
-                this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码存储失败：' + importBindResponse })
                 this.errorInfo = importBindResponse
                 this.changeState(4)
+                this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码存储失败：' + importBindResponse })
               }
             })
           } else {
-            this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
             this.codeIsTrue = false
             this.bindingStatus = 0
+            this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
           }
         } else {
-          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
           this.codeIsTrue = false
           this.bindingStatus = 0
+          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
         }
       })
     },
@@ -562,11 +641,13 @@ export default {
           this.$ipcRenderer.on('initImKeyCore', (result) => {
             const response = result.result
             if (result.isSuccess) {
+              console.log('none')
             } else {
               this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '初始化imkey core失败：' + response })
             }
           })
         } else {
+          console.log('none')
         }
       })
     }

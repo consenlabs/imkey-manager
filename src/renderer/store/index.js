@@ -13,9 +13,12 @@ export default new Vuex.Store({
     cosOldVersionData: '',
     cosNewVersionData: '',
     buttonTexts: '',
-    userPath: ''
+    userPath: '',
+    isFirstGoToManagerPage: true,
+    WalletAddress: []
   },
   mutations: {},
   actions: {},
-  modules: {}
+  modules: {},
+  accounts: ['0xa6c82cf246f820f70d3c11b1b518b2d0eaca3258']
 })

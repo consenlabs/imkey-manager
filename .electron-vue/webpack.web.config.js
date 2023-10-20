@@ -13,13 +13,30 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 const {VueLoaderPlugin} = require('vue-loader')
 
 let webConfig = {
-    devtool: '#cheap-module-eval-source-map',
+    // devtool: '#cheap-module-eval-source-map',
     entry: {
         web: path.join(__dirname, '../src/renderer/main.js'),
-        worker: path.join(__dirname, '../src/worker/worker.js')
+        worker: path.join(__dirname, '../src/worker/worker.js'),
+        polkadotdapp: path.join(__dirname, '../src/api/polkadotdapp.js'),
+        ethereumdapp: path.join(__dirname, '../src/api/ethereumdapp.js'),
+        // imkey_web3_provider: path.join(__dirname, '../src/api/imkey_web3_provider.js')
     },
     module: {
         rules: [
+            {
+                test: /\.vue$/,
+                use: {
+                    loader: 'vue-loader',
+                    options: {
+                        extractCSS: true,
+                        loaders: {
+                            sass: 'vue-style-loader!css-loader!sass-loader?indentedSyntax=1',
+                            scss: 'vue-style-loader!css-loader!sass-loader',
+                            less: 'vue-style-loader!css-loader!less-loader'
+                        }
+                    }
+                }
+            },
             {
                 test: /\.scss$/,
                 use: ['vue-style-loader', 'css-loader', 'sass-loader']
@@ -46,25 +63,12 @@ let webConfig = {
                 include: [path.resolve(__dirname, '../src/renderer')],
                 exclude: /node_modules/
             },
-            {
-                test: /\.vue$/,
-                use: {
-                    loader: 'vue-loader',
-                    options: {
-                        extractCSS: true,
-                        loaders: {
-                            sass: 'vue-style-loader!css-loader!sass-loader?indentedSyntax=1',
-                            scss: 'vue-style-loader!css-loader!sass-loader',
-                            less: 'vue-style-loader!css-loader!less-loader'
-                        }
-                    }
-                }
-            },
+
             {
                 test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
                 use: {
                     loader: 'url-loader',
-                    query: {
+                    options: {
                         limit: 10000,
                         name: 'imgs/[name].[ext]'
                     }
@@ -74,7 +78,7 @@ let webConfig = {
                 test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/,
                 use: {
                     loader: 'url-loader',
-                    query: {
+                    options: {
                         limit: 10000,
                         name: 'fonts/[name].[ext]'
                     }
@@ -85,16 +89,6 @@ let webConfig = {
     plugins: [
         new VueLoaderPlugin(),
         new MiniCssExtractPlugin({filename: 'styles.css'}),
-        // new HtmlWebpackPlugin({
-        //   filename: 'index.html',
-        //   template: path.resolve(__dirname, '../src/index.ejs'),
-        //   minify: {
-        //     collapseWhitespace: true,
-        //     removeAttributeQuotes: true,
-        //     removeComments: true
-        //   },
-        //   nodeModules: false
-        // }),
         new HtmlWebpackPlugin({
             filename: 'index.html',
             template: path.resolve(__dirname, '../src/index.ejs'),
@@ -151,7 +145,8 @@ let webConfig = {
     ],
     output: {
         filename: '[name].js',
-        path: path.join(__dirname, '../dist/web')
+        path: path.join(__dirname, '../dist/web'),
+        publicPath: './'
     },
     resolve: {
         alias: {
@@ -167,17 +162,19 @@ let webConfig = {
  * Adjust webConfig for production settings
  */
 if (process.env.NODE_ENV === 'production') {
-    webConfig.devtool = ''
+    // webConfig.devtool = ''
 
     webConfig.plugins.push(
         new BabiliWebpackPlugin(),
-        new CopyWebpackPlugin([
+        new CopyWebpackPlugin(
             {
-                from: path.join(__dirname, '../static'),
-                to: path.join(__dirname, '../dist/web/static'),
-                ignore: ['.*']
-            }
-        ]),
+                patterns: [
+                    {  from: path.join(__dirname, '../static'),
+                        to: path.join(__dirname, '../dist/web/static')},
+                    {  from: path.join(__dirname, '../src/api/imkey_web3_provider.js'),
+                        to: path.join(__dirname, '../dist/electron/imkey_web3_provider.js')},
+                ]
+            }),
         new webpack.DefinePlugin({
             'process.env.NODE_ENV': '"production"'
         }),

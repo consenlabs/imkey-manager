@@ -7,14 +7,14 @@ import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 import VueI18n from 'vue-i18n'
 import '@fortawesome/fontawesome-free/css/all.css' // Ensure you are using css-loader
-const { remote, ipcRenderer } = require('electron') // Renderer process modules
-const { screen } = remote // Main process modules
-const devInnerHeight = 1080.0 // 开发时的InnerHeight
-const devDevicePixelRatio = 1.0// 开发时的devicepixelratio
-const devScaleFactor = 1.3 // 开发时的ScaleFactor
-const scaleFactor = screen.getPrimaryDisplay().scaleFactor
-const zoomFactor = (window.innerHeight / devInnerHeight) * (window.devicePixelRatio / devDevicePixelRatio) * (devScaleFactor / scaleFactor)
-ipcRenderer.send('zoomIn', zoomFactor)
+const { ipcRenderer } = require('electron') // Renderer process modules
+// const { screen } = remote // Main process modules
+// const devInnerHeight = 1080.0 // 开发时的InnerHeight
+// const devDevicePixelRatio = 1.0// 开发时的devicepixelratio
+// const devScaleFactor = 1.3 // 开发时的ScaleFactor
+// const scaleFactor = screen.getPrimaryDisplay().scaleFactor
+// const zoomFactor = (window.innerHeight / devInnerHeight) * (window.devicePixelRatio / devDevicePixelRatio) * (devScaleFactor / scaleFactor)
+// ipcRenderer.send('zoomIn', zoomFactor)
 // 神策埋点
 Vue.prototype.$sa = sa
 sa.init({
@@ -56,7 +56,7 @@ Vue.use(ElementUI)
 Vue.use(VueI18n)
 // 弹出框禁止滑动
 Vue.prototype.noScroll = function () {
-  var mo = function (e) {
+  const mo = function (e) {
     e.preventDefault()
   }
   document.body.style.overflow = 'hidden'
@@ -66,7 +66,7 @@ Vue.prototype.noScroll = function () {
 
 // 弹出框可以滑动
 Vue.prototype.canScroll = function () {
-  var mo = function (e) {
+  const mo = function (e) {
     e.preventDefault()
   }
   // 出现滚动条
@@ -136,6 +136,7 @@ router.beforeEach(function (to, from, next) {
       toName = 'im_manage'
     }
   }
+  ipcRenderer.send('openBrowserView', 'url', true)
   if (eventName !== '' && toName !== '') {
     sa.track(eventName, { to: toName }) // after the next(); statement
   }

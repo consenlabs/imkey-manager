@@ -3,6 +3,7 @@ import {api} from "./apirouter";
 const apiPb = require('../proto/api_pb')
 const commonPb = require('../proto/common_pb')
 const btcPb = require('../proto/btc_pb')
+const btcforkPb = require('../proto/btcfork_pb')
 const ethPb = require('../proto/eth_pb')
 const eosPb = require('../proto/eos_pb')
 const cosmosPb = require('../proto/cosmos_pb')
@@ -97,7 +98,84 @@ function btcSignTransactionCallImKeyApi (json) {
     }
   }
 }
+function btcForkSignTransactionCallImKeyApi (json,chainType) {
+  let utxos = []
+  utxos = json.utxo
+  const btcForkTxInput = new btcforkPb.BtcForkTxInput()
+  for (let i = 0; i < utxos.length; i++) {
+    const utxo = new btcforkPb.Utxo()
+    const utxoObj = utxos[i]
+    utxo.setTxhash(utxoObj.txHash)
+    utxo.setVout(utxoObj.vout)
+    utxo.setAmount(utxoObj.amount)
+    utxo.setAddress(utxoObj.address)
+    utxo.setScriptpubkey(utxoObj.scriptPubkey)
+    utxo.setDerivedpath(utxoObj.derivedPath)
+    utxo.setSequence(utxoObj.sequence)
+    btcForkTxInput.addUnspents(utxo)
+  }
+  btcForkTxInput.setTo(json.to)
+  btcForkTxInput.setAmount(json.amount)
+  btcForkTxInput.setFee(json.fee)
 
+  if (typeof (json.segWit) === 'undefined') {
+  } else {
+    if (json.segWit !== '' || json.segWit !== null) {
+      btcForkTxInput.setSegwit(json.segWit)
+    }
+  }
+
+  if (typeof (json.changeAddressIndex) === 'undefined') {
+  } else {
+    if (json.changeAddressIndex !== '' || json.changeAddressIndex !== null) {
+      btcForkTxInput.setChangeaddressindex(json.changeAddressIndex)
+    }
+  }
+  if (typeof (json.changeAddress) === 'undefined') {
+  } else {
+    if (json.changeAddress !== '' || json.changeAddress !== null) {
+      btcForkTxInput.setChangeaddress(json.changeAddress)
+    }
+  }
+  const btcForkReqBytes = btcForkTxInput.serializeBinary()
+  const inputAny = new proto.google.protobuf.Any()
+  inputAny.setValue(btcForkReqBytes)
+  const signParam = new commonPb.SignParam()
+  signParam.setChaintype(chainType)
+  signParam.setPath(json.path)
+  signParam.setNetwork(json.network)
+  signParam.setInput(inputAny)
+  if (typeof (json.preview) === 'undefined') {
+
+  }else{
+    signParam.setPayment(json.preview.payment)
+    signParam.setReceiver(json.preview.receiver)
+    signParam.setSender(json.preview.sender)
+    signParam.setFee(json.preview.fee)
+  }
+  const signParamBytes = signParam.serializeBinary()
+  const signParamAny = new proto.google.protobuf.Any()
+  signParamAny.setValue(signParamBytes)
+  const imKeyAction = new apiPb.ImkeyAction()
+  imKeyAction.setMethod('sign_tx')
+  imKeyAction.setParam(signParamAny)
+  const imKeyActionBytes = imKeyAction.serializeBinary()
+  const resBuffer = callImKeyCore.callImKeyApi(bytes2HexStr(imKeyActionBytes))
+  const error = callImKeyCore.getLastErrorMessage()
+  if (error === '' || error === null) {
+    const response = new btcforkPb.BtcForkTxOutput.deserializeBinary(hexStr2Bytes(resBuffer))
+    return {
+      isSuccess: true,
+      result: response.toObject()
+    }
+  } else {
+    const errorResponse = new apiPb.ErrorResponse.deserializeBinary(hexStr2Bytes(error))
+    return {
+      isSuccess: false,
+      result: errorResponse.getError()
+    }
+  }
+}
 function ethSignTransactionCallImKeyApi (json) {
   const transaction = json.transaction
   const preview = json.preview
@@ -382,6 +460,8 @@ function filecoinSignTransactionCallImKeyApi (json) {
 }
 function substrateSignTransactionCallImKeyApi (json,chainType) {
   const substrateRawTxIn = new substratePb.SubstrateRawTxIn()
+  console.log(json)
+  console.log("json.rawdata:"+json.rawdata)
   substrateRawTxIn.setRawdata(json.rawdata)
   const substrateRawTxInBytes = substrateRawTxIn.serializeBinary()
   const substrateRawTxInAny = new proto.google.protobuf.Any()
@@ -390,10 +470,12 @@ function substrateSignTransactionCallImKeyApi (json,chainType) {
   signParam.setChaintype(chainType)
   signParam.setPath(json.path)
   signParam.setInput(substrateRawTxInAny)
-  signParam.setPayment(json.preview.payment)
-  signParam.setReceiver(json.preview.receiver)
-  signParam.setSender(json.preview.sender)
-  signParam.setFee(json.preview.fee)
+  if(json.preview!==null && (typeof json.preview !=='undefined')){
+    signParam.setPayment(json.preview.payment)
+    signParam.setReceiver(json.preview.receiver)
+    signParam.setSender(json.preview.sender)
+    signParam.setFee(json.preview.fee)
+  }
   const signParamBytes = signParam.serializeBinary()
   const signParamAny = new proto.google.protobuf.Any()
   signParamAny.setValue(signParamBytes)
@@ -612,7 +694,52 @@ export function getBTCSegWitAddress (json) {
 export function registerBTCSegWitAddress (json) {
   return address('BITCOIN',json.path, json.network, true, 'register_address')
 }
+export function getBCHAddress (json) {
+  return address('BITCOINCASH',json.path, json.network, false,'get_address')
+}
 
+export function registerBCHAddress (json) {
+  // return address('BITCOINCASH',json.path, json.network, false, 'register_address')
+  return {
+    isSuccess: true,
+    result: ''
+  }
+}
+
+export function getBCHSegWitAddress (json) {
+  return address('BITCOINCASH',json.path, json.network, true,'get_address')
+}
+
+export function registerBCHSegWitAddress (json) {
+  // return address('BITCOINCASH',json.path, json.network, true, 'register_address')
+  return {
+    isSuccess: true,
+    result: ''
+  }
+}
+export function getLTCAddress (json) {
+  return address('LITECOIN',json.path, json.network, false,'get_address')
+}
+
+export function registerLTCAddress (json) {
+  // return address('LITECOIN',json.path, json.network, false, 'register_address')
+  return {
+    isSuccess: true,
+    result: ''
+  }
+}
+
+export function getLTCSegWitAddress (json) {
+  return address('LITECOIN',json.path, json.network, true,'get_address')
+}
+
+export function registerLTCSegWitAddress (json) {
+  // return address('LITECOIN',json.path, json.network, true, 'register_address')
+  return {
+    isSuccess: true,
+    result: ''
+  }
+}
 export function getCOSMOSAddress (json) {
   return address('COSMOS',json.path, '', false,'get_address')
 }
@@ -687,7 +814,12 @@ export function btcUsdtSignTransaction (json) {
 export function btcUsdtSegWitSignTransaction (json) {
   return btcSignTransactionCallImKeyApi(json )
 }
-
+export function bchSignTransaction (json) {
+  return btcForkSignTransactionCallImKeyApi(json,'BITCOINCASH')
+}
+export function ltcSignTransaction (json) {
+  return btcForkSignTransactionCallImKeyApi(json,'LITECOIN')
+}
 export function ethSignTransaction (json) {
   return ethSignTransactionCallImKeyApi(json)
 }

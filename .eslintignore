@@ -4,3 +4,4 @@ test/e2e/*.js
 src/proto/**
 src/api/devicemanagerapi.js
 src/api/walletapi.js
+src/api/imkey_web3_provider.js
