@@ -1,6 +1,6 @@
 {
   "name": "imKeyManager",
-  "version": "2.0.1-beta",
+  "version": "2.1.0-beta",
   "author": "imkey <weiqiang@imkey.im>",
   "description": "imKey Manager @2020",
   "license": "MIT",
@@ -160,7 +160,7 @@
     "del": "^6.0.0",
     "devtron": "^1.4.0",
     "electron": "^11.3.0",
-    "electron-builder": "22.14.5",
+    "electron-builder": "24.6.4",
     "electron-debug": "^3.2.0",
     "electron-devtools-installer": "^3.2.0",
     "electron-download": "^4.1.1",
