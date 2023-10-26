@@ -7,6 +7,7 @@
       <div class="session1">
         <div class="left">
           <p>imKey Pro</p>
+          <p>ble version {{bleOldVersionData}}</p>
           <p>firmware version {{cosOldVersionData}}</p>
         </div>
         <div class="rightNoUpdate" v-if="isCosUpdate==false">
@@ -252,6 +253,8 @@ export default {
       centerDialogVisible: false,
       cosOldVersionData: '',
       cosNewVersionData: '',
+      bleOldVersionData: '',
+      bleNewVersionData: '',
       showError: false,
       errorInfo: {},
       softUpdateInfo: '',
@@ -278,7 +281,7 @@ export default {
           const response = result.result
           if (result.isSuccess) {
             this.bindCode = response
-            this.getSn()
+            this.bleVersion()
           }
         })
 
@@ -314,16 +317,19 @@ export default {
     // },
     compareByFirmwareVersion () {
       // 如果cos版本不一致，提示用户更新
-      if (this.cosNewVersionData === null || this.cosNewVersionData === '') {
+      if ((this.cosNewVersionData === null || this.cosNewVersionData === '') &&
+            (this.bleNewVersionData === null || this.bleNewVersionData === '')) {
         this.isCosUpdate = false
       } else {
-        if (this.cosOldVersionData === this.cosNewVersionData) {
+        if ((this.cosOldVersionData === this.cosNewVersionData) &&
+                (this.bleOldVersionData === this.bleNewVersionData)) {
           this.isCosUpdate = false
         } else {
           // 升级按钮变黑
           this.isCosUpdate = true
           this.$store.state.isCosUpdate = true
           this.$store.state.cosNewVersionData = this.cosNewVersionData
+          this.$store.state.bleNewVersionData = this.bleNewVersionData
 
           // 检查完成
           this.status = 1
@@ -374,8 +380,7 @@ export default {
         if (getFirmwareVersionResult.isSuccess) {
           this.cosOldVersionData = getFirmwareVersionResponse
           this.$store.state.cosOldVersionData = getFirmwareVersionResponse
-          this.toCosCheckUpdate()
-
+          this.toCosCheckUpdate()          
           // TODO this.toCosCheckUpdate()
           // 升级按钮变黑
           // this.cosNewVersionData = '1.6.0'
@@ -387,6 +392,23 @@ export default {
           this.status = 1
         } else {
           // 获取固件版本失败
+          this.changeCode(5)
+        }
+      })
+    },
+    bleVersion () {
+      console.log('enter ble version##:')
+      this.$ipcRenderer.send('getBleVersion')
+      this.$ipcRenderer.on('getBleVersion', (getBleVersionResult) => {
+        console.log('bleOldVersionData##:' + this.bleOldVersionData)
+        const getBleVersionResponse = getBleVersionResult.result
+        if (getBleVersionResult.isSuccess) {
+          this.bleOldVersionData = getBleVersionResponse
+          console.log('bleOldVersionData:' + this.bleOldVersionData)
+          this.$store.state.bleOldVersionData = getBleVersionResponse
+          this.getSn()
+        } else {
+          // 获取BLE固件版本失败
           this.changeCode(5)
         }
       })
@@ -634,6 +656,13 @@ hover {
   color: #0E1019;
 }
 .left p:nth-child(2){
+  font-style: normal;
+  font-weight: normal;
+  font-size: 13px;
+  line-height: 18px;
+  color: #8189A7;
+}
+.left p:nth-child(3){
   font-style: normal;
   font-weight: normal;
   font-size: 13px;

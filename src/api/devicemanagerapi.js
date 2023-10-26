@@ -96,6 +96,9 @@ function getDeviceManageFunction(method_) {
         } else if (method_ === 'get_firmware_version') {
             const response = new devicePb.GetFirmwareVersionRes.deserializeBinary(hexStr2Bytes(resBuffer))
             result = response.getFirmwareVersion()
+        } else if (method_ === 'get_ble_version') {
+            const response = new devicePb.GetBleVersionRes.deserializeBinary(hexStr2Bytes(resBuffer))
+            result = response.getBleVersion()
         } else if (method_ === 'get_sdk_info') {
             const response = new devicePb.GetSdkInfoRes.deserializeBinary(hexStr2Bytes(resBuffer))
             result = response.getSdkVersion()
@@ -318,6 +321,21 @@ export function getRamSize() {
 
 export function getFirmwareVersion() {
     const response = getDeviceManageFunction('get_firmware_version')
+    if (response.isSuccess) {
+        return {
+            isSuccess: true,
+            result: response.result
+        }
+    } else {
+        return {
+            isSuccess: false,
+            result: response.result
+        }
+    }
+}
+
+export function getBleVersion() {
+    const response = getDeviceManageFunction('get_ble_version')
     if (response.isSuccess) {
         return {
             isSuccess: true,

@@ -118,6 +118,10 @@ ipcRenderer.on('message-from-main', (event, arg) => {
       response = deviceManger.getFirmwareVersion()
       handleType = 'getFirmwareVersion'
     }
+    if (arg.type === 'getBleVersion') {
+      response = deviceManger.getBleVersion()
+      handleType = 'getBleVersion'
+    }
     if (arg.type === 'getSdkInfo') {
       response = deviceManger.getSdkInfo()
       handleType = 'getSdkInfo'

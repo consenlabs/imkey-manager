@@ -12,6 +12,8 @@ export default new Vuex.Store({
     isCosUpdate: false,
     cosOldVersionData: '',
     cosNewVersionData: '',
+    bleOldVersionData: '',
+    bleNewVersionData: '',
     buttonTexts: '',
     userPath: '',
     isFirstGoToManagerPage: true,
