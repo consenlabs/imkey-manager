@@ -9,6 +9,7 @@
           <p>imKey Pro</p>
           <p>ble version {{bleOldVersionData}}</p>
           <p>firmware version {{cosOldVersionData}}</p>
+          <p v-if="bleOldVersionData != bleNewVersionData">{{$t('m.imKeyManager.imKey_pro_ble_update_prompt_message')}}</p>
         </div>
         <div class="rightNoUpdate" v-if="isCosUpdate==false">
           <p>
@@ -16,7 +17,7 @@
             <button>{{$t('m.imKeyManager.upgrade')}}</button>
           </p>
         </div>
-        <div class="rightUpdate"v-if="isCosUpdate==true">
+        <div class="rightUpdate" v-if="isCosUpdate==true">
           <p>
             {{$t('m.imKeyManager.found_new_cos_version')}}
             <button @click="updateFirmware">{{$t('m.imKeyManager.upgrade')}}</button>
@@ -380,13 +381,7 @@ export default {
         if (getFirmwareVersionResult.isSuccess) {
           this.cosOldVersionData = getFirmwareVersionResponse
           this.$store.state.cosOldVersionData = getFirmwareVersionResponse
-          this.toCosCheckUpdate()          
-          // TODO this.toCosCheckUpdate()
-          // 升级按钮变黑
-          // this.cosNewVersionData = '1.6.0'
-          // this.isCosUpdate = true
-          // this.$store.state.isCosUpdate = true
-          // this.$store.state.cosNewVersionData = this.cosNewVersionData
+          this.toCosCheckUpdate()
 
           // 检查完成
           this.status = 1
@@ -419,6 +414,8 @@ export default {
         const response = result.result
         if (result.isSuccess) {
           this.cosNewVersionData = response.latestCosVersion
+          this.bleNewVersionData = response.latestBleVersion
+          console.log('bleNewVersionData:' + response.latestBleVersion)
           this.isLatest = response.isLatest
           this.updateType = response.updateType
           this.description = response.description
@@ -668,6 +665,13 @@ hover {
   font-size: 13px;
   line-height: 18px;
   color: #8189A7;
+}
+.left p:nth-child(4){
+  font-style: normal;
+  font-weight: normal;
+  font-size: 10px;
+  line-height: 18px;
+  color: #f20606;
 }
 .rightNoUpdate p{
   font-size: 15px;
