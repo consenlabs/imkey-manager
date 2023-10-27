@@ -9,7 +9,7 @@
           <p>imKey Pro</p>
           <p>ble version {{bleOldVersionData}}</p>
           <p>firmware version {{cosOldVersionData}}</p>
-          <p v-if="bleOldVersionData != bleNewVersionData">{{$t('m.imKeyManager.imKey_pro_ble_update_prompt_message')}}</p>
+          <p id="bleUpdatePromptMsg">{{$t('m.imKeyManager.imKey_pro_ble_update_prompt_message')}}</p>
         </div>
         <div class="rightNoUpdate" v-if="isCosUpdate==false">
           <p>
@@ -326,6 +326,9 @@ export default {
                 (this.bleOldVersionData === this.bleNewVersionData)) {
           this.isCosUpdate = false
         } else {
+          if(this.bleOldVersionData != this.bleNewVersionData){
+            document.getElementById("bleUpdatePromptMsg").style.display = "block"; 
+          }
           // 升级按钮变黑
           this.isCosUpdate = true
           this.$store.state.isCosUpdate = true
@@ -359,7 +362,6 @@ export default {
             const getSnResponse = getSnResult.result
             if (getSnResult.isSuccess) {
               this.SN = getSnResponse
-              console.log('SN:' + this.SN)
               this.firmwareVersion()
             } else {
               // 获取SN失败
@@ -392,14 +394,11 @@ export default {
       })
     },
     bleVersion () {
-      console.log('enter ble version##:')
       this.$ipcRenderer.send('getBleVersion')
       this.$ipcRenderer.on('getBleVersion', (getBleVersionResult) => {
-        console.log('bleOldVersionData##:' + this.bleOldVersionData)
         const getBleVersionResponse = getBleVersionResult.result
         if (getBleVersionResult.isSuccess) {
           this.bleOldVersionData = getBleVersionResponse
-          console.log('bleOldVersionData:' + this.bleOldVersionData)
           this.$store.state.bleOldVersionData = getBleVersionResponse
           this.getSn()
         } else {
@@ -415,7 +414,6 @@ export default {
         if (result.isSuccess) {
           this.cosNewVersionData = response.latestCosVersion
           this.bleNewVersionData = response.latestBleVersion
-          console.log('bleNewVersionData:' + response.latestBleVersion)
           this.isLatest = response.isLatest
           this.updateType = response.updateType
           this.description = response.description
@@ -672,6 +670,7 @@ hover {
   font-size: 10px;
   line-height: 18px;
   color: #f20606;
+  display:none;
 }
 .rightNoUpdate p{
   font-size: 15px;
