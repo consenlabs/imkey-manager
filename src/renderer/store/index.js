@@ -17,7 +17,8 @@ export default new Vuex.Store({
     buttonTexts: '',
     userPath: '',
     isFirstGoToManagerPage: true,
-    WalletAddress: []
+    WalletAddress: [],
+    isDisplayPromptMsg: true
   },
   mutations: {},
   actions: {},

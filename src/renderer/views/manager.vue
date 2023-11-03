@@ -314,37 +314,35 @@ export default {
       this.tip1 = false
     },
     init () {
-      this.$ipcRenderer.send('exportBindCode')
-      this.$ipcRenderer.on('exportBindCode', (result) => {
-        const response = result.result
-        if (result.isSuccess) {
-          this.bindCode = response
-          this.$ipcRenderer.send('connectDevice')
-          this.$ipcRenderer.on('connectDevice', (connectResult) => {
-            const response = connectResult.result
-            if (connectResult.isSuccess) {
-              if (response === constants.RESULT_STATUS_SUCCESS) {
-                if (this.$store.state.isFirstGoToManagerPage === true) {
+      this.$ipcRenderer.send('connectDevice')
+      this.$ipcRenderer.on('connectDevice', (connectResult) => {
+        const response = connectResult.result
+        if (connectResult.isSuccess) {
+          if (response === constants.RESULT_STATUS_SUCCESS) {
+            this.$ipcRenderer.send('exportBindCode')
+            this.$ipcRenderer.on('exportBindCode', (result) => {
+            const response = result.result
+            if (result.isSuccess) {
+              this.bindCode = response              
+              if (this.$store.state.isFirstGoToManagerPage === true) {
+                // 加载应用
+                this.getAppsList()
+                this.$store.state.isFirstGoToManagerPage = false
+              } else {
+                if (this.isEmptyObject(this.$store.state.apps) || JSON.stringify(this.$store.state.apps) === '[]') {
                   // 加载应用
                   this.getAppsList()
-                  this.$store.state.isFirstGoToManagerPage = false
                 } else {
-                  if (this.isEmptyObject(this.$store.state.apps) || JSON.stringify(this.$store.state.apps) === '[]') {
-                    // 加载应用
-                    this.getAppsList()
-                  } else {
-                    this.apps = this.$store.state.apps
-                    // TODO 检测COS升级
-                    this.checkFirmwareVersion()
-                  }
+                  this.apps = this.$store.state.apps
+                  // TODO 检测COS升级
+                  this.checkFirmwareVersion()
                 }
-              } else {
-                this.tip1 = true
               }
             } else {
               this.tip1 = true
             }
           })
+          }
         }
       })
     },
