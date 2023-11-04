@@ -321,27 +321,26 @@ export default {
           if (response === constants.RESULT_STATUS_SUCCESS) {
             this.$ipcRenderer.send('exportBindCode')
             this.$ipcRenderer.on('exportBindCode', (result) => {
-            const response = result.result
-            if (result.isSuccess) {
-              this.bindCode = response              
-              if (this.$store.state.isFirstGoToManagerPage === true) {
+              const response = result.result
+              if (result.isSuccess) {
+                this.bindCode = response
+                if (this.$store.state.isFirstGoToManagerPage === true) {
                 // 加载应用
-                this.getAppsList()
-                this.$store.state.isFirstGoToManagerPage = false
-              } else {
-                if (this.isEmptyObject(this.$store.state.apps) || JSON.stringify(this.$store.state.apps) === '[]') {
-                  // 加载应用
                   this.getAppsList()
+                  this.$store.state.isFirstGoToManagerPage = false
                 } else {
-                  this.apps = this.$store.state.apps
-                  // TODO 检测COS升级
-                  this.checkFirmwareVersion()
+                  if (this.isEmptyObject(this.$store.state.apps) || JSON.stringify(this.$store.state.apps) === '[]') {
+                  // 加载应用
+                    this.getAppsList()
+                  } else {
+                    this.apps = this.$store.state.apps
+                    this.checkFirmwareVersion()
+                  }
                 }
+              } else {
+                this.tip1 = true
               }
-            } else {
-              this.tip1 = true
-            }
-          })
+            })
           }
         }
       })
@@ -384,7 +383,6 @@ export default {
               this.apps = appList
               this.$store.state.apps = appList
               this.isSuccess = true
-              // TODO 检测COS升级
               this.checkFirmwareVersion()
             } else {
               this.tip = true

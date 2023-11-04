@@ -291,7 +291,7 @@ export default {
           } else {
           // 获取SN失败
           // this.changeCode(5)
-          this.status = 2
+            this.status = 2
           }
         })
       } else {
@@ -330,8 +330,8 @@ export default {
                 (this.bleOldVersionData === this.bleNewVersionData)) {
           this.isCosUpdate = false
         } else {
-          if((this.bleOldVersionData != this.bleNewVersionData) && this.$store.state.isDisplayPromptMsg){
-            document.getElementById("bleUpdatePromptMsg").style.display = "block"; 
+          if ((this.bleOldVersionData !== this.bleNewVersionData) && this.$store.state.isDisplayPromptMsg) {
+            document.getElementById('bleUpdatePromptMsg').style.display = 'block'
           }
           // 升级按钮变黑
           this.isCosUpdate = true
@@ -422,12 +422,11 @@ export default {
     },
     cosUpdateWalletAddress () {
       // 发送应用查询请求
-      this.$ipcRenderer.send('checkUpdate')
-      this.$ipcRenderer.on('checkUpdate', (CheckUpdateResult) => {
-        // const result = ipcRenderer.sendSync('checkUpdate')
-        const CheckUpdateResponse = CheckUpdateResult.result
-        if (CheckUpdateResult.isSuccess) {
-          const appList = CheckUpdateResponse.list
+      this.$ipcRenderer.send('getInstalledApplets')
+      this.$ipcRenderer.on('getInstalledApplets', (installedAppletsResult) => {
+        const installedAppletsResponse = installedAppletsResult.result
+        if (installedAppletsResult.isSuccess) {
+          const appList = installedAppletsResponse.list
           const nameList = []
           for (let i = 0; i < appList.length; i++) {
             nameList.push(appList[i].name)
@@ -435,6 +434,7 @@ export default {
           // 写wallet地址
           this.$ipcRenderer.send('writeWalletAddress', { name: nameList, filePath: this.$store.state.userPath })
           this.$ipcRenderer.on('writeWalletAddress', (result) => {
+            debugger
             if (result.isSuccess) {
               // wallet地址写入成功，开始再次检查
               this.isCosUpdate = false
@@ -445,7 +445,7 @@ export default {
               this.bleOldVersionData = this.bleNewVersionData
               this.$store.state.bleOldVersionData = this.bleNewVersionData
               this.$store.state.bleNewVersionData = this.bleNewVersionData
-              document.getElementById("bleUpdatePromptMsg").style.display = "none"; 
+              document.getElementById('bleUpdatePromptMsg').style.display = 'none'
               this.$store.state.isDisplayPromptMsg = false
               this.changeCode(2)
               this.$sa.track('im_setting_firmware$upgrade', { status: 1 })
@@ -454,7 +454,7 @@ export default {
             }
           })
         } else {
-          this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级写wallet地址前获取应用失败失败：' + CheckUpdateResponse })
+          this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级写wallet地址前获取应用失败失败：' + installedAppletsResponse })
         }
       })
     },
@@ -463,16 +463,14 @@ export default {
       this.$ipcRenderer.send('connectDevice')
       this.$ipcRenderer.on('connectDevice', (connectResult) => {
         if (connectResult.isSuccess) {
-          //如果升级cos，需要进行重新绑定和wallet address写入
-          if(this.cosOldVersionData != this.cosNewVersionData){
+          // 如果升级cos，需要进行重新绑定和wallet address写入
+          if (this.cosOldVersionData !== this.cosNewVersionData) {
             this.$ipcRenderer.send('cosUpdate')
             this.$ipcRenderer.on('cosUpdate', (result) => {
               const response = result.result
               if (result.isSuccess) {
-                console.log('cos update success')
                 if ((response === constants.RESULT_STATUS_SUCCESS)) {
-                  if(this.cosOldVersionData != this.cosNewVersionData){
-                    console.log('enter banding')
+                  if (this.cosOldVersionData !== this.cosNewVersionData) {
                     // 升级完成之后，需要重新绑定设备
                     this.$ipcRenderer.send('deviceBindAcquire', this.bindCode)
                     this.$ipcRenderer.on('deviceBindAcquire', (deviceBindResult) => {
@@ -500,15 +498,15 @@ export default {
                         this.changeCode(3)
                         this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
                       }
-                    })  
-                  } else {//如果只升级ble固件，不需要重新绑定和wallet address写入
+                    })
+                  } else { // 如果只升级ble固件，不需要重新绑定和wallet address写入
                     this.isCosUpdate = false
                     this.bleOldVersionData = this.bleNewVersionData
                     this.$store.state.isCosUpdate = false
                     this.$store.state.bleOldVersionData = this.bleNewVersionData
                     this.$store.state.bleNewVersionData = this.bleNewVersionData
-                    document.getElementById("bleUpdatePromptMsg").style.display = "none";
-                    this.$store.state.isDisplayPromptMsg = false 
+                    document.getElementById('bleUpdatePromptMsg').style.display = 'none'
+                    this.$store.state.isDisplayPromptMsg = false
                     this.changeCode(2)
                     this.$sa.track('im_setting_firmware$upgrade', { status: 1 })
                   }
@@ -523,36 +521,34 @@ export default {
                 this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级失败：' + response })
               }
             })
-          }else{
+          } else {
             this.$ipcRenderer.send('cosUpdate')
             this.$ipcRenderer.on('cosUpdate', (result) => {
-            const response = result.result
-            if (result.isSuccess) {
-              console.log('cos update success')
-              if ((response === constants.RESULT_STATUS_SUCCESS)) {              
-                   // wallet地址写入成功，开始再次检查
+              const response = result.result
+              if (result.isSuccess) {
+                if ((response === constants.RESULT_STATUS_SUCCESS)) {
+                  // wallet地址写入成功，开始再次检查
                   this.isCosUpdate = false
                   this.bleOldVersionData = this.bleNewVersionData
                   this.$store.state.isCosUpdate = false
                   this.$store.state.bleOldVersionData = this.bleNewVersionData
                   this.$store.state.bleNewVersionData = this.bleNewVersionData
-                  document.getElementById("bleUpdatePromptMsg").style.display = "none";
-                  this.$store.state.isDisplayPromptMsg = false 
+                  document.getElementById('bleUpdatePromptMsg').style.display = 'none'
+                  this.$store.state.isDisplayPromptMsg = false
                   this.changeCode(2)
                   this.$sa.track('im_setting_firmware$upgrade', { status: 1 })
+                } else {
+                  this.isCosUpdate = true
+                  this.changeCode(3)
+                  this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级失败：' + response })
+                }
               } else {
                 this.isCosUpdate = true
                 this.changeCode(3)
                 this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级失败：' + response })
               }
-            } else {
-              this.isCosUpdate = true
-              this.changeCode(3)
-              this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级失败：' + response })
-            }
-          })
+            })
           }
-          
         } else {
           this.isCosUpdate = true
           this.changeCode(3)

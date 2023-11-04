@@ -150,6 +150,10 @@ ipcRenderer.on('message-from-main', (event, arg) => {
       response = deviceManger.checkUpdateAppList()
       handleType = 'checkUpdate'
     }
+    if (arg.type === 'getInstalledApplets') {
+      response = deviceManger.getInstalledAppletList()
+      handleType = 'getInstalledApplets'
+    }
     if (arg.type === 'downloadApplet') {
       response = deviceManger.downloadApplet(arg.data)
       handleType = 'downloadApplet'

@@ -296,6 +296,33 @@ export function checkUpdateAppList() {
     }
 }
 
+export function getInstalledAppletList() {
+    try {
+        const response = getDeviceManageFunction('check_update')
+        const collections = response.result.availableAppListList
+        const list = []
+        for (let i = 0; i < collections.length; i++) {
+            if (collections[i].installedVersion !== 'none' && collections[i].installedVersion !== null && collections[i].appName !== 'IMK') {
+                const collection = {
+                    name: collections[i].appName,
+                }
+                list.push(collection)
+            }            
+        }
+        const total = list.length
+        const status = response.result.status
+        return {
+            isSuccess: true,
+            result: _.cloneDeep({status: status, total: total, list: list})
+        }
+    } catch (err) {
+        return {
+            isSuccess: false,
+            result: err
+        }
+    }
+}
+
 export function getSeid() {
     return getDeviceManageFunction('get_seid')
 }
