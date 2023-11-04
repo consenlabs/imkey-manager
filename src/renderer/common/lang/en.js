@@ -24,7 +24,7 @@ export const m = {
     find_firmware_update_fail_continue: 'It is detected that the application exit abnormal, please continue to upgrade, and imKey Manager can be used normally after completion',
     imKey_pro_firmware_update_wait: 'The imKey Pro firmware version is being upgraded, please wait patiently',
     imKey_pro_firmware_update_no_disconnect: 'Note: After the upgrade is completed, imKey Pro will automatically restart. During the upgrade process, please do not disconnect the USB connection and terminate the imKey operation at the same time',
-    imKey_pro_ble_update_prompt_message: 'Note: After the upgrade is successful, you need to manually restart the device and delete the Bluetooth pairing information and pair again',
+    imKey_pro_ble_update_prompt_message: 'Note: After successful upgrade, please delete the Bluetooth pairing information and re-pair',
     enter_bind_code: 'Please input a binding code',
     bind_code_error_please_check: 'Binding code error, please check carefully, or reset imKey by importing the mnemonic phrase to retrieve it',
     enter_pin_imKey_pro: 'Please enter the PIN code in imKey Pro',
