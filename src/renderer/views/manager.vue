@@ -342,6 +342,9 @@ export default {
               }
             })
           }
+        }else {
+          //连接设备失败
+          this.status = 2
         }
       })
     },
