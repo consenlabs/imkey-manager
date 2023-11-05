@@ -337,7 +337,11 @@ export default {
           this.isCosUpdate = true
           this.$store.state.isCosUpdate = true
           this.$store.state.cosNewVersionData = this.cosNewVersionData
-          this.$store.state.bleNewVersionData = this.bleNewVersionData
+          if (this.$store.state.installedBleVersion === '') {
+            this.$store.state.bleNewVersionData = this.bleNewVersionData
+          } else {
+            this.$store.state.bleNewVersionData = this.$store.state.installedBleVersion
+          }
 
           // 检查完成
           this.status = 1
@@ -393,8 +397,13 @@ export default {
       this.$ipcRenderer.on('getBleVersion', (getBleVersionResult) => {
         const getBleVersionResponse = getBleVersionResult.result
         if (getBleVersionResult.isSuccess) {
-          this.bleOldVersionData = getBleVersionResponse
-          this.$store.state.bleOldVersionData = getBleVersionResponse
+          if (this.$store.state.installedBleVersion === '') {
+            this.bleOldVersionData = getBleVersionResponse
+            this.$store.state.bleOldVersionData = getBleVersionResponse
+          } else {
+            this.bleOldVersionData = this.$store.state.installedBleVersion
+            this.$store.state.bleOldVersionData = this.$store.state.installedBleVersion
+          }         
           this.getSn()
         } else {
           // 获取BLE固件版本失败
@@ -434,7 +443,6 @@ export default {
           // 写wallet地址
           this.$ipcRenderer.send('writeWalletAddress', { name: nameList, filePath: this.$store.state.userPath })
           this.$ipcRenderer.on('writeWalletAddress', (result) => {
-            debugger
             if (result.isSuccess) {
               // wallet地址写入成功，开始再次检查
               this.isCosUpdate = false
@@ -463,92 +471,63 @@ export default {
       this.$ipcRenderer.send('connectDevice')
       this.$ipcRenderer.on('connectDevice', (connectResult) => {
         if (connectResult.isSuccess) {
-          // 如果升级cos，需要进行重新绑定和wallet address写入
-          if (this.cosOldVersionData !== this.cosNewVersionData) {
-            this.$ipcRenderer.send('cosUpdate')
-            this.$ipcRenderer.on('cosUpdate', (result) => {
-              const response = result.result
-              if (result.isSuccess) {
-                if ((response === constants.RESULT_STATUS_SUCCESS)) {
-                  if (this.cosOldVersionData !== this.cosNewVersionData) {
-                    // 升级完成之后，需要重新绑定设备
-                    this.$ipcRenderer.send('deviceBindAcquire', this.bindCode)
-                    this.$ipcRenderer.on('deviceBindAcquire', (deviceBindResult) => {
-                      // const deviceBindResult = ipcRenderer.sendSync('deviceBindAcquire', bindCode)
-                      const response = deviceBindResult.result
-                      if (deviceBindResult.isSuccess) {
-                        if (response === constants.RESULT_STATUS_SUCCESS) {
-                          // 绑定成功后存储绑定码
-                          this.$ipcRenderer.send('importBindCode', this.bindCode)
-                          this.$ipcRenderer.on('importBindCode', (importBindResult) => {
-                            const importBindResponse = importBindResult.result
-                            if (importBindResult.isSuccess) {
-                              this.cosUpdateWalletAddress()
-                            } else {
-                              this.errorInfo = importBindResponse
-                              this.changeCode(3)
-                              this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码存储失败：' + importBindResponse })
-                            }
-                          })
-                        } else {
-                          this.changeCode(3)
-                          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
-                        }
+          this.$ipcRenderer.send('cosUpdate')
+          this.$ipcRenderer.on('cosUpdate', (result) => {
+            const response = result.result
+            if (result.isSuccess) {
+              if ((response === constants.RESULT_STATUS_SUCCESS)) {
+                // 如果升级cos，需要进行重新绑定和wallet address写入
+                if (this.cosOldVersionData !== this.cosNewVersionData) {
+                  // 升级完成之后，需要重新绑定设备
+                  this.$ipcRenderer.send('deviceBindAcquire', this.bindCode)
+                  this.$ipcRenderer.on('deviceBindAcquire', (deviceBindResult) => {
+                    // const deviceBindResult = ipcRenderer.sendSync('deviceBindAcquire', bindCode)
+                    const response = deviceBindResult.result
+                    if (deviceBindResult.isSuccess) {
+                      if (response === constants.RESULT_STATUS_SUCCESS) {
+                        // 绑定成功后存储绑定码
+                        this.$ipcRenderer.send('importBindCode', this.bindCode)
+                        this.$ipcRenderer.on('importBindCode', (importBindResult) => {
+                          const importBindResponse = importBindResult.result
+                          if (importBindResult.isSuccess) {
+                            this.cosUpdateWalletAddress()
+                          } else {
+                            this.errorInfo = importBindResponse
+                            this.changeCode(3)
+                            this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码存储失败：' + importBindResponse })
+                          }
+                        })
                       } else {
                         this.changeCode(3)
                         this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
                       }
-                    })
-                  } else { // 如果只升级ble固件，不需要重新绑定和wallet address写入
-                    this.isCosUpdate = false
-                    this.bleOldVersionData = this.bleNewVersionData
-                    this.$store.state.isCosUpdate = false
-                    this.$store.state.bleOldVersionData = this.bleNewVersionData
-                    this.$store.state.bleNewVersionData = this.bleNewVersionData
-                    document.getElementById('bleUpdatePromptMsg').style.display = 'none'
-                    this.$store.state.isDisplayPromptMsg = false
-                    this.changeCode(2)
-                    this.$sa.track('im_setting_firmware$upgrade', { status: 1 })
-                  }
-                } else {
-                  this.isCosUpdate = true
-                  this.changeCode(3)
-                  this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级失败：' + response })
+                    } else {
+                      this.changeCode(3)
+                      this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
+                    }
+                  })
                 }
-              } else {
-                this.isCosUpdate = true
-                this.changeCode(3)
-                this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级失败：' + response })
-              }
-            })
-          } else {
-            this.$ipcRenderer.send('cosUpdate')
-            this.$ipcRenderer.on('cosUpdate', (result) => {
-              const response = result.result
-              if (result.isSuccess) {
-                if ((response === constants.RESULT_STATUS_SUCCESS)) {
-                  // wallet地址写入成功，开始再次检查
+                if (this.bleOldVersionData !== this.bleNewVersionData) {
                   this.isCosUpdate = false
                   this.bleOldVersionData = this.bleNewVersionData
                   this.$store.state.isCosUpdate = false
-                  this.$store.state.bleOldVersionData = this.bleNewVersionData
-                  this.$store.state.bleNewVersionData = this.bleNewVersionData
+                  this.$store.state.installedBleVersion = this.bleNewVersionData
                   document.getElementById('bleUpdatePromptMsg').style.display = 'none'
                   this.$store.state.isDisplayPromptMsg = false
                   this.changeCode(2)
                   this.$sa.track('im_setting_firmware$upgrade', { status: 1 })
-                } else {
-                  this.isCosUpdate = true
-                  this.changeCode(3)
-                  this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级失败：' + response })
                 }
               } else {
                 this.isCosUpdate = true
                 this.changeCode(3)
                 this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级失败：' + response })
               }
-            })
-          }
+            } else {
+              this.isCosUpdate = true
+              this.changeCode(3)
+              this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级失败：' + response })
+            }
+          })
         } else {
           this.isCosUpdate = true
           this.changeCode(3)
