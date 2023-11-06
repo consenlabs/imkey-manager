@@ -508,8 +508,8 @@ export default {
     },
     cosUpdateWalletAddress () {
       // 发送应用查询请求
-      this.$ipcRenderer.send('checkUpdate')
-      this.$ipcRenderer.on('checkUpdate', (CheckUpdateResult) => {
+      this.$ipcRenderer.send('getInstalledApplets')
+      this.$ipcRenderer.on('getInstalledApplets', (CheckUpdateResult) => {
         const CheckUpdateResponse = CheckUpdateResult.result
         if (CheckUpdateResult.isSuccess) {
           const appList = CheckUpdateResponse.list
