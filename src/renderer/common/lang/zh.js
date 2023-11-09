@@ -24,7 +24,7 @@ export const m = {
     find_firmware_update_fail_continue: '检测到因应用异常退出导致固件升级未完成，请继续升级，完成后可正常使用 imKey Manager',
     imKey_pro_firmware_update_wait: 'imKey Pro 固件版本升级中，请耐心等待',
     imKey_pro_firmware_update_no_disconnect: '注意：升级完成后 imKey Pro 将自动重启升级过程中请勿断开 USB 连接，同时中止 imKey 操作',
-    notice: '注意',
+    notice: '升级提示',
     imKey_pro_ble_update_prompt_message: '升级成功后需删除蓝牙配对信息重新配对',
     enter_bind_code: '请输入设备绑定码',
     bind_code_error_please_check: ' 绑定码错误，请仔细核对，或通过导入助记词',
