@@ -18,7 +18,6 @@ export default new Vuex.Store({
     userPath: '',
     isFirstGoToManagerPage: true,
     WalletAddress: [],
-    isDisplayPromptMsg: true,
     installedBleVersion: ''
   },
   mutations: {},
