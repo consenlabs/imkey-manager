@@ -165,11 +165,15 @@
 
     <div class="alert" v-if="supportCode==6">
       <div class="alertBox alert2">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M7.86 2H16.14L22 7.86V16.14L16.14 22H7.86L2 16.14V7.86L7.86 2Z" stroke="#43454F" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M15 9L9 15" stroke="#43454F" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M9 9L15 15" stroke="#43454F" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+        <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M33.25 7H29.75V22.75H7V26.25C7 27.2125 7.7875 28 8.75 28H28L35 35V8.75C35 7.7875 34.2125 7 33.25 7ZM26.25 17.5V1.75C26.25 0.7875 25.4625 0 24.5 0H1.75C0.7875 0 0 0.7875 0 1.75V26.25L7 19.25H24.5C25.4625 19.25 26.25 18.4625 26.25 17.5Z" fill="url(#paint0_linear)"/>
+              <defs>
+                <linearGradient id="paint0_linear" x1="2.75964e-07" y1="26.5" x2="35" y2="-1.95578e-07" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#E1DDD2"/>
+                  <stop offset="1" stop-color="#EDE8DC"/>
+                </linearGradient>
+              </defs>
+            </svg>
         <h5>{{$t('m.imKeyManager.notice')}}</h5>
         <p>{{$t('m.imKeyManager.imKey_pro_ble_update_prompt_message')}}</p>
         <button @click="updateFirmware">{{$t('m.imKeyManager.ok')}}</button>
