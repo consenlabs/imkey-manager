@@ -35,7 +35,7 @@
       "url": "https://files.imkey.im/downloads/imKeyManager"
     },
     "releaseInfo": {
-      "releaseNotes": "[{id:1,info:\"解决卡死问题\"},{id:2,info:\"优化UI问题\"},{id:3,info:\"修改安装应用时的提示显示问题\"},{id:4,info:\"修改连接设备的问题\"},{id:5,info:\"解决公证的问题\"}]"
+      "releaseNotes": "[{id:1,info:\"新增蓝牙固件更新功能\"},{id:2,info:\"增加蓝牙固件版本显示\"},{id:3,info:\"删除DApp选项卡\"}]"
     },
     "files": [
       "dist/electron/**/*"

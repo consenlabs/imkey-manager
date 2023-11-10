@@ -128,7 +128,7 @@ export const m = {
     visit_Youzan_Mall_to_buy: 'Buy imKey and peripherals now',
     user_support: 'User Support',
     email: 'Email: support@imkey.im',
-    wechat: 'WeChat: imKeyOfficial',
+    wechat: 'WeChat:  imKey_Official',
     tokenlon_info: 'Trustless token-to-token decentralized exchange',
     compound_info: 'Deposit to earn, support USDT, USDC, Dai & 6 more ',
     aave_info: 'Deposit/Lend to earn, support TUSD, USDT & 15 more',
