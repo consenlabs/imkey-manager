@@ -129,7 +129,7 @@ export const m = {
     visit_Youzan_Mall_to_buy: '访问有赞商城购买 imKey 及其周边吧',
     user_support: '用户支持',
     email: '邮件：support@imkey.im',
-    wechat: '微信： imKey_Official',
+    wechat: '微信：imKey_Official',
     tokenlon_info: '安全快速的去中心化交易所',
     compound_info: '存币生息，支持 USDT/USDC/Dai等 ',
     aave_info: '存/借贷生息，支持 17 个币种',
