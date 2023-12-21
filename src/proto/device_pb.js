@@ -3638,9 +3638,10 @@ proto.deviceapi.CosCheckUpdateRes.toObject = function(includeInstance, msg) {
     seid: jspb.Message.getFieldWithDefault(msg, 1, ""),
     isLatest: jspb.Message.getBooleanFieldWithDefault(msg, 2, false),
     latestCosVersion: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    updateType: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    description: jspb.Message.getFieldWithDefault(msg, 5, ""),
-    isUpdateSuccess: jspb.Message.getBooleanFieldWithDefault(msg, 6, false)
+    latestBleVersion: jspb.Message.getFieldWithDefault(msg, 4, ""),
+    updateType: jspb.Message.getFieldWithDefault(msg, 5, ""),
+    description: jspb.Message.getFieldWithDefault(msg, 6, ""),
+    isUpdateSuccess: jspb.Message.getBooleanFieldWithDefault(msg, 7, false)
   };
 
   if (includeInstance) {
@@ -3691,13 +3692,17 @@ proto.deviceapi.CosCheckUpdateRes.deserializeBinaryFromReader = function(msg, re
       break;
     case 4:
       var value = /** @type {string} */ (reader.readString());
-      msg.setUpdateType(value);
+      msg.setLatestBleVersion(value);
       break;
     case 5:
       var value = /** @type {string} */ (reader.readString());
-      msg.setDescription(value);
+      msg.setUpdateType(value);
       break;
     case 6:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setDescription(value);
+      break;
+    case 7:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setIsUpdateSuccess(value);
       break;
@@ -3751,24 +3756,31 @@ proto.deviceapi.CosCheckUpdateRes.serializeBinaryToWriter = function(message, wr
       f
     );
   }
-  f = message.getUpdateType();
+  f = message.getLatestBleVersion();
   if (f.length > 0) {
     writer.writeString(
       4,
       f
     );
   }
-  f = message.getDescription();
+  f = message.getUpdateType();
   if (f.length > 0) {
     writer.writeString(
       5,
       f
     );
   }
+  f = message.getDescription();
+  if (f.length > 0) {
+    writer.writeString(
+      6,
+      f
+    );
+  }
   f = message.getIsUpdateSuccess();
   if (f) {
     writer.writeBool(
-      6,
+      7,
       f
     );
   }
@@ -3828,30 +3840,29 @@ proto.deviceapi.CosCheckUpdateRes.prototype.setLatestCosVersion = function(value
   return jspb.Message.setProto3StringField(this, 3, value);
 };
 
+/**
+ * optional string latest_ble_version = 4;
+ * @return {string}
+ */
+proto.deviceapi.CosCheckUpdateRes.prototype.getLatestBleVersion = function() {
+    return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
+  };
+  
+  
+  /**
+   * @param {string} value
+   * @return {!proto.deviceapi.CosCheckUpdateRes} returns this
+   */
+  proto.deviceapi.CosCheckUpdateRes.prototype.setLatestBleVersion = function(value) {
+    return jspb.Message.setProto3StringField(this, 4, value);
+  };
+
 
 /**
- * optional string update_type = 4;
+ * optional string update_type = 5;
  * @return {string}
  */
 proto.deviceapi.CosCheckUpdateRes.prototype.getUpdateType = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.deviceapi.CosCheckUpdateRes} returns this
- */
-proto.deviceapi.CosCheckUpdateRes.prototype.setUpdateType = function(value) {
-  return jspb.Message.setProto3StringField(this, 4, value);
-};
-
-
-/**
- * optional string description = 5;
- * @return {string}
- */
-proto.deviceapi.CosCheckUpdateRes.prototype.getDescription = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
 };
 
@@ -3860,17 +3871,35 @@ proto.deviceapi.CosCheckUpdateRes.prototype.getDescription = function() {
  * @param {string} value
  * @return {!proto.deviceapi.CosCheckUpdateRes} returns this
  */
-proto.deviceapi.CosCheckUpdateRes.prototype.setDescription = function(value) {
+proto.deviceapi.CosCheckUpdateRes.prototype.setUpdateType = function(value) {
   return jspb.Message.setProto3StringField(this, 5, value);
 };
 
 
 /**
- * optional bool is_update_success = 6;
+ * optional string description = 6;
+ * @return {string}
+ */
+proto.deviceapi.CosCheckUpdateRes.prototype.getDescription = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 6, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.deviceapi.CosCheckUpdateRes} returns this
+ */
+proto.deviceapi.CosCheckUpdateRes.prototype.setDescription = function(value) {
+  return jspb.Message.setProto3StringField(this, 6, value);
+};
+
+
+/**
+ * optional bool is_update_success = 7;
  * @return {boolean}
  */
 proto.deviceapi.CosCheckUpdateRes.prototype.getIsUpdateSuccess = function() {
-  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 6, false));
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 7, false));
 };
 
 
@@ -3879,7 +3908,7 @@ proto.deviceapi.CosCheckUpdateRes.prototype.getIsUpdateSuccess = function() {
  * @return {!proto.deviceapi.CosCheckUpdateRes} returns this
  */
 proto.deviceapi.CosCheckUpdateRes.prototype.setIsUpdateSuccess = function(value) {
-  return jspb.Message.setProto3BooleanField(this, 6, value);
+  return jspb.Message.setProto3BooleanField(this, 7, value);
 };
 
 

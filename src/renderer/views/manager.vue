@@ -216,8 +216,8 @@ export default {
     },
     cosUpdateWalletAddress () {
       // 发送应用查询请求
-      this.$ipcRenderer.send('checkUpdate')
-      this.$ipcRenderer.on('checkUpdate', (CheckUpdateResult) => {
+      this.$ipcRenderer.send('getInstalledApplets')
+      this.$ipcRenderer.on('getInstalledApplets', (CheckUpdateResult) => {
         const CheckUpdateResponse = CheckUpdateResult.result
         if (CheckUpdateResult.isSuccess) {
           const appList = CheckUpdateResponse.list
@@ -314,37 +314,37 @@ export default {
       this.tip1 = false
     },
     init () {
-      this.$ipcRenderer.send('exportBindCode')
-      this.$ipcRenderer.on('exportBindCode', (result) => {
-        const response = result.result
-        if (result.isSuccess) {
-          this.bindCode = response
-          this.$ipcRenderer.send('connectDevice')
-          this.$ipcRenderer.on('connectDevice', (connectResult) => {
-            const response = connectResult.result
-            if (connectResult.isSuccess) {
-              if (response === constants.RESULT_STATUS_SUCCESS) {
+      this.$ipcRenderer.send('connectDevice')
+      this.$ipcRenderer.on('connectDevice', (connectResult) => {
+        const response = connectResult.result
+        if (connectResult.isSuccess) {
+          if (response === constants.RESULT_STATUS_SUCCESS) {
+            this.$ipcRenderer.send('exportBindCode')
+            this.$ipcRenderer.on('exportBindCode', (result) => {
+              const response = result.result
+              if (result.isSuccess) {
+                this.bindCode = response
                 if (this.$store.state.isFirstGoToManagerPage === true) {
-                  // 加载应用
+                // 加载应用
                   this.getAppsList()
                   this.$store.state.isFirstGoToManagerPage = false
                 } else {
                   if (this.isEmptyObject(this.$store.state.apps) || JSON.stringify(this.$store.state.apps) === '[]') {
-                    // 加载应用
+                  // 加载应用
                     this.getAppsList()
                   } else {
                     this.apps = this.$store.state.apps
-                    // TODO 检测COS升级
                     this.checkFirmwareVersion()
                   }
                 }
               } else {
                 this.tip1 = true
               }
-            } else {
-              this.tip1 = true
-            }
-          })
+            })
+          }
+        } else {
+          // 连接设备失败
+          this.status = 2
         }
       })
     },
@@ -386,7 +386,6 @@ export default {
               this.apps = appList
               this.$store.state.apps = appList
               this.isSuccess = true
-              // TODO 检测COS升级
               this.checkFirmwareVersion()
             } else {
               this.tip = true

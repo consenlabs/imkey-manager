@@ -1,6 +1,6 @@
 {
   "name": "imKeyManager",
-  "version": "2.0.1-beta",
+  "version": "2.1.5-beta",
   "author": "imkey <weiqiang@imkey.im>",
   "description": "imKey Manager @2020",
   "license": "MIT",
@@ -35,7 +35,7 @@
       "url": "https://files.imkey.im/downloads/imKeyManager"
     },
     "releaseInfo": {
-      "releaseNotes": "[{id:1,info:\"解决卡死问题\"},{id:2,info:\"优化UI问题\"},{id:3,info:\"修改安装应用时的提示显示问题\"},{id:4,info:\"修改连接设备的问题\"},{id:5,info:\"解决公证的问题\"}]"
+      "releaseNotes": "[{id:1,info:\"新增蓝牙固件更新功能\"},{id:2,info:\"增加蓝牙固件版本显示\"},{id:3,info:\"删除DApp选项卡\"}]"
     },
     "files": [
       "dist/electron/**/*"
@@ -160,7 +160,7 @@
     "del": "^6.0.0",
     "devtron": "^1.4.0",
     "electron": "^11.3.0",
-    "electron-builder": "22.14.5",
+    "electron-builder": "24.6.4",
     "electron-debug": "^3.2.0",
     "electron-devtools-installer": "^3.2.0",
     "electron-download": "^4.1.1",
