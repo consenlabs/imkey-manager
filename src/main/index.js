@@ -11,8 +11,6 @@ import {
 } from 'electron'
 // 自动更新相关
 import { autoUpdater } from 'electron-updater'
-// 崩溃报告
-import * as Sentry from '@sentry/electron'
 // import ImKeyProvider from '@imkey/web3-provider'
 // test.json
 import pkg from '../../package.json'
@@ -406,21 +404,6 @@ function autoUpdate () {
  * 崩溃报告
  */
 function crashReport () {
-  // 报告常规错误
-  Sentry.init({
-    dsn:
-      'https://36dc1ad5111d44e1ae447e324a4d0141@o359184.ingest.sentry.io/5199393'
-  })
-
-  // 报告系统错误
-  crashReporter.start({
-    companyName: 'imKey',
-    productName: 'imKeyDesktop',
-    ignoreSystemCrashHandler: true,
-    submitURL:
-      'https://o359184.ingest.sentry.io/api/5199393/security/?sentry_key=36dc1ad5111d44e1ae447e324a4d0141'
-  })
-
   // 渲染进程崩溃事件
   mainWindow.webContents.on('crashed', () => {
     const options = {
