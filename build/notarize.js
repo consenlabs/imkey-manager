@@ -11,9 +11,10 @@ exports.default = async function notarizing(context) {
 
     const appName = context.packager.appInfo.productFilename;
     return await notarize({
+        tool: "notarytool",
         appBundleId: 'com.imkey.imkey-manager',
         appPath: `${appOutDir}/${appName}.app`,
-        ascProvider: process.env.TEAM_SHORT_NAME,
+        teamId: process.env.TEAM_SHORT_NAME,
         appleId: process.env.APPLE_ID,
         appleIdPassword: process.env.APPLE_ID_PASSWORD,
     });
