@@ -379,6 +379,7 @@ export default {
                   this.$store.state.WalletAddress = response
                   // 去首页
                   this.$router.push('/home/welcomeHome')
+                  // this.$sa.track('im_onboarding_complete$finish', { name: 'onboardingCompleteClick', to: 'im_homepage' })
                 }
               })
             } else {

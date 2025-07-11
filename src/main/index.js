@@ -99,6 +99,7 @@ function createWorkerWindow () {
   })
   workerWindow.on('closed', () => {
     console.log('background window closed')
+    // sa.track(distinctId, 'im_app$end', { name: 'appEnd' })
   })
   if (process.env.NODE_ENV === 'development') {
     workerWindow.loadFile(workerURL) // 调试时的加载方式
@@ -229,6 +230,7 @@ function createTray () {
         setTimeout(() => {
           app.quit()
         }, 3000)
+        // sa.track(distinctId, 'im_app$end', { name: 'appEnd' })
       }
     }
   ]
@@ -422,6 +424,7 @@ function crashReport () {
 
   function recordCrash () {
     return new Promise((resolve) => {
+      // sa.track(distinctId, 'im_app$crash', { name: 'appCrash' })
       // 崩溃日志请求成功....
       resolve()
     })
@@ -702,178 +705,6 @@ function renderDeviceManagerHandler () {
   ipcMain.on('ready', (event, arg) => {
     console.info('child process ready')
   })
-
-  // 设备管理相关的IPC处理器
-  ipcMain.on('connectDevice', (event, arg) => {
-    const message = { type: 'connectDevice', data: arg }
-    sendWindowMessage(workerWindow, 'message-from-main', message)
-    ipcMain.once('message-from-worker', (workerEvent, workerArg) => {
-      if (workerArg.type === 'connectDevice') {
-        event.reply('connectDevice', workerArg)
-      }
-    })
-  })
-
-  ipcMain.on('getUserPath', (event, arg) => {
-    const message = { type: 'getUserPath', data: arg }
-    sendWindowMessage(workerWindow, 'message-from-main', message)
-    ipcMain.once('message-from-worker', (workerEvent, workerArg) => {
-      if (workerArg.type === 'getUserPath') {
-        event.reply('getUserPath', workerArg)
-      }
-    })
-  })
-
-  ipcMain.on('initImKeyCore', (event, arg) => {
-    const message = { type: 'initImKeyCore', data: arg }
-    sendWindowMessage(workerWindow, 'message-from-main', message)
-    ipcMain.once('message-from-worker', (workerEvent, workerArg) => {
-      if (workerArg.type === 'initImKeyCore') {
-        event.reply('initImKeyCore', workerArg)
-      }
-    })
-  })
-
-  ipcMain.on('deviceBindCheck', (event, arg) => {
-    const message = { type: 'deviceBindCheck', data: arg }
-    sendWindowMessage(workerWindow, 'message-from-main', message)
-    ipcMain.once('message-from-worker', (workerEvent, workerArg) => {
-      if (workerArg.type === 'deviceBindCheck') {
-        event.reply('deviceBindCheck', workerArg)
-      }
-    })
-  })
-
-  ipcMain.on('getBTCXpub', (event, arg) => {
-    const message = { type: 'getBTCXpub', data: arg }
-    sendWindowMessage(workerWindow, 'message-from-main', message)
-    ipcMain.once('message-from-worker', (workerEvent, workerArg) => {
-      if (workerArg.type === 'getBTCXpub') {
-        event.reply('getBTCXpub', workerArg)
-      }
-    })
-  })
-
-  ipcMain.on('genWalletAddress', (event, arg) => {
-    const message = { type: 'genWalletAddress', data: arg }
-    sendWindowMessage(workerWindow, 'message-from-main', message)
-    ipcMain.once('message-from-worker', (workerEvent, workerArg) => {
-      if (workerArg.type === 'genWalletAddress') {
-        event.reply('genWalletAddress', workerArg)
-      }
-    })
-  })
-
-  ipcMain.on('checkUpdate', (event, arg) => {
-    const message = { type: 'checkUpdate', data: arg }
-    sendWindowMessage(workerWindow, 'message-from-main', message)
-    ipcMain.once('message-from-worker', (workerEvent, workerArg) => {
-      if (workerArg.type === 'checkUpdate') {
-        event.reply('checkUpdate', workerArg)
-      }
-    })
-  })
-
-  ipcMain.on('cosCheckUpdate', (event, arg) => {
-    const message = { type: 'cosCheckUpdate', data: arg }
-    sendWindowMessage(workerWindow, 'message-from-main', message)
-    ipcMain.once('message-from-worker', (workerEvent, workerArg) => {
-      if (workerArg.type === 'cosCheckUpdate') {
-        event.reply('cosCheckUpdate', workerArg)
-      }
-    })
-  })
-
-  ipcMain.on('isBLStatus', (event, arg) => {
-    const message = { type: 'isBLStatus', data: arg }
-    sendWindowMessage(workerWindow, 'message-from-main', message)
-    ipcMain.once('message-from-worker', (workerEvent, workerArg) => {
-      if (workerArg.type === 'isBLStatus') {
-        event.reply('isBLStatus', workerArg)
-      }
-    })
-  })
-
-  ipcMain.on('cosUpdate', (event, arg) => {
-    const message = { type: 'cosUpdate', data: arg }
-    sendWindowMessage(workerWindow, 'message-from-main', message)
-    ipcMain.once('message-from-worker', (workerEvent, workerArg) => {
-      if (workerArg.type === 'cosUpdate') {
-        event.reply('cosUpdate', workerArg)
-      }
-    })
-  })
-
-  ipcMain.on('getInstalledApplets', (event, arg) => {
-    const message = { type: 'getInstalledApplets', data: arg }
-    sendWindowMessage(workerWindow, 'message-from-main', message)
-    ipcMain.once('message-from-worker', (workerEvent, workerArg) => {
-      if (workerArg.type === 'getInstalledApplets') {
-        event.reply('getInstalledApplets', workerArg)
-      }
-    })
-  })
-
-  ipcMain.on('writeWalletAddress', (event, arg) => {
-    const message = { type: 'writeWalletAddress', data: arg }
-    sendWindowMessage(workerWindow, 'message-from-main', message)
-    ipcMain.once('message-from-worker', (workerEvent, workerArg) => {
-      if (workerArg.type === 'writeWalletAddress') {
-        event.reply('writeWalletAddress', workerArg)
-      }
-    })
-  })
-
-  ipcMain.on('exportBindCode', (event, arg) => {
-    const message = { type: 'exportBindCode', data: arg }
-    sendWindowMessage(workerWindow, 'message-from-main', message)
-    ipcMain.once('message-from-worker', (workerEvent, workerArg) => {
-      if (workerArg.type === 'exportBindCode') {
-        event.reply('exportBindCode', workerArg)
-      }
-    })
-  })
-
-  ipcMain.on('deviceBindAcquire', (event, arg) => {
-    const message = { type: 'deviceBindAcquire', data: arg }
-    sendWindowMessage(workerWindow, 'message-from-main', message)
-    ipcMain.once('message-from-worker', (workerEvent, workerArg) => {
-      if (workerArg.type === 'deviceBindAcquire') {
-        event.reply('deviceBindAcquire', workerArg)
-      }
-    })
-  })
-
-  ipcMain.on('importBindCode', (event, arg) => {
-    const message = { type: 'importBindCode', data: arg }
-    sendWindowMessage(workerWindow, 'message-from-main', message)
-    ipcMain.once('message-from-worker', (workerEvent, workerArg) => {
-      if (workerArg.type === 'importBindCode') {
-        event.reply('importBindCode', workerArg)
-      }
-    })
-  })
-
-  ipcMain.on('isExistBindCodeFile', (event, arg) => {
-    const message = { type: 'isExistBindCodeFile', data: arg }
-    sendWindowMessage(workerWindow, 'message-from-main', message)
-    ipcMain.once('message-from-worker', (workerEvent, workerArg) => {
-      if (workerArg.type === 'isExistBindCodeFile') {
-        event.reply('isExistBindCodeFile', workerArg)
-      }
-    })
-  })
-
-  ipcMain.on('updateApplet', (event, arg) => {
-    const message = { type: 'updateApplet', data: arg }
-    sendWindowMessage(workerWindow, 'message-from-main', message)
-    ipcMain.once('message-from-worker', (workerEvent, workerArg) => {
-      if (workerArg.type === 'updateApplet') {
-        event.reply('updateApplet', workerArg)
-      }
-    })
-  })
-
   ipcMain.on('openUrl', (event, url) => {
     shell.openExternal(url)
   })
@@ -970,6 +801,11 @@ function renderDeviceManagerHandler () {
     })
   })
 }
+
+// function initSa () {
+//   sa.disableReNameOption()
+//   sa.submitTo(url)
+// }
 
 /**
  * 单一实例
