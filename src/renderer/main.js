@@ -14,7 +14,21 @@ const { ipcRenderer } = require('electron') // Renderer process modules
 // const scaleFactor = screen.getPrimaryDisplay().scaleFactor
 // const zoomFactor = (window.innerHeight / devInnerHeight) * (window.devicePixelRatio / devDevicePixelRatio) * (devScaleFactor / scaleFactor)
 // ipcRenderer.send('zoomIn', zoomFactor)
-let callbackCache = { type: null, callback: null } // Initialize callback cache
+let callbackCache
+Vue.prototype.$ipcRenderer = {
+  send: (msgType, msgData) => {
+    ipcRenderer.send('message-from-renderer', {
+      type: msgType,
+      data: msgData
+    })
+  },
+  on: (type, callback) => {
+    callbackCache = {
+      type,
+      callback
+    }
+  }
+}
 ipcRenderer.on('message-to-renderer', (sender, msg) => {
   if (callbackCache.type === msg.type) {
     callbackCache.callback(msg.data)
@@ -23,7 +37,6 @@ ipcRenderer.on('message-to-renderer', (sender, msg) => {
 Vue.config.productionTip = false
 Vue.prototype.$store = store
 Vue.prototype.router = router
-Vue.prototype.$ipcRenderer = ipcRenderer
 Vue.use(ElementUI)
 Vue.use(VueI18n)
 // 弹出框禁止滑动

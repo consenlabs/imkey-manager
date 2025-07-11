@@ -481,11 +481,9 @@ export default {
       })
     },
     connect () {
-      console.log('connect方法被调用了')
       this.$ipcRenderer.send('connectDevice')
       this.$ipcRenderer.on('connectDevice', (result) => {
         const response = result.result
-        console.log('收到connectDevice响应:', result)
         if (result.isSuccess) {
           if (response === constants.RESULT_STATUS_SUCCESS) {
             this.changeState(3)
