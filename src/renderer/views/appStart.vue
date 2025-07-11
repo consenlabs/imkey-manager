@@ -34,7 +34,7 @@ export default {
     }
   },
   mounted () {
-    this.$sa.track('im_app$start', { name: 'appStart' })
+    // this.$sa.track('im_app$start', { name: 'appStart' })
     // 禁止主页面滑动
     this.noScroll()
   },

@@ -468,20 +468,20 @@ export default {
               this.$store.state.bleOldVersionData = this.bleNewVersionData
               this.$store.state.bleNewVersionData = this.bleNewVersionData
               this.changeCode(2)
-              this.$sa.track('im_setting_firmware$upgrade', { status: 1 })
+              // this.$sa.track('im_setting_firmware$upgrade', { status: 1 })
             } else {
-              this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级写wallet地址失败：' + result.result })
+              // this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级写wallet地址失败：' + result.result })
             }
           })
         } else {
-          this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级写wallet地址前获取应用失败失败：' + installedAppletsResponse })
+          // this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级写wallet地址前获取应用失败失败：' + installedAppletsResponse })
         }
       })
     },
     isShowalert () {
       if (this.bleOldVersionData !== this.bleNewVersionData) {
         this.changeCode(6)
-        this.$sa.track('im_setting_firmware$upgrade', { status: 3 })
+        // this.$sa.track('im_setting_firmware$upgrade', { status: 3 })
       } else {
         this.updateFirmware()
       }
@@ -514,16 +514,16 @@ export default {
                           } else {
                             this.errorInfo = importBindResponse
                             this.changeCode(3)
-                            this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码存储失败：' + importBindResponse })
+                            // this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码存储失败：' + importBindResponse })
                           }
                         })
                       } else {
                         this.changeCode(3)
-                        this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
+                        // this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
                       }
                     } else {
                       this.changeCode(3)
-                      this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
+                      // this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
                     }
                   })
                 }
@@ -533,23 +533,23 @@ export default {
                   this.$store.state.isCosUpdate = false
                   this.$store.state.installedBleVersion = this.bleNewVersionData
                   this.changeCode(2)
-                  this.$sa.track('im_setting_firmware$upgrade', { status: 1 })
+                  // this.$sa.track('im_setting_firmware$upgrade', { status: 1 })
                 }
               } else {
                 this.isCosUpdate = true
                 this.changeCode(3)
-                this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级失败：' + response })
+                // this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级失败：' + response })
               }
             } else {
               this.isCosUpdate = true
               this.changeCode(3)
-              this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级失败：' + response })
+              // this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级失败：' + response })
             }
           })
         } else {
           this.isCosUpdate = true
           this.changeCode(3)
-          this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级失败：' + connectResult.result })
+          // this.$sa.track('im_setting_firmware$upgrade', { status: 0, message: '固件升级失败：' + connectResult.result })
         }
       })
     },
