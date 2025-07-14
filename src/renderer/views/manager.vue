@@ -237,13 +237,13 @@ export default {
               this.$store.state.cosOldVersionData = this.cosNewVersionData
               this.$store.state.cosNewVersionData = this.cosNewVersionData
               this.changeCode(2)
-              this.$sa.track('im_manage_firmware$upgrade', { status: 1 })
+              // this.$sa.track('im_manage_firmware$upgrade', { status: 1 })
             } else {
-              this.$sa.track('im_manage_firmware$upgrade', { status: 0, message: '固件升级写wallet地址失败：' + result.result })
+              // this.$sa.track('im_manage_firmware$upgrade', { status: 0, message: '固件升级写wallet地址失败：' + result.result })
             }
           })
         } else {
-          this.$sa.track('im_manage_firmware$upgrade', { status: 0, message: '固件升级写wallet地址前获取应用失败失败：' + CheckUpdateResponse })
+          // this.$sa.track('im_manage_firmware$upgrade', { status: 0, message: '固件升级写wallet地址前获取应用失败失败：' + CheckUpdateResponse })
         }
       })
     },
@@ -273,16 +273,16 @@ export default {
                         } else {
                           this.errorInfo = importBindResponse
                           this.changeCode(3)
-                          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码存储失败：' + importBindResponse })
+                          // this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码存储失败：' + importBindResponse })
                         }
                       })
                     } else {
                       this.changeCode(3)
-                      this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
+                      // this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
                     }
                   } else {
                     this.changeCode(3)
-                    this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
+                    // this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
                   }
                 })
                 // 更新完cos之后需要清除缓存重新加载数据刷新页面
@@ -293,18 +293,18 @@ export default {
               } else {
                 this.isCosUpdate = true
                 this.changeCode(3)
-                this.$sa.track('im_manage_firmware$upgrade', { status: 0, message: '固件升级失败：' + response })
+                // this.$sa.track('im_manage_firmware$upgrade', { status: 0, message: '固件升级失败：' + response })
               }
             } else {
               this.isCosUpdate = true
               this.changeCode(3)
-              this.$sa.track('im_manage_firmware$upgrade', { status: 0, message: '固件升级失败：' + response })
+              // this.$sa.track('im_manage_firmware$upgrade', { status: 0, message: '固件升级失败：' + response })
             }
           })
         } else {
           this.isCosUpdate = true
           this.changeCode(3)
-          this.$sa.track('im_manage_firmware$upgrade', { status: 0, message: '固件升级失败：' + connectResult.result })
+          // this.$sa.track('im_manage_firmware$upgrade', { status: 0, message: '固件升级失败：' + connectResult.result })
         }
       })
     },
@@ -435,7 +435,7 @@ export default {
                         this.apps[index].deleteDis = false
                         this.apps[index].installLoading = false
                         this.apps[index].desc = this.apps[index].lastVersion
-                        this.$sa.track('im_manage$install', { symbol: name, status: 1 })
+                        // this.$sa.track('im_manage$install', { symbol: name, status: 1 })
                       })
                     } else {
                       // if (response === constants.RESULT_STATUS_SUCCESS) {
@@ -443,25 +443,25 @@ export default {
                       this.apps[index].deleteDis = false
                       this.apps[index].installLoading = false
                       this.apps[index].desc = this.apps[index].lastVersion
-                      this.$sa.track('im_manage$install', { symbol: name, status: 1 })
+                      // this.$sa.track('im_manage$install', { symbol: name, status: 1 })
                     }
                   } else {
                     this.apps[index].installLoading = false
                     this.tip = true
                     this.apps[index].installDis = false
-                    this.$sa.track('im_manage$install', { symbol: name, status: 0, message: response })
+                    // this.$sa.track('im_manage$install', { symbol: name, status: 0, message: response })
                   }
                 })
               } else {
                 this.apps[index].installLoading = false
                 this.apps[index].installDis = false
                 this.tip = true
-                this.$sa.track('im_manage$install', { symbol: name, status: 0, message: response })
+                // this.$sa.track('im_manage$install', { symbol: name, status: 0, message: response })
               }
             })
           } else {
             this.tip = true
-            this.$sa.track('im_manage$install', { symbol: name, status: 0, message: connectResult.result })
+            // this.$sa.track('im_manage$install', { symbol: name, status: 0, message: connectResult.result })
           }
         })
       } else {
@@ -509,7 +509,7 @@ export default {
                         this.apps[index].installDis = true
                         this.apps[index].installLoading = false
                         this.apps[index].desc = this.apps[index].lastVersion
-                        this.$sa.track('im_manage$upgrade', { symbol: name, status: 1 })
+                        // this.$sa.track('im_manage$upgrade', { symbol: name, status: 1 })
                       })
                     } else {
                       // if (response === constants.RESULT_STATUS_SUCCESS) {
@@ -519,25 +519,25 @@ export default {
                       this.apps[index].installDis = true
                       this.apps[index].installLoading = false
                       this.apps[index].desc = this.apps[index].lastVersion
-                      this.$sa.track('im_manage$upgrade', { symbol: name, status: 1 })
+                      // this.$sa.track('im_manage$upgrade', { symbol: name, status: 1 })
                     }
                   } else {
                     this.apps[index].installLoading = false
                     this.apps[index].updateDis = false
                     this.tip = true
-                    this.$sa.track('im_manage$upgrade', { symbol: name, status: 0, message: response })
+                    // this.$sa.track('im_manage$upgrade', { symbol: name, status: 0, message: response })
                   }
                 })
               } else {
                 this.apps[index].updateDis = false
                 this.apps[index].installLoading = false
                 this.tip = true
-                this.$sa.track('im_manage$upgrade', { symbol: name, status: 0, message: response })
+                // this.$sa.track('im_manage$upgrade', { symbol: name, status: 0, message: response })
               }
             })
           } else {
             this.tip = true
-            this.$sa.track('im_manage$upgrade', { symbol: name, status: 0, message: connectResult.result })
+            // this.$sa.track('im_manage$upgrade', { symbol: name, status: 0, message: connectResult.result })
           }
         })
       } else {

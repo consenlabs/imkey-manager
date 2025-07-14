@@ -181,6 +181,7 @@ export default {
     }
   },
   mounted () {
+    console.log('connectDevice页面已加载')
     this.getUserPath()
     // 禁止主页面滑动
     this.noScroll()
@@ -280,7 +281,7 @@ export default {
         } else {
           this.errorInfo = response
           this.changeState(4)
-          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否处于BL状态失败：' + response })
+          // this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否处于BL状态失败：' + response })
         }
       })
     },
@@ -345,7 +346,7 @@ export default {
               } else {
                 this.errorInfo = cosCheckUpdateResponse
                 this.changeState(4)
-                this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否升级COS失败：' + cosCheckUpdateResponse })
+                // this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否升级COS失败：' + cosCheckUpdateResponse })
               }
             })
           } else {
@@ -355,7 +356,7 @@ export default {
         } else {
           this.errorInfo = checkUpdateResponse
           this.changeState(4)
-          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否激活失败：' + checkUpdateResponse })
+          // this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否激活失败：' + checkUpdateResponse })
         }
       })
     },
@@ -368,7 +369,7 @@ export default {
             // 失败的话
             this.errorInfo = response
             this.changeState(4)
-            this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否绑定失败：' + response })
+            // this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否绑定失败：' + response })
           } else {
             if (response === constants.BIND_STATUS_STRING_BOUND_OTHER) {
               // 弹出绑定码输入框，输入绑定码，输入完成后，检查是否创建钱包
@@ -391,13 +392,13 @@ export default {
             } else {
               this.errorInfo = response
               this.changeState(4)
-              this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否绑定失败：' + response })
+              // this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否绑定失败：' + response })
             }
           }
         } else {
           this.errorInfo = response
           this.changeState(4)
-          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否绑定失败：' + response })
+          // this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否绑定失败：' + response })
         }
       })
     },
@@ -422,7 +423,7 @@ export default {
                   // 跳转到主页
                   this.$router.push('/home/welcomeHome')
                   // this.$router.push('imKeySetting')
-                  this.$sa.track('im_landing_connect$success', { name: 'landingConnectSuccess', to: 'im_homepage' })
+                  // this.$sa.track('im_landing_connect$success', { name: 'landingConnectSuccess', to: 'im_homepage' })
                 }
               })
               // }, 2000)
@@ -439,7 +440,7 @@ export default {
           // 错误界面
           // this.errorInfo = response
           // this.changeState(4)
-          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否创建wallet失败：' + response })
+          // this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否创建wallet失败：' + response })
         }
       })
     },
@@ -460,7 +461,7 @@ export default {
                   // 跳转到主页
                   this.$router.push('/home/welcomeHome')
                   // this.$router.push('imKeySetting')
-                  this.$sa.track('im_landing_connect$success', { name: 'landingConnectSuccess', to: 'im_homepage' })
+                  // this.$sa.track('im_landing_connect$success', { name: 'landingConnectSuccess', to: 'im_homepage' })
                 }
               })
             } else {
@@ -475,7 +476,7 @@ export default {
           // 错误界面
           this.errorInfo = response
           this.changeState(4)
-          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否创建wallet失败：' + response })
+          // this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否创建wallet失败：' + response })
         }
       })
     },
@@ -491,13 +492,13 @@ export default {
             this.errorInfo = response
             this.changeState(4)
             // 连接失败
-            this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '连接设备失败：' + response })
+            // this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '连接设备失败：' + response })
           }
         } else {
           this.errorInfo = response
           this.changeState(4)
           // 连接失败
-          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '连接设备失败：' + response })
+          // this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '连接设备失败：' + response })
         }
       })
       // setTimeout(() => {
@@ -524,11 +525,11 @@ export default {
               // wallet地址写入成功，开始再次检查
               this.check()
             } else {
-              this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '固件升级，wallet地址写入失败：' + result.result })
+              // this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '固件升级，wallet地址写入失败：' + result.result })
             }
           })
         } else {
-          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '固件升级，wallet地址写入前获取应用列表失败：' + CheckUpdateResponse })
+          // this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '固件升级，wallet地址写入前获取应用列表失败：' + CheckUpdateResponse })
         }
       })
     },
@@ -566,16 +567,16 @@ export default {
                             } else {
                               this.errorInfo = importBindResponse
                               this.changeCode(5)
-                              this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码存储失败：' + importBindResponse })
+                              // this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码存储失败：' + importBindResponse })
                             }
                           })
                         } else {
                           this.changeCode(5)
-                          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
+                          // this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
                         }
                       } else {
                         this.changeCode(5)
-                        this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
+                        // this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
                       }
                     })
                   }
@@ -583,18 +584,18 @@ export default {
               } else {
                 this.errorInfo = response
                 this.changeState(4)
-                this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否绑定失败：' + response })
+                // this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '检查是否绑定失败：' + response })
               }
             })
           } else {
             // 固件升级失败
             this.changeState(5)
-            this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '固件升级失败：' + response })
+            // this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '固件升级失败：' + response })
           }
         } else {
           // 固件升级失败
           this.changeState(5)
-          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '固件升级失败：' + response })
+          // this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '固件升级失败：' + response })
         }
       })
     },
@@ -614,18 +615,18 @@ export default {
               } else {
                 this.errorInfo = importBindResponse
                 this.changeState(4)
-                this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码存储失败：' + importBindResponse })
+                // this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码存储失败：' + importBindResponse })
               }
             })
           } else {
             this.codeIsTrue = false
             this.bindingStatus = 0
-            this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
+            // this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
           }
         } else {
           this.codeIsTrue = false
           this.bindingStatus = 0
-          this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
+          // this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '绑定码验证失败：' + response })
         }
       })
     },
@@ -643,7 +644,7 @@ export default {
             if (result.isSuccess) {
               console.log('none')
             } else {
-              this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '初始化imkey core失败：' + response })
+              // this.$sa.track('im_landing_connect$error', { name: 'landingConnectError', message: '初始化imkey core失败：' + response })
             }
           })
         } else {

@@ -120,7 +120,7 @@ export default {
       showError: false,
       errorInfo: {},
       softUpdateInfo: [],
-      // softUpdateInfo: [{id:1,info:"解决卡死问题"},{id:2,info:"优化UI问题"},{id:3,info:"你可以在「管理」中看到设备内存并进行管理"},{id:4,info:"新增暗黑模式"},{id:5,info:"新增暗黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式"}],
+      // softUpdateInfo: [{id:1,info:"解决卡死问题"},{id:2,info:"优化UI问题"},{id:3,info:"你可以在「管理」中看到设备内存并进行管理"},{id:4,info:"新增暗黑模式"},{id:5,info:"新增暗黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式黑模式"}],
       // softUpdateInfo: [{id:1,info:"解决卡死问题"},{id:2,info:"优化UI问题"}],
       softOldVersionData: packagejson.version,
       softNewVersionData: '',
@@ -156,7 +156,7 @@ export default {
       // 开始下载
       ipcRenderer.send('downloadUpdate')
       ipcRenderer.on('downloadProgress', (event, progressObj) => {
-        this.$sa.track('im_setting_version$upgrade', { status: 1 })
+        // this.$sa.track('im_setting_version$upgrade', { status: 1 })
         this.progress = progressObj.percent.toFixed(0) || 0
         // if (this.progress  === 100) {
         if (progressObj.percent === 100) {

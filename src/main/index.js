@@ -14,12 +14,7 @@ import { autoUpdater } from 'electron-updater'
 // import ImKeyProvider from '@imkey/web3-provider'
 // test.json
 import pkg from '../../package.json'
-import SensorsAnalytics from 'sa-sdk-node'
 const fs = require('fs')
-const url =
-  'https://imtoken.datasink.sensorsdata.cn/sa?project=production&token=27d69b3e7fd25949'
-const sa = new SensorsAnalytics()
-const distinctId = 'imkey-manager'
 let envPath
 if (process.platform === 'win32') {
   if (process.env.NODE_ENV === 'production') {
@@ -104,7 +99,7 @@ function createWorkerWindow () {
   })
   workerWindow.on('closed', () => {
     console.log('background window closed')
-    sa.track(distinctId, 'im_app$end', { name: 'appEnd' })
+    // sa.track(distinctId, 'im_app$end', { name: 'appEnd' })
   })
   if (process.env.NODE_ENV === 'development') {
     workerWindow.loadFile(workerURL) // 调试时的加载方式
@@ -235,7 +230,7 @@ function createTray () {
         setTimeout(() => {
           app.quit()
         }, 3000)
-        sa.track(distinctId, 'im_app$end', { name: 'appEnd' })
+        // sa.track(distinctId, 'im_app$end', { name: 'appEnd' })
       }
     }
   ]
@@ -429,7 +424,7 @@ function crashReport () {
 
   function recordCrash () {
     return new Promise((resolve) => {
-      sa.track(distinctId, 'im_app$crash', { name: 'appCrash' })
+      // sa.track(distinctId, 'im_app$crash', { name: 'appCrash' })
       // 崩溃日志请求成功....
       resolve()
     })
@@ -710,7 +705,6 @@ function renderDeviceManagerHandler () {
   ipcMain.on('ready', (event, arg) => {
     console.info('child process ready')
   })
-
   ipcMain.on('openUrl', (event, url) => {
     shell.openExternal(url)
   })
@@ -808,10 +802,11 @@ function renderDeviceManagerHandler () {
   })
 }
 
-function initSa () {
-  sa.disableReNameOption()
-  sa.submitTo(url)
-}
+// function initSa () {
+//   sa.disableReNameOption()
+//   sa.submitTo(url)
+// }
+
 /**
  * 单一实例
  */
@@ -836,7 +831,7 @@ if (!gotTheLock) {
     // protocalHandler()
     initimKeyMessageHandler()
     renderDeviceManagerHandler()
-    initSa()
+    // initSa()
     // startHttpServer()
   })
 }

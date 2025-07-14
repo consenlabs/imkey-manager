@@ -1,6 +1,6 @@
 {
   "name": "imKeyManager",
-  "version": "2.1.5-beta",
+  "version": "2.1.6-beta",
   "author": "imkey <weiqiang@imkey.im>",
   "description": "imKey Manager @2020",
   "license": "MIT",
@@ -122,7 +122,6 @@
     "lodash": "^4.17.21",
     "lodash-id": "^0.14.0",
     "ref-napi": "^3.0.2",
-    "sa-sdk-node": "^1.2.3",
     "vue": "^2.6.12",
     "vue-cookies": "^1.7.4",
     "vue-electron": "^1.0.6",

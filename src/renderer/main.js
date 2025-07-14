@@ -14,6 +14,21 @@ const { ipcRenderer } = require('electron') // Renderer process modules
 // const scaleFactor = screen.getPrimaryDisplay().scaleFactor
 // const zoomFactor = (window.innerHeight / devInnerHeight) * (window.devicePixelRatio / devDevicePixelRatio) * (devScaleFactor / scaleFactor)
 // ipcRenderer.send('zoomIn', zoomFactor)
+let callbackCache
+Vue.prototype.$ipcRenderer = {
+  send: (msgType, msgData) => {
+    ipcRenderer.send('message-from-renderer', {
+      type: msgType,
+      data: msgData
+    })
+  },
+  on: (type, callback) => {
+    callbackCache = {
+      type,
+      callback
+    }
+  }
+}
 ipcRenderer.on('message-to-renderer', (sender, msg) => {
   if (callbackCache.type === msg.type) {
     callbackCache.callback(msg.data)
