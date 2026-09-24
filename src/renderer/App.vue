@@ -4,7 +4,7 @@
     </div>
 </template>
 <script></script>
-<style type="text/css" lang="scss">
+<style type="text/css">
     *{
         padding: 0;
         margin: 0;

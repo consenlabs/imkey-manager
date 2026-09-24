@@ -26,11 +26,7 @@ let rendererConfig = {
     // devtool: '#cheap-module-eval-source-map',
     entry: {
         renderer: path.join(__dirname, '../src/renderer/main.js'),
-        worker: path.join(__dirname, '../src/worker/worker.js'),
-        polkadotdapp: path.join(__dirname, '../src/api/polkadotdapp.js'),
-        ethereumdapp: path.join(__dirname, '../src/api/ethereumdapp.js'),
-        ethereumdapp_imkey_web3: path.join(__dirname, '../src/api/ethereumdapp_imkey_web3.js'),
-        // imkey_web3_provider: path.join(__dirname, '../src/api/imkey_web3_provider.js')
+        worker: path.join(__dirname, '../src/worker/worker.js')
     },
     externals: [
         ...Object.keys(dependencies || {}).filter(d => !whiteListedModules.includes(d))
@@ -44,20 +40,10 @@ let rendererConfig = {
                     options: {
                         extractCSS: process.env.NODE_ENV === 'production',
                         loaders: {
-                            sass: 'vue-style-loader!css-loader!sass-loader?indentedSyntax=1',
-                            scss: 'vue-style-loader!css-loader!sass-loader',
                             less: 'vue-style-loader!css-loader!less-loader'
                         }
                     }
                 }
-            },
-            {
-                test: /\.scss$/,
-                use: ['vue-style-loader', 'css-loader', 'sass-loader']
-            },
-            {
-                test: /\.sass$/,
-                use: ['vue-style-loader', 'css-loader', 'sass-loader?indentedSyntax']
             },
             {
                 test: /\.less$/,
@@ -211,9 +197,7 @@ if (process.env.NODE_ENV === 'production') {
             {
                 patterns: [
                     {  from: path.join(__dirname, '../static'),
-                        to: path.join(__dirname, '../dist/electron/static')},
-                    {  from: path.join(__dirname, '../src/api/imkey_web3_provider.js'),
-                        to: path.join(__dirname, '../dist/electron/imkey_web3_provider.js')},
+                        to: path.join(__dirname, '../dist/electron/static')}
                 ]
             }),
         new webpack.DefinePlugin({

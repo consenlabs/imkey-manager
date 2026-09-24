@@ -3,7 +3,7 @@ dist/electron/*
 dist/web/*
 build/*
 !build/icons
-node_modules/
+node_modules
 npm-debug.log
 npm-debug.log.*
 thumbs.db
@@ -13,5 +13,6 @@ imkey-desktop.iml
 yarn-error.log
 key.env
 key.env.prod
+*.p8
 
 .env
