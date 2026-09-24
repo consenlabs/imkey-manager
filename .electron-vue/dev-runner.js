@@ -78,7 +78,7 @@ function startRenderer() {
             }
         )
 
-        server.listen(9080)
+        server.listen(9080, '127.0.0.1')
     })
 }
 
@@ -132,7 +132,9 @@ function startElectron() {
         args = args.concat(process.argv.slice(2))
     }
 
-    electronProcess = spawn(electron, args)
+    const electronEnv = Object.assign({}, process.env)
+    delete electronEnv.NODE_OPTIONS
+    electronProcess = spawn(electron, args, { env: electronEnv })
 
     electronProcess.stdout.on('data', data => {
         electronLog(data, 'blue')
