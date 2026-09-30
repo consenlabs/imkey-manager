@@ -374,7 +374,60 @@ function sendWindowMessage (targetWindow, message, payload) {
   targetWindow.webContents.send(message, payload)
 }
 
+const VC_REDIST_X86_URL = 'https://aka.ms/vs/17/release/vc_redist.x86.exe'
+let connectorErrorShown = false
+
+/**
+ * connector 库加载失败提示
+ * Win32 error 126：依赖模块缺失（通常为 VC++ 运行库）；193：架构不匹配或文件损坏；127：导出函数缺失（版本不匹配）
+ */
+function showConnectorLoadError (loadError) {
+  if (connectorErrorShown) return
+  connectorErrorShown = true
+  const isZh = app.getLocale() === 'zh-CN'
+  const errorMessage = String((loadError && loadError.message) || '')
+  const libraryPath = String((loadError && loadError.libraryPath) || '')
+  const libraryFile = path.extname(libraryPath)
+    ? libraryPath
+    : libraryPath + (process.platform === 'win32' ? '.dll' : '.dylib')
+  const fileMissing = !require('fs').existsSync(libraryFile)
+  const win32Code = Number((/Win32 error (\d+)/.exec(errorMessage) || [])[1])
+  const needRuntime = process.platform === 'win32' && !fileMissing && win32Code === 126
+  let detail
+  if (fileMissing) {
+    detail = isZh
+      ? `找不到 ${libraryFile}，可能已被杀毒软件隔离或删除。请将 imKey Manager 加入杀毒软件白名单后重新安装。`
+      : `${libraryFile} is missing. It may have been quarantined by antivirus software. Please whitelist imKey Manager and reinstall it.`
+  } else if (needRuntime) {
+    detail = isZh
+      ? '可能缺少 Microsoft Visual C++ 运行库（x86）或其他系统依赖。请下载安装运行库后重新启动 imKey Manager；如仍无法启动，请重新安装 imKey Manager。'
+      : 'The Microsoft Visual C++ Redistributable (x86) or another system dependency may be missing. Please install the redistributable and restart imKey Manager. If the problem persists, reinstall imKey Manager.'
+  } else {
+    detail = isZh ? '请尝试重新安装 imKey Manager。' : 'Please try reinstalling imKey Manager.'
+  }
+  const buttons = needRuntime
+    ? (isZh ? ['下载运行库', '关闭'] : ['Download', 'Close'])
+    : (isZh ? ['关闭'] : ['Close'])
+  dialog.showMessageBox({
+    type: 'error',
+    title: 'imKey Manager',
+    message: isZh ? '设备通信组件加载失败' : 'Failed to load the device connector',
+    detail: `${detail}\n\n${errorMessage}`,
+    buttons,
+    defaultId: 0,
+    cancelId: buttons.length - 1
+  }).then(({ response }) => {
+    if (needRuntime && response === 0) {
+      shell.openExternal(VC_REDIST_X86_URL)
+    }
+  })
+}
+
 function renderDeviceManagerHandler () {
+  ipcMain.on('connector-load-failed', (event, loadError) => {
+    if (!isTrustedSender(event, workerWindow)) return
+    showConnectorLoadError(loadError)
+  })
   ipcMain.on('message-from-worker', (event, arg) => {
     if (!isAllowedDeviceMessage(event, workerWindow, arg)) {
       return

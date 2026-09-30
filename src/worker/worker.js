@@ -4,12 +4,26 @@ const { ipcRenderer } = require('electron')
 // const walletApi = remote.app.walletapi
 const deviceManger = require('../api/devicemanagerapi')
 const walletApi = require('../api/walletapi')
+const connectorLoadError = require('../api/callimkeycore').getLoadError()
+if (connectorLoadError) {
+  ipcRenderer.send('connector-load-failed', connectorLoadError)
+}
 ipcRenderer.send('ready')
 let handleType = ''
 ipcRenderer.on('message-from-main', (event, arg) => {
   console.log('arg', arg)
   console.log('arg.type:' + arg.type)
   console.log('arg.data:' + arg.data)
+  // 先记录当前请求类型，确保调用抛错时响应仍能匹配到对应请求
+  handleType = arg.type
+  if (connectorLoadError) {
+    // connector 未加载，所有设备功能不可用，直接返回失败而不是调用后抛错
+    ipcRenderer.send('message-from-worker', {
+      type: handleType,
+      data: { isSuccess: false, result: connectorLoadError.message }
+    })
+    return
+  }
   let response
   try {
     if (arg.type === 'initImKeyCore') {
@@ -338,7 +352,7 @@ ipcRenderer.on('message-from-main', (event, arg) => {
       handleType = 'writeWalletAddress'
     }
   } catch (e) {
-    response = e
+    response = { isSuccess: false, result: e && e.message ? e.message : String(e) }
   }
   const result = {
     type: handleType,
