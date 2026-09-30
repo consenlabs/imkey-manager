@@ -8,6 +8,10 @@ exports.default = async function notarizing(context) {
     if (electronPlatformName !== 'darwin') {
         return;
     }
+    // Explicitly unsigned local builds cannot be notarized.
+    if (context.packager.platformSpecificBuildOptions.identity === null) {
+        return;
+    }
 
     const appName = context.packager.appInfo.productFilename;
     return await notarize({

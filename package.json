@@ -1,6 +1,6 @@
 {
   "name": "imKeyManager",
-  "version": "2.1.6-beta",
+  "version": "2.1.7-beta",
   "author": "imkey <weiqiang@imkey.im>",
   "description": "imKey Manager @2020",
   "license": "MIT",
@@ -13,6 +13,9 @@
     "lint": "eslint --ext .js,.vue -f ./node_modules/eslint-friendly-formatter src test",
     "lint:fix": "eslint --ext .js,.vue -f ./node_modules/eslint-friendly-formatter --fix src test",
     "dev": "node .electron-vue/dev-runner.js",
+    "dev:arm64": "node scripts/macos-arm64.js dev",
+    "build:mac:arm64": "node scripts/macos-arm64.js build",
+    "rebuild:mac:arm64": "node scripts/macos-native.js",
     "e2e": "mocha test/e2e",
     "pack": "npm run pack:main && npm run pack:renderer",
     "pack:main": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.main.config.js",
@@ -36,7 +39,7 @@
       "url": "https://files.imkey.im/downloads/imKeyManager"
     },
     "releaseInfo": {
-      "releaseNotes": "[{id:1,info:\"新增蓝牙固件更新功能\"},{id:2,info:\"增加蓝牙固件版本显示\"},{id:3,info:\"删除DApp选项卡\"}]"
+      "releaseNotes": "[{id:1,info:\"新增 Apple Silicon（ARM64）原生运行支持\"},{id:2,info:\"移除本地 RPC Bridge 和 DApp 调用入口，修复未经授权的设备调用风险\"},{id:3,info:\"保留设备绑定、应用管理及固件升级功能\"}]"
     },
     "files": [
       "dist/electron/**/*"

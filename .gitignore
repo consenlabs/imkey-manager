@@ -1,4 +1,5 @@
 .DS_Store
+.local/
 dist/electron/*
 dist/web/*
 build/*

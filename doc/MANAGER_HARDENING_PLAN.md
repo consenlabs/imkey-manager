@@ -19,7 +19,7 @@
 ### 截图中的 macOS 提示
 
 - 截图是 macOS 对依赖 Rosetta 的 Intel 专用 App 的兼容性通知，不是 8081 服务或设备绑定错误。
-- 原随包的 `connector.dylib` 和生成目录中的 `dist/electron/connector.dylib` 均只有 `x86_64` 架构。本轮已将根目录（macOS 打包所用）的 `connector.dylib` 替换为同一源码构建的 `x86_64` + `arm64` Universal 库，生成目录仍是旧产物。`ffi-napi`、`ref-napi` 的当前安装包仍缺 macOS arm64 可用的原生模块。项目使用 Electron `11.3.0`，它本身已有 Apple Silicon 构建，但现有原生依赖和打包链尚未形成可用的 arm64 应用。
+- 原随包库仅包含 x86_64。本分支的根目录 `connector.dylib` 已替换为 x86_64 + ARM64 Universal 库；新增 ARM64 脚本重建实际使用的顶层与嵌套 FFI/ref 模块，准备匹配的 Electron 运行时。本机 macOS 27.0.1 已验证 ARM64 原生开发启动；生产构建也已生成 ARM64 未签名目录包并通过包内 FFI/connector 加载检查。
 - Apple 已发布 [Rosetta 支持变更说明](https://developer.apple.com/cn/news/?id=w5ngl9k2)：macOS 26.4 起可能出现此类提示，通用 Rosetta 支持计划在 macOS 27 之后结束。因此仅隐藏提示或只调整打包标记都无法解决问题。
 
 ## 实施方案
@@ -55,7 +55,7 @@
 
 ## 风险与依赖
 
-- 已有 arm64 `connector.dylib`，但当前本机 arm64 Node 加载 `ffi-napi/ref-napi` 会因缺少原生构建而失败；仍需完成原生依赖适配及设备业务回归。
+- 原生模块编译阻断已解决：使用新版 node-gyp、目标 Electron 头文件及旧配置所需的 `openssl_fips` 定义。构建命令见 [ARM64_BUILD.md](ARM64_BUILD.md)；需要原生 ARM64 Node.js、Python 与 Xcode。
 - Electron 11 与旧版原生模块的构建链较老，可能需要联动升级。应把依赖升级和业务链路回归视为同一发布门槛。
 - 关闭 8081 是对外接口的有意不兼容变更；不提供兼容开关。
-- 本分支已替换根目录 `connector.dylib`，移除 8081 HTTP/RPC 服务、DApp 页面数据、预加载/Web3 provider、签名 API 与 IPC 转发，并为内部设备 IPC 加入发送者校验和消息白名单；绑定流程未改动。`walletapi.js` 保留 Manager 地址读取和注册所需的方法；未被这些链路引用的交易签名 protobuf 及生成脚本条目已清理。安全测试、钱包地址 API 模拟回归和 JS 静态检查通过。唯一的 SCSS 标记实际只包含普通 CSS，现已改为 CSS 并移除 `node-sass`/`sass-loader`；隔离临时副本中的正式主进程和渲染进程 webpack 构建均通过。未经签名、公证且跳过原生依赖重建的 x64 目录包可生成；arm64 目录包仍卡在 `ffi-napi` 的原生模块重建，尚未完成整包与真机回归。当前工作区未提供打包配置引用的 `key.env`，发布时需由安全的构建流程提供。
+- 当前候选版本为 2.1.7-beta，保留绑定、应用管理与升级恢复链路。8081 HTTP/RPC、DApp 与交易签名入口已移除，设备 IPC 已增加来源校验及消息白名单。安全回归、地址 API 模拟测试、生产 webpack 构建和 electron-builder 24.6.4 的 ARM64 未签名目录包均通过；包内 ARM64 Electron 可加载 FFI/ref 原生模块与 connector。正式签名、公证、Intel 版本及真机业务回归仍须在发布前完成。`key.env` 与 `.p8` 凭据由构建环境安全提供，不提交到仓库。
