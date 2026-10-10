@@ -1,0 +1,1162 @@
+[
+  {
+    "module": "device",
+    "method": "initImKeyCore",
+    "args": [],
+    "responseHex": "0a0773756363657373",
+    "errorHex": "",
+    "requests": [
+      "0a11696e69745f696d6b65795f636f72655f781288011285010a122f666978747572652f75736572446174612f122042383838443235454338433132424435303433373737423141433439463837321a203943304333303838394342434335453031414235423242423838373135373939320250433a06322e31302e33421f68747470733a2f2f696d6b65792e6f6e6c696e653a313030302f696d6b6579"
+    ],
+    "result": {
+      "isSuccess": true,
+      "result": "success"
+    }
+  },
+  {
+    "module": "device",
+    "method": "initImKeyCore",
+    "args": [],
+    "responseHex": "0a0773756363657373",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": [
+      "0a11696e69745f696d6b65795f636f72655f781288011285010a122f666978747572652f75736572446174612f122042383838443235454338433132424435303433373737423141433439463837321a203943304333303838394342434335453031414235423242423838373135373939320250433a06322e31302e33421f68747470733a2f2f696d6b65792e6f6e6c696e653a313030302f696d6b6579"
+    ],
+    "result": {
+      "isSuccess": false,
+      "result": "device_not_connected"
+    }
+  },
+  {
+    "module": "device",
+    "method": "connect",
+    "args": [],
+    "responseHex": "0a0773756363657373",
+    "errorHex": "",
+    "requests": ["0a0e6465766963655f636f6e6e6563741200"],
+    "result": {
+      "isSuccess": true,
+      "result": "success"
+    }
+  },
+  {
+    "module": "device",
+    "method": "connect",
+    "args": [],
+    "responseHex": "0a0773756363657373",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": ["0a0e6465766963655f636f6e6e6563741200"],
+    "result": {
+      "isSuccess": false,
+      "result": "device_not_connected"
+    }
+  },
+  {
+    "module": "device",
+    "method": "getSeid",
+    "args": [],
+    "responseHex": "0a0753454944313233",
+    "errorHex": "",
+    "requests": ["0a086765745f73656964"],
+    "result": {
+      "isSuccess": true,
+      "result": "SEID123"
+    }
+  },
+  {
+    "module": "device",
+    "method": "getSeid",
+    "args": [],
+    "responseHex": "0a0753454944313233",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": ["0a086765745f73656964"],
+    "result": {
+      "isSuccess": false,
+      "result": "device_not_connected"
+    }
+  },
+  {
+    "module": "device",
+    "method": "getSn",
+    "args": [],
+    "responseHex": "0a05534e313233",
+    "errorHex": "",
+    "requests": ["0a066765745f736e"],
+    "result": {
+      "isSuccess": true,
+      "result": "SN123"
+    }
+  },
+  {
+    "module": "device",
+    "method": "getSn",
+    "args": [],
+    "responseHex": "0a05534e313233",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": ["0a066765745f736e"],
+    "result": {
+      "isSuccess": false,
+      "result": "device_not_connected"
+    }
+  },
+  {
+    "module": "device",
+    "method": "getRamSize",
+    "args": [],
+    "responseHex": "0a083030303030303830",
+    "errorHex": "",
+    "requests": ["0a0c6765745f72616d5f73697a65"],
+    "result": {
+      "isSuccess": true,
+      "result": 128
+    }
+  },
+  {
+    "module": "device",
+    "method": "getRamSize",
+    "args": [],
+    "responseHex": "0a083030303030303830",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": ["0a0c6765745f72616d5f73697a65"],
+    "result": {
+      "isSuccess": false,
+      "result": "device_not_connected"
+    }
+  },
+  {
+    "module": "device",
+    "method": "getFirmwareVersion",
+    "args": [],
+    "responseHex": "0a05312e322e33",
+    "errorHex": "",
+    "requests": ["0a146765745f6669726d776172655f76657273696f6e"],
+    "result": {
+      "isSuccess": true,
+      "result": "1.2.3"
+    }
+  },
+  {
+    "module": "device",
+    "method": "getFirmwareVersion",
+    "args": [],
+    "responseHex": "0a05312e322e33",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": ["0a146765745f6669726d776172655f76657273696f6e"],
+    "result": {
+      "isSuccess": false,
+      "result": "device_not_connected"
+    }
+  },
+  {
+    "module": "device",
+    "method": "getBleVersion",
+    "args": [],
+    "responseHex": "0a03312e30",
+    "errorHex": "",
+    "requests": ["0a0f6765745f626c655f76657273696f6e"],
+    "result": {
+      "isSuccess": true,
+      "result": "1.0"
+    }
+  },
+  {
+    "module": "device",
+    "method": "getBleVersion",
+    "args": [],
+    "responseHex": "0a03312e30",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": ["0a0f6765745f626c655f76657273696f6e"],
+    "result": {
+      "isSuccess": false,
+      "result": "device_not_connected"
+    }
+  },
+  {
+    "module": "device",
+    "method": "getSdkInfo",
+    "args": [],
+    "responseHex": "0a06322e31302e33",
+    "errorHex": "",
+    "requests": ["0a0c6765745f73646b5f696e666f"],
+    "result": {
+      "isSuccess": true,
+      "result": "2.10.3"
+    }
+  },
+  {
+    "module": "device",
+    "method": "getSdkInfo",
+    "args": [],
+    "responseHex": "0a06322e31302e33",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": ["0a0c6765745f73646b5f696e666f"],
+    "result": {
+      "isSuccess": false,
+      "result": "device_not_connected"
+    }
+  },
+  {
+    "module": "device",
+    "method": "cosCheckUpdate",
+    "args": [],
+    "responseHex": "",
+    "errorHex": "",
+    "requests": ["0a10636f735f636865636b5f757064617465"],
+    "result": {
+      "isSuccess": true,
+      "result": {
+        "seid": "",
+        "isLatest": false,
+        "latestCosVersion": "",
+        "latestBleVersion": "",
+        "updateType": "",
+        "description": "",
+        "isUpdateSuccess": false
+      }
+    }
+  },
+  {
+    "module": "device",
+    "method": "cosCheckUpdate",
+    "args": [],
+    "responseHex": "",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": ["0a10636f735f636865636b5f757064617465"],
+    "result": {
+      "isSuccess": false,
+      "result": "device_not_connected"
+    }
+  },
+  {
+    "module": "device",
+    "method": "isBLStatus",
+    "args": [],
+    "responseHex": "0801",
+    "errorHex": "",
+    "requests": ["0a0c69735f626c5f737461747573"],
+    "result": {
+      "isSuccess": true,
+      "result": true
+    }
+  },
+  {
+    "module": "device",
+    "method": "isBLStatus",
+    "args": [],
+    "responseHex": "0801",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": ["0a0c69735f626c5f737461747573"],
+    "result": {
+      "isSuccess": false,
+      "result": "device_not_connected"
+    }
+  },
+  {
+    "module": "device",
+    "method": "deviceBindCheck",
+    "args": [],
+    "responseHex": "0a023535",
+    "errorHex": "",
+    "requests": ["0a0a62696e645f636865636b"],
+    "result": {
+      "isSuccess": true,
+      "result": "55"
+    }
+  },
+  {
+    "module": "device",
+    "method": "deviceBindCheck",
+    "args": [],
+    "responseHex": "0a023535",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": ["0a0a62696e645f636865636b"],
+    "result": {
+      "isSuccess": false,
+      "result": "device_not_connected"
+    }
+  },
+  {
+    "module": "device",
+    "method": "deviceBindAcquire",
+    "args": ["ABCDEF"],
+    "responseHex": "0a0773756363657373",
+    "errorHex": "",
+    "requests": ["0a0c62696e645f61637175697265120a12080a06414243444546"],
+    "result": {
+      "isSuccess": true,
+      "result": "success"
+    }
+  },
+  {
+    "module": "device",
+    "method": "deviceBindAcquire",
+    "args": ["ABCDEF"],
+    "responseHex": "0a0773756363657373",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": ["0a0c62696e645f61637175697265120a12080a06414243444546"],
+    "result": {
+      "isSuccess": false,
+      "result": "device_not_connected"
+    }
+  },
+  {
+    "module": "device",
+    "method": "activeDevice",
+    "args": [],
+    "responseHex": "0a0773756363657373",
+    "errorHex": "",
+    "requests": ["0a0f6465766963655f6163746976617465"],
+    "result": {
+      "isSuccess": true,
+      "result": "success"
+    }
+  },
+  {
+    "module": "device",
+    "method": "activeDevice",
+    "args": [],
+    "responseHex": "0a0773756363657373",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": ["0a0f6465766963655f6163746976617465"],
+    "result": {
+      "isSuccess": false,
+      "result": "device_not_connected"
+    }
+  },
+  {
+    "module": "device",
+    "method": "cosUpdate",
+    "args": [],
+    "responseHex": "0a0773756363657373",
+    "errorHex": "",
+    "requests": ["0a0a636f735f757064617465"],
+    "result": {
+      "isSuccess": true,
+      "result": "success"
+    }
+  },
+  {
+    "module": "device",
+    "method": "cosUpdate",
+    "args": [],
+    "responseHex": "0a0773756363657373",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": ["0a0a636f735f757064617465"],
+    "result": {
+      "isSuccess": false,
+      "result": "device_not_connected"
+    }
+  },
+  {
+    "module": "device",
+    "method": "checkDevice",
+    "args": [],
+    "responseHex": "0a0773756363657373",
+    "errorHex": "",
+    "requests": ["0a136465766963655f7365637572655f636865636b"],
+    "result": {
+      "isSuccess": true,
+      "result": "success"
+    }
+  },
+  {
+    "module": "device",
+    "method": "checkDevice",
+    "args": [],
+    "responseHex": "0a0773756363657373",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": ["0a136465766963655f7365637572655f636865636b"],
+    "result": {
+      "isSuccess": false,
+      "result": "device_not_connected"
+    }
+  },
+  {
+    "module": "device",
+    "method": "deviceBindDisplay",
+    "args": [],
+    "responseHex": "0a0773756363657373",
+    "errorHex": "",
+    "requests": ["0a1162696e645f646973706c61795f636f6465"],
+    "result": {
+      "isSuccess": true,
+      "result": "success"
+    }
+  },
+  {
+    "module": "device",
+    "method": "deviceBindDisplay",
+    "args": [],
+    "responseHex": "0a0773756363657373",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": ["0a1162696e645f646973706c61795f636f6465"],
+    "result": {
+      "isSuccess": false,
+      "result": "device_not_connected"
+    }
+  },
+  {
+    "module": "device",
+    "method": "checkUpdateAppList",
+    "args": [],
+    "responseHex": "2a190a03494d4b12086c6f676f2d494d4b1a03312e302a03312e302a190a0342544312086c6f676f2d4254431a03312e302a03312e302a1a0a0345544812086c6f676f2d4554481a046e6f6e652a03312e302a190a03444f5412086c6f676f2d444f541a03312e302a03322e30",
+    "errorHex": "",
+    "requests": ["0a0c636865636b5f757064617465"],
+    "result": {
+      "isSuccess": true,
+      "result": {
+        "status": "",
+        "total": 4,
+        "list": [
+          {
+            "name": "IMK",
+            "desc": "version 1.0",
+            "lastVersion": "version 1.0",
+            "id": 0,
+            "installLoading": false,
+            "installDis": true,
+            "installed": true,
+            "updateLoading": false,
+            "updateDis": true,
+            "deleteDis": true,
+            "deleteLoading": false,
+            "icon": "logo-IMK",
+            "buttonTexts": "install"
+          },
+          {
+            "name": "BTC",
+            "desc": "version 1.0",
+            "lastVersion": "version 1.0",
+            "id": 1,
+            "installLoading": false,
+            "installDis": true,
+            "installed": true,
+            "updateLoading": false,
+            "updateDis": true,
+            "deleteDis": true,
+            "deleteLoading": false,
+            "icon": "logo-BTC",
+            "buttonTexts": "install"
+          },
+          {
+            "name": "ETH",
+            "desc": "",
+            "lastVersion": "version 1.0",
+            "id": 2,
+            "installLoading": false,
+            "installDis": false,
+            "installed": false,
+            "updateLoading": false,
+            "updateDis": true,
+            "deleteDis": true,
+            "deleteLoading": false,
+            "icon": "logo-ETH",
+            "buttonTexts": "install"
+          },
+          {
+            "name": "DOT",
+            "desc": "version 1.0",
+            "lastVersion": "version 2.0",
+            "id": 3,
+            "installLoading": false,
+            "installDis": true,
+            "installed": false,
+            "updateLoading": false,
+            "updateDis": false,
+            "deleteDis": true,
+            "deleteLoading": false,
+            "icon": "logo-DOT",
+            "buttonTexts": "update"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "module": "device",
+    "method": "checkUpdateAppList",
+    "args": [],
+    "responseHex": "2a190a03494d4b12086c6f676f2d494d4b1a03312e302a03312e302a190a0342544312086c6f676f2d4254431a03312e302a03312e302a1a0a0345544812086c6f676f2d4554481a046e6f6e652a03312e302a190a03444f5412086c6f676f2d444f541a03312e302a03322e30",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": ["0a0c636865636b5f757064617465"],
+    "result": {
+      "isSuccess": false,
+      "result": {
+        "legacyError": "Cannot read properties of undefined (reading 'length')"
+      }
+    }
+  },
+  {
+    "module": "device",
+    "method": "getInstalledAppletList",
+    "args": [],
+    "responseHex": "2a190a03494d4b12086c6f676f2d494d4b1a03312e302a03312e302a190a0342544312086c6f676f2d4254431a03312e302a03312e302a1a0a0345544812086c6f676f2d4554481a046e6f6e652a03312e302a190a03444f5412086c6f676f2d444f541a03312e302a03322e30",
+    "errorHex": "",
+    "requests": ["0a0c636865636b5f757064617465"],
+    "result": {
+      "isSuccess": true,
+      "result": {
+        "status": "",
+        "total": 2,
+        "list": [
+          {
+            "name": "BTC"
+          },
+          {
+            "name": "DOT"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "module": "device",
+    "method": "getInstalledAppletList",
+    "args": [],
+    "responseHex": "2a190a03494d4b12086c6f676f2d494d4b1a03312e302a03312e302a190a0342544312086c6f676f2d4254431a03312e302a03312e302a1a0a0345544812086c6f676f2d4554481a046e6f6e652a03312e302a190a03444f5412086c6f676f2d444f541a03312e302a03322e30",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": ["0a0c636865636b5f757064617465"],
+    "result": {
+      "isSuccess": false,
+      "result": {
+        "legacyError": "Cannot read properties of undefined (reading 'length')"
+      }
+    }
+  },
+  {
+    "module": "device",
+    "method": "downloadApplet",
+    "args": ["ETH"],
+    "responseHex": "0a08457468657265756d",
+    "errorHex": "",
+    "requests": ["0a0c6170705f646f776e6c6f6164120712050a03455448"],
+    "result": {
+      "isSuccess": true,
+      "result": ["Ethereum"]
+    }
+  },
+  {
+    "module": "device",
+    "method": "downloadApplet",
+    "args": ["ETH"],
+    "responseHex": "0a08457468657265756d",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": ["0a0c6170705f646f776e6c6f6164120712050a03455448"],
+    "result": {
+      "isSuccess": false,
+      "result": "device_not_connected"
+    }
+  },
+  {
+    "module": "device",
+    "method": "updateApplet",
+    "args": ["ETH"],
+    "responseHex": "0a08457468657265756d",
+    "errorHex": "",
+    "requests": ["0a0a6170705f757064617465120712050a03455448"],
+    "result": {
+      "isSuccess": true,
+      "result": ["Ethereum"]
+    }
+  },
+  {
+    "module": "device",
+    "method": "updateApplet",
+    "args": ["ETH"],
+    "responseHex": "0a08457468657265756d",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": ["0a0a6170705f757064617465120712050a03455448"],
+    "result": {
+      "isSuccess": false,
+      "result": "device_not_connected"
+    }
+  },
+  {
+    "module": "device",
+    "method": "deleteApplet",
+    "args": ["ETH"],
+    "responseHex": "0a0773756363657373",
+    "errorHex": "",
+    "requests": ["0a0a6170705f64656c657465120712050a03455448"],
+    "result": {
+      "isSuccess": true,
+      "result": "success"
+    }
+  },
+  {
+    "module": "device",
+    "method": "deleteApplet",
+    "args": ["ETH"],
+    "responseHex": "0a0773756363657373",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": ["0a0a6170705f64656c657465120712050a03455448"],
+    "result": {
+      "isSuccess": false,
+      "result": "device_not_connected"
+    }
+  },
+  {
+    "module": "device",
+    "method": "getUserPath",
+    "args": [],
+    "responseHex": "",
+    "errorHex": "",
+    "requests": [],
+    "result": {
+      "isSuccess": true,
+      "result": "/fixture/userData/"
+    }
+  },
+  {
+    "module": "device",
+    "method": "getUserPath",
+    "args": [],
+    "responseHex": "",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": [],
+    "result": {
+      "isSuccess": true,
+      "result": "/fixture/userData/"
+    }
+  },
+  {
+    "module": "device",
+    "method": "importBindCode",
+    "args": ["abcdef"],
+    "responseHex": "0a0753454944313233",
+    "errorHex": "",
+    "requests": ["0a086765745f73656964"],
+    "result": {
+      "isSuccess": true
+    }
+  },
+  {
+    "module": "device",
+    "method": "importBindCode",
+    "args": ["abcdef"],
+    "responseHex": "0a0753454944313233",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": ["0a086765745f73656964"],
+    "result": {
+      "isSuccess": true
+    }
+  },
+  {
+    "module": "device",
+    "method": "exportBindCode",
+    "args": [],
+    "responseHex": "0a0753454944313233",
+    "errorHex": "",
+    "requests": ["0a086765745f73656964"],
+    "result": {
+      "isSuccess": true,
+      "result": "ABCDEF"
+    }
+  },
+  {
+    "module": "device",
+    "method": "exportBindCode",
+    "args": [],
+    "responseHex": "0a0753454944313233",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": ["0a086765745f73656964"],
+    "result": {
+      "isSuccess": true,
+      "result": "ABCDEF"
+    }
+  },
+  {
+    "module": "device",
+    "method": "isExistBindCodeFile",
+    "args": [],
+    "responseHex": "0a0753454944313233",
+    "errorHex": "",
+    "requests": ["0a086765745f73656964"],
+    "result": {
+      "isSuccess": true,
+      "result": true
+    }
+  },
+  {
+    "module": "device",
+    "method": "isExistBindCodeFile",
+    "args": [],
+    "responseHex": "0a0753454944313233",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": ["0a086765745f73656964"],
+    "result": {
+      "isSuccess": true,
+      "result": true
+    }
+  },
+  {
+    "module": "wallet",
+    "method": "getBTCXpub",
+    "args": [],
+    "responseHex": "0a0c787075622d66697874757265",
+    "errorHex": "",
+    "requests": [
+      "0a0c6274635f6765745f78707562121c121a0a074d41494e4e4554120f6d2f3434272f30272f30272f302f30"
+    ],
+    "result": {
+      "isSuccess": true,
+      "result": "xpub-fixture"
+    }
+  },
+  {
+    "module": "wallet",
+    "method": "getBTCXpub",
+    "args": [],
+    "responseHex": "0a0c787075622d66697874757265",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": [
+      "0a0c6274635f6765745f78707562121c121a0a074d41494e4e4554120f6d2f3434272f30272f30272f302f30"
+    ],
+    "result": {
+      "isSuccess": false,
+      "result": "device_not_connected"
+    }
+  },
+  {
+    "module": "wallet",
+    "method": "getETHAddress",
+    "args": [
+      {
+        "path": "m/44'/60'/0'/0/0"
+      }
+    ],
+    "responseHex": "1a0f616464726573732d66697874757265",
+    "errorHex": "",
+    "requests": [
+      "0a0b6765745f61646472657373121e121c0a08455448455245554d12106d2f3434272f3630272f30272f302f30"
+    ],
+    "result": {
+      "isSuccess": true,
+      "result": {
+        "path": "",
+        "chaintype": "",
+        "address": "address-fixture"
+      }
+    }
+  },
+  {
+    "module": "wallet",
+    "method": "getETHAddress",
+    "args": [
+      {
+        "path": "m/44'/60'/0'/0/0"
+      }
+    ],
+    "responseHex": "1a0f616464726573732d66697874757265",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": [
+      "0a0b6765745f61646472657373121e121c0a08455448455245554d12106d2f3434272f3630272f30272f302f30"
+    ],
+    "result": {
+      "isSuccess": false,
+      "result": "device_not_connected"
+    }
+  },
+  {
+    "module": "wallet",
+    "method": "getDOTAddress",
+    "args": [
+      {
+        "path": "m/44'/354'/0'/0'/0'"
+      }
+    ],
+    "responseHex": "1a0f616464726573732d66697874757265",
+    "errorHex": "",
+    "requests": [
+      "0a0b6765745f616464726573731221121f0a08504f4c4b41444f5412136d2f3434272f333534272f30272f30272f3027"
+    ],
+    "result": {
+      "isSuccess": true,
+      "result": {
+        "path": "",
+        "chaintype": "",
+        "address": "address-fixture"
+      }
+    }
+  },
+  {
+    "module": "wallet",
+    "method": "getDOTAddress",
+    "args": [
+      {
+        "path": "m/44'/354'/0'/0'/0'"
+      }
+    ],
+    "responseHex": "1a0f616464726573732d66697874757265",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": [
+      "0a0b6765745f616464726573731221121f0a08504f4c4b41444f5412136d2f3434272f333534272f30272f30272f3027"
+    ],
+    "result": {
+      "isSuccess": false,
+      "result": "device_not_connected"
+    }
+  },
+  {
+    "module": "wallet",
+    "method": "getKSMAddress",
+    "args": [
+      {
+        "path": "m/44'/434'/0'/0'/0'"
+      }
+    ],
+    "responseHex": "1a0f616464726573732d66697874757265",
+    "errorHex": "",
+    "requests": [
+      "0a0b6765745f61646472657373121f121d0a064b5553414d4112136d2f3434272f343334272f30272f30272f3027"
+    ],
+    "result": {
+      "isSuccess": true,
+      "result": {
+        "path": "",
+        "chaintype": "",
+        "address": "address-fixture"
+      }
+    }
+  },
+  {
+    "module": "wallet",
+    "method": "getKSMAddress",
+    "args": [
+      {
+        "path": "m/44'/434'/0'/0'/0'"
+      }
+    ],
+    "responseHex": "1a0f616464726573732d66697874757265",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": [
+      "0a0b6765745f61646472657373121f121d0a064b5553414d4112136d2f3434272f343334272f30272f30272f3027"
+    ],
+    "result": {
+      "isSuccess": false,
+      "result": "device_not_connected"
+    }
+  },
+  {
+    "module": "wallet",
+    "method": "registerBTCAddress",
+    "args": [
+      {
+        "path": "m/44'/0'/0'",
+        "network": "MAINNET"
+      }
+    ],
+    "responseHex": "1a0f616464726573732d66697874757265",
+    "errorHex": "",
+    "requests": [
+      "0a1072656769737465725f616464726573731221121f0a07424954434f494e120b6d2f3434272f30272f30271a074d41494e4e4554"
+    ],
+    "result": {
+      "isSuccess": true,
+      "result": {
+        "path": "",
+        "chaintype": "",
+        "address": "address-fixture"
+      }
+    }
+  },
+  {
+    "module": "wallet",
+    "method": "registerBTCAddress",
+    "args": [
+      {
+        "path": "m/44'/0'/0'",
+        "network": "MAINNET"
+      }
+    ],
+    "responseHex": "1a0f616464726573732d66697874757265",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": [
+      "0a1072656769737465725f616464726573731221121f0a07424954434f494e120b6d2f3434272f30272f30271a074d41494e4e4554"
+    ],
+    "result": {
+      "isSuccess": false,
+      "result": "device_not_connected"
+    }
+  },
+  {
+    "module": "wallet",
+    "method": "registerETHAddress",
+    "args": [
+      {
+        "path": "m/44'/60'/0'/0/0"
+      }
+    ],
+    "responseHex": "1a0f616464726573732d66697874757265",
+    "errorHex": "",
+    "requests": [
+      "0a1072656769737465725f61646472657373121e121c0a08455448455245554d12106d2f3434272f3630272f30272f302f30"
+    ],
+    "result": {
+      "isSuccess": true,
+      "result": {
+        "path": "",
+        "chaintype": "",
+        "address": "address-fixture"
+      }
+    }
+  },
+  {
+    "module": "wallet",
+    "method": "registerETHAddress",
+    "args": [
+      {
+        "path": "m/44'/60'/0'/0/0"
+      }
+    ],
+    "responseHex": "1a0f616464726573732d66697874757265",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": [
+      "0a1072656769737465725f61646472657373121e121c0a08455448455245554d12106d2f3434272f3630272f30272f302f30"
+    ],
+    "result": {
+      "isSuccess": false,
+      "result": "device_not_connected"
+    }
+  },
+  {
+    "module": "wallet",
+    "method": "registerCOSMOSAddress",
+    "args": [
+      {
+        "path": "m/44'/118'/0'/0/0"
+      }
+    ],
+    "responseHex": "1a0f616464726573732d66697874757265",
+    "errorHex": "",
+    "requests": [
+      "0a1072656769737465725f61646472657373121d121b0a06434f534d4f5312116d2f3434272f313138272f30272f302f30"
+    ],
+    "result": {
+      "isSuccess": true,
+      "result": {
+        "path": "",
+        "chaintype": "",
+        "address": "address-fixture"
+      }
+    }
+  },
+  {
+    "module": "wallet",
+    "method": "registerCOSMOSAddress",
+    "args": [
+      {
+        "path": "m/44'/118'/0'/0/0"
+      }
+    ],
+    "responseHex": "1a0f616464726573732d66697874757265",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": [
+      "0a1072656769737465725f61646472657373121d121b0a06434f534d4f5312116d2f3434272f313138272f30272f302f30"
+    ],
+    "result": {
+      "isSuccess": false,
+      "result": "device_not_connected"
+    }
+  },
+  {
+    "module": "wallet",
+    "method": "registerFILECOINAddress",
+    "args": [
+      {
+        "path": "m/44'/461'/0'/0/0"
+      }
+    ],
+    "responseHex": "1a0f616464726573732d66697874757265",
+    "errorHex": "",
+    "requests": [
+      "0a1072656769737465725f61646472657373121f121d0a0846494c45434f494e12116d2f3434272f343631272f30272f302f30"
+    ],
+    "result": {
+      "isSuccess": true,
+      "result": {
+        "path": "",
+        "chaintype": "",
+        "address": "address-fixture"
+      }
+    }
+  },
+  {
+    "module": "wallet",
+    "method": "registerFILECOINAddress",
+    "args": [
+      {
+        "path": "m/44'/461'/0'/0/0"
+      }
+    ],
+    "responseHex": "1a0f616464726573732d66697874757265",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": [
+      "0a1072656769737465725f61646472657373121f121d0a0846494c45434f494e12116d2f3434272f343631272f30272f302f30"
+    ],
+    "result": {
+      "isSuccess": false,
+      "result": "device_not_connected"
+    }
+  },
+  {
+    "module": "wallet",
+    "method": "registerDOTAddress",
+    "args": [
+      {
+        "path": "m/44'/354'/0'/0'/0'"
+      }
+    ],
+    "responseHex": "1a0f616464726573732d66697874757265",
+    "errorHex": "",
+    "requests": [
+      "0a1072656769737465725f616464726573731221121f0a08504f4c4b41444f5412136d2f3434272f333534272f30272f30272f3027"
+    ],
+    "result": {
+      "isSuccess": true,
+      "result": {
+        "path": "",
+        "chaintype": "",
+        "address": "address-fixture"
+      }
+    }
+  },
+  {
+    "module": "wallet",
+    "method": "registerDOTAddress",
+    "args": [
+      {
+        "path": "m/44'/354'/0'/0'/0'"
+      }
+    ],
+    "responseHex": "1a0f616464726573732d66697874757265",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": [
+      "0a1072656769737465725f616464726573731221121f0a08504f4c4b41444f5412136d2f3434272f333534272f30272f30272f3027"
+    ],
+    "result": {
+      "isSuccess": false,
+      "result": "device_not_connected"
+    }
+  },
+  {
+    "module": "wallet",
+    "method": "registerKSMAddress",
+    "args": [
+      {
+        "path": "m/44'/434'/0'/0'/0'"
+      }
+    ],
+    "responseHex": "1a0f616464726573732d66697874757265",
+    "errorHex": "",
+    "requests": [
+      "0a1072656769737465725f61646472657373121f121d0a064b5553414d4112136d2f3434272f343334272f30272f30272f3027"
+    ],
+    "result": {
+      "isSuccess": true,
+      "result": {
+        "path": "",
+        "chaintype": "",
+        "address": "address-fixture"
+      }
+    }
+  },
+  {
+    "module": "wallet",
+    "method": "registerKSMAddress",
+    "args": [
+      {
+        "path": "m/44'/434'/0'/0'/0'"
+      }
+    ],
+    "responseHex": "1a0f616464726573732d66697874757265",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": [
+      "0a1072656769737465725f61646472657373121f121d0a064b5553414d4112136d2f3434272f343334272f30272f30272f3027"
+    ],
+    "result": {
+      "isSuccess": false,
+      "result": "device_not_connected"
+    }
+  },
+  {
+    "module": "wallet",
+    "method": "registerTRONAddress",
+    "args": [
+      {
+        "path": "m/44'/195'/0'/0/0"
+      }
+    ],
+    "responseHex": "1a0f616464726573732d66697874757265",
+    "errorHex": "",
+    "requests": [
+      "0a1072656769737465725f61646472657373121b12190a0454524f4e12116d2f3434272f313935272f30272f302f30"
+    ],
+    "result": {
+      "isSuccess": true,
+      "result": {
+        "path": "",
+        "chaintype": "",
+        "address": "address-fixture"
+      }
+    }
+  },
+  {
+    "module": "wallet",
+    "method": "registerTRONAddress",
+    "args": [
+      {
+        "path": "m/44'/195'/0'/0/0"
+      }
+    ],
+    "responseHex": "1a0f616464726573732d66697874757265",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": [
+      "0a1072656769737465725f61646472657373121b12190a0454524f4e12116d2f3434272f313935272f30272f302f30"
+    ],
+    "result": {
+      "isSuccess": false,
+      "result": "device_not_connected"
+    }
+  },
+  {
+    "module": "wallet",
+    "method": "registerEOSPubKey",
+    "args": [
+      {
+        "path": "m/44'/194'/0'/0/0"
+      }
+    ],
+    "responseHex": "",
+    "errorHex": "",
+    "requests": [
+      "0a1072656769737465725f7075625f6b6579121a12180a03454f5312116d2f3434272f313934272f30272f302f30"
+    ],
+    "result": {
+      "isSuccess": true,
+      "result": {
+        "chaintype": "",
+        "address": "",
+        "publickeysList": []
+      }
+    }
+  },
+  {
+    "module": "wallet",
+    "method": "registerEOSPubKey",
+    "args": [
+      {
+        "path": "m/44'/194'/0'/0/0"
+      }
+    ],
+    "responseHex": "",
+    "errorHex": "12146465766963655f6e6f745f636f6e6e6563746564",
+    "requests": [
+      "0a1072656769737465725f7075625f6b6579121a12180a03454f5312116d2f3434272f313934272f30272f302f30"
+    ],
+    "result": {
+      "isSuccess": false,
+      "result": "device_not_connected"
+    }
+  }
+]

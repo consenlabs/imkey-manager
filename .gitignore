@@ -6,6 +6,7 @@ build/*
 !build/icons
 !build/installer.nsh
 node_modules
+out/
 npm-debug.log
 npm-debug.log.*
 thumbs.db
@@ -18,3 +19,5 @@ key.env.prod
 *.p8
 
 .env
+test-results/
+playwright-report/
