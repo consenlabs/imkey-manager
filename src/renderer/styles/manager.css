@@ -1,0 +1,286 @@
+.container :deep(.alert) {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.container :deep(.alert .alertBox) {
+  background: #fafbfc;
+  border-radius: 12px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  left: 35.42%;
+  top: 30.56%;
+  bottom: 42.78%;
+  width: 420px;
+  height: 225px;
+  text-align: center;
+}
+
+.container :deep(.alert1 span) {
+  margin-top: 33px;
+  font-size: 22px;
+}
+
+.container :deep(.alert1 h4) {
+  font-weight: 500;
+  font-size: 15px;
+  color: #2c2842;
+  margin-bottom: 20px;
+  margin-top: 11px;
+  margin-left: 2%;
+  margin-right: 2%;
+}
+
+.container :deep(.alert1 p) {
+  font-weight: 300;
+  font-style: normal;
+  font-size: 13px;
+  line-height: 21px;
+  /* or 165% */
+  text-align: center;
+  color: #2c2842;
+  margin-bottom: 6px;
+  margin-left: 2%;
+  margin-right: 2%;
+}
+
+.container :deep(.alert2 svg),
+.container :deep(.alert3 svg) {
+  margin-top: 34px;
+}
+
+.container :deep(.alert2 h5),
+.container :deep(.alert3 h5),
+.container :deep(.alert5 h5) {
+  font-weight: 500;
+  font-size: 15px;
+  color: #2c2842;
+  margin-top: 12px;
+}
+
+.container :deep(.alert2 p),
+.container :deep(.alert3 p),
+.container :deep(.alert5 p) {
+  font-weight: 300;
+  font-size: 13px;
+  color: #2c2842;
+  margin-top: 6px;
+  margin-left: 2%;
+  margin-right: 2%;
+}
+
+.container :deep(.alert2 button),
+.container :deep(.alert3 button),
+.container :deep(.alert5 button) {
+  width: 90px;
+  height: 36px;
+  background: #2e3035;
+  box-shadow: 0px 2px 20px rgba(137, 101, 172, 0.30772);
+  border-radius: 26.5px;
+  color: #fff;
+  margin-top: 24px;
+}
+
+.container :deep(.dioBox) {
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.container :deep(.dioBox .box) {
+  position: absolute;
+  left: 35.42%;
+  right: 35.42%;
+  top: 30.56%;
+  bottom: 45.33%;
+  background: #fafbfc;
+  border-radius: 12px;
+  text-align: center;
+  /*width: 33%;*/
+  /*height: 30%;*/
+  width: 450px;
+  height: 220px;
+}
+
+.container :deep(.dioBox svg) {
+  margin-top: 34px;
+}
+
+.container :deep(.dioBox h4) {
+  margin-top: 12px;
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 30px;
+  margin-left: 2%;
+  margin-right: 2%;
+  color: #2c2842;
+}
+
+.container :deep(.dioBox p) {
+  color: #2c2842;
+  font-weight: 300;
+  font-size: 13px;
+  margin-left: 2%;
+  margin-right: 2%;
+}
+
+.container :deep(.dioBox button) {
+  margin-top: 30px;
+  background: #2e3035;
+  box-shadow: 0px 2px 20px rgba(137, 101, 172, 0.30772);
+  border-radius: 26.5px;
+  width: 90px;
+  height: 36px;
+  color: #fff;
+}
+
+.container {
+  padding-left: 38px;
+  font-family: PingFang SC;
+}
+
+.container :deep(h2) {
+  margin-top: 57px;
+  font-weight: 600;
+  font-size: 24px;
+}
+
+.container :deep(.msg) {
+  margin-top: 6px;
+  font-size: 16px;
+  color: #8189a7;
+}
+
+.container :deep(h3) {
+  margin-top: 50px;
+  font-weight: 600;
+  font-size: 15px;
+  color: #0e1019;
+}
+
+.container :deep(.searchBox) {
+  position: relative;
+  margin-top: 20px;
+}
+
+.container :deep(.searchBox i) {
+  position: absolute;
+  left: 16px;
+  top: 9px;
+}
+
+.container :deep(.searchBox input) {
+  border: none;
+  width: 400px;
+  height: 34px;
+  box-shadow: 0px 0px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 147px;
+  padding-left: 38px;
+  font-family: PingFang SC;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 13px;
+  line-height: 18px;
+  display: flex;
+  align-items: center;
+  color: #c8cad0;
+}
+
+.container :deep(.appItem img) {
+  width: 34px;
+  height: 34px;
+}
+
+.container :deep(.appItem ul) {
+  margin-top: 34px;
+  width: 830px;
+}
+
+.container :deep(.appItem ul li) {
+  list-style: none;
+  float: left;
+  width: 386px;
+  height: 80px;
+  background: #fafafa;
+  border-radius: 4px;
+  margin-right: 28px;
+  margin-bottom: 20px;
+}
+
+.container :deep(.appItem ul li div) {
+  float: left;
+}
+
+.container :deep(.appItem ul li div:nth-child(1)) {
+  margin-top: 23px;
+  margin-left: 20px;
+}
+
+.container :deep(.appItem ul li div:nth-child(2)) {
+  margin-top: 18px;
+  margin-left: 23px;
+}
+
+.container :deep(.appItem ul li div:nth-child(3)) {
+  float: right;
+  margin-top: 30px;
+}
+
+.container :deep(.appItem ul li div p:nth-child(1)) {
+  font-weight: 600;
+  font-size: 15px;
+  color: #0e1019;
+}
+
+.container :deep(.appItem ul li div p:nth-child(2)) {
+  color: #8189a7;
+}
+
+.container :deep(.appItem ul li div a) {
+  text-decoration: none;
+  color: #b8ac95;
+  font-family: PingFang SC;
+  font-weight: 500;
+  font-size: 13px;
+  margin-right: 20px;
+}
+
+.container :deep(.appItem ul li div a.col) {
+  color: #d0d0d0;
+}
+
+.container :deep(.appItem ul li div span) {
+  margin-right: 20px;
+}
+
+.container :deep(.appItem ul li div span) {
+  margin-right: 20px;
+  color: #b8ac95;
+}
+
+.container :deep(.el-tooltip__popper) {
+  font-style: normal;
+  font-weight: normal;
+  font-size: 13px;
+  line-height: 18px;
+  font-size: 12px;
+  line-height: 1.2;
+  background: #2e3035;
+  border-radius: 6px;
+}
+.container :deep(.el-scrollbar) {
+  height: 100%;
+}
+.container :deep(.el-scrollbar__wrap) {
+  overflow: scroll;
+  width: 110%;
+  height: 120%;
+}

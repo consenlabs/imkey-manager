@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "files": {
+    "connector.dylib": {
+      "sha256": "5518226c205726a35b316b6f34aacb8d069e78d2a512064ae543ad02d2652a12",
+      "architectures": ["x86_64", "arm64"],
+      "imkeyCoreCommit": "80ddae20a2ece117bd443803e9bc6d5de519e575",
+      "source": "imkey-core develop (主 CC 核实)"
+    },
+    "connector.dll": {
+      "sha256": "92d0fd3ee04b3295da2b945bc07707943ae03ac6c7050f1195de0cd50373e6ed",
+      "architectures": ["i386"],
+      "imkeyCoreCommit": null,
+      "source": "待确认"
+    }
+  }
+}
