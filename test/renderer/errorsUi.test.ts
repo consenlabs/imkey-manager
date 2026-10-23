@@ -227,20 +227,57 @@ it('settings firmware read failures exit the loading state into the error dialog
   expect(settings.firmware.state.supportCode).toBe(5)
   expect(settings.firmware.state.errorInfo).toBe('get_firmware_version_error')
 })
-it('setup wallet generation failures stay on the setup page and support retry', async () => {
+it('setup wallet readiness failures stay on the setup page and support retry', async () => {
   mocks.call.mockImplementation(async method =>
-    method === 'genWalletAddress'
-      ? { isSuccess: false, result: 'address_generation_failed' }
+    method === 'getBTCXpub'
+      ? { isSuccess: false, result: 'imkey_wallet_not_created' }
       : { isSuccess: true, result: 'success' }
   )
   const setup = useDeviceSetup()
   setup.finish.value = true
   await setup.send({ page: 0, active: 0, isNext: true })
-  expect(setup.errorInfo.value).toBe('address_generation_failed')
+  expect(setup.errorInfo.value).toBe('imkey_wallet_not_created')
   expect(setup.errorStage.value).toBe('wallet')
   expect(mocks.push).not.toHaveBeenCalled()
   await setup.retry()
-  expect(mocks.call.mock.calls.filter(([method]) => method === 'genWalletAddress')).toHaveLength(2)
+  expect(mocks.call.mock.calls.filter(([method]) => method === 'getBTCXpub')).toHaveLength(2)
+})
+
+it('setup completion only reconnects and verifies wallet readiness before entering home', async () => {
+  mocks.call.mockImplementation(async method => ({
+    isSuccess: true,
+    result: method === 'getBTCXpub' ? 'xpub-ready' : 'success'
+  }))
+  const setup = useDeviceSetup()
+  setup.finish.value = true
+  await setup.send({ page: 0, active: 0, isNext: false })
+  expect(mocks.call.mock.calls.map(([method]) => method)).toEqual(['connectDevice', 'getBTCXpub'])
+  expect(mocks.push).toHaveBeenCalledExactlyOnceWith('/home/welcomeHome')
+})
+
+it.each(['', 'not-a-wallet'])('an unready wallet (%s) cannot finish setup', async value => {
+  mocks.call.mockImplementation(async method => ({
+    isSuccess: true,
+    result: method === 'getBTCXpub' ? value : 'success'
+  }))
+  const setup = useDeviceSetup()
+  setup.finish.value = true
+  await setup.send({ page: 0, active: 0, isNext: false })
+  expect(setup.errorInfo.value).toBe('imkey_wallet_not_created')
+  expect(mocks.push).not.toHaveBeenCalled()
+})
+
+it('a changed device binding prevents completion', async () => {
+  mocks.call.mockImplementation(async method =>
+    method === 'getBTCXpub'
+      ? { isSuccess: false, result: 'device_bind_check_failed' }
+      : { isSuccess: true, result: 'success' }
+  )
+  const setup = useDeviceSetup()
+  setup.finish.value = true
+  await setup.send({ page: 0, active: 0, isNext: false })
+  expect(setup.errorInfo.value).toBe('device_bind_check_failed')
+  expect(mocks.push).not.toHaveBeenCalled()
 })
 
 it('error details preserve safe operation IDs for log correlation', () => {

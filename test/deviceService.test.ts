@@ -7,6 +7,7 @@ import { DeviceQueue } from '../src/service/queue'
 import { ConnectorClient, allowedMockPath } from '../src/service/connector/ConnectorClient'
 import type { DeviceMethod } from '../src/shared/deviceContract'
 import type { Handler } from '../src/service/handlers'
+import { api, btc, create, decode, device, invoke } from '../src/service/protobuf'
 const direct: Record<string, string> = {
   getSeid: 'get_seid',
   getSn: 'get_sn',
@@ -155,7 +156,7 @@ it('runs ten concurrent requests FIFO and preserves each response id', async () 
     Array.from({ length: 10 }, (_, i) => ({ id: i, result: { isSuccess: true, result: i } }))
   )
 })
-it('binding failure immediately stops generation and xpub retrieval', () => {
+it('binding failure immediately stops xpub retrieval', () => {
   let calls = 0
   const handlers = createDeviceHandlers(
     {
@@ -169,12 +170,74 @@ it('binding failure immediately stops generation and xpub retrieval', () => {
     },
     '/user'
   )
-  expect(handlers.genWalletAddress({ filePath: '' })).toEqual({
-    isSuccess: false,
-    result: 'device_not_connected'
-  })
   expect(handlers.getBTCXpub('')).toEqual({ isSuccess: false, result: 'device_not_connected' })
-  expect(calls).toBe(2)
+  expect(calls).toBe(1)
+})
+it.each(['bound_other', 'unbound', '', 'unknown'])(
+  'does not read wallet readiness when binding status is %s',
+  status => {
+    const requests: string[] = []
+    const response = create(device, 'BindCheckRes', { setBindStatus: status })
+    const handlers = createDeviceHandlers(
+      {
+        callImKeyApi(hex) {
+          requests.push(invoke<string>(decode(api, 'ImkeyAction', hex), 'getMethod'))
+          return Buffer.from(response.serializeBinary()).toString('hex')
+        },
+        getLastErrorMessage: () => ''
+      },
+      '/user'
+    )
+    expect(handlers.getBTCXpub()).toEqual({
+      isSuccess: false,
+      result: 'device_bind_check_failed'
+    })
+    expect(requests).toEqual(['bind_check'])
+  }
+)
+it('reads wallet readiness only after confirming the current binding', () => {
+  const requests: string[] = []
+  const handlers = createDeviceHandlers(
+    {
+      callImKeyApi(hex) {
+        const method = invoke<string>(decode(api, 'ImkeyAction', hex), 'getMethod')
+        requests.push(method)
+        const response =
+          method === 'bind_check'
+            ? create(device, 'BindCheckRes', { setBindStatus: 'bound_this' })
+            : create(btc, 'BtcXpubRes', { setXpub: 'xpub-ready' })
+        return Buffer.from(response.serializeBinary()).toString('hex')
+      },
+      getLastErrorMessage: () => ''
+    },
+    '/user'
+  )
+  expect(handlers.getBTCXpub()).toEqual({ isSuccess: true, result: 'xpub-ready' })
+  expect(requests).toEqual(['bind_check', 'btc_get_xpub'])
+})
+it('preserves wallet readiness errors after confirming the current binding', () => {
+  const requests: string[] = []
+  const handlers = createDeviceHandlers(
+    {
+      callImKeyApi(hex) {
+        const method = invoke<string>(decode(api, 'ImkeyAction', hex), 'getMethod')
+        requests.push(method)
+        return method === 'bind_check'
+          ? Buffer.from(
+              create(device, 'BindCheckRes', { setBindStatus: 'bound_this' }).serializeBinary()
+            ).toString('hex')
+          : ''
+      },
+      getLastErrorMessage: () =>
+        requests.at(-1) === 'btc_get_xpub' ? 'imkey_wallet_not_created' : ''
+    },
+    '/user'
+  )
+  expect(handlers.getBTCXpub()).toEqual({
+    isSuccess: false,
+    result: 'imkey_wallet_not_created'
+  })
+  expect(requests).toEqual(['bind_check', 'btc_get_xpub'])
 })
 it('wallet registration collects failures and never reports false success', () => {
   let calls = 0

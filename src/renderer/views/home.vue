@@ -117,7 +117,7 @@
     </div>
     <div class="statusBox status4" v-if="ownsUpdater && status == 4">
       <div class="status4Alert">
-        <div class="status4AlertBox">
+        <div class="status4AlertBox" :class="{ 'update-error-dialog': errorInfo }">
           <h4>{{ $t('m.imKeyManager.found_new_soft_version') }}</h4>
           <ErrorDetail :message="errorInfo" :stage="errorStage" />
           <p>
@@ -143,7 +143,11 @@
 
           <div class="view_button" style="display: inline-block; float: left">
             <button class="later" @click="later">{{ $t('m.imKeyManager.update_later') }}</button>
-            <button class="updateNow" @click="updateNow">
+            <button
+              class="updateNow"
+              :class="errorInfo ? 'retry-button retry-inline' : ''"
+              @click="updateNow"
+            >
               {{ $t('m.imKeyManager.update_now') }}
             </button>
           </div>
@@ -182,7 +186,9 @@
     </div>
     <div v-else-if="ownsUpdater && errorInfo" class="home-update-error">
       <ErrorDetail :message="errorInfo" :stage="errorStage" />
-      <button @click="retry">{{ $t('m.imKeyManager.retry') }}</button>
+      <button type="button" class="retry-button" @click="retry">
+        {{ $t('m.imKeyManager.retry') }}
+      </button>
     </div>
     <div class="tip6" v-else-if="ownsUpdater && status == 6">
       <p>{{ $t('m.imKeyManager.found_imKey_manager_new_version') }}</p>
@@ -220,10 +226,16 @@ defineExpose({ checkHomeUpdate: checkSoftUpdate })
   position: fixed;
   bottom: 23px;
   left: 30px;
-  max-width: 320px;
+  box-sizing: border-box;
+  width: 240px;
   padding: 16px;
   background: #fafbfc;
   border-radius: 12px;
+}
+.home-update-error :deep(.operation-error) {
+  color: #8189a7;
+  font-size: 13px;
+  line-height: 20px;
 }
 .link:hover,
 hover {
@@ -436,3 +448,4 @@ status5AlertBox p:nth-of-type(4) {
   margin-top: 30px;
 }
 </style>
+<style scoped src="../styles/retry.css"></style>

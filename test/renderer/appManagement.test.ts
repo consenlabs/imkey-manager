@@ -96,6 +96,23 @@ describe('canonical app identity and presentation state', () => {
       errorStage: 'app'
     })
   })
+  it('installation finishes after registering the requested addresses without prefetching other chains', async () => {
+    const device = useDeviceStore()
+    device.apps = [catalog('Kusama')]
+    call.mockImplementation(async method => ({
+      isSuccess: true,
+      result: method === 'downloadApplet' ? ['Kusama'] : 'success'
+    }))
+    const manager = useAppManagement()
+    await manager.installApp(manager.apps.value[0])
+    expect(call.mock.calls.map(([method]) => method)).toEqual([
+      'connectDevice',
+      'downloadApplet',
+      'writeWalletAddress'
+    ])
+    expect(call).toHaveBeenCalledWith('writeWalletAddress', { name: ['Kusama'], filePath: '' })
+    expect(device.apps[0].installedVersion).toBe('1.0')
+  })
   it('reopening with another locale derives the display name without changing connector identity', async () => {
     const device = useDeviceStore()
     device.apps = [catalog('IMK', '1.0')]

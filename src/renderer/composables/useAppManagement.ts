@@ -90,11 +90,6 @@ export function useAppManagement() {
         filePath: app.userPath
       })
       if (!registered.isSuccess) return fail(registered, 'restore')
-      if (['Polkadot', 'Kusama', 'Ethereum'].includes(target.name)) {
-        const addresses = await call('genWalletAddress', { filePath: app.userPath })
-        if (!addresses.isSuccess) return fail(addresses, 'restore')
-        app.walletAddresses = addresses.result
-      }
       if (scope.active()) target.installedVersion = target.latestVersion
     } catch (error) {
       fail(error, 'app')

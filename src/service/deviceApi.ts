@@ -11,14 +11,7 @@ import {
   type Message
 } from './protobuf'
 import type { DeviceResult } from '../shared/deviceContract'
-
-const constants = {
-  XPubCommonKey128: 'B888D25EC8C12BD5043777B1AC49F872',
-  XPubCommonIv: '9C0C30889CBCC5E01AB5B2BB88715799',
-  terminalType: 'PC',
-  sdkVersion: '2.10.3',
-  serverUrl: 'https://imkey.online:1000/imkey'
-}
+import constants from '../common/constants'
 const deviceResponses: Record<string, [string, string | null]> = {
   get_seid: ['GetSeidRes', 'getSeid'],
   get_sn: ['GetSnRes', 'getSn'],

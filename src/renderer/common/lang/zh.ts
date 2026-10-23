@@ -1,6 +1,10 @@
 // zh-CN
 export const m = {
   imKeyManager: {
+    secure_check_button: '设备安全校验',
+    secure_check_checking: '设备校验中',
+    secure_check_success: '设备校验通过',
+    secure_check_failed: '设备校验失败',
     retry: '重试',
     operation_failed: '操作失败，请重试。',
     stage_connect: '设备连接',
@@ -30,8 +34,12 @@ export const m = {
     check_firmware_version_update: '检查固件版本升级',
     check_device_bind_code: '检查设备绑定码',
     check_pin_wallet: '检查 PIN 码及钱包',
-    check_secure_test: '检查安全测试',
     usb_connect_error: 'USB 连接异常',
+    connection_incomplete: '设备连接未完成',
+    connection_check_failed:
+      '设备检查失败，请重试；若问题持续出现，请保留错误信息并联系 imKey 支持。',
+    connection_device_rejected:
+      '设备服务拒绝了当前设备的校验请求，连接尚未完成。请保留错误信息并联系 imKey 支持核查。',
     check_usb_connect: '请拔出 USB 重试或检查 USB 接口是否松动，确认无误后再次点击「连接」',
     ok: '确定',
     firmware_update_fail: '固件升级未完成',

@@ -20,7 +20,9 @@ const emit = defineEmits<{ later: []; updateNow: []; retry: [] }>()
     </svg>
     <p>{{ $t('m.imKeyManager.access_error_please_check_your_network_connection') }}</p>
     <ErrorDetail :message="errorInfo" :stage="errorStage" />
-    <button @click="emit('retry')">{{ $t('m.imKeyManager.retry') }}</button>
+    <button type="button" class="retry-button" @click="emit('retry')">
+      {{ $t('m.imKeyManager.retry') }}
+    </button>
   </div>
   <div class="statusBox status3" v-else-if="status == 3">
     <svg width="61" height="60" viewBox="0 0 61 60" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -33,7 +35,7 @@ const emit = defineEmits<{ later: []; updateNow: []; retry: [] }>()
   </div>
   <div class="statusBox status4" v-else-if="status == 4">
     <div class="status4Alert">
-      <div class="status4AlertBox">
+      <div class="status4AlertBox" :class="{ 'update-error-dialog': errorInfo }">
         <h4>{{ $t('m.imKeyManager.found_new_soft_version') }}</h4>
         <ErrorDetail :message="errorInfo" :stage="errorStage" />
         <p>
@@ -68,7 +70,11 @@ const emit = defineEmits<{ later: []; updateNow: []; retry: [] }>()
           <button class="later" @click.prevent="emit('later')">
             {{ $t('m.imKeyManager.update_later') }}
           </button>
-          <button class="updateNow" @click="emit('updateNow')">
+          <button
+            class="updateNow"
+            :class="errorInfo ? 'retry-button retry-inline' : ''"
+            @click="emit('updateNow')"
+          >
             {{ $t('m.imKeyManager.update_now') }}
           </button>
         </p>
@@ -116,3 +122,14 @@ const emit = defineEmits<{ later: []; updateNow: []; retry: [] }>()
     </div>
   </div>
 </template>
+<style scoped>
+.status2 :deep(.operation-error) {
+  max-width: min(560px, calc(100% - 48px));
+  margin-top: 8px;
+  color: #8189a7;
+  font-size: 13px;
+  line-height: 20px;
+  text-align: center;
+}
+</style>
+<style scoped src="../../styles/retry.css"></style>

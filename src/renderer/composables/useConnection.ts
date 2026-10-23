@@ -18,12 +18,12 @@ export function useConnection() {
   const { t } = useTranslation()
   const state = reactive({
     errorInfo: '',
+    errorStage: 'connect',
     connectText: t('m.connectDevice.connect'),
     status: 1,
     checkFirmwareUpgrade: 1,
     checkDeviceBindingCode: 1,
     checkPinAndWallet: 1,
-    checkSafetyTest: 1,
     isUpdateIMK: false
   })
   const binding = useBindCodeInput(bindAcquire, true)
@@ -34,8 +34,30 @@ export function useConnection() {
   }
   function fail(message: unknown, status = 4): void {
     if (!operation.active()) return
+    binding.state.bindingStatus = 0
     state.errorInfo = operationError(message)
     changeState(status)
+  }
+  function resetConnection(): void {
+    binding.resetBindingInput()
+    state.errorInfo = ''
+    state.errorStage = 'connect'
+    state.connectText = t('m.connectDevice.connect')
+    state.checkFirmwareUpgrade = state.checkDeviceBindingCode = state.checkPinAndWallet = 1
+    device.activeStatus = ''
+    device.bindStatus = ''
+    device.apps = []
+  }
+  function cancelBinding(): void {
+    if (state.status !== 7 || binding.state.bindingStatus !== 0) return
+    resetConnection()
+    changeState(1)
+  }
+  function handleKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape' && state.status === 7) {
+      event.preventDefault()
+      cancelBinding()
+    }
   }
   function openUrl(): void {
     void window.imkey.app
@@ -44,14 +66,9 @@ export function useConnection() {
       )
       .catch(error => fail(error instanceof Error ? error.message : String(error)))
   }
-  function check(): void {
-    state.checkFirmwareUpgrade =
-      state.checkDeviceBindingCode =
-      state.checkPinAndWallet =
-      state.checkSafetyTest =
-        1
-    void operation.run(async () => {
-      state.errorInfo = ''
+  async function check(): Promise<void> {
+    await operation.run(async () => {
+      resetConnection()
       try {
         await connect()
       } catch (error) {
@@ -60,6 +77,7 @@ export function useConnection() {
     })
   }
   async function connect(): Promise<void> {
+    state.errorStage = 'connect'
     const request = callDevice('connectDevice')
     if (state.status === 1) changeState(8)
     const result = await request
@@ -68,6 +86,7 @@ export function useConnection() {
       return
     }
     changeState(3)
+    state.errorStage = 'check'
     state.checkFirmwareUpgrade = 2
     const bootloader = await callDevice('isBLStatus')
     if (!bootloader.isSuccess) {
@@ -78,11 +97,9 @@ export function useConnection() {
       await firmware.toCosUpdate()
       return
     }
-    state.checkFirmwareUpgrade = 3
     await checkIsActive()
   }
   async function checkIsActive(): Promise<void> {
-    state.checkDeviceBindingCode = 2
     const update = await callDevice('checkUpdate')
     if (!update.isSuccess) {
       fail(update)
@@ -101,6 +118,7 @@ export function useConnection() {
       await firmware.toCosUpdate()
       return
     }
+    state.checkFirmwareUpgrade = 3
     device.activeStatus = update.result.status
     device.apps = toDeviceApplets(update.result.list)
     state.connectText = t('m.connectDevice.active_success')
@@ -114,6 +132,8 @@ export function useConnection() {
     await checkIsBind()
   }
   async function checkIsBind(): Promise<void> {
+    state.errorStage = 'bind'
+    state.checkDeviceBindingCode = 2
     const result = await callDevice('deviceBindCheck', app.userPath)
     if (!result.isSuccess) {
       fail(result)
@@ -141,60 +161,67 @@ export function useConnection() {
     state.checkDeviceBindingCode = 3
     await checkWallet(false)
   }
-  async function checkWallet(other: boolean): Promise<void> {
+  async function checkWallet(other: boolean, isCurrent = () => operation.active()): Promise<void> {
+    state.errorStage = 'wallet'
     if (!other) state.checkPinAndWallet = 2
     const xpub = await callDevice('getBTCXpub', app.userPath)
+    if (!isCurrent()) return
     if (!xpub.isSuccess) {
       if (other) fail(xpub)
       else await router.push('imKeySetting')
       return
     }
-    if (!xpub.result.includes('xpu')) {
+    if (!xpub.result.startsWith('xpub')) {
       await router.push('imKeySetting')
       return
     }
-    if (!other) {
-      state.checkPinAndWallet = 3
-      state.checkSafetyTest = 2
-    }
-    const addresses = await callDevice('genWalletAddress', { filePath: app.userPath })
-    if (!addresses.isSuccess) {
-      fail(addresses)
-      return
-    }
-    app.walletAddresses = addresses.result
     if (other) binding.state.bindingStatus = 2
-    else state.checkSafetyTest = 3
+    else state.checkPinAndWallet = 3
     await router.push('/home/welcomeHome')
   }
   async function bindAcquire(code: string): Promise<void> {
+    const isCurrent = () => operation.active() && state.status === 7
     await operation.run(async () => {
+      if (!isCurrent()) return
       state.errorInfo = ''
       try {
-        await bindAcquireWithinOperation(code)
+        await bindAcquireWithinOperation(code, isCurrent)
       } catch (error) {
+        if (!isCurrent()) return
         fail(error instanceof Error ? error.message : String(error))
       }
     })
   }
-  async function bindAcquireWithinOperation(code: string): Promise<void> {
+  async function bindAcquireWithinOperation(code: string, isCurrent: () => boolean): Promise<void> {
+    state.errorStage = 'bind'
     const acquired = await callDevice('deviceBindAcquire', code)
-    if (!acquired.isSuccess || acquired.result !== constants.RESULT_STATUS_SUCCESS) {
+    if (!isCurrent()) return
+    if (
+      (acquired.isSuccess && acquired.result === 'error') ||
+      (!acquired.isSuccess &&
+        ['imkey_authcode_error', 'binding_code_error'].includes(acquired.result))
+    ) {
       state.errorInfo = operationError(acquired)
       binding.state.codeIsTrue = false
       binding.state.bindingStatus = 0
       return
     }
+    if (!acquired.isSuccess || acquired.result !== constants.RESULT_STATUS_SUCCESS) {
+      fail(acquired)
+      return
+    }
     const imported = await callDevice('importBindCode', code)
+    if (!isCurrent()) return
     if (!imported.isSuccess) {
       fail(imported)
       return
     }
-    await checkWallet(true)
+    await checkWallet(true, isCurrent)
   }
   onMounted(async () => {
     document.body.style.overflow = 'hidden'
     document.addEventListener('touchmove', preventScroll, { passive: false })
+    document.addEventListener('keydown', handleKeydown)
     await operation.run(async () => {
       const path = await callDevice('getUserPath')
       if (!path.isSuccess) {
@@ -209,6 +236,7 @@ export function useConnection() {
   onUnmounted(() => {
     document.body.style.overflow = ''
     document.removeEventListener('touchmove', preventScroll)
+    document.removeEventListener('keydown', handleKeydown)
   })
-  return { ...toRefs(state), ...binding, ...firmware, changeState, check, openUrl }
+  return { ...toRefs(state), ...binding, ...firmware, changeState, check, cancelBinding, openUrl }
 }

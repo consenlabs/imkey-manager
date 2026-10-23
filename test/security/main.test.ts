@@ -44,10 +44,17 @@ describe('main window IPC policy', () => {
     expect(isAllowedDeviceMessage({ sender: {} }, window, { type: 'cosUpdate' })).toBe(false)
   })
   it('rejects unknown, signing, and malformed requests', () => {
-    for (const method of ['api', 'ethSign', 'signTransaction', 'getBTCAddress', null])
+    for (const method of [
+      'api',
+      'ethSign',
+      'signTransaction',
+      'getBTCAddress',
+      'genWalletAddress',
+      null
+    ])
       expect(() => validateDeviceCall(method, undefined)).toThrow()
     expect(() => validateDeviceCall('downloadApplet', {})).toThrow()
-    expect(() => validateDeviceCall('genWalletAddress', 'wrong')).toThrow()
+    expect(() => validateDeviceCall('genWalletAddress', { filePath: '/user' })).toThrow()
     expect(() => validateDeviceCall('getSeid', undefined)).not.toThrow()
   })
   it('allows only HTTPS external links', () => {

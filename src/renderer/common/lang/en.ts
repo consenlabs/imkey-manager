@@ -1,6 +1,10 @@
 // en-US
 export const m = {
   imKeyManager: {
+    secure_check_button: 'Device Security Check',
+    secure_check_checking: 'Checking Device',
+    secure_check_success: 'Device verification passed',
+    secure_check_failed: 'Device verification failed',
     retry: 'Retry',
     operation_failed: 'The operation failed. Please retry.',
     stage_connect: 'Device connection',
@@ -32,8 +36,12 @@ export const m = {
     check_firmware_version_update: 'Check firmware version',
     check_device_bind_code: 'Check the device binding code',
     check_pin_wallet: 'Check PIN code and wallet',
-    check_secure_test: 'Safety check',
     usb_connect_error: 'usb connection error',
+    connection_incomplete: 'Device connection incomplete',
+    connection_check_failed:
+      'Device checks failed. Please retry. If the problem persists, keep the error details and contact imKey support.',
+    connection_device_rejected:
+      'The device service rejected the verification request. Connection is incomplete. Please keep the error details and contact imKey support.',
     check_usb_connect:
       'Please unplug the USB to try again or check the USB interface, and then click「Connect」again after confirming that it is normal',
     ok: 'Confirm',

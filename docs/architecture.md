@@ -4,7 +4,7 @@
 
 `src/main/index.ts` 创建主窗口和设备服务，窗口使用 `contextIsolation: true`、`nodeIntegration: false`、`sandbox: true`。窗口导航、新窗口和 webview 被限制；macOS 的 Cmd+A/C/V 与 Windows 关闭到托盘行为由主进程管理。生产 CSP 使用 `default-src 'self'`，脚本仅允许自身资源；Element Plus 的运行时样式允许内联样式，图片与字体允许所需的 data URL。开发构建为 Vite HMR 放开 WebSocket 与开发入口脚本。
 
-`src/preload/index.ts` 通过 `contextBridge` 暴露 `window.imkey`，不暴露 `ipcRenderer`、任意通道、`remote` 或 Node API。Vue 页面通过这个对象调用 main；设备状态由 `src/renderer/store/device.ts` 管理（应用列表、COS/BLE 版本、绑定状态与升级标志），应用状态由 `src/renderer/store/app.ts` 管理（用户目录与钱包地址）；`store/index.ts` 仅统一导出。
+`src/preload/index.ts` 通过 `contextBridge` 暴露 `window.imkey`，不暴露 `ipcRenderer`、任意通道、`remote` 或 Node API。Vue 页面通过这个对象调用 main；设备状态由 `src/renderer/store/device.ts` 管理（应用列表、COS/BLE 版本、绑定状态与升级标志），应用状态由 `src/renderer/store/app.ts` 管理（用户目录）；`store/index.ts` 仅统一导出。
 
 `src/main/serviceClient.ts` 启动 `utilityProcess.fork(out/main/service.js)`，首条初始化消息传入 userData、connector 路径、平台和是否打包。后续请求为 `{ id, method, params }`，响应为 `{ id, result }`。主进程用请求 id 与 Map 关联响应，可同时等待多个请求；服务通过 `DeviceQueue` FIFO 串行执行设备操作。生产调用没有会打断固件升级的短超时。服务异常退出使所有挂起请求以错误结束，并自动重启服务。
 
@@ -43,6 +43,10 @@ window.imkey.updater.onProgress(cb: (value: unknown) => void): () => void
 ```
 
 钱包地址恢复写入失败会额外返回 `failed` 链集合；页面保留失败/待恢复状态，不把部分失败展示为完成。应用安装失败关闭 loading 并允许重试。
+
+连接和完成设置中的钱包检查仅确认设备绑定与钱包就绪，不再预取 ETH、DOT、KSM 地址或缓存钱包地址。
+`getBTCXpub` 先执行 `bind_check`，仅当前电脑已绑定（`bound_this`）时读取 xpub；钱包未就绪或绑定失败不能进入首页。
+应用安装和固件升级后的 `writeWalletAddress` 地址注册、恢复流程保持独立。
 
 ## connector 与绑定码
 

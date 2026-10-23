@@ -4,46 +4,57 @@
       <h3>{{ $t('m.imKeyManager.imKey_connecting_wait') }}</h3>
       <p>
         <el-icon
-          v-if="flow.checkFirmwareUpgrade !== 2"
+          v-if="flow.checkFirmwareUpgrade === 3"
           class="el-icon-success"
           :class="{ done: flow.checkFirmwareUpgrade === 3 }"
           ><SuccessFilled /></el-icon
-        ><span v-else class="fas fa-circle-notch fa-spin"></span
+        ><span
+          v-else-if="flow.checkFirmwareUpgrade === 2"
+          class="fas fa-circle-notch fa-spin"
+        ></span
+        ><span v-else class="connection-step-pending" aria-hidden="true"></span
         >{{ $t('m.imKeyManager.check_firmware_version_update') }}
       </p>
       <p>
         <el-icon
-          v-if="flow.checkDeviceBindingCode !== 2"
+          v-if="flow.checkDeviceBindingCode === 3"
           class="el-icon-success"
           :class="{ done: flow.checkDeviceBindingCode === 3 }"
           ><SuccessFilled /></el-icon
-        ><span v-else class="fas fa-circle-notch fa-spin"></span
+        ><span
+          v-else-if="flow.checkDeviceBindingCode === 2"
+          class="fas fa-circle-notch fa-spin"
+        ></span
+        ><span v-else class="connection-step-pending" aria-hidden="true"></span
         >{{ $t('m.imKeyManager.check_device_bind_code') }}
       </p>
       <p>
         <el-icon
-          v-if="flow.checkPinAndWallet !== 2"
+          v-if="flow.checkPinAndWallet === 3"
           class="el-icon-success"
           :class="{ done: flow.checkPinAndWallet === 3 }"
           ><SuccessFilled /></el-icon
-        ><span v-else class="fas fa-circle-notch fa-spin"></span
+        ><span v-else-if="flow.checkPinAndWallet === 2" class="fas fa-circle-notch fa-spin"></span
+        ><span v-else class="connection-step-pending" aria-hidden="true"></span
         >{{ $t('m.imKeyManager.check_pin_wallet') }}
-      </p>
-      <p>
-        <el-icon
-          v-if="flow.checkSafetyTest !== 2"
-          class="el-icon-success"
-          :class="{ done: flow.checkSafetyTest === 3 }"
-          ><SuccessFilled /></el-icon
-        ><span v-else class="fas fa-circle-notch fa-spin"></span
-        >{{ $t('m.imKeyManager.check_secure_test') }}
       </p>
     </div>
   </div>
   <div class="tip1 tip" v-if="flow.status == 4">
     <div class="tipBox">
-      <h3>{{ $t('m.imKeyManager.usb_connect_error') }}</h3>
-      <p>{{ $t('m.imKeyManager.check_usb_connect') }}，{{ flow.errorInfo }}</p>
+      <h3>{{ $t('m.imKeyManager.connection_incomplete') }}</h3>
+      <p>
+        {{
+          $t(
+            deviceRejected
+              ? 'm.imKeyManager.connection_device_rejected'
+              : flow.errorStage === 'connect'
+                ? 'm.imKeyManager.check_usb_connect'
+                : 'm.imKeyManager.connection_check_failed'
+          )
+        }}
+      </p>
+      <ErrorDetail :message="flow.errorInfo" :stage="flow.errorStage" :raw="deviceRejected" />
       <button @click="flow.changeState(1)">{{ $t('m.imKeyManager.ok') }}</button>
     </div>
   </div>
@@ -78,9 +89,13 @@
 </template>
 <script setup lang="ts">
 import ErrorDetail from '../ErrorDetail.vue'
+import { computed } from 'vue'
 import type { UnwrapNestedRefs } from 'vue'
 import type { useConnection } from '../../composables/useConnection'
 import { SuccessFilled, Warning } from '@element-plus/icons-vue'
-defineProps<{ flow: UnwrapNestedRefs<ReturnType<typeof useConnection>> }>()
+const props = defineProps<{ flow: UnwrapNestedRefs<ReturnType<typeof useConnection>> }>()
+const deviceRejected = computed(() =>
+  /^imkey_tsm_device_illegal(?: \[[a-z0-9-]{1,64}\])?$/.test(props.flow.errorInfo)
+)
 </script>
 <style scoped src="../../styles/connection.css"></style>

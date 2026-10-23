@@ -1,11 +1,12 @@
 <template>
-  <div class="tip5 tip" v-if="flow.status == 7">
-    <div class="tipBox">
-      <h3>{{ $t('m.imKeyManager.enter_bind_code') }}</h3>
+  <div class="tip5 tip" v-if="flow.status == 7" @click.self="flow.cancelBinding">
+    <div class="tipBox" role="dialog" aria-modal="true" aria-labelledby="binding-dialog-title">
+      <h3 id="binding-dialog-title">{{ $t('m.imKeyManager.enter_bind_code') }}</h3>
       <div>
         <input
           type="text"
           maxlength="1"
+          :disabled="flow.bindingStatus === 1"
           :value="flow.code1"
           @focus="flow.inpFocus($event)"
           @keyup.delete="flow.deleteInput(1)"
@@ -16,6 +17,7 @@
         <input
           type="text"
           maxlength="1"
+          :disabled="flow.bindingStatus === 1"
           :value="flow.code2"
           @focus="flow.inpFocus($event)"
           @keyup.delete="flow.deleteInput(2)"
@@ -25,6 +27,7 @@
         <input
           type="text"
           maxlength="1"
+          :disabled="flow.bindingStatus === 1"
           :value="flow.code3"
           @focus="flow.inpFocus($event)"
           @keyup.delete="flow.deleteInput(3)"
@@ -34,6 +37,7 @@
         <input
           type="text"
           maxlength="1"
+          :disabled="flow.bindingStatus === 1"
           :value="flow.code4"
           @focus="flow.inpFocus($event)"
           @keyup.delete="flow.deleteInput(4)"
@@ -43,6 +47,7 @@
         <input
           type="text"
           maxlength="1"
+          :disabled="flow.bindingStatus === 1"
           :value="flow.code5"
           @focus="flow.inpFocus($event)"
           @keyup.delete="flow.deleteInput(5)"
@@ -52,6 +57,7 @@
         <input
           type="text"
           maxlength="1"
+          :disabled="flow.bindingStatus === 1"
           :value="flow.code6"
           @focus="flow.inpFocus($event)"
           @keyup.delete="flow.deleteInput(6)"
@@ -61,6 +67,7 @@
         <input
           type="text"
           maxlength="1"
+          :disabled="flow.bindingStatus === 1"
           :value="flow.code7"
           @focus="flow.inpFocus($event)"
           @keyup.delete="flow.deleteInput(7)"
@@ -70,6 +77,7 @@
         <input
           type="text"
           maxlength="1"
+          :disabled="flow.bindingStatus === 1"
           :value="flow.code8"
           @focus="flow.inpFocus($event)"
           @keyup.delete="flow.deleteInput(8)"

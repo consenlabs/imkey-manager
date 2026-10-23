@@ -35,6 +35,13 @@ module.exports = {
     if (method === 'app_download') installed = true
     if (method === 'app_delete') installed = false
     if (method === 'register_address') registrations++
+    if (method === 'device_secure_check') {
+      if (scenario === 'secure-check-failure') {
+        error = response(api, 'ErrorResponse', 'setError', 'imkey_tsm_device_illegal')
+        return ''
+      }
+      return response(api, 'CommonResponse', 'setResult', 'success')
+    }
     if (
       (scenario.startsWith('disconnected') && method === 'device_connect') ||
       ((scenario === 'register-failure' || scenario.startsWith('cos-address')) &&

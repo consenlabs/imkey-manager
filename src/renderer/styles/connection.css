@@ -237,6 +237,21 @@ hover {
   color: #000;
 }
 
+.tip2 p .connection-step-pending {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  box-sizing: border-box;
+  border: 1px solid #b8bdcd;
+  border-radius: 50%;
+}
+
+.tip1 .tipBox {
+  height: auto;
+  min-height: 217px;
+  padding-bottom: 26px;
+}
+
 .tip4 span {
   margin-top: 20px;
   font-size: 26px;

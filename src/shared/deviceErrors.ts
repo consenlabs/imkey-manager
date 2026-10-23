@@ -6,6 +6,7 @@ const knownErrors: Record<string, string> = {
   device_not_found: 'DEVICE_NOT_FOUND',
   user_not_confirmed: 'USER_NOT_CONFIRMED',
   device_bind_check_failed: 'DEVICE_BIND_CHECK_FAILED',
+  imkey_tsm_device_illegal: 'TSM_DEVICE_ILLEGAL',
   binding_code_error: 'BINDING_CODE_ERROR',
   imkey_bluetooth_channel_error: 'BLUETOOTH_CHANNEL_ERROR',
   imkey_bluetooth_timeout: 'BLUETOOTH_TIMEOUT',

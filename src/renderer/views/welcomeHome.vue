@@ -22,6 +22,33 @@
         <span>{{ $t('m.imKeyManager.fast_connect_desktop_APP') }}</span>
       </p>
     </div>
+    <div class="secure-check">
+      <el-button
+        type="primary"
+        data-testid="secure-check-button"
+        :class="secureCheck.state.status === 'failed' ? 'retry-button retry-inline' : ''"
+        :loading="secureCheck.state.status === 'checking'"
+        :disabled="secureCheck.state.status === 'checking'"
+        @click="secureCheck.check"
+      >
+        {{
+          $t(
+            secureCheck.state.status === 'checking'
+              ? 'm.imKeyManager.secure_check_checking'
+              : 'm.imKeyManager.secure_check_button'
+          )
+        }}
+      </el-button>
+      <div data-testid="secure-check-result" aria-live="polite">
+        <p v-if="secureCheck.state.status === 'success'" class="secure-check-success">
+          {{ $t('m.imKeyManager.secure_check_success') }}
+        </p>
+        <template v-if="secureCheck.state.status === 'failed'">
+          <p class="secure-check-failure">{{ $t('m.imKeyManager.secure_check_failed') }}</p>
+          <ErrorDetail :message="secureCheck.state.errorInfo" />
+        </template>
+      </div>
+    </div>
     <h4>{{ $t('m.imKeyManager.used_this_desktop_APP') }}</h4>
     <div class="appBox">
       <a class="link6" @click="openUrl('TokenLon')">
@@ -107,8 +134,15 @@
 </template>
 
 <script>
+import ErrorDetail from '../components/ErrorDetail.vue'
+import { useSecureCheck } from '../composables/useSecureCheck'
+
 export default {
   name: 'welcomeHome',
+  components: { ErrorDetail },
+  setup() {
+    return { secureCheck: useSecureCheck() }
+  },
   methods: {
     async openUrl(urlType) {
       let url
@@ -140,6 +174,17 @@ hover {
 .container {
   padding-left: 38px;
   font-family: PingFang SC;
+}
+.secure-check {
+  margin-top: 24px;
+  max-width: 760px;
+  font-size: 14px;
+}
+.secure-check-success {
+  color: var(--el-color-success);
+}
+.secure-check-failure {
+  color: var(--el-color-danger);
 }
 .container h2 {
   height: 34px;
@@ -253,3 +298,4 @@ hover {
   text-align: center;
 }
 </style>
+<style scoped src="../styles/retry.css"></style>

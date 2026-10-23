@@ -1,5 +1,4 @@
 import { expect, it } from 'vitest'
-import { createDeviceHandlers } from '../src/service/handlers'
 import { DeviceApi } from '../src/service/deviceApi'
 import { nativeErrorMessage } from '../src/service/protobuf'
 
@@ -36,23 +35,3 @@ it.each(['', '0', 'not-hex', 'ff'])(
     })
   }
 )
-
-it('does not report empty wallet addresses as successful when a chain fails', () => {
-  let count = 0
-  const handlers = createDeviceHandlers(
-    {
-      callImKeyApi: () => {
-        count++
-        return count === 1 ? '0a0a626f756e645f74686973' : ''
-      },
-      getLastErrorMessage: () => (count === 1 ? '' : 'device_not_connected')
-    },
-    '/user'
-  )
-  expect(handlers.genWalletAddress()).toEqual({
-    isSuccess: false,
-    result: 'device_not_connected',
-    failed: ['Ethereum']
-  })
-  expect(count).toBe(2)
-})

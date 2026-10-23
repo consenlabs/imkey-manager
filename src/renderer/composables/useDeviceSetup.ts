@@ -93,11 +93,9 @@ export function useDeviceSetup() {
       if (!state.finish) return
       const connected = await callDevice('connectDevice')
       if (!connected.isSuccess) return failed(connected, 'connect')
-      const addresses = await callDevice('genWalletAddress', { filePath: app.userPath })
-      if (addresses.isSuccess) {
-        app.walletAddresses = addresses.result
+      if (await checkWalletReady()) {
         await router.push('/home/welcomeHome')
-      } else failed(addresses, 'wallet')
+      }
       return
     }
     if (page === 3 && active === 1 && !isNext) {
@@ -122,16 +120,27 @@ export function useDeviceSetup() {
     if (page === 4 && isNext) {
       const connected = await callDevice('connectDevice')
       if (connected.isSuccess) {
-        const xpub = await callDevice('getBTCXpub', app.userPath)
-        if (xpub.isSuccess && xpub.result.includes('xpu')) {
+        if (await checkWalletReady()) {
           state.active = active
           state.page = page
           return
         }
-        failed(xpub, 'wallet')
       } else failed(connected, 'connect')
       state.checkWalletTip = true
     }
+  }
+  async function checkWalletReady(): Promise<boolean> {
+    const xpub = await callDevice('getBTCXpub', app.userPath)
+    if (!operation.active()) return false
+    if (!xpub.isSuccess) {
+      failed(xpub, 'wallet')
+      return false
+    }
+    if (!xpub.result.startsWith('xpub')) {
+      failed('imkey_wallet_not_created', 'wallet')
+      return false
+    }
+    return true
   }
   function changeStep(step: SetupStep): void {
     state[step] = !state[step]

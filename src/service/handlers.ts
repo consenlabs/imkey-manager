@@ -49,29 +49,15 @@ export function createDeviceHandlers(
     deviceBindDisplay: manage('bind_display_code'),
     getBTCXpub: () => {
       const binding = api.deviceMethod('bind_check')
-      return binding.isSuccess ? api.getBTCXpub() : binding
+      if (!binding.isSuccess) return binding
+      if (binding.result !== 'bound_this')
+        return { isSuccess: false, result: 'device_bind_check_failed' }
+      return api.getBTCXpub()
     },
     getUserPath: () => api.getUserPath(),
     importBindCode: storage,
     exportBindCode: storage,
     isExistBindCodeFile: storage,
-    genWalletAddress: () => {
-      const binding = api.deviceMethod('bind_check')
-      if (!binding.isSuccess) return binding
-      const result = []
-      for (const name of ['Ethereum', 'Polkadot', 'Kusama']) {
-        const response = api.address(chains[name].chain, chains[name].path)
-        if (!response.isSuccess) return { ...response, failed: [name] }
-        result.push({
-          chain: name,
-          address: (response.result as { address: string }).address,
-          chainId: name === 'Ethereum' ? 1 : name,
-          rpcUrl: name === 'Ethereum' ? 'https://mainnet-eth.token.im' : '',
-          symbol: name === 'Ethereum' ? 'ETH' : ''
-        })
-      }
-      return { isSuccess: true, result }
-    },
     writeWalletAddress: p => {
       const binding = api.deviceMethod('bind_check')
       if (!binding.isSuccess) return binding

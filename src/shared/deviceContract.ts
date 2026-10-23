@@ -25,7 +25,6 @@ export const deviceMethods = [
   'importBindCode',
   'exportBindCode',
   'isExistBindCodeFile',
-  'genWalletAddress',
   'writeWalletAddress'
 ] as const
 export type DeviceMethod = (typeof deviceMethods)[number]
@@ -35,13 +34,6 @@ export interface Applet {
   installedVersion: string | null
   latestVersion: string
   icon: string
-}
-export interface WalletAddress {
-  chain: string
-  address: string
-  chainId: number | string
-  rpcUrl: string
-  symbol: string
 }
 export interface AppletList {
   status: string
@@ -68,17 +60,15 @@ export type DeviceValues = {
       ? InstalledAppletList
       : M extends 'cosCheckUpdate'
         ? FirmwareUpdate
-        : M extends 'genWalletAddress'
-          ? WalletAddress[]
-          : M extends 'downloadApplet' | 'updateApplet'
-            ? WalletChain[]
-            : M extends 'isBLStatus' | 'isExistBindCodeFile'
-              ? boolean
-              : M extends 'getRamSize'
-                ? number
-                : M extends 'importBindCode'
-                  ? undefined
-                  : string
+        : M extends 'downloadApplet' | 'updateApplet'
+          ? WalletChain[]
+          : M extends 'isBLStatus' | 'isExistBindCodeFile'
+            ? boolean
+            : M extends 'getRamSize'
+              ? number
+              : M extends 'importBindCode'
+                ? undefined
+                : string
 }
 export type DeviceResult<T = unknown> =
   | { isSuccess: true; result: T }
@@ -115,11 +105,9 @@ export type DeviceParams = {
     ? string
     : M extends BindingMethod
       ? string | undefined
-      : M extends 'genWalletAddress'
-        ? { filePath: string }
-        : M extends 'writeWalletAddress'
-          ? { filePath: string; name: WalletChain[] }
-          : undefined
+      : M extends 'writeWalletAddress'
+        ? { filePath: string; name: WalletChain[] }
+        : undefined
 }
 export interface DeviceCallContext {
   operationId: string
@@ -168,8 +156,6 @@ export function isValidDeviceParams(method: DeviceMethod, params: unknown): bool
     case 'deviceBindCheck':
     case 'getBTCXpub':
       return params === undefined || typeof params === 'string'
-    case 'genWalletAddress':
-      return object(params) && keys(params, ['filePath']) && typeof params.filePath === 'string'
     case 'writeWalletAddress':
       return (
         object(params) &&

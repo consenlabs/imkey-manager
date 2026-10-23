@@ -18,6 +18,11 @@ export function useBindCodeInput(acquire: (code: string) => Promise<void>, upper
   const codeKey = (index: CodeIndex): CodeKey => `code${index}`
   const value = (): string =>
     Array.from({ length: 8 }, (_, index) => state[codeKey((index + 1) as CodeIndex)]).join('')
+  function resetBindingInput(): void {
+    for (let index = 1; index <= 8; index++) state[codeKey(index as CodeIndex)] = ''
+    state.codeIsTrue = true
+    state.bindingStatus = 0
+  }
   function filterBindInput(index: CodeIndex, event: Event): void {
     const target = input(event)
     target.value = target.value.replace(/[^\w./]/gi, '')
@@ -30,6 +35,7 @@ export function useBindCodeInput(acquire: (code: string) => Promise<void>, upper
     if (value().length !== 8) input(event).value = ''
   }
   function inpCode(index: CodeIndex, event: KeyboardEvent): void {
+    if (state.bindingStatus === 1) return
     state.codeIsTrue = true
     if (index === 8) {
       const code = uppercase ? value().toUpperCase() : value()
@@ -46,5 +52,13 @@ export function useBindCodeInput(acquire: (code: string) => Promise<void>, upper
     else target.value = ''
     if (event.key === 'Backspace') (target.previousElementSibling as HTMLElement | null)?.focus()
   }
-  return { state, ...toRefs(state), filterBindInput, deleteInput, inpFocus, inpCode }
+  return {
+    state,
+    ...toRefs(state),
+    resetBindingInput,
+    filterBindInput,
+    deleteInput,
+    inpFocus,
+    inpCode
+  }
 }
