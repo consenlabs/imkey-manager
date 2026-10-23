@@ -8,6 +8,8 @@ import { useTranslation } from './useTranslation'
 import { useBindCodeInput } from './useBindCodeInput'
 import { useConnectionFirmware } from './useConnectionFirmware'
 import constants from '../../common/constants'
+import { useDeviceRecovery } from './useDeviceRecovery'
+import { isSessionRecoveryError } from './deviceSession'
 
 export function useConnection() {
   const operation = useDeviceOperation()
@@ -16,6 +18,7 @@ export function useConnection() {
   const device = useDeviceStore()
   const app = useAppStore()
   const { t } = useTranslation()
+  const recovery = useDeviceRecovery(operation)
   const state = reactive({
     errorInfo: '',
     errorStage: 'connect',
@@ -27,16 +30,22 @@ export function useConnection() {
     isUpdateIMK: false
   })
   const binding = useBindCodeInput(bindAcquire, true)
-  const firmware = useConnectionFirmware(changeState, fail, connect, operation)
+  const firmware = useConnectionFirmware(
+    changeState,
+    (message, status) => fail(message, status, false),
+    connect,
+    operation
+  )
   const preventScroll = (event: TouchEvent): void => event.preventDefault()
   function changeState(status: number): void {
     state.status = status
   }
-  function fail(message: unknown, status = 4): void {
+  function fail(message: unknown, status = 4, allowRecovery = true): void {
     if (!operation.active()) return
     binding.state.bindingStatus = 0
     state.errorInfo = operationError(message)
     changeState(status)
+    if (allowRecovery && isSessionRecoveryError(message)) recovery.offer(message, check)
   }
   function resetConnection(): void {
     binding.resetBindingInput()
@@ -47,6 +56,7 @@ export function useConnection() {
     device.activeStatus = ''
     device.bindStatus = ''
     device.apps = []
+    device.connectedSeid = ''
   }
   function cancelBinding(): void {
     if (state.status !== 7 || binding.state.bindingStatus !== 0) return
@@ -96,6 +106,14 @@ export function useConnection() {
     if (bootloader.result) {
       await firmware.toCosUpdate()
       return
+    }
+    if (!device.connectedSeid) {
+      const identity = await callDevice('getSeid')
+      if (!identity.isSuccess || !identity.result) {
+        fail(identity.isSuccess ? 'get_seid_error' : identity)
+        return
+      }
+      device.connectedSeid = identity.result
     }
     await checkIsActive()
   }
@@ -158,6 +176,12 @@ export function useConnection() {
       changeState(7)
       return
     }
+    const stored = await callDevice('exportBindCode')
+    if (!stored.isSuccess) {
+      state.errorInfo = operationError(stored)
+      changeState(7)
+      return
+    }
     state.checkDeviceBindingCode = 3
     await checkWallet(false)
   }
@@ -167,12 +191,12 @@ export function useConnection() {
     const xpub = await callDevice('getBTCXpub', app.userPath)
     if (!isCurrent()) return
     if (!xpub.isSuccess) {
-      if (other) fail(xpub)
-      else await router.push('imKeySetting')
+      if (xpub.result === 'imkey_wallet_not_created') await router.push('imKeySetting')
+      else fail(xpub)
       return
     }
     if (!xpub.result.startsWith('xpub')) {
-      await router.push('imKeySetting')
+      fail('invalid_wallet_response')
       return
     }
     if (other) binding.state.bindingStatus = 2

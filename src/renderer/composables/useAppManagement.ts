@@ -13,6 +13,8 @@ import { useDeviceOperation } from './useDeviceOperation'
 import { useFirmwareUpgrade } from './useFirmwareUpgrade'
 import { useTranslation } from './useTranslation'
 import { operationError } from './operationError'
+import { connectDeviceSession, isSessionRecoveryError } from './deviceSession'
+import { useDeviceRecovery } from './useDeviceRecovery'
 
 export function useAppManagement() {
   const device = useDeviceStore()
@@ -20,6 +22,7 @@ export function useAppManagement() {
   const { t } = useTranslation()
   const scope = useDeviceOperation()
   const call = scope.call
+  const recovery = useDeviceRecovery(scope)
   const firmware = useFirmwareUpgrade('manager', scope)
   const state = reactive({ tip: false, tip1: false, appName: '', errorInfo: '', errorStage: '' })
   const operations = reactive<Record<string, AppOperation | undefined>>({})
@@ -29,12 +32,26 @@ export function useAppManagement() {
     )
   )
   const getApps = computed(() => filterApplets(apps.value, state.appName))
-  function fail(error: unknown, stage: string, binding = false) {
+  function fail(
+    error: unknown,
+    stage: string,
+    binding = false,
+    retry: () => Promise<unknown> = init
+  ) {
     if (!scope.active()) return
     state.errorInfo = operationError(error)
     state.errorStage = stage
-    if (binding) state.tip1 = true
-    else state.tip = true
+    if (binding || isSessionRecoveryError(error)) {
+      recovery.offer(error, retry, {
+        reconnectOnly: binding || isChanged(error)
+      })
+      return
+    }
+    state.tip = true
+  }
+  function isChanged(error: unknown): boolean {
+    const result = typeof error === 'string' ? error : (error as { result?: unknown })?.result
+    return result === 'device_session_changed' || result === 'device_bind_check_failed'
   }
   function ok() {
     state.tip = false
@@ -52,7 +69,7 @@ export function useAppManagement() {
   }
   async function initWithinOperation() {
     try {
-      const connected = await call('connectDevice')
+      const connected = await connectDeviceSession(call, device)
       if (!connected.isSuccess) return fail(connected, 'connect')
       if (connected.result !== constants.RESULT_STATUS_SUCCESS) return fail(connected, 'connect')
       const binding = await call('exportBindCode')
@@ -69,30 +86,31 @@ export function useAppManagement() {
   function init() {
     return scope.run(initWithinOperation, 'initialize')
   }
-  async function changeApp(item: AppletView, operation: 'install' | 'update') {
+  async function changeApp(item: AppletView, operation: 'install' | 'update'): Promise<void> {
     const target = device.apps.find(entry => entry.id === item.id)
     if (!target) return
+    const retry = () => scope.run(() => changeApp(item, operation))
     try {
       if (firmware.state.cosUpdateStatus === '1') {
         await firmware.updateFirmwareWithinOperation()
         return
       }
-      const connected = await call('connectDevice')
-      if (!connected.isSuccess) return fail(connected, 'connect')
+      const connected = await connectDeviceSession(call, device)
+      if (!connected.isSuccess) return fail(connected, 'connect', false, retry)
       operations[target.id] = operation
       const response = await call(
         operation === 'install' ? 'downloadApplet' : 'updateApplet',
         target.name
       )
-      if (!response.isSuccess) return fail(response, 'app')
+      if (!response.isSuccess) return fail(response, 'app', false, retry)
       const registered = await call('writeWalletAddress', {
         name: response.result,
         filePath: app.userPath
       })
-      if (!registered.isSuccess) return fail(registered, 'restore')
+      if (!registered.isSuccess) return fail(registered, 'restore', false, retry)
       if (scope.active()) target.installedVersion = target.latestVersion
     } catch (error) {
-      fail(error, 'app')
+      fail(error, 'app', false, retry)
     } finally {
       delete operations[target.id]
     }
@@ -103,23 +121,24 @@ export function useAppManagement() {
   function updateApp(item: AppletView) {
     return scope.run(() => changeApp(item, 'update'))
   }
-  async function deleteWithinOperation(item: AppletView) {
+  async function deleteWithinOperation(item: AppletView): Promise<void> {
     const target = device.apps.find(entry => entry.id === item.id)
     if (!target) return
+    const retry = () => scope.run(() => deleteWithinOperation(item))
     try {
       if (firmware.state.cosUpdateStatus === '1') {
         await firmware.updateFirmwareWithinOperation()
         return
       }
-      const connected = await call('connectDevice')
-      if (!connected.isSuccess) return fail(connected, 'connect')
+      const connected = await connectDeviceSession(call, device)
+      if (!connected.isSuccess) return fail(connected, 'connect', false, retry)
       operations[target.id] = 'delete'
       const result = await call('deleteApplet', target.name)
       if (!result.isSuccess || result.result !== constants.RESULT_STATUS_SUCCESS)
-        return fail(result, 'app')
+        return fail(result, 'app', false, retry)
       if (scope.active()) target.installedVersion = null
     } catch (error) {
-      fail(error, 'app')
+      fail(error, 'app', false, retry)
     } finally {
       delete operations[target.id]
     }

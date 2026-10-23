@@ -6,6 +6,18 @@ export const m = {
     secure_check_success: 'Device verification passed',
     secure_check_failed: 'Device verification failed',
     retry: 'Retry',
+    recovery_title: 'Operation incomplete',
+    return_to_connection: 'Back to connection',
+    continue_current_step: 'Continue this step',
+    recovery_message: 'Check the device and network, then retry or return to the connection page.',
+    recovery_device_changed:
+      'The device or its binding has changed. Return to the connection page to identify and bind it again.',
+    recovery_restart_required:
+      'Device binding is incomplete. Continue this step or return to the connection page to start again.',
+    recovery_timeout:
+      'The device stopped responding and the operation did not complete. Check the device and retry, or return to the connection page.',
+    recovery_pending:
+      'The previous device service has not exited yet. Retry shortly, or return to the connection page.',
     operation_failed: 'The operation failed. Please retry.',
     stage_connect: 'Device connection',
     stage_check: 'Version check',
@@ -370,6 +382,11 @@ export const m = {
     imkey_exceeded_max_utxo_number: 'exceeded max utxo number',
     imkey_command_execute_fail: 'command execute fail',
     imkey_wallet_not_created: 'wallet not created',
+    device_session_changed: 'The device or binding has changed. Return to the connection page.',
+    device_operation_timeout:
+      'The device stopped responding. Retry or return to the connection page.',
+    device_recovery_pending: 'The previous device service has not exited yet. Retry shortly.',
+    invalid_wallet_response: 'Failed to read wallet status. Reconnect the device and retry.',
     imkey_in_menu_page: 'in menu page',
     imkey_pin_not_verified: 'pin not verified',
     imkey_address_mismatch_with_path: 'address mismatch with path',

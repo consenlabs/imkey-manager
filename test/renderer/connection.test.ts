@@ -9,6 +9,9 @@ const mocks = vi.hoisted(() => ({
   push: vi.fn()
 }))
 vi.mock('../../src/renderer/device', () => ({ callDevice: mocks.call }))
+vi.mock('../../src/renderer/composables/useDeviceRecovery', () => ({
+  useDeviceRecovery: () => ({ offer: vi.fn(), returnToConnection: vi.fn() })
+}))
 vi.mock('vue-router', () => ({ useRouter: () => ({ push: mocks.push }) }))
 vi.mock('../../src/renderer/composables/useTranslation', () => ({
   useTranslation: () => ({ t: (key: string) => key })
@@ -43,6 +46,7 @@ it('waits for connection and all version checks before marking firmware complete
   expect(mocks.call.mock.calls.map(([method]) => method)).toEqual(['connectDevice'])
   await reply('connectDevice', { isSuccess: true, result: 'success' })
   await reply('isBLStatus', { isSuccess: true, result: false })
+  await reply('getSeid', { isSuccess: true, result: 'test-device' })
   expect(flow.checkFirmwareUpgrade.value).toBe(2)
   expect(flow.checkDeviceBindingCode.value).toBe(1)
   await reply('checkUpdate', { isSuccess: true, result: { status: 'latest', list: [] } })
@@ -66,6 +70,7 @@ it('stops on a TSM version-query rejection before binding or wallet calls, then 
   const checking = flow.check()
   await reply('connectDevice', { isSuccess: true, result: 'success' })
   await reply('isBLStatus', { isSuccess: true, result: false })
+  await reply('getSeid', { isSuccess: true, result: 'test-device' })
   await reply('checkUpdate', {
     isSuccess: false,
     result: 'imkey_tsm_device_illegal',
@@ -81,6 +86,7 @@ it('stops on a TSM version-query rejection before binding or wallet calls, then 
   expect(mocks.call.mock.calls.map(([method]) => method)).toEqual([
     'connectDevice',
     'isBLStatus',
+    'getSeid',
     'checkUpdate'
   ])
   flow.changeState(1)

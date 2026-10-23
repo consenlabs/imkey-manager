@@ -54,7 +54,12 @@ test('home secure check reconnects through the existing device and displays succ
     /设备校验通过|Device verification passed/i
   )
   await expect(button).toBeEnabled()
-  expect((await calls()).slice(before)).toEqual(['device_connect', 'device_secure_check'])
+  expect((await calls()).slice(before)).toEqual([
+    'device_connect',
+    'get_seid',
+    'bind_check',
+    'device_secure_check'
+  ])
 })
 
 test('home secure check displays the translated failure and permits retry', async () => {

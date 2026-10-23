@@ -1,5 +1,6 @@
 import { ConnectorClient, type ConnectorOptions } from './connector/ConnectorClient'
 import { createDeviceHandlers } from './handlers'
+import { initializedHandlers } from './initializedHandlers'
 import { DeviceQueue } from './queue'
 import type { DeviceMethod, DeviceRequest } from '../shared/deviceContract'
 interface ParentPort {
@@ -18,7 +19,7 @@ port.on('message', event => {
   if (data.type === 'init' && !queue) {
     const connector = new ConnectorClient(data)
     queue = new DeviceQueue(
-      createDeviceHandlers(connector, data.userDataPath),
+      initializedHandlers(createDeviceHandlers(connector, data.userDataPath)),
       connector.loadError?.message,
       event => port.postMessage(event)
     )

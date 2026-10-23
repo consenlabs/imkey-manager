@@ -91,7 +91,7 @@ for (const failure of ['not-ready', 'disconnected', 'binding-failure']) {
     expect(await calls()).toContain('wallet:' + failure)
     expect(await calls()).not.toContain('get_address')
     await page.screenshot({ path: `test-results/wallet-setup-${failure}.png` })
-    await page.locator('.setup-error button').click()
+    await page.locator('.device-recovery-dialog').getByRole('button', { name: /retry/i }).click()
     await expect(page.locator('.homeBox')).toBeVisible()
     expect(await calls()).not.toContain('get_address')
   })

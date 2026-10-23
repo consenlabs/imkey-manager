@@ -3,11 +3,14 @@ import { useDeviceOperation } from './useDeviceOperation'
 import { operationError } from './operationError'
 import { useDeviceStore } from '../store/device'
 import { useFirmwareUpgrade } from './useFirmwareUpgrade'
+import { connectDeviceSession, isSessionRecoveryError } from './deviceSession'
+import { useDeviceRecovery } from './useDeviceRecovery'
 
 export function useSettings() {
   const device = useDeviceStore()
   const operation = useDeviceOperation()
   const callDevice = operation.call
+  const recovery = useDeviceRecovery(operation)
   const firmware = useFirmwareUpgrade('setting', operation)
   const state = reactive({
     status: 3,
@@ -18,6 +21,21 @@ export function useSettings() {
   })
   let active = true
   let copyTimer: ReturnType<typeof setTimeout> | undefined
+  function failed(error: unknown, stage: string, bindingFile = false) {
+    if (!active || !operation.active()) return
+    state.errorInfo = operationError(error)
+    state.errorStage = stage
+    state.status = 2
+    if (bindingFile || isSessionRecoveryError(error)) {
+      const result = typeof error === 'string' ? error : (error as { result?: unknown })?.result
+      recovery.offer(error, init, {
+        reconnectOnly:
+          bindingFile ||
+          result === 'device_session_changed' ||
+          result === 'device_bind_check_failed'
+      })
+    }
+  }
   async function copyText() {
     try {
       await window.imkey.app.copyText(state.SN)
@@ -41,9 +59,7 @@ export function useSettings() {
       firmware.state.bindCode = result.result
       firmware.changeCode(4)
     } else {
-      firmware.state.errorInfo = operationError(result)
-      firmware.state.errorStage = 'store'
-      firmware.changeCode(5)
+      failed(result, 'store', true)
     }
   }
   async function initialize() {
@@ -56,35 +72,27 @@ export function useSettings() {
         state.status = 2
         return
       }
-      const connected = await callDevice('connectDevice')
+      const connected = await connectDeviceSession(callDevice, device)
       if (!connected.isSuccess) {
-        state.errorInfo = operationError(connected)
-        state.errorStage = 'connect'
-        state.status = 2
+        failed(connected, 'connect')
         return
       }
       const binding = await callDevice('exportBindCode')
       if (!binding.isSuccess) {
-        state.errorInfo = operationError(binding)
-        state.errorStage = 'store'
-        state.status = 2
+        failed(binding, 'store', true)
         return
       }
       firmware.state.bindCode = binding.result
       const ble = await callDevice('getBleVersion')
       if (!ble.isSuccess) {
-        state.errorInfo = operationError(ble)
-        state.errorStage = 'check'
-        state.status = 2
+        failed(ble, 'check')
         return
       }
       firmware.state.bleOldVersionData = device.installedBleVersion || ble.result
       device.bleOldVersionData = firmware.state.bleOldVersionData
       const serial = await callDevice('getSn')
       if (!serial.isSuccess) {
-        state.errorInfo = operationError(serial)
-        state.errorStage = 'check'
-        state.status = 2
+        failed(serial, 'check')
         return
       }
       state.SN = serial.result
@@ -94,9 +102,7 @@ export function useSettings() {
       if (active && firmware.state.supportCode === 5) state.status = 1
     } catch (error) {
       if (!active) return
-      state.errorInfo = operationError(error)
-      state.errorStage = 'check'
-      state.status = 2
+      failed(error, 'check')
     }
   }
   function init() {

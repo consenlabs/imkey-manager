@@ -43,6 +43,7 @@
       <input
         type="text"
         maxlength="1"
+        :disabled="flow.busy || flow.bindingStatus === 1"
         :value="flow.code1"
         @focus="flow.inpFocus($event)"
         @keyup.delete="flow.deleteInput(1)"
@@ -53,6 +54,7 @@
       <input
         type="text"
         maxlength="1"
+        :disabled="flow.busy || flow.bindingStatus === 1"
         :value="flow.code2"
         @focus="flow.inpFocus($event)"
         @keyup.delete="flow.deleteInput(2)"
@@ -62,6 +64,7 @@
       <input
         type="text"
         maxlength="1"
+        :disabled="flow.busy || flow.bindingStatus === 1"
         :value="flow.code3"
         @focus="flow.inpFocus($event)"
         @keyup.delete="flow.deleteInput(3)"
@@ -71,6 +74,7 @@
       <input
         type="text"
         maxlength="1"
+        :disabled="flow.busy || flow.bindingStatus === 1"
         :value="flow.code4"
         @focus="flow.inpFocus($event)"
         @keyup.delete="flow.deleteInput(4)"
@@ -80,6 +84,7 @@
       <input
         type="text"
         maxlength="1"
+        :disabled="flow.busy || flow.bindingStatus === 1"
         :value="flow.code5"
         @focus="flow.inpFocus($event)"
         @keyup.delete="flow.deleteInput(5)"
@@ -89,6 +94,7 @@
       <input
         type="text"
         maxlength="1"
+        :disabled="flow.busy || flow.bindingStatus === 1"
         :value="flow.code6"
         @focus="flow.inpFocus($event)"
         @keyup.delete="flow.deleteInput(6)"
@@ -98,6 +104,7 @@
       <input
         type="text"
         maxlength="1"
+        :disabled="flow.busy || flow.bindingStatus === 1"
         :value="flow.code7"
         @focus="flow.inpFocus($event)"
         @keyup.delete="flow.deleteInput(7)"
@@ -107,6 +114,7 @@
       <input
         type="text"
         maxlength="1"
+        :disabled="flow.busy || flow.bindingStatus === 1"
         :value="flow.code8"
         @focus="flow.inpFocus($event)"
         @keyup.delete="flow.deleteInput(8)"
@@ -145,6 +153,7 @@
     <div class="btnBox">
       <button
         :class="[flow.bindFinish ? '' : 'noFinish']"
+        :disabled="flow.busy || flow.bindingStatus === 1"
         class="nextBtn"
         @click="flow.send({ page: 3, active: 1, isNext: true })"
       >

@@ -11,6 +11,9 @@ const deviceMock = vi.hoisted(() =>
   vi.fn<(method: string, params?: unknown) => Promise<DeviceResult>>()
 )
 vi.mock('../../src/renderer/device', () => ({ callDevice: deviceMock }))
+vi.mock('../../src/renderer/composables/useDeviceRecovery', () => ({
+  useDeviceRecovery: () => ({ offer: vi.fn() })
+}))
 vi.mock('../../src/renderer/composables/useTranslation', () => ({
   useTranslation: () => ({ t: () => 'imKey' })
 }))
@@ -132,6 +135,8 @@ it('manager stops update spinner and enables retry after address registration fa
   ])
   const update = manager.updateApp(manager.apps.value[0])
   await reply('connectDevice', { isSuccess: true, result: 'success' })
+  await reply('getSeid', { isSuccess: true, result: 'test-device' })
+  await reply('deviceBindCheck', { isSuccess: true, result: 'bound_this' })
   expect(manager.apps.value[0].updateLoading).toBe(true)
   await reply('updateApplet', { isSuccess: true, result: ['Ethereum'] })
   await reply('writeWalletAddress', { isSuccess: false, result: 'registration failed' })

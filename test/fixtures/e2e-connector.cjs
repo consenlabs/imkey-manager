@@ -101,13 +101,13 @@ module.exports = {
       result.setLatestBleVersion(offer && scenario === 'ble-only' ? '2.0.0' : '1.0.0')
       return hex(result)
     }
-    if (method === 'btc_get_xpub')
-      return response(
-        btc,
-        'BtcXpubRes',
-        'setXpub',
-        scenario === 'wallet-not-ready' ? '' : 'xpub-e2e'
-      )
+    if (method === 'btc_get_xpub') {
+      if (scenario === 'wallet-not-ready') {
+        error = response(api, 'ErrorResponse', 'setError', 'imkey_wallet_not_created')
+        return ''
+      }
+      return response(btc, 'BtcXpubRes', 'setXpub', 'xpub-e2e')
+    }
     if (method === 'get_address' || method === 'register_address')
       return response(api, 'AddressResult', 'setAddress', '0xe2e-address')
     if (method === 'register_pub_key') return response(api, 'EosWallet', 'setAddress', 'eos-e2e')

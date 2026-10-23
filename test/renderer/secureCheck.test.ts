@@ -1,4 +1,5 @@
 import { beforeEach, expect, it, vi } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
 import type { DeviceResult } from '../../src/shared/deviceContract'
 import { useSecureCheck } from '../../src/renderer/composables/useSecureCheck'
 import { createDeviceOperation } from '../../src/renderer/composables/useDeviceOperation'
@@ -8,12 +9,20 @@ const mocks = vi.hoisted(() => ({
   unmounted: [] as (() => void)[]
 }))
 vi.mock('../../src/renderer/device', () => ({ callDevice: mocks.call }))
+vi.mock('../../src/renderer/composables/useDeviceRecovery', () => ({
+  useDeviceRecovery: () => ({ offer: vi.fn(), returnToConnection: vi.fn() })
+}))
+vi.mock('../../src/renderer/composables/deviceSession', async original => ({
+  ...(await original<typeof import('../../src/renderer/composables/deviceSession')>()),
+  connectDeviceSession: (invoke: typeof mocks.call) => invoke('connectDevice')
+}))
 vi.mock('vue', async original => ({
   ...(await original<typeof import('vue')>()),
   getCurrentInstance: () => ({}),
   onUnmounted: (callback: () => void) => mocks.unmounted.push(callback)
 }))
 beforeEach(() => {
+  setActivePinia(createPinia())
   mocks.call.mockReset().mockResolvedValue({ isSuccess: true, result: 'success' })
   mocks.unmounted.length = 0
 })

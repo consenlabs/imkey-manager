@@ -16,6 +16,13 @@ const mocks = vi.hoisted(() => ({
   push: vi.fn()
 }))
 vi.mock('../../src/renderer/device', () => ({ callDevice: mocks.call }))
+vi.mock('../../src/renderer/composables/useDeviceRecovery', () => ({
+  useDeviceRecovery: () => ({ offer: vi.fn(), returnToConnection: vi.fn() })
+}))
+vi.mock('../../src/renderer/composables/deviceSession', async original => ({
+  ...(await original<typeof import('../../src/renderer/composables/deviceSession')>()),
+  connectDeviceSession: (call: (method: string) => Promise<DeviceResult>) => call('connectDevice')
+}))
 vi.mock('../../src/renderer/composables/useTranslation', () => ({
   useTranslation: () => ({ t: () => 'https://imkey.im/' })
 }))
@@ -55,6 +62,7 @@ beforeEach(() => {
     return vi.fn()
   })
   vi.stubGlobal('window', { imkey: bridge })
+  vi.stubGlobal('document', { addEventListener: vi.fn(), removeEventListener: vi.fn() })
 })
 async function mounted() {
   for (const callback of mocks.mounted) await callback()
@@ -231,7 +239,7 @@ it('setup wallet readiness failures stay on the setup page and support retry', a
   mocks.call.mockImplementation(async method =>
     method === 'getBTCXpub'
       ? { isSuccess: false, result: 'imkey_wallet_not_created' }
-      : { isSuccess: true, result: 'success' }
+      : { isSuccess: true, result: method === 'deviceBindCheck' ? 'bound_this' : 'success' }
   )
   const setup = useDeviceSetup()
   setup.finish.value = true
@@ -246,19 +254,29 @@ it('setup wallet readiness failures stay on the setup page and support retry', a
 it('setup completion only reconnects and verifies wallet readiness before entering home', async () => {
   mocks.call.mockImplementation(async method => ({
     isSuccess: true,
-    result: method === 'getBTCXpub' ? 'xpub-ready' : 'success'
+    result:
+      method === 'getBTCXpub'
+        ? 'xpub-ready'
+        : method === 'deviceBindCheck'
+          ? 'bound_this'
+          : 'success'
   }))
   const setup = useDeviceSetup()
   setup.finish.value = true
   await setup.send({ page: 0, active: 0, isNext: false })
-  expect(mocks.call.mock.calls.map(([method]) => method)).toEqual(['connectDevice', 'getBTCXpub'])
+  expect(mocks.call.mock.calls.map(([method]) => method)).toEqual([
+    'connectDevice',
+    'deviceBindCheck',
+    'getBTCXpub'
+  ])
   expect(mocks.push).toHaveBeenCalledExactlyOnceWith('/home/welcomeHome')
 })
 
 it.each(['', 'not-a-wallet'])('an unready wallet (%s) cannot finish setup', async value => {
   mocks.call.mockImplementation(async method => ({
     isSuccess: true,
-    result: method === 'getBTCXpub' ? value : 'success'
+    result:
+      method === 'getBTCXpub' ? value : method === 'deviceBindCheck' ? 'bound_this' : 'success'
   }))
   const setup = useDeviceSetup()
   setup.finish.value = true
@@ -271,7 +289,7 @@ it('a changed device binding prevents completion', async () => {
   mocks.call.mockImplementation(async method =>
     method === 'getBTCXpub'
       ? { isSuccess: false, result: 'device_bind_check_failed' }
-      : { isSuccess: true, result: 'success' }
+      : { isSuccess: true, result: method === 'deviceBindCheck' ? 'bound_this' : 'success' }
   )
   const setup = useDeviceSetup()
   setup.finish.value = true

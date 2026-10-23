@@ -7,6 +7,13 @@ import { useDeviceStore } from '../../src/renderer/store/device'
 
 const call = vi.hoisted(() => vi.fn<(method: string, params?: unknown) => Promise<DeviceResult>>())
 const locale = vi.hoisted(() => ({ imkey: 'imKey 软件' }))
+vi.mock('../../src/renderer/composables/useDeviceRecovery', () => ({
+  useDeviceRecovery: () => ({ offer: vi.fn(), returnToConnection: vi.fn() })
+}))
+vi.mock('../../src/renderer/composables/deviceSession', async original => ({
+  ...(await original<typeof import('../../src/renderer/composables/deviceSession')>()),
+  connectDeviceSession: (invoke: typeof call) => invoke('connectDevice')
+}))
 vi.mock('../../src/renderer/composables/useTranslation', () => ({
   useTranslation: () => ({ t: () => locale.imkey })
 }))

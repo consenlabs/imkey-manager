@@ -1,0 +1,46 @@
+.device-recovery-dialog {
+  width: 460px;
+  max-width: calc(100vw - 48px);
+  padding: 24px;
+  border-radius: 12px;
+  background: #fafbfc;
+}
+.device-recovery-dialog .el-message-box__title {
+  color: #2c2842;
+  font-size: 18px;
+  font-weight: 500;
+}
+.device-recovery-dialog .el-message-box__message {
+  color: #8189a7;
+  font-size: 13px;
+  line-height: 20px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.device-recovery-dialog .el-message-box__btns {
+  gap: 12px;
+  padding-top: 24px;
+}
+.device-recovery-dialog .el-message-box__btns .el-button {
+  min-width: 120px;
+  height: 44px;
+  margin: 0;
+  padding: 0 20px;
+  border: 1px solid #2e3035;
+  border-radius: 44px;
+  background: transparent;
+  color: #2e3035;
+  font-size: 14px;
+  font-weight: 500;
+}
+.device-recovery-dialog .el-message-box__btns .el-button--primary {
+  background: #2e3035;
+  color: #fff;
+}
+.device-recovery-dialog .el-message-box__btns .el-button--primary:hover {
+  background: #42454c;
+}
+.device-recovery-dialog .el-message-box__btns .el-button:focus-visible {
+  outline: 2px solid #8189a7;
+  outline-offset: 4px;
+}

@@ -63,6 +63,7 @@
     <div class="btnBox">
       <button
         :class="[flow.bindViewFinish ? '' : 'noFinish']"
+        :disabled="!flow.bindViewFinish || flow.busy"
         class="nextBtn"
         @click="flow.send({ page: 2, active: 0, isNext: true })"
       >
