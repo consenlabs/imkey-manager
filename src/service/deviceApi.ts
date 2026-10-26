@@ -22,7 +22,8 @@ const deviceResponses: Record<string, [string, string | null]> = {
   check_update: ['CheckUpdateRes', null],
   cos_check_update: ['CosCheckUpdateRes', null],
   is_bl_status: ['IsBlStatusRes', 'getCheckResult'],
-  bind_check: ['BindCheckRes', 'getBindStatus']
+  bind_check: ['BindCheckRes', 'getBindStatus'],
+  device_sn_check: ['DeviceSnCheckRes', null]
 }
 export class DeviceApi {
   constructor(
@@ -55,6 +56,7 @@ export class DeviceApi {
           'GetSnRes',
           'GetFirmwareVersionRes',
           'GetBleVersionRes',
+          'DeviceSnCheckRes',
           'BtcXpubRes'
         ].includes(response))
     )

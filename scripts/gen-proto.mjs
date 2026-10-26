@@ -13,14 +13,20 @@ const commit = '80ddae20a2ece117bd443803e9bc6d5de519e575'
 const names = ['api', 'btc', 'device']
 const require = createRequire(import.meta.url)
 const plugin = require('protoc-gen-js')
-const protoc = process.env.PROTOC || '/opt/homebrew/bin/protoc'
+const protoc = process.env.PROTOC || 'protoc'
 const temporary = mkdtempSync(path.join(tmpdir(), 'imkey-proto-'))
 const hashes = {}
 
 try {
   for (const name of names) {
     const source = execFileSync('git', ['-C', core, 'show', `${commit}:proto/src/${name}.proto`])
-    writeFileSync(path.join(temporary, `${name}.proto`), source.toString('utf8').trimEnd() + '\n')
+    let contents = source.toString('utf8').trimEnd() + '\n'
+    if (name === 'device') {
+      const extension = readFileSync(path.join(root, 'src/proto/extensions/device-sn-check.proto'))
+      contents += '\n' + extension.toString('utf8').trimEnd() + '\n'
+      hashes.deviceSnCheckExtension = createHash('sha256').update(extension).digest('hex')
+    }
+    writeFileSync(path.join(temporary, `${name}.proto`), contents)
     hashes[name] = createHash('sha256').update(source).digest('hex')
   }
   execFileSync(

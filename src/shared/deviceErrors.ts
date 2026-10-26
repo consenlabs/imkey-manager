@@ -9,6 +9,8 @@ const knownErrors: Record<string, string> = {
   device_operation_timeout: 'DEVICE_OPERATION_TIMEOUT',
   device_recovery_pending: 'DEVICE_RECOVERY_PENDING',
   imkey_tsm_device_illegal: 'TSM_DEVICE_ILLEGAL',
+  imkey_tsm_device_sn_check_fail: 'TSM_DEVICE_SN_CHECK_FAILED',
+  imkey_tsm_device_sn_check_invalid_response: 'TSM_DEVICE_SN_RESPONSE_INVALID',
   binding_code_error: 'BINDING_CODE_ERROR',
   imkey_bluetooth_channel_error: 'BLUETOOTH_CHANNEL_ERROR',
   imkey_bluetooth_timeout: 'BLUETOOTH_TIMEOUT',

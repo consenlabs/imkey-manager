@@ -13,6 +13,13 @@ for (const [filename, entry] of Object.entries(manifest.files)) {
       .digest('hex')
     if (actual !== entry.sha256)
       throw new Error(`SHA-256 mismatch: expected ${entry.sha256}, actual ${actual}`)
+    if (entry.sourcePatch) {
+      const patchHash = createHash('sha256')
+        .update(readFileSync(path.join(root, entry.sourcePatch)))
+        .digest('hex')
+      if (patchHash !== entry.sourcePatchSha256)
+        throw new Error(`Source patch SHA-256 mismatch: ${entry.sourcePatch}`)
+    }
     console.log(`${filename}: SHA-256 verified (${entry.architectures.join('+')})`)
   } catch (error) {
     failures++

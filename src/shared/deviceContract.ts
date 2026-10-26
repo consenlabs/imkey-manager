@@ -12,6 +12,7 @@ export const deviceMethods = [
   'cosCheckUpdate',
   'isBLStatus',
   'checkDevice',
+  'deviceSnCheck',
   'checkUpdate',
   'getInstalledApplets',
   'downloadApplet',
@@ -53,22 +54,29 @@ export interface FirmwareUpdate {
   updateType: string
   description: string
 }
+export interface DeviceSnCheck {
+  snCheckResult: boolean
+  isActivate: boolean
+  activateTime: string
+}
 export type DeviceValues = {
   [M in DeviceMethod]: M extends 'checkUpdate'
     ? AppletList
-    : M extends 'getInstalledApplets'
-      ? InstalledAppletList
-      : M extends 'cosCheckUpdate'
-        ? FirmwareUpdate
-        : M extends 'downloadApplet' | 'updateApplet'
-          ? WalletChain[]
-          : M extends 'isBLStatus' | 'isExistBindCodeFile'
-            ? boolean
-            : M extends 'getRamSize'
-              ? number
-              : M extends 'importBindCode'
-                ? undefined
-                : string
+    : M extends 'deviceSnCheck'
+      ? DeviceSnCheck
+      : M extends 'getInstalledApplets'
+        ? InstalledAppletList
+        : M extends 'cosCheckUpdate'
+          ? FirmwareUpdate
+          : M extends 'downloadApplet' | 'updateApplet'
+            ? WalletChain[]
+            : M extends 'isBLStatus' | 'isExistBindCodeFile'
+              ? boolean
+              : M extends 'getRamSize'
+                ? number
+                : M extends 'importBindCode'
+                  ? undefined
+                  : string
 }
 export type DeviceResult<T = unknown> =
   | { isSuccess: true; result: T }

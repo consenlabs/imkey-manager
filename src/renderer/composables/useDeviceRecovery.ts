@@ -11,7 +11,7 @@ let promptOwner: symbol | undefined
 export function useDeviceRecovery(operation?: Pick<DeviceOperation, 'active'>) {
   const router = useRouter()
   const device = useDeviceStore()
-  const { t } = useTranslation()
+  const { t, te } = useTranslation()
   const owner = Symbol('device-recovery')
   let mounted = true
   const active = () => mounted && (operation?.active() ?? true)
@@ -38,9 +38,14 @@ export function useDeviceRecovery(operation?: Pick<DeviceOperation, 'active'>) {
       device_bind_check_failed: 'recovery_device_changed'
     }
     const key = raw && Object.hasOwn(messages, raw) ? messages[raw] : undefined
+    const detail = operationError(error)
+    const diagnostic = detail.match(/ \[([a-z0-9-]{1,64})\]$/)?.[0] || ''
+    const cause = diagnostic ? detail.slice(0, -diagnostic.length) : detail
+    const causeKey = `m.imKeyCoreErrorInfo.${cause}`
+    const translated = te?.(causeKey) ? `${t(causeKey)}${diagnostic}` : detail
     const message = key
       ? t(`m.imKeyManager.${key}`)
-      : `${t('m.imKeyManager.recovery_message')}\n\n${operationError(error)}`
+      : `${t('m.imKeyManager.recovery_message')}\n\n${translated}`
     void (async () => {
       let action: 'retry' | 'reconnect' | undefined
       try {

@@ -2,16 +2,22 @@
   "version": 1,
   "files": {
     "connector.dylib": {
-      "sha256": "5518226c205726a35b316b6f34aacb8d069e78d2a512064ae543ad02d2652a12",
+      "sha256": "832f6945936a403fc21af814579707331e0565b73239c4393a4d35cdcc0e9e55",
       "architectures": ["x86_64", "arm64"],
       "imkeyCoreCommit": "80ddae20a2ece117bd443803e9bc6d5de519e575",
-      "source": "imkey-core develop (主 CC 核实)"
+      "sourcePatchSha256": "5bf88d443168ee98ebe7c714d0f4c47b8b322a4bae2721b00f10a45d38e0c5b2",
+      "sourcePatch": "vendor/imkey-core/device-sn-check/core-source.patch",
+      "buildProvenance": "vendor/imkey-core/device-sn-check/build-provenance.json",
+      "source": "imkey-core base commit + uncommitted device_sn_check patch"
     },
     "connector.dll": {
-      "sha256": "92d0fd3ee04b3295da2b945bc07707943ae03ac6c7050f1195de0cd50373e6ed",
+      "sha256": "489303a483ace00d4905e1cfddabec98edc4f0ecddaa0afe4d7789bb11629e5d",
       "architectures": ["i386"],
-      "imkeyCoreCommit": null,
-      "source": "待确认"
+      "imkeyCoreCommit": "80ddae20a2ece117bd443803e9bc6d5de519e575",
+      "sourcePatchSha256": "5bf88d443168ee98ebe7c714d0f4c47b8b322a4bae2721b00f10a45d38e0c5b2",
+      "sourcePatch": "vendor/imkey-core/device-sn-check/core-source.patch",
+      "buildProvenance": "vendor/imkey-core/device-sn-check/windows-build-provenance.json",
+      "source": "imkey-core base commit + uncommitted device_sn_check patch (Windows ia32)"
     }
   }
 }

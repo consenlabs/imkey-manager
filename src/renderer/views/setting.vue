@@ -2,13 +2,14 @@
 import ErrorDetail from '../components/ErrorDetail.vue'
 import { toRef, toRefs } from 'vue'
 import DeviceInfo from '../components/settings/DeviceInfo.vue'
-import SettingsLinks from '../components/settings/SettingsLinks.vue'
+import DeviceVerificationCard from '../components/device/DeviceVerificationCard.vue'
 import SettingsDialogs from '../components/settings/SettingsDialogs.vue'
 import UpdateStatus from '../components/settings/UpdateStatus.vue'
 import { useSettings } from '../composables/useSettings'
 import { useSoftwareUpdate } from '../composables/useSoftwareUpdate'
 const settings = useSettings()
-const { status, SN, copyTooltipDisabled } = toRefs(settings.state)
+const { status, SN, copyTooltipDisabled, checkingUpdate } = toRefs(settings.state)
+const verification = settings.secureCheck
 const {
   supportCode,
   errorInfo,
@@ -20,28 +21,39 @@ const {
 } = toRefs(settings.firmware.state)
 const updater = useSoftwareUpdate(toRef(settings.state, 'status'))
 const { progress, softOldVersionData, softNewVersionData } = toRefs(updater.state)
-const { copyText, exportBindCode, openUrl } = settings
+const { copyText, exportBindCode } = settings
 const { changeCode, isShowalert, updateFirmware } = settings.firmware
 const { later, updateNow, updateNowTip, checkSoftUpdate } = updater
 defineExpose({ checkSoftUpdate })
 </script>
 <template>
-  <div v-if="status == 1 || status == 6" class="container">
+  <div v-if="status == 1 || status == 6" class="container device-page" data-testid="device-page">
     <DeviceInfo
       :SN="SN"
       :ble-old-version-data="bleOldVersionData"
       :cos-old-version-data="cosOldVersionData"
       :is-cos-update="isCosUpdate"
+      :firmware-check-failed="settings.firmware.state.cosUpdateStatus === '2'"
       :copy-tooltip-disabled="copyTooltipDisabled"
+      :checking-update="checkingUpdate"
+      :identity-checking="verification.state.identityChecking"
       @is-showalert="isShowalert"
       @copy-text="copyText"
       @export-bind-code="exportBindCode"
+      @check-update="settings.checkUpdate"
+    />
+    <DeviceVerificationCard
+      variant="device"
+      :status="verification.state.status"
+      :activation-status="verification.state.activationStatus"
+      :activated-at="verification.state.activatedAt"
+      :identity-checking="verification.state.identityChecking"
+      @verify="verification.check"
     />
     <ErrorDetail
       :message="settings.state.errorInfo || updater.state.errorInfo"
       :stage="settings.state.errorInfo ? settings.state.errorStage : updater.state.errorStage"
     />
-    <SettingsLinks @open-url="openUrl" />
     <SettingsDialogs
       :support-code="supportCode"
       :error-info="errorInfo"

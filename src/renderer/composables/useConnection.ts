@@ -44,6 +44,7 @@ export function useConnection() {
     if (allowRecovery && isSessionRecoveryError(message)) recovery.offer(message, check)
   }
   function resetConnection(): void {
+    device.invalidateDeviceData()
     binding.resetBindingInput()
     state.errorInfo = ''
     state.errorStage = 'connect'

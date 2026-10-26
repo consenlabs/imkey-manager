@@ -39,6 +39,7 @@ export function createDeviceHandlers(
     cosCheckUpdate: manage('cos_check_update'),
     isBLStatus: manage('is_bl_status'),
     checkDevice: manage('device_secure_check'),
+    deviceSnCheck: manage('device_sn_check'),
     checkUpdate: () => api.applets(false),
     getInstalledApplets: () => api.applets(true),
     downloadApplet: p => api.applet('app_download', p as string),

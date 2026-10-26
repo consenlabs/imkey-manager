@@ -36,10 +36,13 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
     state.cosUpdateStatus = '1'
     changeCode(3)
   }
-  async function checkFirmwareVersion(onVersion?: () => void) {
+  async function checkFirmwareVersion(
+    onVersion?: () => void,
+    isCurrent: () => boolean = operation.active
+  ) {
     state.errorInfo = ''
     const version = await callDevice('getFirmwareVersion')
-    if (!operation.active()) return
+    if (!operation.active() || !isCurrent()) return
     if (!version.isSuccess) {
       state.isCosUpdate = false
       state.cosUpdateStatus = '2'
@@ -52,7 +55,7 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
     device.cosOldVersionData = version.result
     onVersion?.()
     const update = await callDevice('cosCheckUpdate')
-    if (!operation.active()) return
+    if (!operation.active() || !isCurrent()) return
     if (!update.isSuccess) {
       state.isCosUpdate = false
       state.cosUpdateStatus = '2'

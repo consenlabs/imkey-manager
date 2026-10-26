@@ -34,6 +34,7 @@ async function home(scenario = 'ready'): Promise<void> {
   await page.locator('.appStart button').click()
   await page.locator('.connectDevice button').first().click()
   await expect(page.locator('.homeBox')).toBeVisible()
+  await expect(page.getByTestId('secure-check-button')).toBeEnabled()
 }
 
 async function calls(): Promise<string[]> {
@@ -50,15 +51,21 @@ test('home secure check reconnects through the existing device and displays succ
   const before = (await calls()).length
   const button = page.getByTestId('secure-check-button')
   await button.click()
-  await expect(page.getByTestId('secure-check-result')).toContainText(
-    /设备校验通过|Device verification passed/i
+  await expect(page.getByTestId('device-verification-card')).toHaveAttribute(
+    'data-status',
+    'success'
   )
+  await expect(page.getByTestId('secure-check-result')).toContainText(/authenticity\s+verified/i)
   await expect(button).toBeEnabled()
   expect((await calls()).slice(before)).toEqual([
     'device_connect',
     'get_seid',
     'bind_check',
-    'device_secure_check'
+    'device_secure_check',
+    'device_sn_check',
+    'device_connect',
+    'get_seid',
+    'bind_check'
   ])
 })
 
@@ -66,14 +73,17 @@ test('home secure check displays the translated failure and permits retry', asyn
   await home('secure-check-failure')
   const button = page.getByTestId('secure-check-button')
   await button.click()
-  await expect(page.getByTestId('secure-check-result')).toContainText('device illegal')
-  await expect(page.getByTestId('secure-check-result')).not.toContainText(
-    'imkey_tsm_device_illegal'
-  )
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toContainText('device illegal')
+  await expect(dialog).not.toContainText('imkey_tsm_device_illegal')
+  await expect(page.getByTestId('device-verification-card')).toHaveAttribute('data-status', 'idle')
   await expect(button).toBeEnabled()
   expect((await calls()).filter(method => method === 'device_secure_check')).toHaveLength(1)
+  await dialog.locator('.el-message-box__headerbtn').click()
+  await expect(dialog).not.toBeVisible()
   await button.click()
-  await expect(page.getByTestId('secure-check-result')).toContainText('device illegal')
+  await expect(dialog).toContainText('device illegal')
+  await expect(page.getByTestId('device-verification-card')).toHaveAttribute('data-status', 'idle')
   await expect(button).toBeEnabled()
   expect((await calls()).filter(method => method === 'device_secure_check')).toHaveLength(2)
 })

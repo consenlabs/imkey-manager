@@ -34,7 +34,7 @@ async function calls(): Promise<string[]> {
   return (await readFile(path.join(directory, 'calls.log'), 'utf8')).trim().split('\n')
 }
 async function screenshot(name: string): Promise<void> {
-  await page.screenshot({ path: `test-results/flow-${name}.png`, fullPage: true })
+  await page.screenshot({ path: test.info().outputPath(`flow-${name}.png`), fullPage: true })
 }
 async function enterCode(code: string): Promise<void> {
   for (const [index, character] of [...code].entries()) {
@@ -51,6 +51,7 @@ async function home(scenario = 'ready'): Promise<void> {
   await launch(scenario)
   await connect()
   await expect(page.locator('.homeBox')).toBeVisible()
+  await expect(page.getByTestId('secure-check-button')).toBeEnabled()
 }
 async function settings(): Promise<void> {
   await page.locator('.routerBar li').nth(2).click()
@@ -151,9 +152,9 @@ for (const scenario of ['cos-success', 'cos-address-failure', 'ble-only']) {
   test(`${scenario === 'cos-success' ? 'e' : scenario === 'cos-address-failure' ? 'f' : 'g'} ${scenario} firmware flow`, async () => {
     await home(scenario)
     await settings()
-    await expect(page.locator('.rightUpdate')).toBeVisible()
+    await expect(page.getByTestId('firmware-upgrade-button')).toBeVisible()
     const before = await calls()
-    await page.locator('.rightUpdate button').click()
+    await page.getByTestId('firmware-upgrade-button').click()
     if (scenario === 'ble-only') await page.locator('.alertBox button').click()
     await expect(
       page.locator(scenario === 'cos-address-failure' ? '.alert3' : '.alert2')
@@ -173,18 +174,18 @@ for (const scenario of ['cos-success', 'cos-address-failure', 'ble-only']) {
     )
     await page.locator('.alertBox button').click()
     if (scenario === 'cos-address-failure') {
-      await expect(page.locator('.rightUpdate')).toBeVisible()
-      await expect(page.locator('.equipmentBox')).toContainText('firmware version 1.0.0')
+      await expect(page.getByTestId('firmware-upgrade-button')).toBeVisible()
+      await expect(page.locator('.device-info-primary > div').last()).toContainText('1.0.0')
       await screenshot('f-address-pending-recovery')
     } else if (scenario === 'cos-success') {
-      await expect(page.locator('.equipmentBox')).toContainText('firmware version 2.0.0')
-      await expect(page.locator('.rightUpdate')).toHaveCount(0)
+      await expect(page.locator('.device-info-primary > div').last()).toContainText('2.0.0')
+      await expect(page.getByTestId('firmware-upgrade-button')).toHaveCount(0)
       await page.locator('.routerBar li').nth(1).click()
       await expect(page.locator('.appItem .col')).toBeVisible()
       await expect(page.locator('.appItem')).toContainText('Ethereum')
       await screenshot('e-restored-apps')
     } else {
-      await expect(page.locator('.equipmentBox')).toContainText('ble version 2.0.0')
+      await expect(page.locator('.device-info-secondary > div').last()).toContainText('2.0.0')
       await screenshot('g-ble-updated')
     }
   })
@@ -192,7 +193,7 @@ for (const scenario of ['cos-success', 'cos-address-failure', 'ble-only']) {
 test('h settings version, clipboard, external link and updater events', async () => {
   await home()
   await settings()
-  await expect(page.locator('.equipmentBox')).toContainText('firmware version 1.0.0')
+  await expect(page.locator('.device-info-primary > div').last()).toContainText('1.0.0')
   expect(await page.evaluate(() => window.imkey.app.getVersion())).toBe('2.1.7-beta')
   await application.evaluate(({ clipboard }) => {
     const record = globalThis as unknown as { copiedText?: string }
@@ -220,12 +221,14 @@ test('h settings version, clipboard, external link and updater events', async ()
       return null
     }
   })
-  await page.locator('.link5').first().click()
+  await page.locator('.routerBar li').first().click()
+  await page.getByRole('button', { name: /Tokenlon/ }).click()
   await expect
     .poll(() =>
       application.evaluate(() => (globalThis as unknown as { externalUrl?: string }).externalUrl)
     )
-    .toBe('https://imkey.im/get-started')
+    .toBe('https://tokenlon.im')
+  await settings()
   await invoke('checkSoftUpdate')
   await expect(page.locator('.tip6')).toBeVisible()
   await page.locator('.tip6 button').click()
@@ -250,7 +253,7 @@ for (const locale of ['zh-CN', 'en-US']) {
       await screenshot(`i-${locale}-${name}`)
     }
     await expect(page.locator('.routerView h2')).toContainText(
-      locale === 'zh-CN' ? '设置' : 'Settings'
+      locale === 'zh-CN' ? '设备' : 'Device'
     )
   })
   test(`i ${locale} setup screen contains translated text`, async () => {
@@ -275,6 +278,10 @@ test('initialization queues the first click and duplicate connection clicks run 
       target.click()
     })
   await expect(page.locator('.homeBox')).toBeVisible()
-  expect((await calls()).filter(method => method === 'device_connect')).toHaveLength(1)
+  await expect(page.getByTestId('secure-check-button')).toBeEnabled()
+  const methods = await calls()
+  // The connection flow runs once; entering home then confirms the current device once.
+  expect(methods.filter(method => method === 'device_connect')).toHaveLength(2)
+  expect(methods.slice(-3)).toEqual(['device_connect', 'get_seid', 'bind_check'])
   await screenshot('connection-double-click')
 })

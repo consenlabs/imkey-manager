@@ -188,6 +188,7 @@ for (const replacement of ['reset', 'different-device'] as const) {
     await launch()
     await connect(true)
     await expect(page.locator('.homeBox')).toBeVisible()
+    await expect(page.getByTestId('secure-check-button')).toBeEnabled()
     const before = await calls()
     await configure({
       binding: 'unbound',
@@ -208,11 +209,15 @@ test('a worker crash recovers by user retry with core reinitialized', async () =
   await launch()
   await connect(true)
   await expect(page.locator('.homeBox')).toBeVisible()
+  await expect(page.getByTestId('secure-check-button')).toBeEnabled()
+  const connections = (await calls()).filter(method => method === 'device_connect').length
   await configure({ fault: { id: 'crash-once', method: 'device_connect', kind: 'crash' } })
   await page.locator('.routerBar li').nth(2).click()
   await expect(page.locator('.device-recovery-dialog')).toBeVisible()
   await expect.poll(serviceReadyCount).toBe(2)
-  expect((await calls()).filter(method => method === 'device_connect')).toHaveLength(2)
+  expect((await calls()).filter(method => method === 'device_connect')).toHaveLength(
+    connections + 1
+  )
   await retryRecovery()
   await expect(page.locator('.equipmentBox')).toContainText('SN123')
   expect((await calls()).filter(method => method === 'init_imkey_core_x').length).toBeGreaterThan(1)

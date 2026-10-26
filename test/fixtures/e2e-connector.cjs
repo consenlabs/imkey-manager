@@ -108,6 +108,13 @@ module.exports = {
       }
       return response(btc, 'BtcXpubRes', 'setXpub', 'xpub-e2e')
     }
+    if (method === 'device_sn_check') {
+      const result = new device.DeviceSnCheckRes()
+      result.setSnCheckResult(true)
+      result.setIsActivate(true)
+      result.setActivateTime('2026-10-18')
+      return hex(result)
+    }
     if (method === 'get_address' || method === 'register_address')
       return response(api, 'AddressResult', 'setAddress', '0xe2e-address')
     if (method === 'register_pub_key') return response(api, 'EosWallet', 'setAddress', 'eos-e2e')

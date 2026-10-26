@@ -82,7 +82,7 @@
                 stroke="black"
               />
             </svg>
-            {{ $t('m.imKeyManager.manager') }}
+            {{ $t('m.devicePages.nav_apps') }}
           </li>
         </router-link>
         <router-link to="/home/setting" custom v-slot="{ navigate, isActive, isExactActive }">
@@ -107,7 +107,7 @@
                 stroke="black"
               />
             </svg>
-            {{ $t('m.imKeyManager.setting') }}
+            {{ $t('m.devicePages.nav_device') }}
           </li>
         </router-link>
       </ul>
