@@ -2,7 +2,6 @@
 import ErrorDetail from '../ErrorDetail.vue'
 defineProps<{
   tip: boolean
-  tip1: boolean
   errorInfo?: string
   errorStage?: string
   supportCode: number
@@ -30,29 +29,6 @@ const emit = defineEmits<{ ok: []; changeCode: [code: number] }>()
       </svg>
       <h4>{{ $t('m.imKeyManager.install_uninstall_upgrade_delete_Apps_fail') }}</h4>
       <p>{{ $t('m.imKeyManager.check_usb_or_internet_connect') }}</p>
-      <ErrorDetail :message="errorInfo" :stage="errorStage" />
-      <button @click="emit('ok')">{{ $t('m.imKeyManager.ok') }}</button>
-    </div>
-  </div>
-  <div class="dioBox" v-if="tip1">
-    <div class="box">
-      <svg
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M7.86 2H16.14L22 7.86V16.14L16.14 22H7.86L2 16.14V7.86L7.86 2Z"
-          stroke="#43454F"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        />
-        <path d="M15 9L9 15" stroke="#43454F" stroke-linecap="round" stroke-linejoin="round" />
-        <path d="M9 9L15 15" stroke="#43454F" stroke-linecap="round" stroke-linejoin="round" />
-      </svg>
-      <h4>{{ $t('m.imKeyManager.check_usb_or_internet_connect') }}</h4>
       <ErrorDetail :message="errorInfo" :stage="errorStage" />
       <button @click="emit('ok')">{{ $t('m.imKeyManager.ok') }}</button>
     </div>

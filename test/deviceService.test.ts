@@ -6,6 +6,7 @@ import { createDeviceHandlers } from '../src/service/handlers'
 import { DeviceQueue } from '../src/service/queue'
 import { ConnectorClient, allowedMockPath } from '../src/service/connector/ConnectorClient'
 import type { DeviceMethod } from '../src/shared/deviceContract'
+import { isValidDeviceParams } from '../src/shared/deviceContract'
 import type { Handler } from '../src/service/handlers'
 import { api, btc, create, decode, device, invoke } from '../src/service/protobuf'
 const direct: Record<string, string> = {
@@ -49,12 +50,14 @@ function execute(api: DeviceApi, method: string, args: unknown[]): unknown {
   }
   const options = args[0] as { path: string; network?: string }
   if (method === 'registerEOSPubKey') return api.registerEOSPubKey(options.path)
-  const symbol = method.replace(/^(get|register)/, '').replace('Address', '')
-  return api.address(chains[symbol], options.path, method.startsWith('register'), options.network)
+  const symbol = method.replace(/^register/, '').replace('Address', '')
+  return api.registerAddress(chains[symbol], options.path, options.network)
 }
 describe('legacy protobuf golden fixtures', () => {
   for (const fixture of fixtures.filter(
-    item => !['importBindCode', 'exportBindCode', 'isExistBindCodeFile'].includes(item.method)
+    item =>
+      !['importBindCode', 'exportBindCode', 'isExistBindCodeFile'].includes(item.method) &&
+      !/^get.*Address$/.test(item.method)
   )) {
     it(`${fixture.module}.${fixture.method} ${fixture.errorHex ? 'error' : 'success'}`, () => {
       const requests: string[] = []
@@ -260,3 +263,79 @@ it('wallet registration collects failures and never reports false success', () =
   })
   expect(calls).toBe(3)
 })
+it.each([
+  ['downloadApplet', 'app_download', 'AppDownloadRes'],
+  ['updateApplet', 'app_update', 'AppUpdateRes']
+] as const)(
+  '%s accepts real connector response names and preserves supported address registration requests',
+  async (method, nativeMethod, responseClass) => {
+    // Names emitted by connector common/src/applet.rs at commit 80ddae2.
+    const names = [
+      'Bitcoin',
+      'Ethereum',
+      'EOS',
+      'Cosmos',
+      'Filecoin',
+      'Kusama',
+      'Polkadot',
+      'TRON',
+      'Bitcoin Cash',
+      'Litecoin',
+      'IMK',
+      'Nervos',
+      'Tezos'
+    ]
+    const requests: string[] = []
+    const handlers = createDeviceHandlers(
+      {
+        callImKeyApi(hex) {
+          requests.push(hex)
+          const action = decode(api, 'ImkeyAction', hex)
+          const actionMethod = invoke<string>(action, 'getMethod')
+          if (actionMethod === nativeMethod)
+            return Buffer.from(
+              create(device, responseClass, {
+                setAddressRegisterListList: names
+              }).serializeBinary()
+            ).toString('hex')
+          if (actionMethod === 'bind_check')
+            return Buffer.from(
+              create(device, 'BindCheckRes', { setBindStatus: 'bound_this' }).serializeBinary()
+            ).toString('hex')
+          // Empty protobuf responses are valid for both registration response schemas.
+          return ''
+        },
+        getLastErrorMessage: () => ''
+      },
+      '/user'
+    )
+    const installed = await handlers[method]('Nervos')
+    expect(installed).toEqual({ isSuccess: true, result: names })
+    if (!installed.isSuccess) throw new Error('Expected successful applet installation')
+    const params = { filePath: '/user', name: installed.result }
+    expect(isValidDeviceParams('writeWalletAddress', params)).toBe(true)
+    expect(await handlers.writeWalletAddress(params)).toEqual({
+      isSuccess: true,
+      result: 'success'
+    })
+    expect(invoke(decode(api, 'ImkeyAction', requests[0]), 'getMethod')).toBe(nativeMethod)
+    expect(invoke(decode(api, 'ImkeyAction', requests[1]), 'getMethod')).toBe('bind_check')
+    // Exact legacy wire requests ensure existing paths/networks and registration order remain intact.
+    // Bitcoin Cash/Litecoin/IMK/Nervos/Tezos keep the legacy skip policy.
+    const registrationMethods = [
+      'registerBTCAddress',
+      'registerETHAddress',
+      'registerEOSPubKey',
+      'registerCOSMOSAddress',
+      'registerFILECOINAddress',
+      'registerKSMAddress',
+      'registerDOTAddress',
+      'registerTRONAddress'
+    ]
+    expect(requests.slice(2)).toEqual(
+      registrationMethods.flatMap(
+        name => fixtures.find(fixture => fixture.method === name && !fixture.errorHex)!.requests
+      )
+    )
+  }
+)

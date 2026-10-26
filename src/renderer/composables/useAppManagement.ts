@@ -24,7 +24,7 @@ export function useAppManagement() {
   const call = scope.call
   const recovery = useDeviceRecovery(scope)
   const firmware = useFirmwareUpgrade('manager', scope)
-  const state = reactive({ tip: false, tip1: false, appName: '', errorInfo: '', errorStage: '' })
+  const state = reactive({ tip: false, appName: '', errorInfo: '', errorStage: '' })
   const operations = reactive<Record<string, AppOperation | undefined>>({})
   const apps = computed(() =>
     device.apps.map(entry =>
@@ -55,7 +55,6 @@ export function useAppManagement() {
   }
   function ok() {
     state.tip = false
-    state.tip1 = false
     state.errorInfo = ''
     state.errorStage = ''
   }
@@ -86,10 +85,13 @@ export function useAppManagement() {
   function init() {
     return scope.run(initWithinOperation, 'initialize')
   }
-  async function changeApp(item: AppletView, operation: 'install' | 'update'): Promise<void> {
+  async function changeAppWithinOperation(
+    item: AppletView,
+    operation: 'install' | 'update'
+  ): Promise<void> {
     const target = device.apps.find(entry => entry.id === item.id)
     if (!target) return
-    const retry = () => scope.run(() => changeApp(item, operation))
+    const retry = () => changeApp(item, operation)
     try {
       if (firmware.state.cosUpdateStatus === '1') {
         await firmware.updateFirmwareWithinOperation()
@@ -97,7 +99,6 @@ export function useAppManagement() {
       }
       const connected = await connectDeviceSession(call, device)
       if (!connected.isSuccess) return fail(connected, 'connect', false, retry)
-      operations[target.id] = operation
       const response = await call(
         operation === 'install' ? 'downloadApplet' : 'updateApplet',
         target.name
@@ -111,15 +112,24 @@ export function useAppManagement() {
       if (scope.active()) target.installedVersion = target.latestVersion
     } catch (error) {
       fail(error, 'app', false, retry)
+    }
+  }
+  async function changeApp(item: AppletView, operation: 'install' | 'update'): Promise<void> {
+    const target = device.apps.find(entry => entry.id === item.id)
+    if (!target || !scope.active() || Object.keys(operations).length > 0) return
+    // Show feedback before queueing or awaiting the device preflight checks.
+    operations[target.id] = operation
+    try {
+      await scope.run(() => changeAppWithinOperation(item, operation))
     } finally {
       delete operations[target.id]
     }
   }
   function installApp(item: AppletView) {
-    return scope.run(() => changeApp(item, 'install'))
+    return changeApp(item, 'install')
   }
   function updateApp(item: AppletView) {
-    return scope.run(() => changeApp(item, 'update'))
+    return changeApp(item, 'update')
   }
   async function deleteWithinOperation(item: AppletView): Promise<void> {
     const target = device.apps.find(entry => entry.id === item.id)

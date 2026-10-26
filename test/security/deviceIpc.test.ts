@@ -10,6 +10,22 @@ vi.mock('electron', () => ({
   }
 }))
 import { registerDeviceIpc } from '../../src/main/deviceIpc'
+// Names emitted by connector common/src/applet.rs at commit 80ddae2.
+const connectorAppletNames = [
+  'Bitcoin',
+  'Ethereum',
+  'EOS',
+  'Cosmos',
+  'Filecoin',
+  'Kusama',
+  'Polkadot',
+  'TRON',
+  'Bitcoin Cash',
+  'Litecoin',
+  'IMK',
+  'Nervos',
+  'Tezos'
+]
 const webContents = {}
 const window = { isDestroyed: () => false, webContents } as unknown as BrowserWindow
 const event = { sender: webContents } as unknown as IpcMainInvokeEvent
@@ -52,6 +68,34 @@ describe('registered device IPC handler', () => {
       result: 'seid'
     })
     expect(call).toHaveBeenCalledWith('downloadApplet', 'Ethereum')
+  })
+  it.each(connectorAppletNames)('accepts connector registration name %s unchanged', async name => {
+    const params = { filePath: '/user', name: [name] }
+    await expect(invoke(event, 'writeWalletAddress', params)).resolves.toEqual({
+      isSuccess: true,
+      result: 'seid'
+    })
+    expect(call).toHaveBeenCalledExactlyOnceWith('writeWalletAddress', params)
+  })
+  it('accepts a mixed connector registration list unchanged', async () => {
+    const params = { filePath: '/user', name: connectorAppletNames }
+    await invoke(event, 'writeWalletAddress', params)
+    expect(call).toHaveBeenCalledExactlyOnceWith('writeWalletAddress', params)
+  })
+  it.each([
+    { filePath: '/user', name: ['Ethereum', 'invalid-chain'] },
+    { filePath: '/user', name: ['NERVOS'] },
+    { filePath: '/user', name: ['TEZOS'] },
+    { filePath: '/user', name: ['Bitcion Cash'] },
+    { filePath: '/user', name: [null] },
+    { filePath: '/user', name: 'Nervos' },
+    { filePath: 1, name: ['Nervos'] },
+    { filePath: '/user', name: ['Nervos'], unexpected: true }
+  ])('rejects malformed registration parameters %j before forwarding', async params => {
+    await expect(invoke(event, 'writeWalletAddress', params)).rejects.toThrow(
+      'Invalid device parameters'
+    )
+    expect(call).not.toHaveBeenCalled()
   })
   it('routes binding storage methods to main-process storage', async () => {
     await expect(invoke(event, 'importBindCode', 'BINDCODE')).resolves.toEqual({

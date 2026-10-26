@@ -71,7 +71,7 @@ export function createDeviceHandlers(
           response =
             name === 'EOS'
               ? api.registerEOSPubKey(chain.path)
-              : api.address(chain.chain, chain.path, true, chain.network)
+              : api.registerAddress(chain.chain, chain.path, chain.network)
         } catch (error) {
           response = {
             isSuccess: false,

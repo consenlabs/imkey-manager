@@ -179,9 +179,9 @@ export class DeviceApi {
       'getXpub'
     )
   }
-  address(chain: string, path: string, register = false, network = ''): DeviceResult {
+  registerAddress(chain: string, path: string, network = ''): DeviceResult {
     return this.request(
-      register ? 'register_address' : 'get_address',
+      'register_address',
       create(api, 'AddressParam', {
         setChaintype: chain,
         setPath: path,

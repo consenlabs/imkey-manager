@@ -82,6 +82,7 @@ export type DeviceResult<T = unknown> =
       operationId?: string
       failed?: string[]
     }
+// Exact names in the connector's address_register_list; registration support is separate.
 export const walletChains = [
   'Bitcoin',
   'Ethereum',
@@ -91,10 +92,11 @@ export const walletChains = [
   'Polkadot',
   'Kusama',
   'TRON',
-  'TEZOS',
-  'NERVOS',
-  'Bitcion Cash',
-  'Litecoin'
+  'Tezos',
+  'Nervos',
+  'Bitcoin Cash',
+  'Litecoin',
+  'IMK'
 ] as const
 export type WalletChain = (typeof walletChains)[number]
 type StringMethod =

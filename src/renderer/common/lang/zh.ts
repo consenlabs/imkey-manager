@@ -14,7 +14,6 @@ export const m = {
     recovery_restart_required: '尚未完成设备绑定。可以继续当前步骤，或返回连接页重新开始。',
     recovery_timeout: '设备长时间未响应，本次操作未完成。请检查设备后重试，或返回连接页。',
     recovery_pending: '旧设备通信服务尚未退出，请稍后重试，或返回连接页。',
-    operation_failed: '操作失败，请重试。',
     stage_connect: '设备连接',
     stage_check: '版本检查',
     stage_app: '应用管理',
@@ -42,7 +41,6 @@ export const m = {
     check_firmware_version_update: '检查固件版本升级',
     check_device_bind_code: '检查设备绑定码',
     check_pin_wallet: '检查 PIN 码及钱包',
-    usb_connect_error: 'USB 连接异常',
     connection_incomplete: '设备连接未完成',
     connection_check_failed:
       '设备检查失败，请重试；若问题持续出现，请保留错误信息并联系 imKey 支持。',
@@ -81,9 +79,7 @@ export const m = {
     same_imKey_bind_different_PC_used_same_bind_code:
       '同一台 imKey Pro 若在不同 PC 端绑定，将使用相同的绑定码',
     next: '下一步',
-    // enter_bind_code:'输入设备绑定码',
     enter_bind_code_for_use_on_the_current_device: '请输入设备绑定码，以便在当前设备上使用',
-    // bind_code_error_please_check:'绑定码错误，请仔细核对，或通过导入助记词重置 imKey 找回',
 
     disconnect_usb: '断开USB连接',
     setting_pin: '设置 PIN 码',
@@ -92,12 +88,10 @@ export const m = {
     use_pin_unlock_imKey: 'PIN 码用于解锁 imKey',
     setting_6_8_bit_pin: '设置 6-8 位 PIN 码',
     do_not_enter_the_same_or_consecutive_pin: '请勿输入相同或连续数字的 PIN 码',
-    // create_restore_Wallet:'创建 / 恢复钱包',
     Mnemonic_control_ownership_please_private: '助记词掌控资产所有权，请妥善私密保管',
     Replace_reset_device_use_mnemonic_restore_wallet: '更换或重置设备，可以使用助记词恢复钱包资产',
     Create_restore_wallet_2_minutes_wait: '创建 / 恢复钱包约 2 分钟，请耐心等待',
     choose_create_wallet_mnemonic_never_be_online: '建议选择创建钱包，保障助记词永不联网',
-    // complete_setup:'完成设置',
     congratulations_complete_setup_final_security_check:
       '恭喜你已完成 imKey 设置，进行最后一步安全检查吧',
     confirm_pi_code_set_for_me_backup_completed: '确认为本人设置 PIN 码，并已完成备份',
@@ -125,10 +119,8 @@ export const m = {
     install: '安装',
     upgrade: '升级',
     installed: '已安装',
-    delete: '删除',
-    APP_installing_do_not_disconnect_usb: '币种程序安装中，请勿断开 USB 连接，并中止 imKey 操作',
-    APP_deleting_do_not_disconnect_usb: '币种程序删除中，请勿断开 USB 连接，并中止 imKey 操作',
-    APP_upgrading_do_not_disconnect_usb: '币种程序升级中，请勿断开 USB 连接，并中止 imKey 操作',
+    APP_installing_do_not_disconnect_usb: '正在处理安装，请勿断开 USB 连接或操作 imKey',
+    APP_upgrading_do_not_disconnect_usb: '正在处理升级，请勿断开 USB 连接或操作 imKey',
     install_uninstall_upgrade_delete_Apps_fail: '币种安装/升级失败',
     check_usb_or_internet_connect: '请检查 USB 连接或网络连接情况，确认无误后重试',
     imKey_pro_setting_and_info: 'imKey Pro 基本设置及相关信息 ',
@@ -173,144 +165,7 @@ export const m = {
     wechat: '微信：imKey_Official',
     tokenlon_info: '安全快速的去中心化交易所',
     operating_tutorial_url: 'https://imkey.im/get-started?locale=zh-cn',
-    update_tip_wait: '更新完成后 App 将自动重启，请耐心等待',
-    coming_soon: ' 敬请期待 ',
-    installing_dot_ksm_coin: '请前往管理界面安装币种程序DOT和KSM'
-  },
-  appStart: {
-    imKey_manager: 'imKey Manager',
-    your_imKey_manager: '你的 imKey Pro 桌面管理工具',
-    no_have_imKey_pro: '还未拥有 imKey Pro?',
-    use_now: '立即使用'
-  },
-  connectDevice: {
-    get_start_imKey: '开始使用你的imKey Pro',
-    info_connect_imKey: '将imKey连接到你的电脑上',
-    info_click_button: '点击连接按钮',
-    info_enter_pin: '在imKey上输入PIN码 ',
-    info_if_pin: '如果没有PIN就不用输入',
-    connect: '连接',
-    connect_success: '连接成功',
-    connecting: '连接中',
-    check_BL: '检查BL',
-    upgrading_firmware: '升级固件中',
-    check_active: '检查激活',
-    active_success: '激活成功',
-    check_bind: '检查绑定',
-    check_create_wallet: '检查创建钱包'
-  },
-  step: {
-    connect: '连接',
-    active_bind: '激活&绑定',
-    set_pin_create_wallet: '设置PIN&创建钱包'
-  },
-  stepOne: {
-    connect_imKey: '连接你的imKey'
-  },
-  stepTwo: {
-    active_bind: '激活&绑定',
-    please_active_bind: '请激活并绑定你的imKey',
-    active_imKey: '激活你的imKey',
-    bind_imKey: '绑定你的imKey',
-    start_active_bind_imKey: '开始激活并绑定你的imKey',
-    start: '开始',
-    activating_imKey: '正在激活你的imKey',
-    binding_imKey: '正在绑定你的imKey',
-    bind: '绑定',
-    bind_code_is_null: '绑定码不能为空',
-    bind_code_is_correct: '绑定码格式不正确',
-    enter_bind_code: '输入绑定码'
-  },
-  stepThree: {
-    set_pin_create_wallet: '设置PIN&创建钱包',
-    please_disconnect: '请断开USB，设置PIN并创建钱包',
-    set_modify_pin: '设置或修改PIN',
-    create_wallet: '创建或恢复钱包',
-    next: '下一步',
-    operation_guide: '操作指南',
-    how_to_set_pin: '设置方式：',
-    set_pin_1: 'imKey 的 PIN 码设置要求为 6 - 8 位数字，不支持相同或连续的数字组合。',
-    set_pin_2: 'imKey 上显示「设置 PIN 」进入设置流程。',
-    set_pin_3: '设置每一位的数字，上下按钮切换，点击「OK」确认，点击「C」取消',
-    set_pin_4:
-      '重复此过程，直到选择了 PIN 码的所有数字。（如果你想设置 6 位 PIN 码，在第 7 位出现「✔️」符号时点击「OK」按钮即可完成设置。如果你想设置 7 位或者 8 位 PIN\n' +
-      '                        码，在显示「✔️」符号时，通过切换按钮切换成数字并确认即可。）',
-    set_pin_5: '再次输入 PIN 码进行确认',
-    security_reminders: '安全提示：',
-    security_info_1: 'PIN 码用于解锁 imKey，丢失无法找回，请妥善保管；',
-    security_info_2: '不支持相同或连续的数字组合。',
-    security_info_3: '切勿使用随机 PIN 码和第三方工具提供的 PIN 码。',
-    how_to_change_PIN: '修改 PIN 码：',
-    change_pin:
-      '输入 PIN 开启 imKey，点击「OK」进入钱包设置界面，选择「设置」—「修改 PIN」，输入原 PIN 码进行身份确认，然后重新设置 PIN 码即可。',
-    special_notes:
-      '特别提示：为保证钱包资产安全，连续五次输入错误的 PIN 码，imKey 会被强制重置。请用户务必记牢设置的 PIN 码，PIN 码一旦遗失没有任何办法能够重置或者找回。',
-    create_a_wallet: '创建钱包：',
-    create_a_wallet_1: '根据 imKey 界面显示，使用上下按钮移动光标至「创建钱包」，点击 OK。',
-    create_a_wallet_2: '阅读提醒后点击 OK 确认',
-    create_a_wallet_3: '准确按顺序抄写单词',
-    create_a_wallet_4:
-      '重复此过程直到 12 个单词全部保存（助记词是恢复钱包的唯一方式，只能在创建钱包的时候备份备份，请务必离线妥善保管）',
-    create_a_wallet_5: '备份助记词结束后 imKey 会显示「请确认助记词」',
-    create_a_wallet_6: '上下按钮选择对应位置正确的单词，点击 OK 确认」',
-    create_a_wallet_7: '重复此过程直到 12 个单词全部验证 ',
-    create_a_wallet_8: '验证完成后提示「钱包创建中，预计 2 分钟完成」。创建完成后，即可开始使用。',
-    recover_wallet: '恢复钱包：',
-    recover_wallet_1: '根据 imKey 界面显示，使用上下按钮移动光标至「恢复钱包」，点击 OK。',
-    recover_wallet_2: '选择要导入助记词的单词数量，imKey 目前支持导入 12、18、24 个单词的助记词。',
-    recover_wallet_3: '选择助记词对应位置单词的字母，上下按钮切换，OK 确认，C 取消。',
-    recover_wallet_4:
-      '重复此操作，直到 imKey 显示可供选择的建议单词，上下按钮移动光标，点击 OK 选择正确的单词。（因为 BIP39 词库的 2048\n' +
-      '                        个单词各不相同。每个单词只需要前几位字母即可确定，所以输入前几位字母后即可跳转到选择备选单词界面）',
-    recover_wallet_5:
-      '完成助记词导入后，点击 OK 。开始导入钱包后进入提示界面「钱包恢复中，预计 2 分钟完成」。',
-    recover_wallet_6: '导入完成，即可开始使用。'
-  },
-  home: {
-    buy_now: '现在购买',
-    use_imToken_to_buy: '请使用 imToken 2.0 扫码购买',
-    use_WeChat_AliPay_to_buy: '请使用微信/支付宝扫码购买',
-    WeChat_AliPay: '微信/支付宝'
-  },
-  connect: {
-    connect_imKey: '连接你的imKey',
-    follow_steps: '执行下面步骤进入管理界面',
-    connect_imKey_to_computer: '将你的imKey连接到电脑上',
-    click_connect: '点击连接按钮',
-    enter_pin_imKey: '在你的imKey上输入PIN码',
-    connect: '连接'
-  },
-  manager: {
-    manager: '管理',
-    install_uninstall_apps: '给imKey安装或者下载应用',
-    firmware_version: '固件版本',
-    firmware_is: '有新的固件 ',
-    available: '可用',
-    update: '更新',
-    app_catalog: '应用目录',
-    search_app: '搜索应用',
-    install: '安装'
-  },
-  setting: {
-    info: '提示',
-    is_update: '是否要更新？',
-    cancel: '取消',
-    ok: '确定',
-    is_quit_update: '是否立刻退出更新？',
-    setting: '设置',
-    setting_imKey_manager: '设置imKey-manager',
-    need_help: '帮助?',
-    imKey_manager_version: 'imKey-manager版本',
-    imKey_manager_version_is: 'imKey-manager有新的版本',
-    available: '可用'
-  },
-  menu: {
-    home: '主页',
-    manager: '管理',
-    setting: '设置'
-  },
-  noticeDialog: {
-    info: '提示'
+    update_tip_wait: '更新完成后 App 将自动重启，请耐心等待'
   },
   imKeyCoreErrorInfo: {
     operation_failed: '操作失败，请重试。',

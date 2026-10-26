@@ -14,9 +14,6 @@ vi.mock('../../src/renderer/composables/useDeviceRecovery', () => ({
   useDeviceRecovery: () => ({ offer: vi.fn(), returnToConnection: vi.fn() })
 }))
 vi.mock('vue-router', () => ({ useRouter: () => ({ push: mocks.push }) }))
-vi.mock('../../src/renderer/composables/useTranslation', () => ({
-  useTranslation: () => ({ t: (key: string) => key })
-}))
 vi.mock('vue', async original => ({
   ...(await original<typeof import('vue')>()),
   onMounted: vi.fn(),

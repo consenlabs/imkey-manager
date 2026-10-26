@@ -26,7 +26,6 @@ export function useDeviceSetup() {
   const state = reactive({
     errorInfo: '',
     errorStage: '',
-    bindCode: '',
     active: 0,
     page: 1,
     step1: false,
@@ -144,7 +143,6 @@ export function useDeviceSetup() {
     )
   }
   async function acquire(code: string): Promise<void> {
-    state.bindCode = code
     binding.state.bindingStatus = 1
     binding.state.codeIsTrue = true
     state.bindFinish = false

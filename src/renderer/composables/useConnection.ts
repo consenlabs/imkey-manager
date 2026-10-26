@@ -4,7 +4,6 @@ import { operationError } from './operationError'
 import { useDeviceOperation } from './useDeviceOperation'
 import { toDeviceApplets } from '../models/applets'
 import { useAppStore, useDeviceStore } from '../store'
-import { useTranslation } from './useTranslation'
 import { useBindCodeInput } from './useBindCodeInput'
 import { useConnectionFirmware } from './useConnectionFirmware'
 import constants from '../../common/constants'
@@ -17,17 +16,14 @@ export function useConnection() {
   const router = useRouter()
   const device = useDeviceStore()
   const app = useAppStore()
-  const { t } = useTranslation()
   const recovery = useDeviceRecovery(operation)
   const state = reactive({
     errorInfo: '',
     errorStage: 'connect',
-    connectText: t('m.connectDevice.connect'),
     status: 1,
     checkFirmwareUpgrade: 1,
     checkDeviceBindingCode: 1,
-    checkPinAndWallet: 1,
-    isUpdateIMK: false
+    checkPinAndWallet: 1
   })
   const binding = useBindCodeInput(bindAcquire, true)
   const firmware = useConnectionFirmware(
@@ -51,7 +47,6 @@ export function useConnection() {
     binding.resetBindingInput()
     state.errorInfo = ''
     state.errorStage = 'connect'
-    state.connectText = t('m.connectDevice.connect')
     state.checkFirmwareUpgrade = state.checkDeviceBindingCode = state.checkPinAndWallet = 1
     device.activeStatus = ''
     device.bindStatus = ''
@@ -139,13 +134,10 @@ export function useConnection() {
     state.checkFirmwareUpgrade = 3
     device.activeStatus = update.result.status
     device.apps = toDeviceApplets(update.result.list)
-    state.connectText = t('m.connectDevice.active_success')
     const imk = update.result.list.find(entry => entry.name === 'IMK')
     if (imk && imk.installedVersion !== null && imk.installedVersion !== imk.latestVersion) {
-      state.isUpdateIMK = true
       const updated = await callDevice('updateApplet', 'IMK')
       if (!updated.isSuccess) return fail(updated)
-      state.isUpdateIMK = false
     }
     await checkIsBind()
   }

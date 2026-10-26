@@ -51,7 +51,7 @@
     </div>
     <h4>{{ $t('m.imKeyManager.used_this_desktop_APP') }}</h4>
     <div class="appBox">
-      <a class="link6" @click="openUrl('TokenLon')">
+      <a class="link6" @click="openUrl">
         <div class="cbox">
           <svg
             width="100"
@@ -144,20 +144,9 @@ export default {
     return { secureCheck: useSecureCheck() }
   },
   methods: {
-    async openUrl(urlType) {
-      let url
-      if (urlType === 'TokenLon') {
-        url = 'https://tokenlon.im'
-      }
-      if (urlType === 'Compound') {
-        url = 'https://compound.finance/'
-      }
-      if (urlType === 'AAVE') {
-        url = 'https://aave.com/'
-      }
-      if (!url) return
+    async openUrl() {
       try {
-        await window.imkey.app.openExternal(url)
+        await window.imkey.app.openExternal('https://tokenlon.im')
       } catch (error) {
         this.$message.error(error instanceof Error ? error.message : String(error))
       }
@@ -255,47 +244,6 @@ hover {
   width: 200px;
   height: 25px;
   color: #2e3035;
-}
-.appBox .dbox {
-  display: inline-block;
-  margin-left: 40px;
-  width: 240px;
-  height: 99px;
-  background: #fafafa;
-  border-radius: 4px;
-  vertical-align: middle;
-  text-align: center;
-}
-.appBox .dbox .comingsoon {
-  margin-top: 38px;
-  margin-left: 10px;
-  font-weight: 500;
-  font-size: 13px;
-  width: 200px;
-  height: 25px;
-  color: #979797;
-  vertical-align: middle;
-  text-align: center;
-}
-.appBox .dbox .leftLine {
-  margin-top: 38px;
-  font-size: 10px;
-  line-height: 90px;
-  width: 15px;
-  height: 0.5px;
-  color: #979797;
-  vertical-align: middle;
-  text-align: center;
-}
-.appBox .dbox .rightLine {
-  margin-top: 38px;
-  margin-left: 10px;
-  font-size: 10px;
-  width: 15px;
-  height: 0.5px;
-  color: #979797;
-  vertical-align: middle;
-  text-align: center;
 }
 </style>
 <style scoped src="../styles/retry.css"></style>

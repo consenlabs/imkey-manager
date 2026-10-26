@@ -18,7 +18,6 @@ export const m = {
       'The device stopped responding and the operation did not complete. Check the device and retry, or return to the connection page.',
     recovery_pending:
       'The previous device service has not exited yet. Retry shortly, or return to the connection page.',
-    operation_failed: 'The operation failed. Please retry.',
     stage_connect: 'Device connection',
     stage_check: 'Version check',
     stage_app: 'Application management',
@@ -48,7 +47,6 @@ export const m = {
     check_firmware_version_update: 'Check firmware version',
     check_device_bind_code: 'Check the device binding code',
     check_pin_wallet: 'Check PIN code and wallet',
-    usb_connect_error: 'usb connection error',
     connection_incomplete: 'Device connection incomplete',
     connection_check_failed:
       'Device checks failed. Please retry. If the problem persists, keep the error details and contact imKey support.',
@@ -92,10 +90,8 @@ export const m = {
     same_imKey_bind_different_PC_used_same_bind_code:
       'If the same imKey Pro is bound on different PCs, the same binding code will be used',
     next: 'Next',
-    // enter_bind_code: 'Please Input a Binding Code',
     enter_bind_code_for_use_on_the_current_device:
       'Please enter the device binding code to use it on the current device',
-    // bind_code_error_please_check:'Binding code error, please check carefully, or reset imKey by importing the mnemonic phrase to retrieve it',
 
     setting_pin: 'Set PIN Code',
     disconnect_usb_use_imKey_setting: 'Please disconnect the USB and use imKey to set up',
@@ -103,7 +99,6 @@ export const m = {
     setting_6_8_bit_pin: 'Set up the PIN code with 6 to 8 digits',
     do_not_enter_the_same_or_consecutive_pin:
       'Do not enter a PIN code of the same or continuous numbers',
-    // create_restore_Wallet:'Create / Recover Wallet',
     Mnemonic_control_ownership_please_private:
       'Mnemonic equals ownership of wallet assets, please keep it safe',
     Replace_reset_device_use_mnemonic_restore_wallet:
@@ -111,7 +106,6 @@ export const m = {
     Create_restore_wallet_2_minutes_wait: 'Creation/recovery of the wallet takes ~2 minutes',
     choose_create_wallet_mnemonic_never_be_online:
       'Recommended to choose to create a wallet and ensure that the Mnemonic never connects to the network',
-    // complete_setup:'Complete Setup',
     congratulations_complete_setup_final_security_check:
       'Congratulations, you have completed the imKey setup, let’s go to the last security check',
     confirm_pi_code_set_for_me_backup_completed:
@@ -141,13 +135,10 @@ export const m = {
     install: 'Install',
     upgrade: 'Update',
     installed: 'Installed',
-    delete: 'Delete',
     APP_installing_do_not_disconnect_usb:
-      'App is installing, please do not disconnect the USB connection and stop the imKey operation',
-    APP_deleting_do_not_disconnect_usb:
-      'App is deleting, please do not disconnect the USB connection and stop the imKey operation',
+      'Processing installation. Keep USB connected and do not operate imKey.',
     APP_upgrading_do_not_disconnect_usb:
-      'App is upgrading, please do not disconnect the USB connection and stop the imKey operation',
+      'Processing update. Keep USB connected and do not operate imKey.',
     install_uninstall_upgrade_delete_Apps_fail: 'Coin installation/upgrade failed',
     check_usb_or_internet_connect:
       'Please check the USB connection or network connection and try again after confirming that it is normal',
@@ -197,153 +188,7 @@ export const m = {
     wechat: 'WeChat: imKey_Official',
     tokenlon_info: 'Trustless token-to-token decentralized exchange',
     operating_tutorial_url: 'https://imkey.im/get-started?locale=en-us',
-    update_tip_wait: 'After the update, the app will restart. Please be patient',
-    coming_soon: ' Coming Soon ',
-    installing_dot_ksm_coin: 'Please go to the manager page to install the applet DOT and KSM'
-  },
-  appStart: {
-    imKey_manager: 'imKey Manager',
-    your_imKey_manager: 'Your imKey Pro desktop management tool',
-    no_have_imKey_pro: 'Not yet own imKey Pro?',
-    use_now: 'use immediately'
-  },
-  connectDevice: {
-    get_start_imKey: 'Get start with your Pro device',
-    info_connect_imKey: 'Connect the to your Computer',
-    info_click_button: 'Click the connect button',
-    info_enter_pin: 'Enter the PIN code on ',
-    info_if_pin:
-      'If you have not set the pin code of the imKey, you don"t need to enter the pin code on imKey',
-    connect: 'Connect',
-    connect_success: 'connect success',
-    connecting: 'Connecting',
-    check_BL: 'Check BL',
-    upgrading_firmware: 'Upgrading firmware',
-    check_active: 'Check Active',
-    active_success: 'Active Success',
-    check_bind: 'Check Bind',
-    check_create_wallet: 'Check Create Wallet'
-  },
-  step: {
-    connect: 'Connect',
-    active_bind: 'Active&Bind',
-    set_pin_create_wallet: 'Set PIN&Create Wallet'
-  },
-  stepOne: {
-    connect_imKey: 'Connect your imKey'
-  },
-  stepTwo: {
-    active_bind: 'Active&Bind',
-    please_active_bind: 'Please active and bind your imKey',
-    active_imKey: 'Activate your imKey',
-    bind_imKey: 'Bind your imKey',
-    start_active_bind_imKey: 'Start active and bind your imKey',
-    start: 'Start',
-    activating_imKey: 'Activating your imKey',
-    binding_imKey: 'Binding your imKey',
-    bind: 'Bind',
-    bind_code_is_null: 'BindCode is Not Null',
-    bind_code_is_correct: 'BindCode is not in correct format',
-    enter_bind_code: 'enter bind code'
-  },
-  stepThree: {
-    set_pin_create_wallet: 'Set PIN&Create Wallet',
-    please_disconnect: 'Please disconnect the USB ,set PIN and create wallet',
-    set_modify_pin: 'Set and modify PIN code',
-    create_wallet: 'Create or restore wallets',
-    next: 'Next',
-    operation_guide: 'Operation Guide',
-    how_to_set_pin: 'How to set the PIN',
-    set_pin_1:
-      "imKey's PIN code should be 6-8 digits long and should not be a combination of same or continuous numbers.",
-    set_pin_2: 'The shows Set PIN , and you enter the setting procedure.',
-    set_pin_3:
-      'Set the number for every digit, use the up and down buttons to switch among digits, click on OK  to confirm, and click on C  to cancel.',
-    set_pin_4:
-      'Repeat the above process until all digits of the PIN code are selected. (If you want to set a 6-digit PIN code, you can complete the setting by clicking on OK  when the 7th digit shows ✔️ . If you want to set a 7-digit or 8-digit PIN code, you can confirm by switching the ✔️  to numbers.)',
-    set_pin_5: 'Type in the PIN code again to confirm',
-    security_reminders: 'Security reminders',
-    security_info_1:
-      'The PIN code is used to unlock and cannot be recovered if lost. Please keep it safe;',
-    security_info_2: 'The PIN shall not be a combination of same or continuous numbers;',
-    security_info_3:
-      'Please do not use a random PIN code or the PIN code provided by the third-party tools.',
-    how_to_change_PIN: 'How to change the PIN code',
-    change_pin:
-      'Type in the PIN, turn on imKey, click on OK  and enter the setting interface of the wallet. Choose Setting  -> Change the PIN , type in the original PIN to check the identity, and reset the PIN code.',
-    special_notes:
-      'To safeguard the assets in the wallet, if a wrong PIN is typed in five times in a row, will be forced to be reset. Please do remember the PIN code you set, since the PIN code cannot reset or recovered once lost.',
-    create_a_wallet: 'Create a wallet',
-    create_a_wallet_1:
-      'According to the prompt message on the screen, press the Previous/Next button to select Recover Wallet, and click OK.',
-    create_a_wallet_2: 'View the tips then click on OK to continue',
-    create_a_wallet_3: 'Accurately transcribe words in the correct order',
-    create_a_wallet_4:
-      'Repeat this process until 12 words of the Mnemonic phrase are all backed up. (The Mnemonic is the only way to recover your wallet. Please keep it offline and properly safe.)',
-    create_a_wallet_5: 'Next, displays Please confirm your Mnemonic',
-    create_a_wallet_6:
-      'Enter the correct word with Previous and Next buttons, click on  OK  to confirm',
-    create_a_wallet_7: 'Repeat this process until 12 words of the Mnemonic phrase are all verified',
-    create_a_wallet_8:
-      'After the verification is completed, will display  Creating wallet,  estimated 2 min.  ',
-    recover_wallet: 'Recover wallet',
-    recover_wallet_1:
-      'According to the prompt message on the screen, press the Previous/Next button to select Recover Wallet, and click OK.',
-    recover_wallet_2:
-      'Input the Mnemonic words. At present, supports the import of 12-, 18-, or 24-word Mnemonics.',
-    recover_wallet_3:
-      'Press the Up/Down button to switch letters. Press OK to confirm letter selection and C to cancel letter selection.',
-    recover_wallet_4:
-      'Repeat this operation until displays all available words. Press the Up/Down button to move the cursor. Press OK to select the desired word. (The BIP39 word base contains 2,048 different words. As long as you enter several beginning letters, all candidate words can be displayed and available for selection.)',
-    recover_wallet_5:
-      'After the Mnemonic import is completed, click OK. will display Recovering wallet,  estimated 2 min',
-    recover_wallet_6: 'It can be used after the import is completed.'
-  },
-  home: {
-    buy_now: 'Get your own imKey',
-    use_imToken_to_buy: 'Please use the imToken scan code to buy',
-    use_WeChat_AliPay_to_buy: 'Please use the WeChat / Alipay scan code to buy',
-    WeChat_AliPay: 'WeChat/AliPay'
-  },
-  connect: {
-    connect_imKey: 'Connect your imKey',
-    follow_steps: 'Follow the steps below to the Manager',
-    connect_imKey_to_computer: 'Connect the  to your Computer',
-    click_connect: 'Click the connect button',
-    enter_pin_imKey: 'Enter the PIN code on your imKey',
-    connect: 'Connect'
-  },
-  manager: {
-    manager: 'Manager',
-    install_uninstall_apps: 'Install or unstall apps on your device',
-    firmware_version: 'firmware version',
-    firmware_is: 'firmware is ',
-    available: 'available',
-    update: 'update',
-    app_catalog: 'App catalog',
-    search_app: 'search app',
-    install: 'install'
-  },
-  setting: {
-    info: 'info',
-    is_update: 'Do you want to update ？',
-    cancel: 'Cancel',
-    ok: 'Ok',
-    is_quit_update: 'Exit update now ？',
-    setting: 'Setting',
-    setting_imKey_manager: 'Setting imKey-manager',
-    need_help: 'Need Help?',
-    imKey_manager_version: 'imKey-manager version',
-    imKey_manager_version_is: 'imKey-manager version is ',
-    available: 'available'
-  },
-  menu: {
-    home: 'Home',
-    manager: 'Manager',
-    setting: 'Setting'
-  },
-  noticeDialog: {
-    info: 'info'
+    update_tip_wait: 'After the update, the app will restart. Please be patient'
   },
   imKeyCoreErrorInfo: {
     operation_failed: 'The operation failed. Please retry.',

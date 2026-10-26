@@ -42,11 +42,6 @@
 <script>
 export default {
   name: 'appStart',
-  data() {
-    return {
-      connectText: this.$t('m.imKeyManager.use_now')
-    }
-  },
   mounted() {
     this.noScroll()
   },

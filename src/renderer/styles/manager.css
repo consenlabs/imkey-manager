@@ -55,8 +55,7 @@
 }
 
 .container :deep(.alert2 h5),
-.container :deep(.alert3 h5),
-.container :deep(.alert5 h5) {
+.container :deep(.alert3 h5) {
   font-weight: 500;
   font-size: 15px;
   color: #2c2842;
@@ -64,8 +63,7 @@
 }
 
 .container :deep(.alert2 p),
-.container :deep(.alert3 p),
-.container :deep(.alert5 p) {
+.container :deep(.alert3 p) {
   font-weight: 300;
   font-size: 13px;
   color: #2c2842;
@@ -75,8 +73,7 @@
 }
 
 .container :deep(.alert2 button),
-.container :deep(.alert3 button),
-.container :deep(.alert5 button) {
+.container :deep(.alert3 button) {
   width: 90px;
   height: 36px;
   background: #2e3035;

@@ -6,9 +6,6 @@ import { useConnection } from '../../src/renderer/composables/useConnection'
 const mocks = vi.hoisted(() => ({ call: vi.fn(), push: vi.fn(), offer: vi.fn() }))
 vi.mock('../../src/renderer/device', () => ({ callDevice: mocks.call }))
 vi.mock('vue-router', () => ({ useRouter: () => ({ push: mocks.push }) }))
-vi.mock('../../src/renderer/composables/useTranslation', () => ({
-  useTranslation: () => ({ t: (key: string) => key })
-}))
 vi.mock('../../src/renderer/composables/useDeviceRecovery', () => ({
   useDeviceRecovery: () => ({ offer: mocks.offer })
 }))

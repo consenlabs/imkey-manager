@@ -49,6 +49,9 @@ describe('main window IPC policy', () => {
       'ethSign',
       'signTransaction',
       'getBTCAddress',
+      'getETHAddress',
+      'getDOTAddress',
+      'getKSMAddress',
       'genWalletAddress',
       null
     ])

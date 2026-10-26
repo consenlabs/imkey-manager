@@ -47,6 +47,9 @@ window.imkey.updater.onProgress(cb: (value: unknown) => void): () => void
 连接和完成设置中的钱包检查仅确认设备绑定与钱包就绪，不再预取 ETH、DOT、KSM 地址或缓存钱包地址。
 `getBTCXpub` 先执行 `bind_check`，仅当前电脑已绑定（`bound_this`）时读取 xpub；钱包未就绪或绑定失败不能进入首页。
 应用安装和固件升级后的 `writeWalletAddress` 地址注册、恢复流程保持独立。
+恢复列表按 connector 的原始名称校验（包括 `Nervos`、`Tezos`、`Bitcoin Cash` 和 `IMK`），不使用展示名或大写别名。合法列表与实际已启用注册的链集合分开维护；未启用项继续沿用跳过策略。
+点击安装或升级时立即进入处理中状态，覆盖排队和前置设备检查；只有安装和后续地址注册均成功才更新已安装状态，失败后恢复操作入口。
+底层 `DeviceApi.registerAddress` 只发送 `register_address`；已移除独立 `get_address` 分支，不再为旧地址预取保留实现。
 
 ## connector 与绑定码
 
@@ -59,6 +62,7 @@ window.imkey.updater.onProgress(cb: (value: unknown) => void): () => void
 ## 回归证据
 
 `test/fixtures/golden-api.json` 在修改旧 API 前采集，固定旧实现的请求 hex 与响应解析结果。单测用它逐字节检查新 protobuf 编解码，并明确断言约定的缺陷修复差异。旧 API、worker 和临时生成器已清理；该 fixture 是历史基线，不能声称可从当前源码重新生成。
+已删除地址预取方法的历史记录保留在 fixture 中，但不再由测试重新执行；现存地址注册仍逐字节对照原记录。
 
 Vitest 同时覆盖绑定码三种格式与迁移、写失败、非主窗口/非法方法拒绝、并发响应关联、FIFO、服务异常退出与重启、打包 mock 禁用、有限 preload 订阅，以及无 8081/DApp/签名入口。Playwright 在真实 Electron 中使用 mock 验证页面流程；真实 connector 冒烟验证 utilityProcess 可以加载本机原生库并返回无设备错误。这些验证不等同于真机固件升级或跨平台签名验收。
 
