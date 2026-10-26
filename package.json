@@ -14,7 +14,7 @@
     "lint": "eslint src/main src/preload src/service src/shared src/renderer src/common test --ext .ts,.js,.vue && prettier --check src test --ignore-unknown",
     "test:security": "vitest run test/security",
     "test:connector": "electron-vite build && electron scripts/connector-smoke.cjs",
-    "postinstall": "electron-builder install-app-deps",
+    "postinstall": "install-electron && electron-builder install-app-deps",
     "test:e2e": "electron-vite build && playwright test",
     "verify:connector": "node scripts/verify-connector.mjs",
     "gen:proto": "node scripts/gen-proto.mjs",

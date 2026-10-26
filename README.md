@@ -8,6 +8,8 @@ imKey 桌面设备管理工具，保留设备连接、绑定、钱包初始化�
 
 使用 npm 与仓库中的 `package-lock.json`。Node 范围以 `package.json#engines` 为准：`^22.12.0 || ^24.0.0 || >=26.0.0`，即 Node 22.12 起的 22.x、24.x 或 26 及以上版本。使用受支持的 Node 版本。
 
+仓库的 `.nvmrc` 固定开发版本为 Node `22.21.0`。已安装 nvm 时，先运行 `nvm install && nvm use`，再执行下面的安装与启动命令。平台依赖、验证步骤和 macOS 启动排障见[开发环境说明](docs/development.md)。
+
 开发运行需要项目根目录中与平台匹配的 `connector.dylib` 或 `connector.dll`，以及由维护者配置的 `key.env`。不要把密钥文件写入日志或提交到仓库。
 
 ```sh
@@ -21,7 +23,7 @@ Electron 固定为 `43.7.9`：重构时最新稳定版 `44.7.0` 未提供 Window
 
 | 命令 | 用途 |
 | --- | --- |
-| `npm ci` | 按锁文件安装；postinstall 仅安装应用原生依赖，不改写源码 |
+| `npm ci` | 按锁文件安装；postinstall 安装 Electron 运行时与应用原生依赖，不改写源码 |
 | `npm run dev` | electron-vite 开发环境与界面 HMR |
 | `npm run build` | 校验 connector（不匹配仅警告）、构建 `out/` 并通过 electron-builder 打包 |
 | `npm run build:dir` | 构建并生成未制作安装器的应用目录 |
