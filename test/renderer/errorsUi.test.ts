@@ -159,15 +159,19 @@ describe('settings and setup do not silently stop', () => {
     expect(settings.state.errorStage).toBe('connect')
     expect(settings.state.status).toBe(2)
   })
-  it('shows binding-code read failure in settings', async () => {
+  it('shows binding-code read failure only when explicitly exporting from settings', async () => {
     mocks.call.mockImplementation(async method =>
-      method === 'connectDevice'
-        ? { isSuccess: true, result: 'success' }
-        : { isSuccess: false, result: 'bind_file_unreadable' }
+      method === 'exportBindCode'
+        ? { isSuccess: false, result: 'bind_file_unreadable' }
+        : { isSuccess: true, result: 'success' }
     )
     const settings = useSettings()
     await settings.init()
+    expect(settings.state.status).toBe(1)
+    expect(mocks.call.mock.calls.some(([method]) => method === 'exportBindCode')).toBe(false)
+    await settings.exportBindCode()
     expect(settings.state.errorInfo).toBe('bind_file_unreadable')
+    expect(settings.state.errorStage).toBe('store')
     expect(settings.state.status).toBe(2)
   })
   it('shows activation failure and retries setup initialization', async () => {
@@ -223,7 +227,7 @@ it('connection restoration awaits its continuation before finishing', async () =
   await recovery
   expect(finished).toBe(true)
 })
-it('settings firmware read failures exit the loading state into the error dialog', async () => {
+it('settings metadata read failures do not imply a firmware update check', async () => {
   mocks.call.mockImplementation(async method =>
     method === 'getFirmwareVersion'
       ? { isSuccess: false, result: 'get_firmware_version_error' }
@@ -232,8 +236,12 @@ it('settings firmware read failures exit the loading state into the error dialog
   const settings = useSettings()
   await settings.init()
   expect(settings.state.status).toBe(1)
-  expect(settings.firmware.state.supportCode).toBe(5)
-  expect(settings.firmware.state.errorInfo).toBe('get_firmware_version_error')
+  expect(settings.state.initializing).toBe(false)
+  expect(settings.state.checkingUpdate).toBe(false)
+  expect(settings.state.firmwareChecked).toBe(false)
+  expect(settings.state.errorInfo).toBe('get_firmware_version_error')
+  expect(mocks.call.mock.calls.some(([method]) => method === 'cosCheckUpdate')).toBe(false)
+  expect(bridge.app.isOnline).not.toHaveBeenCalled()
 })
 it('setup wallet readiness failures stay on the setup page and support retry', async () => {
   mocks.call.mockImplementation(async method =>

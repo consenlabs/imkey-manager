@@ -114,3 +114,43 @@ it('invalidates stale verification and ends identity checking when the identity 
   expect(device.cosOldVersionData).toBe('')
   expect(device.isCosUpdate).toBe(false)
 })
+
+it('keeps confirmed information visible while a business identity check is pending', async () => {
+  const device = useDeviceStore()
+  device.connectedSeid = 'SEID-A'
+  device.identityReady = true
+  let release!: (value: DeviceResult) => void
+  call.mockImplementationOnce(
+    () =>
+      new Promise(resolve => {
+        release = resolve
+      })
+  )
+  const pending = refreshDeviceIdentity(call as typeof callDevice, device, () => true, {
+    hideCachedData: false
+  })
+  expect(device.identityReady).toBe(true)
+  expect(device.identityChecking).toBe(false)
+  release({ isSuccess: true, result: 'success' })
+  expect(await pending).toEqual({ isSuccess: true, result: 'success' })
+  expect(device.identityReady).toBe(true)
+})
+
+it('still invalidates confirmed data when a business identity check finds a replacement', async () => {
+  const device = useDeviceStore()
+  device.connectedSeid = 'SEID-B'
+  device.identityReady = true
+  device.verification = {
+    status: 'success',
+    activationStatus: true,
+    activatedAt: '2024-01-01',
+    errorInfo: ''
+  }
+  expect(
+    await refreshDeviceIdentity(call as typeof callDevice, device, () => true, {
+      hideCachedData: false
+    })
+  ).toMatchObject({ isSuccess: false, result: 'device_session_changed' })
+  expect(device.identityReady).toBe(false)
+  expect(device.verification.status).toBe('idle')
+})

@@ -1,9 +1,9 @@
 {
   "sourceRepository": "imkey-core",
   "sourceBaseCommit": "80ddae20a2ece117bd443803e9bc6d5de519e575",
-  "sourcePatchSha256": "5bf88d443168ee98ebe7c714d0f4c47b8b322a4bae2721b00f10a45d38e0c5b2",
+  "sourcePatchSha256": "a93cc65bc531927fb591812b76976b1ad9244875904c8b96fe0adedc852b7bf0",
   "sourceProtoSha256": "47d93817291f1dc84d56709560fd81bf1202fc925401cf27822067c8aaab6cd3",
-  "artifactSha256": "832f6945936a403fc21af814579707331e0565b73239c4393a4d35cdcc0e9e55",
+  "artifactSha256": "f603f65ca4bfdd4e43cfad2df606f8d2ec61dfbd856e3078b823c5657a71f5c2",
   "rustToolchain": "nightly-2023-06-15-aarch64-apple-darwin",
   "cargoLockSha256": "cfae821e5d1becc0357c0e75dbe5cc545c936c3df7d00b795ed805d379d9778a",
   "targets": [
@@ -14,6 +14,6 @@
     "x86_64": "10.9",
     "arm64": "11.0"
   },
-  "tests": "cargo +nightly-2023-06-15 test --locked -p device device_sn_check::tests: 8 passed",
-  "notes": "Original locked dependencies unchanged. For arm64-host to x86_64 cross-build, fff 0.2.3 build.rs skips its assembly. Its unchanged registry asm/mul_4.S was compiled using clang -target x86_64-apple-macos10.9 -c, archived into libff-derive-crypto.a, and provided by CARGO_TARGET_X86_64_APPLE_DARWIN_RUSTFLAGS=-L native=/private/tmp/imkey-core-sn-fff. No registry source was modified. MACOSX_DEPLOYMENT_TARGET was set per target. lipo merged both targets; install_name_tool set @rpath/connector.dylib; codesign --sign - matched existing local adhoc signature. Native library loaded offline via ctypes, public FFI symbols resolved; no device or server request executed."
+  "tests": "cargo +nightly-2023-06-15 test --locked --offline -p device upgrade_identity::tests: 6 passed; device_sn_check::tests: 8 passed",
+  "notes": "Original locked dependencies unchanged. For arm64-host to x86_64 cross-build, fff 0.2.3 build.rs skips its assembly. Its unchanged registry asm/mul_4.S was compiled using clang -target x86_64-apple-macos10.9 -c, archived into libff-derive-crypto.a, and provided by CARGO_TARGET_X86_64_APPLE_DARWIN_RUSTFLAGS=-L native=/private/tmp/imkey-core-sn-fff. No registry source was modified. MACOSX_DEPLOYMENT_TARGET was set per target. lipo merged both targets; install_name_tool set @rpath/connector.dylib; codesign --sign - matched existing local adhoc signature. Native library loaded offline via ctypes, public FFI symbols resolved; no device or server request executed. Added read-only get_upgrade_seid using the existing GetSeidRes response: normal firmware reads get_se_id, bootloader parses the certificate SEID as cos_upgrade does. Both are returned in uppercase after format validation. cos_update and connection recovery remain unchanged. Offline FFI calls to get_upgrade_seid and device_sn_check returned device_connect_interface_not_called without connecting to USB or a server."
 }

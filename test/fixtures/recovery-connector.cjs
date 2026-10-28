@@ -58,9 +58,9 @@ module.exports = {
       }
       return fail(method, fault.error || 'device_not_connected')
     }
-    if (method === 'get_seid' || method === 'get_sn') {
+    if (method === 'get_seid' || method === 'get_upgrade_seid' || method === 'get_sn') {
       record(method)
-      return method === 'get_seid'
+      return method !== 'get_sn'
         ? response(device, 'GetSeidRes', 'setSeid', control.seid || 'E2ESEID')
         : response(device, 'GetSnRes', 'setSn', control.sn || 'SN123')
     }

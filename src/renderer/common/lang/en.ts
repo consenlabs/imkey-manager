@@ -1,5 +1,8 @@
 // en-US
+import { getExternalLinks } from '../../../shared/externalLinks'
+const links = getExternalLinks('en-US')
 export const m = {
+  links,
   devicePages: {
     nav_device: 'Device',
     nav_apps: 'Apps',
@@ -20,7 +23,6 @@ export const m = {
     more_device_information: 'View more device information',
     verify_device: 'Verify device',
     verifying: 'Verifying…',
-    identifying: 'Identifying device…',
     verification_scope:
       'Authenticity verification checks the device’s identity. It does not check the integrity of all device hardware.',
     learn_more: 'Learn more',
@@ -54,12 +56,11 @@ export const m = {
     retry: 'Retry',
     recovery_title: 'Operation incomplete',
     return_to_connection: 'Back to connection',
-    continue_current_step: 'Continue this step',
+    device_changed_title: 'Device changed',
     recovery_message: 'Check the device and network, then retry or return to the connection page.',
-    recovery_device_changed:
-      'The device or its binding has changed. Return to the connection page to identify and bind it again.',
+    recovery_device_changed: 'The device or its binding has changed. Please reconnect the device.',
     recovery_restart_required:
-      'Device binding is incomplete. Continue this step or return to the connection page to start again.',
+      'Device binding is incomplete. Return to the connection page to start again.',
     recovery_timeout:
       'The device stopped responding and the operation did not complete. Check the device and retry, or return to the connection page.',
     recovery_pending:
@@ -233,7 +234,7 @@ export const m = {
     email: "Email: support{'@'}imkey.im",
     wechat: 'WeChat: imKey_Official',
     tokenlon_info: 'Trustless token-to-token decentralized exchange',
-    operating_tutorial_url: 'https://imkey.im/get-started?locale=en-us',
+    operating_tutorial_url: links.quick_start,
     update_tip_wait: 'After the update, the app will restart. Please be patient'
   },
   imKeyCoreErrorInfo: {

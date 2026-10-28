@@ -44,3 +44,34 @@
   outline: 2px solid #8189a7;
   outline-offset: 4px;
 }
+
+/* Match the connection page's existing notice cards and single confirmation button. */
+.device-changed-overlay {
+  background: rgba(0, 0, 0, 0.2);
+}
+.device-changed-dialog {
+  width: 488px;
+  padding: 40px 44px 30px;
+  text-align: center;
+}
+.device-changed-dialog .el-message-box__header {
+  padding: 0;
+}
+.device-changed-dialog .el-message-box__title {
+  font-size: 15px;
+  line-height: 30px;
+}
+.device-changed-dialog .el-message-box__message {
+  color: #2c2842;
+  font-weight: 300;
+}
+.device-changed-dialog .el-message-box__btns {
+  justify-content: center;
+  padding-top: 30px;
+}
+.device-changed-dialog .el-message-box__btns .el-button {
+  min-width: 90px;
+  height: 36px;
+  border-radius: 26.5px;
+  box-shadow: 0 2px 20px rgba(137, 101, 172, 0.30772);
+}

@@ -1,8 +1,7 @@
 diff --git a/api/src/device_manager.rs b/api/src/device_manager.rs
-index 7ab6dbb..61d6fad 100644
 --- a/api/src/device_manager.rs
 +++ b/api/src/device_manager.rs
-@@ -10,9 +10,9 @@ use device::device_manager;
+@@ -10,9 +10,9 @@
  use device::deviceapi::{
      AppDeleteReq, AppDownloadReq, AppDownloadRes, AppUpdateReq, AppUpdateRes, AvailableAppBean,
      BindAcquireReq, BindAcquireRes, BindCheckRes, BleCheckUpdateRes, CheckUpdateRes,
@@ -15,7 +14,7 @@ index 7ab6dbb..61d6fad 100644
  };
  use parking_lot::RwLock;
  use prost::Message;
-@@ -152,6 +152,22 @@ pub fn check_update() -> Result<Vec<u8>> {
+@@ -152,6 +152,22 @@
      encode_message(response_msg)
  }
  
@@ -38,11 +37,22 @@ index 7ab6dbb..61d6fad 100644
  pub fn se_secure_check() -> Result<Vec<u8>> {
      device_manager::check_device()?;
      encode_message(CommonResponse {
+@@ -180,6 +196,11 @@
+     let bind_result = device_manager::bind_acquire(&bind_acquire.bind_code)?;
+     let response_msg = BindAcquireRes { bind_result };
+     encode_message(response_msg)
++}
++
++pub fn get_upgrade_seid() -> Result<Vec<u8>> {
++    let seid = device::upgrade_identity::get_upgrade_seid()?;
++    encode_message(GetSeidRes { seid })
+ }
+ 
+ pub fn get_seid() -> Result<Vec<u8>> {
 diff --git a/api/src/lib.rs b/api/src/lib.rs
-index c4956bd..f54eb48 100644
 --- a/api/src/lib.rs
 +++ b/api/src/lib.rs
-@@ -105,6 +105,7 @@ pub unsafe extern "C" fn call_imkey_api(hex_str: *const c_char) -> *const c_char
+@@ -105,10 +105,12 @@
          "device_activate" => landingpad(|| device_manager::se_activate()),
          "check_update" => landingpad(|| device_manager::check_update()),
          "device_secure_check" => landingpad(|| device_manager::se_secure_check()),
@@ -50,11 +60,15 @@ index c4956bd..f54eb48 100644
          "bind_check" => landingpad(|| device_manager::bind_check()),
          "bind_display_code" => landingpad(|| device_manager::bind_display_code()),
          "bind_acquire" => landingpad(|| device_manager::bind_acquire(&action.param.unwrap().value)),
+         "get_seid" => landingpad(|| device_manager::get_seid()),
++        "get_upgrade_seid" => landingpad(|| device_manager::get_upgrade_seid()),
+         "get_sn" => landingpad(|| device_manager::get_sn()),
+         "get_ram_size" => landingpad(|| device_manager::get_ram_size()),
+         "get_firmware_version" => landingpad(|| device_manager::get_firmware_version()),
 diff --git a/common/src/constants.rs b/common/src/constants.rs
-index c2f2fda..da24cce 100644
 --- a/common/src/constants.rs
 +++ b/common/src/constants.rs
-@@ -9,6 +9,7 @@ pub const TSM_ACTION_APP_DELETE: &str = "/appDelete";
+@@ -9,6 +9,7 @@
  pub const TSM_ACTION_SE_ACTIVATE: &str = "/seActivate";
  pub const TSM_ACTION_SE_QUERY: &str = "/seInfoQuery";
  pub const TSM_ACTION_AUTHCODE_STORAGE: &str = "/authCodeStorage";
@@ -62,57 +76,8 @@ index c2f2fda..da24cce 100644
  pub const TSM_ACTION_DEVICE_CERT_CHECK: &str = "/deviceCertCheck";
  pub const TSM_ACTION_COS_UPGRADE: &str = "/seCosUpdate";
  pub const TSM_ACTION_COS_CHECK_UPDATE: &str = "/cosCheckUpdate";
-diff --git a/device/src/deviceapi.rs b/device/src/deviceapi.rs
-index 01ea177..b14defa 100644
---- a/device/src/deviceapi.rs
-+++ b/device/src/deviceapi.rs
-@@ -155,3 +155,13 @@ pub struct BleCheckUpdateRes {
-     #[prost(string, tag = "5")]
-     pub description: std::string::String,
- }
-+/// SN registration metadata; authenticity is checked by device_secure_check.
-+#[derive(Clone, PartialEq, ::prost::Message)]
-+pub struct DeviceSnCheckRes {
-+    #[prost(bool, tag = "1")]
-+    pub sn_check_result: bool,
-+    #[prost(bool, tag = "2")]
-+    pub is_activate: bool,
-+    #[prost(string, tag = "3")]
-+    pub activate_time: std::string::String,
-+}
-diff --git a/device/src/lib.rs b/device/src/lib.rs
-index 0b19039..6f74d0d 100644
---- a/device/src/lib.rs
-+++ b/device/src/lib.rs
-@@ -4,6 +4,7 @@ pub mod app_update;
- pub mod auth_code_storage;
- pub mod device_binding;
- pub mod device_cert_check;
-+pub mod device_sn_check;
- pub mod se_activate;
- pub mod se_query;
- pub mod se_secure_check;
-diff --git a/proto/src/device.proto b/proto/src/device.proto
-index 87d9c45..d85e682 100644
---- a/proto/src/device.proto
-+++ b/proto/src/device.proto
-@@ -114,4 +114,11 @@ message BleCheckUpdateRes {
-     bool is_latest = 2;
-     string latest_cos_version = 3;
-     string description = 5;
--}
-\ No newline at end of file
-+}
-+
-+// SN registration metadata; authenticity is checked by device_secure_check.
-+message DeviceSnCheckRes {
-+    bool sn_check_result = 1;
-+    bool is_activate = 2;
-+    string activate_time = 3;
-+}
 diff --git a/device/src/device_sn_check.rs b/device/src/device_sn_check.rs
 new file mode 100644
-index 0000000..9837d8f
 --- /dev/null
 +++ b/device/src/device_sn_check.rs
 @@ -0,0 +1,283 @@
@@ -398,4 +363,168 @@ index 0000000..9837d8f
 +        assert!(valid_date("2000-02-29"));
 +        assert!(valid_date("2024-12-31"));
 +    }
++}
+diff --git a/device/src/deviceapi.rs b/device/src/deviceapi.rs
+--- a/device/src/deviceapi.rs
++++ b/device/src/deviceapi.rs
+@@ -155,3 +155,13 @@
+     #[prost(string, tag = "5")]
+     pub description: std::string::String,
+ }
++/// SN registration metadata; authenticity is checked by device_secure_check.
++#[derive(Clone, PartialEq, ::prost::Message)]
++pub struct DeviceSnCheckRes {
++    #[prost(bool, tag = "1")]
++    pub sn_check_result: bool,
++    #[prost(bool, tag = "2")]
++    pub is_activate: bool,
++    #[prost(string, tag = "3")]
++    pub activate_time: std::string::String,
++}
+diff --git a/device/src/lib.rs b/device/src/lib.rs
+--- a/device/src/lib.rs
++++ b/device/src/lib.rs
+@@ -4,12 +4,14 @@
+ pub mod auth_code_storage;
+ pub mod device_binding;
+ pub mod device_cert_check;
++pub mod device_sn_check;
+ pub mod se_activate;
+ pub mod se_query;
+ pub mod se_secure_check;
+ extern crate common;
+ pub mod cos_upgrade;
+ pub mod device_manager;
++pub mod upgrade_identity;
+ pub mod deviceapi;
+ pub mod key_manager;
+ #[macro_use]
+diff --git a/device/src/upgrade_identity.rs b/device/src/upgrade_identity.rs
+new file mode 100644
+--- /dev/null
++++ b/device/src/upgrade_identity.rs
+@@ -0,0 +1,107 @@
++//! Read-only identity lookup for normal firmware and interrupted COS upgrades.
++use crate::device_manager::{get_cert, get_se_id};
++use crate::Result;
++
++pub fn get_upgrade_seid() -> Result<String> {
++    read_upgrade_seid(get_cert, get_se_id)
++}
++
++fn read_upgrade_seid<C, S>(read_cert: C, read_seid: S) -> Result<String>
++where
++    C: FnOnce() -> Result<String>,
++    S: FnOnce() -> Result<String>,
++{
++    let cert = read_cert()?;
++    if cert.len() < 4 || cert.len() % 2 != 0 || !cert.bytes().all(|b| b.is_ascii_hexdigit()) {
++        return Err(format_err!("get_upgrade_seid_invalid_certificate"));
++    }
++    // Match cos_upgrade's certificate branches without starting an upgrade.
++    let seid = if cert[..4].eq_ignore_ascii_case("bf21") {
++        read_seid()?
++    } else if cert[..4].eq_ignore_ascii_case("7f21") && cert.len() >= 44 {
++        cert[12..44].to_owned()
++    } else {
++        return Err(format_err!("get_upgrade_seid_invalid_certificate"));
++    };
++    if seid.len() != 32 || !seid.bytes().all(|b| b.is_ascii_hexdigit()) {
++        return Err(format_err!("get_upgrade_seid_invalid_response"));
++    }
++    Ok(seid.to_ascii_uppercase())
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    const SEID: &str = "00112233445566778899aabbccddeeff";
++
++    #[test]
++    fn normal_certificate_reads_seid() {
++        for prefix in &["bf21", "BF21"] {
++            let result = read_upgrade_seid(|| Ok(prefix.to_string()), || Ok(SEID.to_string()));
++            assert_eq!(result.unwrap(), SEID.to_ascii_uppercase());
++        }
++    }
++
++    #[test]
++    fn bootloader_certificate_does_not_read_normal_seid() {
++        for prefix in &["7f21", "7F21"] {
++            let cert = format!("{}00000000{}abcd", prefix, SEID);
++            let result = read_upgrade_seid(|| Ok(cert), || panic!("normal SEID unavailable in BL"));
++            assert_eq!(result.unwrap(), SEID.to_ascii_uppercase());
++        }
++    }
++
++    #[test]
++    fn invalid_certificates_fail_without_normal_seid_read() {
++        for cert in &[
++            "",
++            "7f21",
++            "7f2100000000001122",
++            "7f210000000000112233445566778899aabbccddeef",
++            "7f210000000000112233445566778899aabbccddeeg",
++            "7f210000000000112233445566778899aabbccddeeé",
++            "aa210000000000112233445566778899aabbccddeeff",
++        ] {
++            let result =
++                read_upgrade_seid(|| Ok(cert.to_string()), || panic!("invalid certificate"));
++            assert_eq!(
++                result.unwrap_err().to_string(),
++                "get_upgrade_seid_invalid_certificate"
++            );
++        }
++    }
++
++    #[test]
++    fn invalid_normal_seid_is_rejected() {
++        for seid in &[
++            "",
++            "0011",
++            "00112233445566778899aabbccddeefg",
++            "00112233445566778899aabbccddeeff00",
++        ] {
++            let result = read_upgrade_seid(|| Ok("bf21".to_string()), || Ok(seid.to_string()));
++            assert_eq!(
++                result.unwrap_err().to_string(),
++                "get_upgrade_seid_invalid_response"
++            );
++        }
++    }
++
++    #[test]
++    fn certificate_read_error_is_preserved() {
++        let result = read_upgrade_seid(
++            || Err(format_err!("device_not_connected")),
++            || panic!("certificate failed"),
++        );
++        assert_eq!(result.unwrap_err().to_string(), "device_not_connected");
++    }
++
++    #[test]
++    fn normal_seid_read_error_is_preserved() {
++        let result = read_upgrade_seid(
++            || Ok("bf21".to_string()),
++            || Err(format_err!("get_seid_error")),
++        );
++        assert_eq!(result.unwrap_err().to_string(), "get_seid_error");
++    }
++}
+diff --git a/proto/src/device.proto b/proto/src/device.proto
+--- a/proto/src/device.proto
++++ b/proto/src/device.proto
+@@ -114,4 +114,11 @@
+     bool is_latest = 2;
+     string latest_cos_version = 3;
+     string description = 5;
+-}
+\ No newline at end of file
++}
++
++// SN registration metadata; authenticity is checked by device_secure_check.
++message DeviceSnCheckRes {
++    bool sn_check_result = 1;
++    bool is_activate = 2;
++    string activate_time = 3;
 +}

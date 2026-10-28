@@ -111,6 +111,23 @@ async function recoverToConnection(): Promise<void> {
   await expect(page.locator('.device-recovery-dialog')).not.toBeVisible()
 }
 
+async function acknowledgeDeviceChanged(): Promise<void> {
+  await expect(page.locator('.connectDevice')).toHaveCount(0)
+  const dialog = page.locator('.device-changed-dialog')
+  await expect(dialog).toContainText('Device changed')
+  await expect(dialog).toContainText(
+    'The device or its binding has changed. Please reconnect the device.'
+  )
+  await expect(dialog.getByRole('button')).toHaveCount(1)
+  await expect(dialog.getByRole('button', { name: /continue|retry|cancel|close/i })).toHaveCount(0)
+  await expect(dialog.locator('.el-message-box__headerbtn')).toHaveCount(0)
+  await dialog.getByRole('button', { name: 'Confirm', exact: true }).click()
+  await expect(dialog).not.toBeVisible()
+  await expect(page.locator('.connectDevice')).toBeVisible()
+  await expect(page.locator('.homeBox')).toHaveCount(0)
+  await expect(page.locator('.setKeyPage')).toHaveCount(0)
+}
+
 async function retryRecovery(): Promise<void> {
   const dialog = page.locator('.device-recovery-dialog')
   await expect(dialog).toBeVisible()
@@ -147,7 +164,8 @@ for (const step of [2, 3, 4] as const) {
       await expect(page.locator('.set2 .codeTit')).toBeVisible()
       await page.locator('.set2 .nextBtn').click()
     } else await page.locator(`.set${step} .nextBtn`).click()
-    await recoverToConnection()
+    if (step === 2) await recoverToConnection()
+    else await acknowledgeDeviceChanged()
     await connect()
     await expect(page.locator('.set1 .nextBtn')).toBeEnabled()
     expect((await calls()).filter(method => method === 'bind_display_code')).toHaveLength(2)
@@ -197,7 +215,7 @@ for (const replacement of ['reset', 'different-device'] as const) {
     })
     expect(await calls()).toEqual(before)
     await page.locator('.routerBar li').nth(1).click()
-    await recoverToConnection()
+    await acknowledgeDeviceChanged()
     expect(await calls()).not.toContain('app_download')
     await connect()
     await expect(page.locator('.set1 .nextBtn')).toBeEnabled()
@@ -254,6 +272,11 @@ for (const fileState of ['deleted', 'corrupted'] as const) {
       if (fileState === 'deleted') await rm(file)
       else await writeFile(file, '{invalid-json')
       await page.locator('.routerBar li').nth(tab).click()
+      if (tab === 2) {
+        await expect(page.getByTestId('device-info-card')).toContainText('SN123')
+        await expect(page.locator('.device-recovery-dialog')).not.toBeVisible()
+        await page.locator('.exportBindCode').click()
+      }
       await recoverToConnection()
       await connect()
       await expect(page.locator('.tip5 input')).toHaveCount(8)

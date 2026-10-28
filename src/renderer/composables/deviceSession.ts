@@ -24,16 +24,21 @@ export function isSessionRecoveryError(error: unknown): boolean {
 export async function connectDeviceSession(
   call: typeof callDevice,
   device: Session,
-  { requireBinding = true }: { requireBinding?: boolean } = {}
+  {
+    requireBinding = true,
+    firmwareRecovery = false
+  }: { requireBinding?: boolean; firmwareRecovery?: boolean } = {}
 ): Promise<DeviceResult<string>> {
+  if (firmwareRecovery && !device.connectedSeid)
+    return { isSuccess: false, result: 'device_session_changed' }
   const connected = await call('connectDevice')
   if (!connected.isSuccess) return connected
   if (connected.result !== constants.RESULT_STATUS_SUCCESS)
     return { isSuccess: false, result: connected.result || 'device_not_connected' }
-  const identity = await call('getSeid')
+  const identity = await call(firmwareRecovery ? 'getUpgradeSeid' : 'getSeid')
   if (!identity.isSuccess) return identity
   if (!identity.result) return { isSuccess: false, result: 'get_seid_error' }
-  if (device.connectedSeid && device.connectedSeid !== identity.result)
+  if (device.connectedSeid && device.connectedSeid.toUpperCase() !== identity.result.toUpperCase())
     return { isSuccess: false, result: 'device_session_changed' }
   if (requireBinding) {
     const binding = await call('deviceBindCheck')

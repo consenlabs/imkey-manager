@@ -8,7 +8,7 @@ import UpdateStatus from '../components/settings/UpdateStatus.vue'
 import { useSettings } from '../composables/useSettings'
 import { useSoftwareUpdate } from '../composables/useSoftwareUpdate'
 const settings = useSettings()
-const { status, SN, copyTooltipDisabled, checkingUpdate } = toRefs(settings.state)
+const { status, SN, copyTooltipDisabled, checkingUpdate, initializing } = toRefs(settings.state)
 const verification = settings.secureCheck
 const {
   supportCode,
@@ -36,6 +36,8 @@ defineExpose({ checkSoftUpdate })
       :firmware-check-failed="settings.firmware.state.cosUpdateStatus === '2'"
       :copy-tooltip-disabled="copyTooltipDisabled"
       :checking-update="checkingUpdate"
+      :firmware-checked="settings.state.firmwareChecked"
+      :initializing="initializing"
       :identity-checking="verification.state.identityChecking"
       @is-showalert="isShowalert"
       @copy-text="copyText"
@@ -44,10 +46,10 @@ defineExpose({ checkSoftUpdate })
     />
     <DeviceVerificationCard
       variant="device"
-      :status="verification.state.status"
+      :status="verification.state.identityChecking ? 'idle' : verification.state.status"
       :activation-status="verification.state.activationStatus"
       :activated-at="verification.state.activatedAt"
-      :identity-checking="verification.state.identityChecking"
+      :disabled="initializing || verification.state.identityChecking"
       @verify="verification.check"
     />
     <ErrorDetail

@@ -164,6 +164,7 @@ set3 {
 }
 .setKeyPage .course {
   width: 177px;
+  cursor: pointer;
   height: 70px;
   background: #faf8f6;
   border-radius: 4px;

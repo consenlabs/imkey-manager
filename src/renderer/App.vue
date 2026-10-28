@@ -24,4 +24,8 @@ button {
   border: none;
   cursor: pointer;
 }
+a[href],
+[role='button']:not([aria-disabled='true']) {
+  cursor: pointer;
+}
 </style>

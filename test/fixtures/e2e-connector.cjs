@@ -55,6 +55,7 @@ module.exports = {
     }
     const descriptors = {
       get_seid: ['GetSeidRes', 'setSeid', 'E2ESEID'],
+      get_upgrade_seid: ['GetSeidRes', 'setSeid', 'E2ESEID'],
       get_sn: ['GetSnRes', 'setSn', 'SN123'],
       get_ram_size: ['GetRamSizeRes', 'setRamSize', '00000080'],
       get_firmware_version: [

@@ -1,4 +1,4 @@
 import { defineStore } from 'pinia'
 export const useAppStore = defineStore('app', {
-  state: () => ({ userPath: '' })
+  state: () => ({ userPath: '', deviceChanged: false })
 })

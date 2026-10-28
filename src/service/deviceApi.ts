@@ -14,6 +14,7 @@ import type { DeviceResult } from '../shared/deviceContract'
 import constants from '../common/constants'
 const deviceResponses: Record<string, [string, string | null]> = {
   get_seid: ['GetSeidRes', 'getSeid'],
+  get_upgrade_seid: ['GetSeidRes', 'getSeid'],
   get_sn: ['GetSnRes', 'getSn'],
   get_ram_size: ['GetRamSizeRes', 'getRamSize'],
   get_firmware_version: ['GetFirmwareVersionRes', 'getFirmwareVersion'],

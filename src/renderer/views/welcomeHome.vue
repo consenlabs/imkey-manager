@@ -20,29 +20,36 @@ const secureCheck = useSecureCheck()
 const router = useRouter()
 const { t } = useI18n()
 const shortcuts = [
-  { name: 'imKey', description: 'imkey_description', image: imkeyMark, external: externalImkey },
+  {
+    name: 'imKey',
+    description: 'imkey_description',
+    image: imkeyMark,
+    external: externalImkey,
+    urlKey: 'm.links.imkey'
+  },
   {
     name: 'imToken',
     description: 'imtoken_description',
     image: imtokenMark,
-    external: externalImtoken
+    external: externalImtoken,
+    urlKey: 'm.links.imtoken'
   },
   {
     name: 'Tokenlon',
     description: 'tokenlon_description',
     image: tokenlonMark,
     external: externalTokenlon,
-    url: 'https://tokenlon.im'
+    urlKey: 'm.links.tokenlon'
   },
   {
     name: 'Rabby Wallet',
     description: 'rabby_description',
     image: rabbyMark,
-    external: externalRabby
+    external: externalRabby,
+    urlKey: 'm.links.rabby'
   }
 ]
-async function openUrl(url?: string) {
-  if (!url) return
+async function openUrl(url: string) {
   try {
     await window.imkey.app.openExternal(url)
   } catch (error) {
@@ -69,23 +76,19 @@ async function copySupportEmail() {
       :status="secureCheck.state.status"
       :activation-status="secureCheck.state.activationStatus"
       :activated-at="secureCheck.state.activatedAt"
-      :identity-checking="secureCheck.state.identityChecking"
       @verify="secureCheck.check"
       @details="router.push('/home/setting')"
     />
     <section class="quick-access">
       <h3>{{ $t('m.devicePages.quick_access') }}</h3>
       <div class="shortcut-grid">
-        <!-- TODO: configure the remaining approved shortcut destinations. -->
         <button
           v-for="shortcut in shortcuts"
           :key="shortcut.name"
           type="button"
-          class="shortcut-card"
-          :class="{ link6: shortcut.url }"
-          :disabled="!shortcut.url"
-          :title="shortcut.url ? shortcut.name : $t('m.devicePages.link_pending')"
-          @click="openUrl(shortcut.url)"
+          class="shortcut-card link6"
+          :title="shortcut.name"
+          @click="openUrl($t(shortcut.urlKey))"
         >
           <span class="shortcut-icon"><img :src="shortcut.image" alt="" /></span>
           <span class="shortcut-copy"
@@ -101,8 +104,7 @@ async function copySupportEmail() {
     <section class="help-support">
       <h3>{{ $t('m.devicePages.help_support') }}</h3>
       <div class="help-grid">
-        <!-- TODO: add the approved getting-started and support destinations. -->
-        <button type="button" class="help-card" disabled :title="$t('m.devicePages.link_pending')">
+        <button type="button" class="help-card" @click="openUrl($t('m.links.quick_start'))">
           <span class="help-icon"><img :src="bookIcon" alt="" /></span>
           <span class="help-copy"
             ><span class="help-title">{{ $t('m.devicePages.quick_start') }}</span
@@ -112,7 +114,7 @@ async function copySupportEmail() {
           >
           <span class="help-arrow" aria-hidden="true">→</span>
         </button>
-        <div class="help-card">
+        <div class="help-card support-card">
           <span class="help-icon"><img :src="supportIcon" alt="" /></span>
           <div class="help-copy">
             <span class="help-title">{{ $t('m.devicePages.contact_support') }}</span
@@ -128,10 +130,9 @@ async function copySupportEmail() {
           </div>
           <button
             type="button"
-            class="help-arrow"
-            disabled
-            :title="$t('m.devicePages.link_pending')"
+            class="help-arrow support-link"
             :aria-label="$t('m.devicePages.contact_support')"
+            @click="openUrl($t('m.links.support'))"
           >
             →
           </button>
@@ -200,7 +201,8 @@ async function copySupportEmail() {
 .shortcut-card:disabled {
   cursor: default;
 }
-.shortcut-card:hover:not(:disabled) {
+.shortcut-card:hover:not(:disabled),
+.help-card:hover:not(:disabled) {
   background: #f1f1f1;
 }
 .shortcut-icon {
@@ -290,7 +292,22 @@ async function copySupportEmail() {
   align-items: center;
   gap: 6px;
 }
+.support-card {
+  cursor: pointer;
+}
+.support-link {
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  height: 100%;
+  padding: 0 16px;
+  border-radius: inherit;
+}
 .support-email button {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   padding: 0;
   border: 0;

@@ -152,6 +152,8 @@ for (const scenario of ['cos-success', 'cos-address-failure', 'ble-only']) {
   test(`${scenario === 'cos-success' ? 'e' : scenario === 'cos-address-failure' ? 'f' : 'g'} ${scenario} firmware flow`, async () => {
     await home(scenario)
     await settings()
+    await expect(page.getByTestId('firmware-upgrade-button')).toHaveCount(0)
+    await page.getByTestId('firmware-check-button').click()
     await expect(page.getByTestId('firmware-upgrade-button')).toBeVisible()
     const before = await calls()
     await page.getByTestId('firmware-upgrade-button').click()
@@ -227,7 +229,7 @@ test('h settings version, clipboard, external link and updater events', async ()
     .poll(() =>
       application.evaluate(() => (globalThis as unknown as { externalUrl?: string }).externalUrl)
     )
-    .toBe('https://tokenlon.im')
+    .toBe('https://tokenlon.im/?locale=en-us')
   await settings()
   await invoke('checkSoftUpdate')
   await expect(page.locator('.tip6')).toBeVisible()
@@ -280,8 +282,7 @@ test('initialization queues the first click and duplicate connection clicks run 
   await expect(page.locator('.homeBox')).toBeVisible()
   await expect(page.getByTestId('secure-check-button')).toBeEnabled()
   const methods = await calls()
-  // The connection flow runs once; entering home then confirms the current device once.
-  expect(methods.filter(method => method === 'device_connect')).toHaveLength(2)
-  expect(methods.slice(-3)).toEqual(['device_connect', 'get_seid', 'bind_check'])
+  // Home entry is passive; duplicate clicks must still start only one connection flow.
+  expect(methods.filter(method => method === 'device_connect')).toHaveLength(1)
   await screenshot('connection-double-click')
 })

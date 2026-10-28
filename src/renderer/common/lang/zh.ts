@@ -1,5 +1,8 @@
 // zh-CN
+import { getExternalLinks } from '../../../shared/externalLinks'
+const links = getExternalLinks('zh-CN')
 export const m = {
+  links,
   devicePages: {
     nav_device: '设备',
     nav_apps: '应用',
@@ -20,7 +23,6 @@ export const m = {
     more_device_information: '查看更多设备信息',
     verify_device: '验证设备',
     verifying: '验证中…',
-    identifying: '识别设备中…',
     verification_scope: '正品验证用于核验设备身份，不代表对设备全部硬件进行完整性检查。',
     learn_more: '了解更多',
     link_pending: '链接待配置',
@@ -53,10 +55,10 @@ export const m = {
     retry: '重试',
     recovery_title: '操作未完成',
     return_to_connection: '返回连接',
-    continue_current_step: '继续当前步骤',
+    device_changed_title: '设备已变化',
     recovery_message: '请检查设备与网络后重试，或返回连接页重新识别设备。',
-    recovery_device_changed: '设备已更换或绑定状态已变化。请返回连接页，重新识别并绑定设备。',
-    recovery_restart_required: '尚未完成设备绑定。可以继续当前步骤，或返回连接页重新开始。',
+    recovery_device_changed: '设备或绑定状态已变化，需要重新连接。',
+    recovery_restart_required: '尚未完成设备绑定，请返回连接页重新开始。',
     recovery_timeout: '设备长时间未响应，本次操作未完成。请检查设备后重试，或返回连接页。',
     recovery_pending: '旧设备通信服务尚未退出，请稍后重试，或返回连接页。',
     stage_connect: '设备连接',
@@ -209,7 +211,7 @@ export const m = {
     email: "邮件：support{'@'}imkey.im",
     wechat: '微信：imKey_Official',
     tokenlon_info: '安全快速的去中心化交易所',
-    operating_tutorial_url: 'https://imkey.im/get-started?locale=zh-cn',
+    operating_tutorial_url: links.quick_start,
     update_tip_wait: '更新完成后 App 将自动重启，请耐心等待'
   },
   imKeyCoreErrorInfo: {

@@ -80,7 +80,7 @@ test('completing setup checks wallet readiness and enters home without prefetchi
   await page.screenshot({ path: 'test-results/wallet-setup-complete.png' })
 })
 
-for (const failure of ['not-ready', 'disconnected', 'binding-failure']) {
+for (const failure of ['not-ready', 'disconnected']) {
   test(`setup completion ${failure} stays in setup and can retry without prefetching addresses`, async () => {
     await launch('unbound', failure)
     await completeSetupSteps()
@@ -96,6 +96,38 @@ for (const failure of ['not-ready', 'disconnected', 'binding-failure']) {
     expect(await calls()).not.toContain('get_address')
   })
 }
+
+test('setup completion binding failure returns to connection before a fresh unverified home entry', async () => {
+  await launch('unbound', 'binding-failure')
+  await completeSetupSteps()
+  await page.locator('.set4 .nextBtn').click()
+  await expect(page.locator('.connectDevice')).toHaveCount(0)
+  await expect(page.locator('.set4')).toBeVisible()
+  await expect(page.locator('.homeBox')).toHaveCount(0)
+  const dialog = page.locator('.device-changed-dialog')
+  await expect(dialog).toContainText('Device changed')
+  await expect(dialog).toContainText(
+    'The device or its binding has changed. Please reconnect the device.'
+  )
+  await expect(dialog.getByRole('button')).toHaveCount(1)
+  await expect(dialog.getByRole('button', { name: /continue|retry|cancel|close/i })).toHaveCount(0)
+  await expect(dialog.locator('.el-message-box__headerbtn')).toHaveCount(0)
+  expect(await calls()).toContain('wallet:binding-failure')
+  await dialog.getByRole('button', { name: 'Confirm', exact: true }).click()
+  await expect(page.locator('.connectDevice')).toBeVisible()
+  await expect(page.locator('.set4')).toHaveCount(0)
+  const before = await calls()
+  const verificationMethods = ['device_secure_check', 'device_sn_check', 'get_sn']
+  await page.locator('.connectDevice button').first().click()
+  await expect(page.getByTestId('device-verification-card')).toHaveAttribute('data-status', 'idle')
+  await expect(page.getByTestId('device-details-link')).toHaveCount(0)
+  const after = await calls()
+  for (const method of verificationMethods)
+    expect(after.filter(value => value === method)).toEqual(
+      before.filter(value => value === method)
+    )
+  expect(after).not.toContain('get_address')
+})
 
 for (const scenario of ['ready', 'bound-other']) {
   test(`${scenario} connection enters home without prefetching wallet addresses`, async () => {

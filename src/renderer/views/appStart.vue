@@ -51,7 +51,7 @@ export default {
     },
     async openUrl() {
       try {
-        await window.imkey.app.openExternal('https://imkey.im/')
+        await window.imkey.app.openExternal(this.$t('m.links.imkey'))
       } catch (error) {
         this.$message.error(error instanceof Error ? error.message : String(error))
       }

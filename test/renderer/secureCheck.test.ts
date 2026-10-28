@@ -27,7 +27,7 @@ function methods() {
   return mocks.call.mock.calls.map(([method]) => method)
 }
 function createCheck() {
-  return useSecureCheck({ checkIdentityOnMount: false })
+  return useSecureCheck()
 }
 beforeEach(() => {
   setActivePinia(createPinia())
@@ -46,13 +46,13 @@ beforeEach(() => {
   mocks.mounted.length = mocks.unmounted.length = 0
 })
 
-it('enters unverified and only checks lightweight identity until the user verifies', async () => {
+it('enters unverified without mounting any automatic device work', async () => {
   const check = useSecureCheck()
   expect(check.state.status).toBe('idle')
-  expect(check.state.identityChecking).toBe(true)
+  expect(check.state.identityChecking).toBe(false)
   expect(mocks.call).not.toHaveBeenCalled()
-  await check.enter()
-  expect(methods()).toEqual(['connectDevice', 'getSeid', 'deviceBindCheck'])
+  for (const mounted of mocks.mounted) await mounted()
+  expect(methods()).toEqual([])
   expect(check.state.status).toBe('idle')
   expect(check.state.identityChecking).toBe(false)
 })
@@ -78,15 +78,15 @@ it('verifies authenticity and SN metadata, then confirms identity before publish
   })
 })
 
-it('shares a successful result between page consumers after the same identity is confirmed', async () => {
+it('shares the last verified result between page consumers without new mount queries', async () => {
   const home = createCheck()
   await home.check()
   const details = createCheck()
   expect(details.state.status).toBe('success')
   useDeviceStore().prepareIdentityCheck()
-  expect(home.state.status).toBe('idle')
-  expect(details.state.activatedAt).toBeNull()
-  await details.enter()
+  expect(home.state.status).toBe('success')
+  expect(details.state.activatedAt).toBe('2024-02-29')
+  for (const mounted of mocks.mounted) await mounted()
   expect(details.state.status).toBe('success')
   expect(home.state.activatedAt).toBe('2024-02-29')
   expect(methods().filter(method => method === 'checkDevice')).toHaveLength(1)
@@ -255,7 +255,7 @@ it('shows thrown errors without leaving checking active', async () => {
   expect(check.state.errorInfo).toBe('network unavailable')
 })
 
-it('clears identity and verification state if the lightweight identity query throws', async () => {
+it('clears identity and verification if an explicit verification identity query throws', async () => {
   const check = createCheck()
   await check.check()
   const device = useDeviceStore()
@@ -264,7 +264,7 @@ it('clears identity and verification state if the lightweight identity query thr
   mocks.call.mockImplementation(method =>
     method === 'getSeid' ? Promise.reject(new Error('identity unavailable')) : normal(method)
   )
-  await check.enter()
+  await check.check()
   expect(device.identityReady).toBe(false)
   expect(device.identityChecking).toBe(false)
   expect(check.state.status).toBe('idle')

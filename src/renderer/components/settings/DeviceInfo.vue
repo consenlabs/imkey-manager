@@ -7,8 +7,10 @@ defineProps<{
   isCosUpdate: boolean
   copyTooltipDisabled: boolean
   checkingUpdate?: boolean
+  firmwareChecked?: boolean
   firmwareCheckFailed?: boolean
   identityChecking?: boolean
+  initializing?: boolean
 }>()
 const emit = defineEmits<{
   isShowalert: []
@@ -31,35 +33,28 @@ const emit = defineEmits<{
           :class="{ 'firmware-available': isCosUpdate && !firmwareCheckFailed }"
         >
           <span
+            v-if="firmwareChecked && !initializing && !identityChecking"
             data-testid="firmware-check-result"
-            :data-status="
-              identityChecking
-                ? 'unknown'
-                : checkingUpdate
-                  ? 'checking'
-                  : firmwareCheckFailed
-                    ? 'failed'
-                    : isCosUpdate
-                      ? 'available'
-                      : 'latest'
-            "
+            :data-status="firmwareCheckFailed ? 'failed' : isCosUpdate ? 'available' : 'latest'"
             aria-live="polite"
             >{{
-              identityChecking
-                ? '—'
-                : $t(
-                    checkingUpdate
-                      ? 'm.devicePages.checking_firmware'
-                      : firmwareCheckFailed
-                        ? 'm.devicePages.firmware_check_incomplete'
-                        : isCosUpdate
-                          ? 'm.devicePages.firmware_available'
-                          : 'm.devicePages.firmware_latest'
-                  )
+              $t(
+                firmwareCheckFailed
+                  ? 'm.devicePages.firmware_check_incomplete'
+                  : isCosUpdate
+                    ? 'm.devicePages.firmware_available'
+                    : 'm.devicePages.firmware_latest'
+              )
             }}</span
           >
           <button
-            v-if="isCosUpdate && !checkingUpdate && !firmwareCheckFailed"
+            v-if="
+              firmwareChecked &&
+              isCosUpdate &&
+              !checkingUpdate &&
+              !initializing &&
+              !firmwareCheckFailed
+            "
             type="button"
             data-testid="firmware-upgrade-button"
             :disabled="identityChecking"
@@ -71,10 +66,14 @@ const emit = defineEmits<{
             v-else
             type="button"
             data-testid="firmware-check-button"
-            :disabled="checkingUpdate || identityChecking"
+            :disabled="checkingUpdate || initializing || identityChecking"
+            :aria-busy="Boolean(checkingUpdate)"
             @click="emit('checkUpdate')"
           >
-            {{ $t('m.devicePages.check_updates') }}
+            <i v-if="checkingUpdate" class="fas fa-circle-notch fa-spin" aria-hidden="true" />
+            {{
+              $t(checkingUpdate ? 'm.devicePages.checking_firmware' : 'm.devicePages.check_updates')
+            }}
           </button>
         </div>
       </div>
@@ -83,7 +82,7 @@ const emit = defineEmits<{
           <div class="serial-number-row">
             <dt>{{ $t('m.devicePages.serial_number') }}</dt>
             <dd>
-              <span>{{ SN || '—' }}</span>
+              <span>{{ initializing ? '—' : SN || '—' }}</span>
               <el-tooltip
                 trigger="manual"
                 :visible="copyTooltipDisabled"
@@ -94,7 +93,7 @@ const emit = defineEmits<{
                   class="copy-sn el-icon-copy-document"
                   type="button"
                   :aria-label="$t('m.devicePages.copy_serial_number')"
-                  :disabled="!SN || identityChecking"
+                  :disabled="!SN || initializing || identityChecking"
                   @click="emit('copyText')"
                 >
                   <img :src="copyIcon" alt="" />
@@ -104,7 +103,7 @@ const emit = defineEmits<{
           </div>
           <div>
             <dt>{{ $t('m.devicePages.firmware_version') }}</dt>
-            <dd>{{ cosOldVersionData || '—' }}</dd>
+            <dd>{{ initializing ? '—' : cosOldVersionData || '—' }}</dd>
           </div>
         </dl>
         <dl class="device-info-secondary">
@@ -114,7 +113,7 @@ const emit = defineEmits<{
               <button
                 class="exportBindCode"
                 type="button"
-                :disabled="identityChecking"
+                :disabled="initializing || identityChecking"
                 @click="emit('exportBindCode')"
               >
                 {{ $t('m.devicePages.export_binding_code') }}
@@ -123,7 +122,7 @@ const emit = defineEmits<{
           </div>
           <div>
             <dt>{{ $t('m.devicePages.bluetooth_version') }}</dt>
-            <dd>{{ bleOldVersionData || '—' }}</dd>
+            <dd>{{ initializing ? '—' : bleOldVersionData || '—' }}</dd>
           </div>
         </dl>
       </div>
@@ -191,6 +190,10 @@ const emit = defineEmits<{
   color: #b8ac95;
 }
 .firmware-status button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   min-width: 114px;
   height: 32px;
   padding: 0 15px;

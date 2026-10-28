@@ -2,22 +2,27 @@
   "version": 1,
   "files": {
     "connector.dylib": {
-      "sha256": "832f6945936a403fc21af814579707331e0565b73239c4393a4d35cdcc0e9e55",
-      "architectures": ["x86_64", "arm64"],
+      "sha256": "f603f65ca4bfdd4e43cfad2df606f8d2ec61dfbd856e3078b823c5657a71f5c2",
+      "architectures": [
+        "x86_64",
+        "arm64"
+      ],
       "imkeyCoreCommit": "80ddae20a2ece117bd443803e9bc6d5de519e575",
-      "sourcePatchSha256": "5bf88d443168ee98ebe7c714d0f4c47b8b322a4bae2721b00f10a45d38e0c5b2",
+      "sourcePatchSha256": "a93cc65bc531927fb591812b76976b1ad9244875904c8b96fe0adedc852b7bf0",
       "sourcePatch": "vendor/imkey-core/device-sn-check/core-source.patch",
       "buildProvenance": "vendor/imkey-core/device-sn-check/build-provenance.json",
-      "source": "imkey-core base commit + uncommitted device_sn_check patch"
+      "source": "imkey-core base commit + uncommitted device_sn_check and read-only get_upgrade_seid patch"
     },
     "connector.dll": {
-      "sha256": "489303a483ace00d4905e1cfddabec98edc4f0ecddaa0afe4d7789bb11629e5d",
-      "architectures": ["i386"],
+      "sha256": "5c71b473b2a9aeebde410f6711fe1738238aa69cbbe9a3f073229ccffb920d9d",
+      "architectures": [
+        "i386"
+      ],
       "imkeyCoreCommit": "80ddae20a2ece117bd443803e9bc6d5de519e575",
-      "sourcePatchSha256": "5bf88d443168ee98ebe7c714d0f4c47b8b322a4bae2721b00f10a45d38e0c5b2",
+      "sourcePatchSha256": "a93cc65bc531927fb591812b76976b1ad9244875904c8b96fe0adedc852b7bf0",
       "sourcePatch": "vendor/imkey-core/device-sn-check/core-source.patch",
       "buildProvenance": "vendor/imkey-core/device-sn-check/windows-build-provenance.json",
-      "source": "imkey-core base commit + uncommitted device_sn_check patch (Windows ia32)"
+      "source": "imkey-core base commit + uncommitted device_sn_check and read-only get_upgrade_seid patch (Windows ia32)"
     }
   }
 }

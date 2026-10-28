@@ -1,6 +1,6 @@
 # Windows connector 构建记录
 
-Windows `connector.dll` 使用 `develop` 的 `80ddae2` 加本目录的 SN 校验源码补丁，
+Windows `connector.dll` 使用 `develop` 的 `80ddae2` 加本目录的 SN 校验和升级身份查询源码补丁，
 与 macOS connector 一致。蓝牙固件升级和外部传入 `server_url` 已在该基础提交中，
 本次未修改这两项业务逻辑，也未修改 `Cargo.lock`。产物为 PE32 i386，匹配当前 Manager 的 ia32 目标，
 可在对应 Windows 32 位进程中运行；不是跨 macOS/Windows 的通用库。
@@ -35,3 +35,13 @@ Manager 的单元测试直接检查实际 DLL 的 PE 架构、C ABI 导出、运
 外部参数初始化、SDK 读取和未连接设备时的 SN 调用返回。此冒烟测试没有调用 `connectDevice`，
 不会进行 USB 通信、固件升级或服务器请求；旧 DLL 缺少 SN 方法时应明确失败。
 本次 macOS 主机不能实际执行 Windows DLL，Windows 加载与实机设备验证由用户在测试机完成。
+
+## 升级重试身份查询
+
+`get_upgrade_seid` 复用已有 `GetSeidRes`，不改变 protobuf 字段。正常固件通过 `get_se_id` 读取，
+BL 按既有 `cos_upgrade` 的证书格式提取 SEID；错误证书或非 16 字节十六进制 SEID 会返回错误，
+成功结果统一为大写。该接口不检查绑定、不启动升级、不访问服务器，`cos_update` 和恢复顺序保持不变。
+
+本次离线解析与错误传播测试 6 项通过，既有 SN 校验测试 8 项通过。macOS Universal 与 Windows ia32
+均通过离线交叉构建；macOS 新接口在未连接设备时返回 `device_connect_interface_not_called`，
+证明新方法已注册且没有尝试连接 USB。Windows DLL 的运行验证仍需 Windows 主机。

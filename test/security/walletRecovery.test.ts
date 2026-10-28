@@ -86,6 +86,8 @@ describe('firmware address recovery preserves failure state', () => {
     })
     const upgrade = firmware.updateFirmware()
     await reply('connectDevice', { isSuccess: true, result: 'success' })
+    await reply('getSeid', { isSuccess: true, result: 'test-device' })
+    await reply('deviceBindCheck', { isSuccess: true, result: 'bound_this' })
     await reply('cosUpdate', { isSuccess: true, result: 'success' })
     await reply('deviceBindAcquire', { isSuccess: true, result: 'success' })
     await reply('importBindCode', { isSuccess: true, result: undefined })
@@ -99,7 +101,15 @@ describe('firmware address recovery preserves failure state', () => {
     expect(firmware.state.supportCode).toBe(3)
   })
   it('BLE-only updates do not bind or register addresses', async () => {
-    deviceMock.mockResolvedValue({ isSuccess: true, result: 'success' })
+    deviceMock.mockImplementation(async method => ({
+      isSuccess: true,
+      result:
+        method === 'deviceBindCheck'
+          ? 'bound_this'
+          : method === 'getSeid'
+            ? 'test-device'
+            : 'success'
+    }))
     const firmware = useFirmwareUpgrade('setting')
     Object.assign(firmware.state, {
       cosOldVersionData: 'same',
@@ -108,7 +118,12 @@ describe('firmware address recovery preserves failure state', () => {
       bleNewVersionData: 'new'
     })
     await firmware.updateFirmware()
-    expect(deviceMock.mock.calls.map(([method]) => method)).toEqual(['connectDevice', 'cosUpdate'])
+    expect(deviceMock.mock.calls.map(([method]) => method)).toEqual([
+      'connectDevice',
+      'getSeid',
+      'deviceBindCheck',
+      'cosUpdate'
+    ])
     expect(firmware.state.supportCode).toBe(2)
     expect(useDeviceStore().installedBleVersion).toBe('new')
   })

@@ -3,6 +3,7 @@ export interface DeviceInfoCache {
   sn: string
   firmwareVersion: string
   bleVersion: string
+  firmwareChecked: boolean
   latestFirmwareVersion: string
   latestBleVersion: string
   updateAvailable: boolean

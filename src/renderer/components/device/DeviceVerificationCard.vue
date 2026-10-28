@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { ElMessage } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import deviceIllustration from '../../assets/device-pages/device-illustration.svg'
 import magnifierHandle from '../../assets/device-pages/magnifier-handle.svg'
 import magnifierCircle from '../../assets/device-pages/magnifier-circle.svg'
@@ -12,11 +14,19 @@ const props = defineProps<{
   status: 'idle' | 'checking' | 'success'
   activationStatus: boolean | null
   activatedAt: string | null
-  identityChecking?: boolean
+  disabled?: boolean
 }>()
 const emit = defineEmits<{ verify: []; details: [] }>()
 const verified = computed(() => props.status === 'success')
-const busy = computed(() => props.status === 'checking' || props.identityChecking)
+const busy = computed(() => props.status === 'checking')
+const { t } = useI18n()
+async function openVerificationInfo() {
+  try {
+    await window.imkey.app.openExternal(t('m.links.verification'))
+  } catch (error) {
+    ElMessage.error(error instanceof Error ? error.message : String(error))
+  }
+}
 </script>
 
 <template>
@@ -85,24 +95,15 @@ const busy = computed(() => props.status === 'checking' || props.identityCheckin
         type="button"
         class="verification-button"
         data-testid="secure-check-button"
-        :disabled="busy"
+        :disabled="busy || disabled"
         @click="emit('verify')"
       >
         <i v-if="busy" class="fas fa-circle-notch fa-spin" aria-hidden="true" />
-        {{
-          $t(
-            status === 'checking'
-              ? 'm.devicePages.verifying'
-              : identityChecking
-                ? 'm.devicePages.identifying'
-                : 'm.devicePages.verify_device'
-          )
-        }}
+        {{ $t(status === 'checking' ? 'm.devicePages.verifying' : 'm.devicePages.verify_device') }}
       </button>
       <div v-if="variant === 'device'" class="verification-footnote">
         <span>{{ $t('m.devicePages.verification_scope') }}</span>
-        <!-- TODO: add the approved device verification explanation URL. -->
-        <button type="button" disabled :title="$t('m.devicePages.link_pending')">
+        <button type="button" @click="openVerificationInfo">
           {{ $t('m.devicePages.learn_more') }} <span aria-hidden="true">→</span>
         </button>
       </div>
@@ -328,6 +329,6 @@ const busy = computed(() => props.status === 'checking' || props.identityCheckin
   background: transparent;
   color: #7f7f7f;
   font: inherit;
-  cursor: default;
+  cursor: pointer;
 }
 </style>

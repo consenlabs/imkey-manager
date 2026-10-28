@@ -1,7 +1,7 @@
 import { getCurrentInstance, onUnmounted } from 'vue'
 import { ElMessageBox } from 'element-plus'
 import { useRouter } from 'vue-router'
-import { useDeviceStore } from '../store'
+import { useAppStore, useDeviceStore } from '../store'
 import { useTranslation } from './useTranslation'
 import { operationError } from './operationError'
 import type { DeviceOperation } from './useDeviceOperation'
@@ -11,9 +11,11 @@ let promptOwner: symbol | undefined
 export function useDeviceRecovery(operation?: Pick<DeviceOperation, 'active'>) {
   const router = useRouter()
   const device = useDeviceStore()
+  const app = useAppStore()
   const { t, te } = useTranslation()
   const owner = Symbol('device-recovery')
   let mounted = true
+  let changedNoticeOpen = false
   const active = () => mounted && (operation?.active() ?? true)
 
   async function returnToConnection(): Promise<void> {
@@ -27,15 +29,49 @@ export function useDeviceRecovery(operation?: Pick<DeviceOperation, 'active'>) {
     retry: () => Promise<unknown>,
     { reconnectOnly = false }: { reconnectOnly?: boolean } = {}
   ): void {
-    if (!active() || promptOwner) return
-    promptOwner = owner
+    if (!active()) return
     const raw = typeof error === 'string' ? error : (error as { result?: string })?.result
+    if (raw === 'device_session_changed' || raw === 'device_bind_check_failed') {
+      if (app.deviceChanged) return
+      app.deviceChanged = true
+      if (promptOwner) {
+        promptOwner = undefined
+        ElMessageBox.close()
+      }
+      device.invalidateDeviceData()
+      changedNoticeOpen = true
+      void (async () => {
+        try {
+          await ElMessageBox.alert(
+            t('m.imKeyManager.recovery_device_changed'),
+            t('m.imKeyManager.device_changed_title'),
+            {
+              confirmButtonText: t('m.imKeyManager.ok'),
+              customClass: 'device-recovery-dialog device-changed-dialog',
+              modalClass: 'device-changed-overlay',
+              showClose: false,
+              closeOnClickModal: false,
+              closeOnPressEscape: false
+            }
+          )
+          if (!active()) return
+          device.$reset()
+          await router.replace('/connectDevice')
+        } catch {
+          // Programmatic closure on disposal must not replay a stale navigation.
+        } finally {
+          changedNoticeOpen = false
+          app.deviceChanged = false
+        }
+      })()
+      return
+    }
+    if (promptOwner || app.deviceChanged) return
+    promptOwner = owner
     const messages: Record<string, string> = {
-      device_session_changed: 'recovery_device_changed',
       device_session_restart_required: 'recovery_restart_required',
       device_operation_timeout: 'recovery_timeout',
-      device_recovery_pending: 'recovery_pending',
-      device_bind_check_failed: 'recovery_device_changed'
+      device_recovery_pending: 'recovery_pending'
     }
     const key = raw && Object.hasOwn(messages, raw) ? messages[raw] : undefined
     const detail = operationError(error)
@@ -53,11 +89,9 @@ export function useDeviceRecovery(operation?: Pick<DeviceOperation, 'active'>) {
           confirmButtonText: t(
             reconnectOnly ? 'm.imKeyManager.return_to_connection' : 'm.imKeyManager.retry'
           ),
-          cancelButtonText: t(
-            reconnectOnly
-              ? 'm.imKeyManager.continue_current_step'
-              : 'm.imKeyManager.return_to_connection'
-          ),
+          cancelButtonText: t('m.imKeyManager.return_to_connection'),
+          showCancelButton: !reconnectOnly,
+          showClose: !reconnectOnly,
           customClass: 'device-recovery-dialog',
           distinguishCancelAndClose: true,
           closeOnClickModal: false,
@@ -82,6 +116,7 @@ export function useDeviceRecovery(operation?: Pick<DeviceOperation, 'active'>) {
   if (getCurrentInstance())
     onUnmounted(() => {
       mounted = false
+      if (changedNoticeOpen) ElMessageBox.close()
       if (promptOwner === owner) {
         promptOwner = undefined
         ElMessageBox.close()

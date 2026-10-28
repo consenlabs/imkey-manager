@@ -43,7 +43,10 @@ function response(method: string): DeviceResult {
     getSeid: 'device-A',
     deviceBindCheck: 'bound_this',
     downloadApplet: ['Nervos'],
-    updateApplet: ['Nervos']
+    updateApplet: ['Nervos'],
+    checkUpdate: {
+      list: [{ name: 'Nervos', installedVersion: null, latestVersion: '1.0', icon: '' }]
+    }
   }
   return { isSuccess: true, result: values[method] ?? 'success' }
 }
@@ -123,6 +126,12 @@ it.each(['connectDevice', 'getSeid', 'deviceBindCheck', 'downloadApplet', 'write
     expect(manager.apps.value[0].installed).toBe(false)
     waiting.release()
     await pending
+    const identityFailure = ['connectDevice', 'getSeid', 'deviceBindCheck'].includes(failedMethod)
+    if (identityFailure) {
+      expect(manager.apps.value).toEqual([])
+      expect(mocks.offer).toHaveBeenCalledOnce()
+      await mocks.offer.mock.calls[0][1]()
+    }
     expect(manager.apps.value[0]).toMatchObject({
       installLoading: false,
       installDis: false,
@@ -168,4 +177,108 @@ it('preserves the firmware branch and clears feedback when it finishes', async (
   await pending
   expect(manager.apps.value[0].installLoading).toBe(false)
   expect(useDeviceStore().apps[0].installedVersion).toBeNull()
+})
+
+it.each(['init', 'install', 'update', 'delete'] as const)(
+  '%s rejects a replacement and clears previously verified device data immediately',
+  async action => {
+    const device = useDeviceStore()
+    device.identityReady = true
+    device.verification = {
+      status: 'success',
+      activationStatus: true,
+      activatedAt: '2026-01-01',
+      errorInfo: ''
+    }
+    device.deviceInfo = {
+      seid: 'device-A',
+      sn: 'old',
+      firmwareVersion: '1',
+      bleVersion: '1',
+      firmwareChecked: true,
+      latestFirmwareVersion: '2',
+      latestBleVersion: '1',
+      updateAvailable: true
+    }
+    mocks.call.mockImplementation(async method =>
+      method === 'getSeid' ? { isSuccess: true, result: 'device-B' } : response(method)
+    )
+    const manager = useAppManagement()
+    const item = manager.apps.value[0]
+    if (action === 'init') await manager.init()
+    else if (action === 'install') await manager.installApp(item)
+    else if (action === 'update') await manager.updateApp(item)
+    else await manager.deleteApp(item)
+    expect(device.verification.status).toBe('idle')
+    expect(device.deviceInfo).toBeNull()
+    expect(device.apps).toEqual([])
+    expect(device.connectedSeid).toBe('device-A')
+    expect(mocks.call.mock.calls.map(([method]) => method)).toEqual(['connectDevice', 'getSeid'])
+    expect(mocks.offer).toHaveBeenCalledWith(
+      expect.objectContaining({ result: 'device_session_changed' }),
+      expect.any(Function),
+      { reconnectOnly: true }
+    )
+  }
+)
+
+it('clears verification when an application response reports a changed binding', async () => {
+  const device = useDeviceStore()
+  device.verification = {
+    status: 'success',
+    activationStatus: true,
+    activatedAt: '2026-01-01',
+    errorInfo: ''
+  }
+  mocks.call.mockImplementation(async method =>
+    method === 'downloadApplet'
+      ? { isSuccess: false, result: 'device_bind_check_failed' }
+      : response(method)
+  )
+  const manager = useAppManagement()
+  await manager.installApp(manager.apps.value[0])
+  expect(device.verification.status).toBe('idle')
+  expect(device.apps).toEqual([])
+  expect(mocks.call.mock.calls.some(([method]) => method === 'writeWalletAddress')).toBe(false)
+  expect(mocks.offer).toHaveBeenCalledWith(expect.anything(), expect.any(Function), {
+    reconnectOnly: true
+  })
+})
+
+it('discards an obsolete catalog response without marking initialization complete', async () => {
+  const device = useDeviceStore()
+  const catalog = gate(response('checkUpdate'))
+  mocks.call.mockImplementation(async method =>
+    method === 'checkUpdate' ? catalog.promise : response(method)
+  )
+  const manager = useAppManagement()
+  const pending = manager.init()
+  await vi.waitFor(() =>
+    expect(mocks.call.mock.calls.some(([method]) => method === 'checkUpdate')).toBe(true)
+  )
+  device.invalidateDeviceData()
+  catalog.release()
+  await pending
+  expect(device.apps).toEqual([])
+  expect(device.isFirstGoToManagerPage).toBe(true)
+  expect(mocks.offer).not.toHaveBeenCalled()
+})
+
+it('does not register addresses after an obsolete installation response', async () => {
+  const device = useDeviceStore()
+  const downloaded = gate(response('downloadApplet'))
+  mocks.call.mockImplementation(async method =>
+    method === 'downloadApplet' ? downloaded.promise : response(method)
+  )
+  const manager = useAppManagement()
+  const pending = manager.installApp(manager.apps.value[0])
+  await vi.waitFor(() =>
+    expect(mocks.call.mock.calls.some(([method]) => method === 'downloadApplet')).toBe(true)
+  )
+  device.invalidateDeviceData()
+  downloaded.release()
+  await pending
+  expect(device.apps).toEqual([])
+  expect(mocks.call.mock.calls.some(([method]) => method === 'writeWalletAddress')).toBe(false)
+  expect(mocks.offer).not.toHaveBeenCalled()
 })

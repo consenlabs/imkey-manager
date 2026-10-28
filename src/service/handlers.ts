@@ -29,6 +29,7 @@ export function createDeviceHandlers(
     initImKeyCore: () => api.initImKeyCore(),
     connectDevice: () => api.connect(),
     getSeid: manage('get_seid'),
+    getUpgradeSeid: manage('get_upgrade_seid'),
     getSn: manage('get_sn'),
     getRamSize: () => api.getRamSize(),
     getFirmwareVersion: manage('get_firmware_version'),

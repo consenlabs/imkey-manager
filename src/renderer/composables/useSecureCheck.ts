@@ -1,4 +1,4 @@
-import { onMounted, onUnmounted, reactive } from 'vue'
+import { onUnmounted, reactive } from 'vue'
 import constants from '../../common/constants'
 import { operationError } from './operationError'
 import { useDeviceOperation, type DeviceOperation } from './useDeviceOperation'
@@ -6,9 +6,7 @@ import { useDeviceStore } from '../store'
 import { useDeviceRecovery } from './useDeviceRecovery'
 import { refreshDeviceIdentity } from './deviceIdentity'
 
-export function useSecureCheck(
-  options: { scope?: DeviceOperation; checkIdentityOnMount?: boolean } = {}
-) {
+export function useSecureCheck(options: { scope?: DeviceOperation } = {}) {
   const scope = options.scope || useDeviceOperation()
   const call = scope.call
   const device = useDeviceStore()
@@ -16,17 +14,16 @@ export function useSecureCheck(
   let ownedRevision: number | undefined
   const state = reactive({
     get status() {
-      if (device.verification.status === 'checking') return 'checking' as const
-      return device.identityReady ? device.verification.status : ('idle' as const)
+      return device.verification.status
     },
     get errorInfo() {
       return device.verification.errorInfo
     },
     get activationStatus() {
-      return device.identityReady ? device.verification.activationStatus : null
+      return device.verification.activationStatus
     },
     get activatedAt() {
-      return device.identityReady ? device.verification.activatedAt : null
+      return device.verification.activatedAt
     },
     get identityChecking() {
       return device.identityChecking
@@ -43,20 +40,6 @@ export function useSecureCheck(
     })
   }
 
-  function enter() {
-    device.prepareIdentityCheck()
-    return scope.run(async () => {
-      try {
-        const result = await refreshDeviceIdentity(call, device, scope.active)
-        if (!result.isSuccess && result.code !== 'OPERATION_CANCELLED') fail(result, enter)
-      } catch (error) {
-        if (!scope.active()) return
-        device.invalidateDeviceData()
-        fail(error, enter)
-      }
-    }, 'identity')
-  }
-
   function check() {
     if (!scope.active() || device.verification.status === 'checking') return
     device.clearVerification()
@@ -66,7 +49,9 @@ export function useSecureCheck(
     device.verification.status = 'checking'
     return scope.run(async () => {
       try {
-        const connected = await refreshDeviceIdentity(call, device, scope.active)
+        const connected = await refreshDeviceIdentity(call, device, scope.active, {
+          hideCachedData: false
+        })
         if (!connected.isSuccess) {
           if (connected.code !== 'OPERATION_CANCELLED') fail(connected)
           return
@@ -81,7 +66,9 @@ export function useSecureCheck(
         if (!metadata.isSuccess) return fail(metadata)
         if (!metadata.result.snCheckResult) return fail('imkey_tsm_device_sn_check_fail')
         // Do not publish a result if the device was replaced during the server checks.
-        const confirmed = await refreshDeviceIdentity(call, device, scope.active)
+        const confirmed = await refreshDeviceIdentity(call, device, scope.active, {
+          hideCachedData: false
+        })
         if (!confirmed.isSuccess) {
           if (confirmed.code !== 'OPERATION_CANCELLED') fail(confirmed)
           return
@@ -101,13 +88,9 @@ export function useSecureCheck(
     }, 'secureCheck')
   }
 
-  if (options.checkIdentityOnMount !== false) {
-    device.prepareIdentityCheck()
-    onMounted(() => void enter())
-  }
   onUnmounted(() => {
     if (ownedRevision === device.verificationRevision && device.verification.status === 'checking')
       device.clearVerification()
   })
-  return { state, check, enter }
+  return { state, check }
 }

@@ -11,6 +11,7 @@ import type { Handler } from '../src/service/handlers'
 import { api, btc, create, decode, device, invoke } from '../src/service/protobuf'
 const direct: Record<string, string> = {
   getSeid: 'get_seid',
+  getUpgradeSeid: 'get_upgrade_seid',
   getSn: 'get_sn',
   getFirmwareVersion: 'get_firmware_version',
   getBleVersion: 'get_ble_version',
@@ -23,6 +24,24 @@ const direct: Record<string, string> = {
   deviceBindCheck: 'bind_check',
   deviceBindDisplay: 'bind_display_code'
 }
+it('routes upgrade identity reads through the existing SEID response schema', async () => {
+  const requests: string[] = []
+  const seid = '00112233445566778899AABBCCDDEEFF'
+  const handlers = createDeviceHandlers(
+    {
+      callImKeyApi(request) {
+        requests.push(invoke<string>(decode(api, 'ImkeyAction', request), 'getMethod'))
+        return Buffer.from(
+          create(device, 'GetSeidRes', { setSeid: seid }).serializeBinary()
+        ).toString('hex')
+      },
+      getLastErrorMessage: () => ''
+    },
+    '/fixture/userData'
+  )
+  expect(await handlers.getUpgradeSeid()).toEqual({ isSuccess: true, result: seid })
+  expect(requests).toEqual(['get_upgrade_seid'])
+})
 function execute(api: DeviceApi, method: string, args: unknown[]): unknown {
   if (direct[method]) return api.deviceMethod(direct[method])
   if (method === 'initImKeyCore') return api.initImKeyCore()

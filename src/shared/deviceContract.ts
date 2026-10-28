@@ -2,6 +2,7 @@ export const deviceMethods = [
   'initImKeyCore',
   'connectDevice',
   'getSeid',
+  'getUpgradeSeid',
   'getSn',
   'getRamSize',
   'getFirmwareVersion',
