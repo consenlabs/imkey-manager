@@ -33,7 +33,7 @@
       "url": "https://files.imkey.im/downloads/imKeyManager"
     },
     "releaseInfo": {
-      "releaseNotes": "[{\"id\":1,\"info\":\"新增 Apple Silicon Mac 原生支持\"},{\"id\":2,\"info\":\"完善设备正品验证与激活信息展示\"},{\"id\":3,\"info\":\"优化设备连接、应用管理和固件升级恢复\"},{\"id\":4,\"info\":\"更新中英文帮助链接及卡片交互\"},{\"id\":5,\"info\":\"移除本地 DApp 调用功能\"}]"
+      "releaseNotes": "[{\"id\":1,\"info\":\"新增 Apple Silicon Mac 原生支持\"},{\"id\":2,\"info\":\"完善设备正品验证与激活信息展示\"},{\"id\":3,\"info\":\"优化设备连接、应用管理和固件升级恢复\"},{\"id\":4,\"info\":\"更新中英文帮助链接及卡片交互\"}]"
     },
     "files": [
       "out/**/*"
