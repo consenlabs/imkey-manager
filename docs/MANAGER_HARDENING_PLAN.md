@@ -58,4 +58,4 @@
 - 原生模块编译阻断已解决：使用新版 node-gyp、目标 Electron 头文件及旧配置所需的 `openssl_fips` 定义。构建命令见 [当前打包说明](packaging.md)（旧 ffi 重建说明已被 koffi 方案替代；本条为历史记录）；需要原生 ARM64 Node.js、Python 与 Xcode。
 - Electron 11 与旧版原生模块的构建链较老，可能需要联动升级。应把依赖升级和业务链路回归视为同一发布门槛。
 - 关闭 8081 是对外接口的有意不兼容变更；不提供兼容开关。
-- 当前候选版本为 2.1.7-beta，保留绑定、应用管理与升级恢复链路。8081 HTTP/RPC、DApp 与交易签名入口已移除，设备 IPC 已增加来源校验及消息白名单。安全回归、地址 API 模拟测试、生产 webpack 构建和 electron-builder 24.6.4 的 ARM64 未签名目录包均通过；包内 ARM64 Electron 可加载 FFI/ref 原生模块与 connector。正式签名、公证、Intel 版本及真机业务回归仍须在发布前完成。`key.env` 与 `.p8` 凭据由构建环境安全提供，不提交到仓库。
+- 当前发布目标为 `2.2.0`（Windows / macOS 统一，无 beta 后缀），保留绑定、应用管理与升级恢复链路。8081 HTTP/RPC、DApp 与交易签名入口已移除，设备 IPC 已增加来源校验及消息白名单。历史阶段验证：安全回归、地址 API 模拟测试、生产 webpack 构建和 electron-builder 24.6.4 的 ARM64 未签名目录包均通过；包内 ARM64 Electron 可加载 FFI/ref 原生模块与 connector。正式签名、公证、Intel 版本及真机业务回归仍须在发布前完成。`key.env` 与 `.p8` 凭据由构建环境安全提供，不提交到仓库。

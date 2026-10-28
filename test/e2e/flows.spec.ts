@@ -196,7 +196,7 @@ test('h settings version, clipboard, external link and updater events', async ()
   await home()
   await settings()
   await expect(page.locator('.device-info-primary > div').last()).toContainText('1.0.0')
-  expect(await page.evaluate(() => window.imkey.app.getVersion())).toBe('2.1.7-beta')
+  expect(await page.evaluate(() => window.imkey.app.getVersion())).toBe('2.2.0')
   await application.evaluate(({ clipboard }) => {
     const record = globalThis as unknown as { copiedText?: string }
     clipboard.writeText = text => {
@@ -219,7 +219,7 @@ test('h settings version, clipboard, external link and updater events', async ()
       .createRequire(app.getAppPath() + '/package.json')
     const updater = nodeRequire('electron-updater').autoUpdater
     updater.checkForUpdates = async () => {
-      updater.emit('update-available', { version: '2.1.8', releaseNotes: '' })
+      updater.emit('update-available', { version: '2.2.1', releaseNotes: '' })
       return null
     }
   })
@@ -234,7 +234,7 @@ test('h settings version, clipboard, external link and updater events', async ()
   await invoke('checkSoftUpdate')
   await expect(page.locator('.tip6')).toBeVisible()
   await page.locator('.tip6 button').click()
-  await expect(page.locator('.status4AlertBox')).toContainText('2.1.8')
+  await expect(page.locator('.status4AlertBox')).toContainText('2.2.1')
   await screenshot('h-settings-updater')
 })
 for (const locale of ['zh-CN', 'en-US']) {

@@ -2,7 +2,7 @@
 
 ## 版本与平台
 
-版本固定为 `2.1.7-beta`；Electron、electron-builder 与 koffi 使用精确版本号，依赖由 `package-lock.json` 锁定。Node 开发工具范围为 `^22.12.0 || ^24.0.0 || >=26.0.0`，与应用自带的 Electron Node 运行时分开管理。
+Windows 与 macOS 的发布版本统一为 `2.2.0`，不带预发布后缀，两平台均从 `package.json` 读取版本号；Electron、electron-builder 与 koffi 使用精确版本号，依赖由 `package-lock.json` 锁定。Node 开发工具范围为 `^22.12.0 || ^24.0.0 || >=26.0.0`，与应用自带的 Electron Node 运行时分开管理。
 
 2026-10-09 重构版本选择：Electron 最新稳定版 `44.7.0` 的发布资产没有 Windows ia32，而现有 connector.dll 是 i386。因此选择仍受支持、且提供 ia32 的最高稳定主版本 `43`，固定为 `43.7.9`。43.7.9 同时提供 macOS x64/arm64 产物，最低系统为 macOS Monterey 12、Windows 10。Electron 43 的官方 EOL 为 **2027-01-05**；后续升级需要先解决 Windows connector 的架构兼容。
 
@@ -143,7 +143,10 @@ npm run build -- --mac --publish never --config.mac.identity=null
 ```
 
 默认产物在 `build/`：`mac-universal/imKey Manager.app`、Universal DMG、Universal `*-universal-mac.zip`、
-对应 blockmap 以及 `beta-mac.yml`。Windows 仍输出 ia32 NSIS 安装器、blockmap 与 `beta.yml`。
+对应 blockmap 以及正式渠道清单 `latest-mac.yml`。Windows 仍输出 ia32 NSIS 安装器、blockmap 与正式渠道清单 `latest.yml`。
+`generateUpdatesFilesForAllChannels: true` 让构建器同时生成 beta 和 alpha 兼容清单，清单中的版本同样为 `2.2.0`。
+发布时将 `beta-mac.yml` / `beta.yml` 与对应的正式渠道清单一起更新，使仍读取 beta 渠道的旧客户端也能发现本次正式版；
+这些清单必须指向同一批正式安装包，不能继续沿用旧 beta 包的文件名、大小或摘要。
 公证签名包与未签名本地验收包需分目录保存，不把本地验收的更新 metadata 上传。
 
 ```sh
@@ -156,7 +159,7 @@ find "$TASK_APP/Contents/Resources/koffi" -name koffi.node -exec lipo -info {} \
 
 主程序、所有 Helper、connector 和两份 koffi.node 应均显示 `x86_64 arm64`。
 再解开更新 ZIP，重复相同检查，确认 ZIP 内的应用本身也是 Universal；仅文件名含 universal 不足以证明。
-检查 `beta-mac.yml` 的 ZIP 条目及 `path` 指向 Universal ZIP，`sha512`、`size` 与该 ZIP 一致；
+检查 `latest-mac.yml` 及兼容渠道清单的 ZIP 条目及 `path` 指向 Universal ZIP，`sha512`、`size` 与该 ZIP 一致；
 DMG 主要用于手工安装，自动更新必须同时提供 ZIP 与 metadata。
 
 同一份 Universal ZIP 包含两架构，Intel 与 Apple Silicon 安装均可使用。

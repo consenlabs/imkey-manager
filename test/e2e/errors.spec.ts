@@ -113,7 +113,7 @@ test('updater errors are visible and retry reaches the normal update UI', async 
         updater.emit('error', error)
         throw error
       }
-      updater.emit('update-available', { version: '2.1.8', releaseNotes: '' })
+      updater.emit('update-available', { version: '2.2.1', releaseNotes: '' })
       return null
     }
     updater.downloadUpdate = async () => {
@@ -154,7 +154,7 @@ test('home updater errors remain visible and settings owns exactly one update UI
         throw error
       }
       updater.emit('update-available', {
-        version: '2.1.8',
+        version: '2.2.1',
         releaseNotes: '[{info:"E2E release note"}]'
       })
       return null

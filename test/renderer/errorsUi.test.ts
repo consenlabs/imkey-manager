@@ -49,7 +49,7 @@ beforeEach(() => {
   mocks.mounted.length = mocks.unmounted.length = 0
   setActivePinia(createPinia())
   mocks.call.mockResolvedValue({ isSuccess: false, result: 'device_not_connected' })
-  bridge.app.getVersion.mockResolvedValue('2.1.7-beta')
+  bridge.app.getVersion.mockResolvedValue('2.2.0')
   bridge.app.isOnline.mockResolvedValue(true)
   bridge.updater.check.mockResolvedValue(undefined)
   bridge.updater.download.mockResolvedValue(undefined)
@@ -341,13 +341,13 @@ it('home updater ignores events while settings owns the UI', async () => {
   await update.checkSoftUpdate()
   enabled = false
   message({ action: 'error', errorInfo: { message: 'settings error' } })
-  message({ action: 'updateAva', updateInfo: { version: '2.1.8' } })
+  message({ action: 'updateAva', updateInfo: { version: '2.2.1' } })
   expect(status.value).toBe(1)
   expect(update.state.errorInfo).toBe('')
   enabled = true
   message({
     action: 'updateAva',
-    updateInfo: { version: '2.1.8', releaseNotes: '[{info:"Release note"}]' }
+    updateInfo: { version: '2.2.1', releaseNotes: '[{info:"Release note"}]' }
   })
   expect(status.value).toBe(6)
   expect(update.state.softUpdateInfo).toEqual([{ id: 0, info: 'Release note' }])

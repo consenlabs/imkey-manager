@@ -1,6 +1,6 @@
 # imKey Manager
 
-imKey 桌面设备管理工具，保留设备连接、绑定、钱包初始化、固件升级、应用管理与软件更新流程。当前版本为 `2.1.7-beta`。
+imKey 桌面设备管理工具，保留设备连接、绑定、钱包初始化、固件升级、应用管理与软件更新流程。Windows 与 macOS 当前统一版本为 `2.2.0`（无 beta 后缀）。
 
 运行底座为 Electron 43、electron-vite、TypeScript；界面使用 Vue 3、Pinia、Vue Router 4、vue-i18n 与 Element Plus。原生设备调用由独立 `utilityProcess` 中的 koffi 封装同步执行，渲染进程通过有限 preload API 访问设备和应用能力。
 

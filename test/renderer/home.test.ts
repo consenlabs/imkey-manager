@@ -17,7 +17,7 @@ function createHome() {
     download: vi.fn().mockResolvedValue(undefined),
     quitAndInstall: vi.fn().mockResolvedValue(undefined)
   }
-  vi.stubGlobal('window', { imkey: { updater, app: { getVersion: async () => '2.1.7-beta' } } })
+  vi.stubGlobal('window', { imkey: { updater, app: { getVersion: async () => '2.2.0' } } })
   const status = ref(1)
   const home = useSoftwareUpdate(status, { installDelayMs: 5000 })
   return {
