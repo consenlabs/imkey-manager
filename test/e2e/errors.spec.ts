@@ -97,6 +97,29 @@ test('address restoration displays its stage and plain native cause', async () =
   )
   await page.screenshot({ path: 'test-results/error-native-restoration.png', fullPage: true })
 })
+test('visiting the device page does not create an update notification without update data', async () => {
+  await launch()
+  await connect()
+  await expect(page.locator('.homeBox')).toBeVisible()
+  await expect(page.locator('.tip6')).toHaveCount(0)
+  for (let visit = 0; visit < 2; visit++) {
+    await settings()
+    await page.locator('.routerBar li').first().click()
+    await expect(page.locator('.manager-home')).toBeVisible()
+    await expect(page.locator('.tip6')).toHaveCount(0)
+    await expect(page.locator('.status4AlertBox')).toHaveCount(0)
+  }
+  await application.evaluate(({ app }) => {
+    const require = process
+      .getBuiltinModule('module')
+      .createRequire(app.getAppPath() + '/package.json')
+    const updater = require('electron-updater').autoUpdater
+    updater.emit('update-available', { version: '  ', releaseNotes: '' })
+  })
+  await expect(page.locator('.tip6')).toHaveCount(0)
+  await expect(page.locator('.status4AlertBox')).toHaveCount(0)
+})
+
 test('updater errors are visible and retry reaches the normal update UI', async () => {
   await launch()
   await connect()
@@ -129,6 +152,10 @@ test('updater errors are visible and retry reaches the normal update UI', async 
   await expect(page.locator('.tip6')).toBeVisible()
   await page.locator('.tip6 button').click()
   await expect(page.locator('.status4AlertBox')).toHaveCount(1)
+  await expect(page.locator('.status4AlertBox')).toContainText('V2.2.1')
+  await expect(page.locator('.release-notes-empty')).toContainText(
+    'Release notes are not available.'
+  )
   await page.locator('.updateNow').click()
   await expect(page.locator('.status4AlertBox .operation-error')).toContainText(
     'E2E download unavailable'
@@ -168,6 +195,8 @@ test('home updater errors remain visible and settings owns exactly one update UI
   await expect(page.locator('.tip6')).toHaveCount(1)
   await page.locator('.tip6 button').click()
   await expect(page.locator('.status4AlertBox')).toHaveCount(1)
+  await expect(page.locator('.status4AlertBox')).toContainText('V2.2.1')
+  await expect(page.locator('.status4AlertBox')).toContainText('V2.2.0')
   await expect(page.locator('.update-info-scroller')).toContainText('E2E release note')
   await page.locator('.later').click()
   await settings()
@@ -177,5 +206,8 @@ test('home updater errors remain visible and settings owns exactly one update UI
   await expect(page.locator('.tip6')).toHaveCount(1)
   await page.locator('.tip6 button').click()
   await expect(page.locator('.status4AlertBox')).toHaveCount(1)
+  await expect(page.locator('.status4AlertBox')).toContainText('V2.2.1')
+  await expect(page.locator('.update-info-scroller')).toContainText('E2E release note')
+  await expect(page.locator('.status4AlertBox')).not.toContainText('新增暗黑模式')
   await page.screenshot({ path: 'test-results/error-home-updater-owner.png', fullPage: true })
 })

@@ -124,22 +124,7 @@
             {{ $t('m.imKeyManager.new_version_is') }}V{{ softNewVersionData
             }}{{ $t('m.imKeyManager.current_version_is') }}V{{ softOldVersionData }}
           </p>
-          <div class="update-info-scroller">
-            <div v-for="item in softUpdateInfo" :key="item.id">
-              <p>
-                <svg
-                  width="6"
-                  height="6"
-                  viewBox="0 0 6 6"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <circle cx="3" cy="3" r="2.5" stroke="#8189A7" />
-                </svg>
-                {{ item.info }}
-              </p>
-            </div>
-          </div>
+          <UpdateReleaseNotes :notes="softUpdateInfo" />
 
           <div class="view_button" style="display: inline-block; float: left">
             <button class="later" @click="later">{{ $t('m.imKeyManager.update_later') }}</button>
@@ -160,22 +145,7 @@
           <h4>{{ $t('m.imKeyManager.found_new_soft_version') }}</h4>
           <ErrorDetail :message="errorInfo" :stage="errorStage" />
           <p>{{ $t('m.imKeyManager.update_tip_wait') }}</p>
-          <div class="update-info-scroller">
-            <div v-for="item in softUpdateInfo" :key="item.id">
-              <p>
-                <svg
-                  width="6"
-                  height="6"
-                  viewBox="0 0 6 6"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <circle cx="3" cy="3" r="2.5" stroke="#8189A7" />
-                </svg>
-                {{ item.info }}
-              </p>
-            </div>
-          </div>
+          <UpdateReleaseNotes :notes="softUpdateInfo" />
 
           <p>
             <el-progress color="#000" :percentage="progress"></el-progress>
@@ -201,6 +171,7 @@
 import { computed, onMounted, ref, toRefs, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import ErrorDetail from '../components/ErrorDetail.vue'
+import UpdateReleaseNotes from '../components/UpdateReleaseNotes.vue'
 import { useSoftwareUpdate } from '../composables/useSoftwareUpdate'
 const route = useRoute()
 const ownsUpdater = computed(() => route.path !== '/home/setting')
@@ -437,12 +408,6 @@ status5AlertBox p:nth-of-type(4) {
   font-weight: 600;
   font-size: 13px;
   color: #ded0b6;
-}
-.update-info-scroller {
-  -webkit-overflow-scrolling: touch;
-  overflow-scrolling: touch;
-  height: 70px;
-  overflow: scroll;
 }
 .view_button {
   margin-top: 30px;

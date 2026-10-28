@@ -64,6 +64,10 @@ beforeEach(() => {
   vi.stubGlobal('window', { imkey: bridge })
   vi.stubGlobal('document', { addEventListener: vi.fn(), removeEventListener: vi.fn() })
 })
+async function offerSoftwareUpdate(update: ReturnType<typeof useSoftwareUpdate>) {
+  await update.checkSoftUpdate()
+  message({ action: 'updateAva', updateInfo: { version: '2.2.1' } })
+}
 async function mounted() {
   for (const callback of mocks.mounted) await callback()
   await vi.waitFor(() => expect(mocks.call).toHaveBeenCalled())
@@ -120,6 +124,7 @@ describe('software updates fail visibly and support retry', () => {
     bridge.updater.download.mockRejectedValueOnce(new Error('download unavailable'))
     const status = ref(4)
     const update = useSoftwareUpdate(status)
+    await offerSoftwareUpdate(update)
     await update.updateNow()
     expect(update.state.errorInfo).toBe('download unavailable')
     expect(status.value).toBe(4)
@@ -138,6 +143,7 @@ describe('software updates fail visibly and support retry', () => {
     )
     const status = ref(4)
     const update = useSoftwareUpdate(status)
+    await offerSoftwareUpdate(update)
     const downloading = update.updateNow()
     progress({ percent: NaN })
     expect(update.state.progress).toBe(0)
@@ -320,6 +326,7 @@ it('delayed home installation is cancelled by later and unmount', async () => {
   vi.useFakeTimers()
   try {
     const update = useSoftwareUpdate(ref(4), { installDelayMs: 5000 })
+    await offerSoftwareUpdate(update)
     await update.updateNow()
     expect(bridge.updater.quitAndInstall).not.toHaveBeenCalled()
     expect(update.state.busy).toBe(false)
@@ -354,7 +361,7 @@ it('home updater ignores events while settings owns the UI', async () => {
 })
 it('updater error events during a successful download response prevent installation', async () => {
   const update = useSoftwareUpdate(ref(4))
-  await update.checkSoftUpdate()
+  await offerSoftwareUpdate(update)
   bridge.updater.download.mockImplementation(async () => {
     message({ action: 'error', errorInfo: { message: 'download integrity failed' } })
   })

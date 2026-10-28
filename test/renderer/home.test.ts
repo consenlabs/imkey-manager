@@ -27,6 +27,15 @@ function createHome() {
     unmount: () => lifecycle.unmounted.forEach(callback => callback())
   }
 }
+async function createAvailableHome() {
+  const context = createHome()
+  await context.home.checkSoftUpdate()
+  context.updater.onMessage.mock.calls[0][0]({
+    action: 'updateAva',
+    updateInfo: { version: '2.2.1', releaseNotes: '[{info:"Release note"}]' }
+  })
+  return context
+}
 beforeEach(() => {
   lifecycle.unmounted.length = 0
 })
@@ -35,6 +44,47 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 describe('home updater lifecycle', () => {
+  it('does not invent an update when navigation dismisses an updater with no result', async () => {
+    const { home, status, updater } = createHome()
+    await home.checkSoftUpdate()
+    home.later()
+    expect(status.value).toBe(1)
+    home.updateNowTip()
+    expect(status.value).toBe(1)
+    await home.updateNow()
+    expect(updater.download).not.toHaveBeenCalled()
+    expect(updater.quitAndInstall).not.toHaveBeenCalled()
+  })
+  it('preserves an actual update when dismissed and clears it after a no-update response', async () => {
+    const { home, status, updater } = await createAvailableHome()
+    home.updateNowTip()
+    expect(status.value).toBe(4)
+    home.later()
+    expect(status.value).toBe(6)
+    expect(home.state.softNewVersionData).toBe('2.2.1')
+    expect(home.state.softUpdateInfo).toEqual([{ id: 0, info: 'Release note' }])
+    updater.onMessage.mock.calls[0][0]({ action: 'updateNotAva' })
+    expect(home.state.softNewVersionData).toBe('')
+    expect(home.state.softUpdateInfo).toEqual([])
+    home.later()
+    home.updateNowTip()
+    await home.updateNow()
+    expect(status.value).toBe(1)
+    expect(updater.download).not.toHaveBeenCalled()
+  })
+  it.each([undefined, {}, { version: '' }, { version: '  ' }, { version: 2 }])(
+    'does not offer or download an update without a target version: %j',
+    async updateInfo => {
+      const { home, status, updater } = await createAvailableHome()
+      updater.onMessage.mock.calls[0][0]({ action: 'updateAva', updateInfo })
+      home.updateNowTip()
+      await home.updateNow()
+      expect(status.value).toBe(1)
+      expect(home.state.softNewVersionData).toBe('')
+      expect(home.state.softUpdateInfo).toEqual([])
+      expect(updater.download).not.toHaveBeenCalled()
+    }
+  )
   it('parses legacy object-literal release notes as data without running expressions', async () => {
     const { home, updater } = createHome()
     await home.checkSoftUpdate()
@@ -51,8 +101,7 @@ describe('home updater lifecycle', () => {
     expect((globalThis as unknown as { executed: boolean }).executed).toBe(false)
   })
   it('subscribes before checking and removes each subscription on unmount', async () => {
-    const { home, updater, unmount } = createHome()
-    await home.checkSoftUpdate()
+    const { home, updater, unmount } = await createAvailableHome()
     await home.updateNow()
     expect(updater.onMessage.mock.invocationCallOrder[0]).toBeLessThan(
       updater.check.mock.invocationCallOrder[0]
@@ -68,7 +117,7 @@ describe('home updater lifecycle', () => {
   })
   it('waits for the download promise before scheduling installation despite 100 percent progress', async () => {
     vi.useFakeTimers()
-    const { home, updater } = createHome()
+    const { home, updater } = await createAvailableHome()
     let finishDownload!: () => void
     updater.download.mockImplementationOnce(
       () =>
@@ -93,7 +142,7 @@ describe('home updater lifecycle', () => {
   })
   it('cancels a pending install on unmount', async () => {
     vi.useFakeTimers()
-    const { home, updater, unmount } = createHome()
+    const { home, updater, unmount } = await createAvailableHome()
     await home.updateNow()
     unmount()
     await vi.advanceTimersByTimeAsync(5000)
@@ -101,7 +150,7 @@ describe('home updater lifecycle', () => {
   })
   it('does not schedule installation if unmounted while download is pending', async () => {
     vi.useFakeTimers()
-    const { home, updater, unmount } = createHome()
+    const { home, updater, unmount } = await createAvailableHome()
     let finishDownload!: () => void
     updater.download.mockImplementationOnce(
       () =>
@@ -117,7 +166,7 @@ describe('home updater lifecycle', () => {
     expect(updater.quitAndInstall).not.toHaveBeenCalled()
   })
   it('handles rejected updater calls without leaving a downloading screen', async () => {
-    const { home, status, updater } = createHome()
+    const { home, status, updater } = await createAvailableHome()
     updater.download.mockRejectedValueOnce(new Error('download unavailable'))
     await home.updateNow()
     expect(home.state.errorInfo).toBe('download unavailable')

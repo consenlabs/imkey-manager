@@ -20,7 +20,7 @@ const {
   isCosUpdate
 } = toRefs(settings.firmware.state)
 const updater = useSoftwareUpdate(toRef(settings.state, 'status'))
-const { progress, softOldVersionData, softNewVersionData } = toRefs(updater.state)
+const { progress, softOldVersionData, softNewVersionData, softUpdateInfo } = toRefs(updater.state)
 const { copyText, exportBindCode } = settings
 const { changeCode, isShowalert, updateFirmware } = settings.firmware
 const { later, updateNow, updateNowTip, checkSoftUpdate } = updater
@@ -78,6 +78,7 @@ defineExpose({ checkSoftUpdate })
     :progress="progress"
     :soft-old-version-data="softOldVersionData"
     :soft-new-version-data="softNewVersionData"
+    :soft-update-info="softUpdateInfo"
     @later="later"
     @update-now="updateNow"
   />

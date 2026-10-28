@@ -15,7 +15,7 @@ function releaseNotes(value: unknown): { id: number | string; info: string }[] {
     try {
       parsed = JSON5.parse(value)
     } catch {
-      return value ? [{ id: 0, info: value }] : []
+      return value.trim() ? [{ id: 0, info: value }] : []
     }
   }
   if (!Array.isArray(parsed)) return []
@@ -23,7 +23,7 @@ function releaseNotes(value: unknown): { id: number | string; info: string }[] {
     if (!record(note)) return []
     const info = note.info ?? note.note
     const noteId = typeof note.id === 'number' || typeof note.id === 'string' ? note.id : id
-    return typeof info === 'string' ? [{ id: noteId, info }] : []
+    return typeof info === 'string' && info.trim() ? [{ id: noteId, info }] : []
   })
 }
 export function useSoftwareUpdate(status: Ref<number>, options: UpdateOptions = {}) {
@@ -43,6 +43,7 @@ export function useSoftwareUpdate(status: Ref<number>, options: UpdateOptions = 
   let installRequested = false
   let installTimer: ReturnType<typeof setTimeout> | undefined
   const enabled = () => active && (options.isEnabled?.() ?? true)
+  const hasUpdate = () => state.softNewVersionData.length > 0
   function cancelInstall() {
     installRequested = false
     clearTimeout(installTimer)
@@ -58,15 +59,16 @@ export function useSoftwareUpdate(status: Ref<number>, options: UpdateOptions = 
   }
   function later() {
     cancelInstall()
-    status.value = 6
+    status.value = hasUpdate() ? 6 : 1
   }
   function updateNowTip() {
+    if (!enabled() || !hasUpdate()) return
     status.value = 4
     state.progress = 0
     state.errorInfo = ''
   }
   async function downloadAndUpdate() {
-    if (state.busy || !enabled()) return
+    if (state.busy || !enabled() || !hasUpdate()) return
     cancelInstall()
     installRequested = true
     state.busy = true
@@ -103,21 +105,38 @@ export function useSoftwareUpdate(status: Ref<number>, options: UpdateOptions = 
   function updateNow() {
     return downloadAndUpdate()
   }
+  function clearUpdate() {
+    cancelInstall()
+    retryDownload = false
+    state.softNewVersionData = ''
+    state.softUpdateInfo = []
+    state.progress = 0
+    state.errorInfo = ''
+    state.errorStage = ''
+    status.value = 1
+  }
   function subscribe() {
     unsubscribeMessage?.()
     unsubscribeMessage = window.imkey.updater.onMessage(value => {
       if (!enabled() || !record(value)) return
       if (value.action === 'error') {
         fail(value.errorInfo, status.value === 5)
-      } else if (
-        value.action === 'updateAva' &&
-        record(value.updateInfo) &&
-        typeof value.updateInfo.version === 'string'
-      ) {
-        status.value = 6
-        state.softNewVersionData = value.updateInfo.version
+      } else if (value.action === 'updateAva') {
+        if (
+          !record(value.updateInfo) ||
+          typeof value.updateInfo.version !== 'string' ||
+          !value.updateInfo.version.trim()
+        ) {
+          clearUpdate()
+          return
+        }
+        state.softNewVersionData = value.updateInfo.version.trim()
         state.softUpdateInfo = releaseNotes(value.updateInfo.releaseNotes)
-      } else if (value.action === 'updateNotAva') status.value = 1
+        state.errorInfo = ''
+        state.errorStage = ''
+        retryDownload = false
+        status.value = 6
+      } else if (value.action === 'updateNotAva') clearUpdate()
     })
   }
   async function checkSoftUpdate() {

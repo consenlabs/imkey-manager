@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import ErrorDetail from '../ErrorDetail.vue'
+import UpdateReleaseNotes from '../UpdateReleaseNotes.vue'
 defineProps<{
   errorInfo?: string
   errorStage?: string
@@ -7,6 +8,7 @@ defineProps<{
   progress: number
   softOldVersionData: string
   softNewVersionData: string
+  softUpdateInfo: { id: number | string; info: string }[]
 }>()
 const emit = defineEmits<{ later: []; updateNow: []; retry: [] }>()
 </script>
@@ -42,31 +44,8 @@ const emit = defineEmits<{ later: []; updateNow: []; retry: [] }>()
           {{ $t('m.imKeyManager.new_version_is') }}V{{ softNewVersionData
           }}{{ $t('m.imKeyManager.current_version_is') }}V{{ softOldVersionData }}
         </p>
-        <p>
-          <svg
-            width="6"
-            height="6"
-            viewBox="0 0 6 6"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <circle cx="3" cy="3" r="2.5" stroke="#8189A7" />
-          </svg>
-          你可以在「管理」中看到设备内存并进行管理
-        </p>
-        <p>
-          <svg
-            width="6"
-            height="6"
-            viewBox="0 0 6 6"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <circle cx="3" cy="3" r="2.5" stroke="#8189A7" />
-          </svg>
-          新增暗黑模式
-        </p>
-        <p>
+        <UpdateReleaseNotes :notes="softUpdateInfo" />
+        <div class="update-actions">
           <button class="later" @click.prevent="emit('later')">
             {{ $t('m.imKeyManager.update_later') }}
           </button>
@@ -77,7 +56,7 @@ const emit = defineEmits<{ later: []; updateNow: []; retry: [] }>()
           >
             {{ $t('m.imKeyManager.update_now') }}
           </button>
-        </p>
+        </div>
       </div>
     </div>
   </div>
@@ -90,39 +69,19 @@ const emit = defineEmits<{ later: []; updateNow: []; retry: [] }>()
           {{ $t('m.imKeyManager.new_version_is') }}V{{ softNewVersionData
           }}{{ $t('m.imKeyManager.current_version_is') }}V{{ softOldVersionData }}
         </p>
-        <p>
-          <svg
-            width="6"
-            height="6"
-            viewBox="0 0 6 6"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <circle cx="3" cy="3" r="2.5" stroke="#8189A7" />
-          </svg>
-          你可以在「管理」中看到设备内存并进行管理
-        </p>
-        <p>
-          <svg
-            width="6"
-            height="6"
-            viewBox="0 0 6 6"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <circle cx="3" cy="3" r="2.5" stroke="#8189A7" />
-          </svg>
-          新增暗黑模式
-        </p>
-        <p>
+        <UpdateReleaseNotes :notes="softUpdateInfo" />
+        <div>
           <el-progress color="#000" :percentage="progress"></el-progress>
           <a href="#" @click.prevent="emit('later')">{{ $t('m.imKeyManager.cancel') }}</a>
-        </p>
+        </div>
       </div>
     </div>
   </div>
 </template>
 <style scoped>
+.update-actions {
+  margin-top: 30px;
+}
 .status2 :deep(.operation-error) {
   max-width: min(560px, calc(100% - 48px));
   margin-top: 8px;

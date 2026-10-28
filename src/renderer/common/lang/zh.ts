@@ -197,6 +197,7 @@ export const m = {
     current_version_is: '，当前版本为 ',
     update_later: '稍后更新',
     update_now: '立刻更新',
+    release_notes_unavailable: '暂未提供更新内容。',
     cancel: '取消',
     copy_success: '复制成功',
     verifying: ' 正在验证',
