@@ -1,3 +1,5 @@
+import type { FirmwareDiagnosticCode, FirmwareDiagnosticStage } from './firmwareDiagnostics'
+
 export const deviceMethods = [
   'initImKeyCore',
   'connectDevice',
@@ -82,6 +84,8 @@ export interface FirmwareRecoveryCheckpoint {
   // have no baseline; legacy v1 files may still contain advertised targets there.
   expectedCos: string
   expectedBle: string
+  // Optional for older v1 records. Actual COS observed before the native update.
+  previousCos?: string
   pendingAddresses?: WalletChain[]
 }
 export type FirmwareRecoveryMethod =
@@ -158,14 +162,34 @@ export interface DeviceCallContext {
 }
 export const deviceOperationActions = ['action', 'initialize', 'firmware-upgrade'] as const
 export type DeviceOperationAction = (typeof deviceOperationActions)[number]
-export const deviceOperationPhases = ['enqueued', 'started', 'feedback', 'finished'] as const
-export interface DeviceOperationTrace {
+export const deviceOperationPhases = [
+  'enqueued',
+  'started',
+  'feedback',
+  'finished',
+  'failed'
+] as const
+interface DeviceOperationTraceIdentity {
   operationId: string
   action: DeviceOperationAction
-  phase: (typeof deviceOperationPhases)[number]
-  queueMs?: number
-  durationMs?: number
 }
+export type DeviceOperationTrace = DeviceOperationTraceIdentity &
+  (
+    | {
+        phase: Exclude<(typeof deviceOperationPhases)[number], 'failed'>
+        queueMs?: number
+        durationMs?: number
+        stage?: never
+        code?: never
+      }
+    | {
+        phase: 'failed'
+        stage: FirmwareDiagnosticStage
+        code: FirmwareDiagnosticCode
+        queueMs?: never
+        durationMs?: never
+      }
+  )
 export interface DeviceRequest {
   id: number
   method: DeviceMethod
@@ -211,6 +235,7 @@ export function isFirmwareRecoveryCheckpoint(value: unknown): value is FirmwareR
       'needsBinding',
       'expectedCos',
       'expectedBle',
+      'previousCos',
       'pendingAddresses'
     ]) &&
     value.version === 1 &&
@@ -220,6 +245,9 @@ export function isFirmwareRecoveryCheckpoint(value: unknown): value is FirmwareR
     [value.expectedCos, value.expectedBle].every(
       version => typeof version === 'string' && /^[a-zA-Z0-9._-]{0,64}$/.test(version)
     ) &&
+    (value.previousCos === undefined ||
+      (typeof value.previousCos === 'string' &&
+        /^[a-zA-Z0-9._-]{1,64}$/.test(value.previousCos))) &&
     (value.pendingAddresses === undefined ||
       (Array.isArray(value.pendingAddresses) &&
         value.pendingAddresses.length <= walletChains.length &&

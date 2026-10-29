@@ -483,6 +483,12 @@ describe('binding code identity guards', () => {
 })
 
 describe('durable firmware recovery safety', () => {
+  it('limits the missing-binding preflight exception to verify on a BLE-only plan', () => {
+    expect(firmwareRecoveryRequiresBinding('verify', false)).toBe(false)
+    expect(firmwareRecoveryRequiresBinding('verify', true)).toBe(true)
+    for (const phase of ['store', 'apps', 'restore', 'complete'] as const)
+      expect(firmwareRecoveryRequiresBinding(phase, false)).toBe(true)
+  })
   it.each(['update', 'capture-versions'] as const)(
     'migrates legacy v1 %s targets to an uncaptured baseline',
     phase => {
@@ -715,5 +721,156 @@ describe('durable firmware recovery safety', () => {
       result: 'firmware_recovery_unreadable'
     })
     for (const method of writes) expect(context.count(method)).toBe(0)
+  })
+})
+
+describe('promoting a BLE-only plan to full recovery', () => {
+  function pending(phase: 'capture-versions' | 'verify', status = 'unbound') {
+    const context = setup({
+      phase,
+      needsBinding: false,
+      bindCode: '',
+      expectedCos: phase === 'verify' ? '1.1.0' : '',
+      expectedBle: phase === 'verify' ? '2.1.0' : '',
+      pendingAddresses: ['Ethereum']
+    })
+    let acquired = false
+    const original = context.invoke.getMockImplementation()!
+    context.invoke.mockImplementation(async (method, params) => {
+      if (method === 'deviceBindCheck' && !acquired && !context.responses[method])
+        return { isSuccess: true, result: status }
+      const result = await original(method, params)
+      if (method === 'deviceBindAcquire' && result.isSuccess) acquired = true
+      return result
+    })
+    return context
+  }
+
+  it('leaves an unchanged COS with bound_this on the BLE-only path', async () => {
+    const context = setup({ needsBinding: false, previousCos: '1.1.0', bindCode: '' })
+    expect(await context.run()).toBeUndefined()
+    expect(context.recovery.needsBinding).toBe(false)
+    for (const method of [
+      'exportBindCode',
+      'deviceBindAcquire',
+      'importBindCode',
+      'writeWalletAddress'
+    ] as const)
+      expect(context.count(method)).toBe(0)
+    expect(context.count('cosUpdate')).toBe(1)
+    expect(context.count('clearFirmwareRecovery')).toBe(1)
+  })
+
+  it('rebuilds every installed address when actual COS changed even if still bound_this', async () => {
+    const context = pending('capture-versions', 'bound_this')
+    context.recovery.previousCos = '1.0.0'
+    expect(await context.run()).toBeUndefined()
+    expect(context.recovery.needsBinding).toBe(true)
+    expect(context.count('cosUpdate')).toBe(0)
+    expect(context.count('exportBindCode')).toBe(1)
+    expect(context.count('deviceBindAcquire')).toBe(1)
+    expect(context.invoke).toHaveBeenCalledWith('writeWalletAddress', {
+      name: ['Ethereum', 'Bitcoin'],
+      filePath: '/user'
+    })
+    const promoted = context.invoke.mock.calls.find(
+      ([method, value]) =>
+        method === 'saveFirmwareRecovery' &&
+        (value as FirmwareRecoveryCheckpoint).phase === 'load-code'
+    )?.[1]
+    expect(promoted).toMatchObject({
+      needsBinding: true,
+      previousCos: '1.0.0',
+      expectedCos: '1.1.0'
+    })
+    expect(promoted).not.toHaveProperty('pendingAddresses')
+  })
+
+  it.each(['capture-versions', 'verify'] as const)(
+    'repairs an old %s checkpoint without previousCos after binding loss',
+    async phase => {
+      for (const status of ['unbound', 'bound_other']) {
+        const context = pending(phase, status)
+        expect(await context.run()).toBeUndefined()
+        expect(context.recovery.needsBinding).toBe(true)
+        expect(context.count('cosUpdate')).toBe(0)
+        expect(context.count('deviceBindAcquire')).toBe(1)
+        expect(context.invoke).toHaveBeenCalledWith('writeWalletAddress', {
+          name: ['Ethereum', 'Bitcoin'],
+          filePath: '/user'
+        })
+        const methods = context.invoke.mock.calls.map(([method]) => method)
+        expect(methods.indexOf('cosCheckUpdate')).toBeLessThan(methods.indexOf('exportBindCode'))
+        expect(methods.indexOf('getUpgradeSeid')).toBeLessThan(methods.indexOf('exportBindCode'))
+        expect(context.count('clearFirmwareRecovery')).toBe(1)
+      }
+    }
+  )
+
+  const failures: { method: DeviceMethod; response: DeviceResult }[] = [
+    { method: 'deviceBindCheck', response: failed('binding_unavailable') },
+    { method: 'deviceBindCheck', response: { isSuccess: true, result: 'unknown' } },
+    { method: 'isBLStatus', response: failed('mode_unavailable') },
+    { method: 'isBLStatus', response: { isSuccess: true, result: true } },
+    { method: 'getFirmwareVersion', response: failed('cos_unavailable') },
+    { method: 'getFirmwareVersion', response: { isSuccess: true, result: '' } },
+    { method: 'getBleVersion', response: failed('ble_unavailable') },
+    { method: 'getBleVersion', response: { isSuccess: true, result: '' } },
+    { method: 'getUpgradeSeid', response: failed('identity_unavailable') },
+    { method: 'getUpgradeSeid', response: { isSuccess: true, result: 'SEID-B' } },
+    { method: 'cosCheckUpdate', response: failed('server_unavailable') },
+    { method: 'cosCheckUpdate', response: { isSuccess: true, result: { isUpdateSuccess: false } } }
+  ]
+  it.each(
+    failures.flatMap(failure =>
+      (['capture-versions', 'verify'] as const).map(phase => ({ ...failure, phase }))
+    )
+  )(
+    '$phase refuses promotion when $method returns $response',
+    async ({ phase, method, response }) => {
+      const context = pending(phase)
+      // A changed COS must not bypass the binding/identity validation during capture.
+      context.recovery.previousCos = '1.0.0'
+      const original = structuredClone(context.recovery)
+      context.responses[method] = response
+      expect(await context.run()).toMatchObject({ error: { isSuccess: false } })
+      expect(context.recovery).toEqual(original)
+      for (const method of [...writes, 'exportBindCode', 'clearFirmwareRecovery'] as const)
+        expect(context.count(method)).toBe(0)
+      expect(
+        context.invoke.mock.calls.filter(([name]) => name === 'saveFirmwareRecovery')
+      ).toHaveLength(1)
+    }
+  )
+
+  it.each(['getFirmwareVersion', 'getBleVersion'] as const)(
+    'does not repair a legacy verify record whose %s changed',
+    async method => {
+      const context = pending('verify')
+      context.responses[method] = { isSuccess: true, result: '9.9.9' }
+      expect(await context.run()).toMatchObject({
+        error: { result: 'firmware_recovery_version_mismatch' }
+      })
+      expect(context.recovery.needsBinding).toBe(false)
+      expect(context.recovery.phase).toBe('verify')
+      for (const method of [...writes, 'exportBindCode', 'clearFirmwareRecovery'] as const)
+        expect(context.count(method)).toBe(0)
+    }
+  )
+
+  it('does not read a code or bind when the promoted checkpoint cannot be saved', async () => {
+    const context = pending('verify')
+    const original = context.invoke.getMockImplementation()!
+    context.invoke.mockImplementation(async (method, params) => {
+      if (
+        method === 'saveFirmwareRecovery' &&
+        (params as FirmwareRecoveryCheckpoint).phase === 'load-code'
+      )
+        return failed('firmware_recovery_write_failed')
+      return original(method, params)
+    })
+    expect(await context.run()).toMatchObject({ stage: 'store' })
+    for (const method of [...writes, 'exportBindCode', 'clearFirmwareRecovery'] as const)
+      expect(context.count(method)).toBe(0)
   })
 })

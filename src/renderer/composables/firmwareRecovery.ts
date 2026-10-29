@@ -25,6 +25,7 @@ export interface FirmwareRecovery {
   // They become authoritative only after capture-versions completes.
   expectedCos: string
   expectedBle: string
+  previousCos?: string
   pendingAddresses?: WalletChain[]
 }
 export interface FirmwareFailure {
@@ -41,7 +42,13 @@ function unsuccessful(result: DeviceResult): DeviceResult {
     : result
 }
 
-export function firmwareRecoveryRequiresBinding(phase: FirmwarePhase): boolean {
+export function firmwareRecoveryRequiresBinding(
+  phase: FirmwarePhase,
+  needsBinding = true
+): boolean {
+  // A BLE-only plan may discover a lost binding at final verification. Allow the
+  // recovery engine to inspect and repair it; this does not authorize home access.
+  if (phase === 'verify' && !needsBinding) return false
   return !['update', 'capture-versions', 'load-code', 'bind'].includes(phase)
 }
 
@@ -82,6 +89,7 @@ async function saveRecovery(recovery: FirmwareRecovery, call: typeof callDevice)
     needsBinding: recovery.needsBinding,
     expectedCos: recovery.expectedCos,
     expectedBle: recovery.expectedBle,
+    ...(recovery.previousCos === undefined ? {} : { previousCos: recovery.previousCos }),
     ...(recovery.pendingAddresses ? { pendingAddresses: [...recovery.pendingAddresses] } : {})
   })
 }
@@ -184,12 +192,28 @@ export async function runFirmwareRecovery(
           stage: 'check',
           error: { isSuccess: false, result: 'firmware_recovery_not_ready' }
         }
+      let needsBinding =
+        recovery.needsBinding ||
+        Boolean(recovery.previousCos && recovery.previousCos !== versions[0])
+      if (!recovery.needsBinding) {
+        const binding = await call('deviceBindCheck')
+        if (!current()) return cancelled()
+        if (!binding.isSuccess) return { stage: 'bind', error: binding }
+        if (!['bound_this', 'bound_other', 'unbound'].includes(binding.result))
+          return {
+            stage: 'bind',
+            error: { isSuccess: false, result: 'device_bind_check_failed' }
+          }
+        needsBinding = needsBinding || binding.result !== 'bound_this'
+      }
       const identity = await call('getUpgradeSeid')
       if (!current()) return cancelled()
       if (!identity.isSuccess) return { stage: 'connect', error: identity }
       if (identity.result.toUpperCase() !== recovery.seid.toUpperCase())
         return { stage: 'connect', error: { isSuccess: false, result: 'device_session_changed' } }
       ;[recovery.expectedCos, recovery.expectedBle] = versions
+      if (!recovery.needsBinding && needsBinding) delete recovery.pendingAddresses
+      recovery.needsBinding = needsBinding
       recovery.phase = recovery.needsBinding ? (recovery.bindCode ? 'bind' : 'load-code') : 'verify'
     } else if (phase === 'load-code') {
       const failure = await readRecoveryCode(recovery, call, current, false)
@@ -248,7 +272,10 @@ export async function runFirmwareRecovery(
       const binding = await call('deviceBindCheck')
       if (!current()) return cancelled()
       if (!binding.isSuccess) return { stage: 'bind', error: binding }
-      if (binding.result !== 'bound_this')
+      if (
+        binding.result !== 'bound_this' &&
+        (recovery.needsBinding || !['unbound', 'bound_other'].includes(binding.result))
+      )
         return { stage: 'bind', error: { isSuccess: false, result: 'device_bind_check_failed' } }
       const validation = await validateFirmwareResume(recovery, call, current)
       if (validation) return validation
@@ -260,7 +287,14 @@ export async function runFirmwareRecovery(
           stage: 'check',
           error: { isSuccess: false, result: 'firmware_recovery_not_ready' }
         }
-      recovery.phase = 'complete'
+      if (binding.result !== 'bound_this') {
+        // Older BLE-only checkpoints can already be at verify when COS changed.
+        // Promote only after mode, actual versions, native completion and identity
+        // have been checked. The ordinary code/rebind/address checks still follow.
+        recovery.needsBinding = true
+        delete recovery.pendingAddresses
+        recovery.phase = 'load-code'
+      } else recovery.phase = 'complete'
     }
   }
   return cancelled()

@@ -413,3 +413,72 @@ it('server-confirmed native incompletion clears the old baseline before reenteri
   expect(flow.hasPendingRecovery()).toBe(false)
   expect(journal).toBeNull()
 })
+
+it.each(['unbound', 'bound_other'])(
+  'restarts a legacy BLE-only verify record on %s and restores all addresses before home',
+  async status => {
+    bootloader = false
+    updated = true
+    binding = status
+    journal = {
+      version: 1,
+      seid,
+      phase: 'verify',
+      needsBinding: false,
+      expectedCos: cos,
+      expectedBle: ble,
+      pendingAddresses: ['Ethereum']
+    }
+    await useConnection().check()
+    expect(calls('cosUpdate')).toHaveLength(0)
+    expect(calls('deviceBindAcquire')).toHaveLength(1)
+    expect(calls('writeWalletAddress')[0][1]).toEqual({
+      name: ['Ethereum', 'Bitcoin'],
+      filePath: ''
+    })
+    const promoted = calls('saveFirmwareRecovery').find(
+      ([, value]) => (value as FirmwareRecoveryCheckpoint).phase === 'load-code'
+    )?.[1]
+    expect(promoted).toMatchObject({ needsBinding: true, expectedCos: cos, expectedBle: ble })
+    expect(promoted).not.toHaveProperty('pendingAddresses')
+    expect(journal).toBeNull()
+    expect(useDeviceStore().canEnterHome).toBe(true)
+    expect(mocks.push).toHaveBeenCalledExactlyOnceWith('/home/welcomeHome')
+  }
+)
+
+it.each(['unknown', 'binding-error', 'version', 'identity', 'server-error'])(
+  'does not let the legacy BLE-only verify exception bypass %s checks',
+  async reason => {
+    bootloader = false
+    updated = true
+    binding = 'unbound'
+    journal = {
+      version: 1,
+      seid,
+      phase: 'verify',
+      needsBinding: false,
+      expectedCos: cos,
+      expectedBle: ble
+    }
+    if (reason === 'unknown') binding = 'unknown'
+    if (reason === 'binding-error') failedMethod = 'deviceBindCheck'
+    if (reason === 'version') cos = 'changed'
+    if (reason === 'identity') journal.seid = 'SEID-B'
+    if (reason === 'server-error') failedMethod = 'cosCheckUpdate'
+    await useConnection().check()
+    expect(journal?.needsBinding).toBe(false)
+    expect(journal?.phase).toBe('verify')
+    for (const method of [
+      'cosUpdate',
+      'deviceBindAcquire',
+      'importBindCode',
+      'writeWalletAddress',
+      'clearFirmwareRecovery',
+      'getBTCXpub'
+    ])
+      expect(calls(method)).toHaveLength(0)
+    expect(useDeviceStore().canEnterHome).toBe(false)
+    expect(mocks.push).not.toHaveBeenCalled()
+  }
+)

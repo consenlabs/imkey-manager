@@ -275,3 +275,47 @@ it('accepts only trusted, bounded operation telemetry without device payloads', 
   })
   await expect(trace(event, value)).resolves.toBeUndefined()
 })
+
+it('routes only exact allowlisted business failures to warning diagnostics', async () => {
+  const log = vi.fn()
+  registerDeviceIpc(() => window, { call } as unknown as ServiceClient, {} as BindCodeStore, log)
+  const trace = handlers.get('device:trace')!
+  const value = {
+    operationId: 'operation-1',
+    action: 'firmware-upgrade',
+    phase: 'failed',
+    stage: 'capture-versions',
+    code: 'FIRMWARE_RECOVERY_VERSION_MISMATCH'
+  }
+  await expect(trace({ sender: {} }, value)).rejects.toThrow('Untrusted IPC sender')
+  for (const invalid of [
+    { ...value, stage: undefined },
+    { ...value, code: undefined },
+    { ...value, stage: 'A2345678' },
+    { ...value, stage: 'getFirmwareVersion' },
+    { ...value, stage: 'capture-versions private-device-data' },
+    { ...value, code: 'FIRMWARE_RECOVERY_PRIVATE_SECRET' },
+    { ...value, code: 'firmware_recovery_version_mismatch' },
+    { ...value, code: { value: 'DEVICE_OPERATION_FAILED' } },
+    { ...value, result: 'A2345678' },
+    { ...value, error: 'private-device-data' },
+    { ...value, seid: 'PRIVATE' },
+    { ...value, bindCode: 'A2345678' },
+    { ...value, version: '1.9.11' },
+    { ...value, wallet: 'xpub-private' },
+    { ...value, queueMs: 0 },
+    { ...value, durationMs: 0 },
+    { ...value, action: 'private-device-data' },
+    { ...value, operationId: 'A2345678' },
+    { ...value, phase: 'finished' }
+  ])
+    await expect(trace(event, invalid)).rejects.toThrow('Invalid device trace')
+  expect(log).not.toHaveBeenCalled()
+  await expect(trace(event, value)).resolves.toBeUndefined()
+  expect(log).toHaveBeenCalledExactlyOnceWith('warn', 'device.operation-failed', value)
+  expect(call).not.toHaveBeenCalled()
+  log.mockImplementation(() => {
+    throw new Error('private diagnostics failure')
+  })
+  await expect(trace(event, value)).resolves.toBeUndefined()
+})

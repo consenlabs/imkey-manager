@@ -117,6 +117,7 @@ export class FirmwareRecoveryStore {
       needsBinding: checkpoint.needsBinding,
       expectedCos: checkpoint.expectedCos,
       expectedBle: checkpoint.expectedBle,
+      ...(checkpoint.previousCos === undefined ? {} : { previousCos: checkpoint.previousCos }),
       ...(checkpoint.pendingAddresses === undefined
         ? {}
         : { pendingAddresses: [...checkpoint.pendingAddresses] })

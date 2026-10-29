@@ -60,6 +60,35 @@ describe('FirmwareRecoveryStore', () => {
     expect(JSON.parse(await readFile(file, 'utf8'))).toEqual(checkpoint)
   })
 
+  it('persists the previous actual COS across restart and still reads older v1 records', async () => {
+    const withPrevious = { ...checkpoint, previousCos: '1.0.01' }
+    expect(await store().saveFirmwareRecovery(withPrevious)).toEqual({
+      isSuccess: true,
+      result: undefined
+    })
+    expect(JSON.parse(await readFile(file, 'utf8'))).toEqual(withPrevious)
+    expect(await store().getFirmwareRecovery()).toEqual({ isSuccess: true, result: withPrevious })
+    await writeFile(file, JSON.stringify(checkpoint))
+    expect(await store().getFirmwareRecovery()).toEqual({ isSuccess: true, result: checkpoint })
+  })
+
+  it.each([null, 1, '', ' '.repeat(4), 'x'.repeat(65), '../secret'])(
+    'rejects invalid previousCos %j on save and reload',
+    async previousCos => {
+      const invalid = { ...checkpoint, previousCos }
+      expect(
+        await store().saveFirmwareRecovery(invalid as FirmwareRecoveryCheckpoint)
+      ).toMatchObject({ isSuccess: false, code: 'FIRMWARE_RECOVERY_INVALID' })
+      expect(getSeid).not.toHaveBeenCalled()
+      await mkdir(path.dirname(file))
+      await writeFile(file, JSON.stringify(invalid))
+      expect(await store().getFirmwareRecovery()).toMatchObject({
+        isSuccess: false,
+        code: 'FIRMWARE_RECOVERY_UNREADABLE'
+      })
+    }
+  )
+
   it.each(['../escape', '/tmp/escape', '..', 'a\\b', 'a'.repeat(129), ''])(
     'rejects unsafe native identity %j',
     async seid => {

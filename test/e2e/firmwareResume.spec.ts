@@ -24,6 +24,7 @@ interface Control {
   latestCos?: string
   failCaptureRead?: 'once' | 'persistent' | false
   failWallet?: boolean
+  postUpdateBinding?: string
 }
 interface DeviceState {
   cosWritten: boolean
@@ -42,6 +43,15 @@ interface Call {
   seid: string
   method: string
 }
+interface Diagnostic {
+  level: string
+  event: string
+  operationId?: string
+  phase?: string
+  stage?: string
+  code?: string
+  method?: string
+}
 
 let application: ElectronApplication | undefined
 let page: Page
@@ -51,6 +61,11 @@ const publishedMismatch: Control = {
   initialCos: '1.6.03',
   installedCos: '1.9.11',
   latestCos: '1.9.12'
+}
+const unexpectedCosUpdate: Control = {
+  initialCos: '1.9.11',
+  latestCos: '1.9.11',
+  installedCos: '1.9.12'
 }
 
 async function configure(update: Partial<Control>): Promise<void> {
@@ -108,6 +123,51 @@ async function state(seid = 'RESUMEDEVICEA'): Promise<DeviceState> {
       DeviceState
     >
   )[seid]
+}
+
+async function expectMissingCodeDiagnostic(): Promise<void> {
+  const file = path.join(directory, 'logs/manager.jsonl')
+  const records = async (): Promise<Diagnostic[]> =>
+    (await readFile(file, 'utf8'))
+      .trim()
+      .split('\n')
+      .map(line => JSON.parse(line))
+  await expect.poll(records).toContainEqual(
+    expect.objectContaining({
+      level: 'warn',
+      event: 'device.operation-failed',
+      phase: 'failed',
+      stage: 'load-code',
+      code: 'BINDING_CODE_FILE_MISSING'
+    })
+  )
+  const failure = (await records()).find(
+    item => item.event === 'device.operation-failed' && item.code === 'BINDING_CODE_FILE_MISSING'
+  )!
+  expect(failure.operationId).toMatch(/^[a-z0-9-]{1,64}$/)
+  await expect.poll(records).toContainEqual(
+    expect.objectContaining({
+      event: 'device.operation',
+      operationId: failure.operationId,
+      phase: 'finished'
+    })
+  )
+  const operation = (await records()).filter(item => item.operationId === failure.operationId)
+  const index = (event: string, method?: string) =>
+    operation.findIndex(item => item.event === event && (!method || item.method === method))
+  const failedAt = index('device.operation-failed')
+  expect(index('device.call-queued', 'cosUpdate')).toBeGreaterThanOrEqual(0)
+  expect(index('device.call-finished', 'cosUpdate')).toBeGreaterThan(
+    index('device.call-queued', 'cosUpdate')
+  )
+  expect(index('binding.storage-finished', 'exportBindCode')).toBeGreaterThan(
+    index('device.call-finished', 'cosUpdate')
+  )
+  expect(failedAt).toBeGreaterThan(index('binding.storage-finished', 'exportBindCode'))
+  expect(operation.at(-1)).toMatchObject({ event: 'device.operation', phase: 'finished' })
+  const log = await readFile(file, 'utf8')
+  for (const secret of ['A2345678', 'xpub-resumed-wallet', 'RESUMEDEVICEA'])
+    expect(log).not.toContain(secret)
 }
 
 async function connect(seed = false): Promise<void> {
@@ -175,6 +235,28 @@ async function retryDeviceUpgrade(): Promise<void> {
   await page.getByTestId('firmware-upgrade-button').click()
 }
 
+async function prepareBleOnlyUpgrade(fault: Control = {}): Promise<void> {
+  await launch({ mode: 'normal', ...unexpectedCosUpdate })
+  await connect(true)
+  await expect(page.locator('.homeBox')).toBeVisible()
+  await page.locator('.routerBar li').nth(2).click()
+  await expect(page.getByTestId('device-info-card')).toContainText('SN-RESUME')
+  await expect(page.locator('.device-info-primary > div').last()).toContainText('1.9.11')
+  await configure({ offer: true, ...fault })
+  await page.getByTestId('firmware-check-button').click()
+  await expect(page.getByTestId('firmware-upgrade-button')).toBeEnabled()
+  expect(await page.evaluate(() => window.imkey.device.call('cosCheckUpdate'))).toMatchObject({
+    isSuccess: true,
+    result: { latestCosVersion: '1.9.11', latestBleVersion: '1.1.0', isUpdateSuccess: true }
+  })
+}
+
+async function confirmBleOnlyUpgrade(): Promise<void> {
+  await page.getByTestId('firmware-upgrade-button').click()
+  await expect(page.locator('.alertBox')).toContainText('Bluetooth')
+  await page.locator('.alertBox button').click()
+}
+
 async function expectActualVersionAndPublishedUpdate(expectedWrites = 1): Promise<void> {
   await expect(page.locator('.device-info-primary > div').last()).toContainText('1.9.11')
   if (await page.getByTestId('firmware-check-button').isVisible())
@@ -204,6 +286,131 @@ test.afterEach(async () => {
   await application?.close()
   application = undefined
   if (directory) await rm(directory, { recursive: true, force: true })
+})
+
+test('an advertised BLE-only update restores binding and addresses when native COS actually changes', async () => {
+  await prepareBleOnlyUpgrade()
+  const before = (await calls()).length
+  await confirmBleOnlyUpgrade()
+  await expect(page.locator('.alert2')).toBeVisible()
+  await completed()
+  const upgraded = (await calls()).slice(before).map(call => call.method)
+  expect(upgraded.filter(method => method === 'cos_update')).toHaveLength(1)
+  expect(upgraded.filter(method => method === 'bind_acquire')).toHaveLength(1)
+  expect(upgraded.indexOf('get_firmware_version')).toBeGreaterThan(upgraded.indexOf('cos_update'))
+  expect(upgraded.indexOf('bind_acquire')).toBeGreaterThan(upgraded.indexOf('get_firmware_version'))
+  expect(upgraded.indexOf('register_address')).toBeGreaterThan(upgraded.indexOf('bind_acquire'))
+  expect(upgraded.indexOf('btc_get_xpub')).toBeGreaterThan(upgraded.indexOf('register_address'))
+  await page.locator('.alert2 button').click()
+  await expect(page.locator('.device-info-primary > div').last()).toContainText('1.9.12')
+  await page.screenshot({ path: test.info().outputPath('ble-only-actual-cos-recovered.png') })
+})
+
+for (const recoveryPath of ['direct-retry', 'reopen'] as const) {
+  test(`an unexpected COS update during BLE-only upgrade resumes a failed rebind through ${recoveryPath}`, async () => {
+    await prepareBleOnlyUpgrade({ failBinding: true })
+    await confirmBleOnlyUpgrade()
+    await expect(page.locator('.alert3')).toContainText('imkey_tsm_bind_acquire_fail')
+    expect(await state()).toMatchObject({
+      physicalWrites: 1,
+      firmwareVersion: '1.9.12',
+      binding: 'unbound',
+      bindingAttempts: 1,
+      addressWrites: 0
+    })
+    const saved = JSON.parse(
+      await readFile(path.join(directory, 'firmware-recovery/RESUMEDEVICEA.json'), 'utf8')
+    )
+    expect(saved).toMatchObject({ phase: 'bind', needsBinding: true, expectedCos: '1.9.12' })
+    expect(JSON.stringify(saved)).not.toContain('A2345678')
+    const beforeRetry = (await calls()).length
+    await configure({ failBinding: false })
+    if (recoveryPath === 'direct-retry') {
+      await retryDeviceUpgrade()
+      await expect(page.locator('.alert2')).toBeVisible()
+    } else {
+      await reopen()
+      await connect()
+    }
+    await completed()
+    expect((await calls()).filter(call => call.method === 'cos_update')).toHaveLength(1)
+    const resumed = (await calls()).slice(beforeRetry).map(call => call.method)
+    expect(resumed.filter(method => method === 'bind_acquire')).toHaveLength(1)
+    expect(resumed.indexOf('register_address')).toBeGreaterThan(resumed.indexOf('bind_acquire'))
+    expect(resumed.indexOf('btc_get_xpub')).toBeGreaterThan(resumed.indexOf('register_address'))
+    await page.screenshot({
+      path: test.info().outputPath(`ble-only-${recoveryPath}-completed.png`)
+    })
+  })
+}
+
+for (const rejection of ['missing-code', 'unknown-binding'] as const) {
+  test(`an unexpected COS update during BLE-only upgrade cannot succeed with ${rejection}`, async () => {
+    await prepareBleOnlyUpgrade(
+      rejection === 'unknown-binding' ? { postUpdateBinding: 'unknown' } : {}
+    )
+    if (rejection === 'missing-code') await rm(path.join(directory, 'RESUMEDEVICEAbindCode.json'))
+    const before = (await calls()).length
+    await confirmBleOnlyUpgrade()
+    if (rejection === 'missing-code') await expect(page.locator('.alert3')).toBeVisible()
+    else await expect(page.locator('.device-recovery-dialog')).toBeVisible()
+    await expect(page.locator('.alert2')).toHaveCount(0)
+    expect(await state()).toMatchObject({ physicalWrites: 1, addressWrites: 0, bindingAttempts: 0 })
+    const rejected = (await calls()).slice(before).map(call => call.method)
+    expect(rejected.filter(method => method === 'cos_update')).toHaveLength(1)
+    expect(rejected).not.toContain('bind_acquire')
+    expect(rejected).not.toContain('register_address')
+    expect(rejected).not.toContain('btc_get_xpub')
+    expect(await readdir(path.join(directory, 'firmware-recovery'))).toEqual(['RESUMEDEVICEA.json'])
+    if (rejection === 'missing-code') {
+      await expectMissingCodeDiagnostic()
+      const dialog = await page.locator('.alertBox.alert3').boundingBox()
+      const button = await page.locator('.alertBox.alert3 button').boundingBox()
+      expect(dialog).not.toBeNull()
+      expect(button).not.toBeNull()
+      expect(button!.x).toBeGreaterThanOrEqual(dialog!.x)
+      expect(button!.y).toBeGreaterThanOrEqual(dialog!.y)
+      expect(button!.x + button!.width).toBeLessThanOrEqual(dialog!.x + dialog!.width)
+      expect(button!.y + button!.height).toBeLessThanOrEqual(dialog!.y + dialog!.height)
+    }
+    await page.screenshot({ path: test.info().outputPath(`ble-only-${rejection}-denied.png`) })
+    await page.evaluate(() => {
+      window.location.hash = '#/home/welcomeHome'
+    })
+    await expect(page).not.toHaveURL(/#\/home/)
+    await expect(page.locator('.homeBox')).toHaveCount(0)
+  })
+}
+
+test('a legacy BLE-only verify checkpoint restores lost binding before wallet authorization', async () => {
+  await prepareBleOnlyUpgrade({ failCaptureRead: 'persistent' })
+  await confirmBleOnlyUpgrade()
+  await expect(page.locator('.alert3')).toBeVisible()
+  expect(await state()).toMatchObject({ physicalWrites: 1, binding: 'unbound' })
+  await application!.close()
+  application = undefined
+  await writeFile(
+    path.join(directory, 'firmware-recovery/RESUMEDEVICEA.json'),
+    JSON.stringify({
+      version: 1,
+      seid: 'RESUMEDEVICEA',
+      phase: 'verify',
+      needsBinding: false,
+      expectedCos: '1.9.12',
+      expectedBle: '1.1.0'
+    })
+  )
+  const beforeRestart = (await calls()).length
+  await configure({ failCaptureRead: false })
+  await reopen()
+  await connect()
+  await completed()
+  expect((await calls()).filter(call => call.method === 'cos_update')).toHaveLength(1)
+  const resumed = (await calls()).slice(beforeRestart).map(call => call.method)
+  expect(resumed.indexOf('bind_acquire')).toBeGreaterThanOrEqual(0)
+  expect(resumed.indexOf('register_address')).toBeGreaterThan(resumed.indexOf('bind_acquire'))
+  expect(resumed.indexOf('btc_get_xpub')).toBeGreaterThan(resumed.indexOf('register_address'))
+  await page.screenshot({ path: test.info().outputPath('legacy-ble-only-verify-recovered.png') })
 })
 
 test('COS downgrade retries native application installation in the same session without rewriting COS', async () => {

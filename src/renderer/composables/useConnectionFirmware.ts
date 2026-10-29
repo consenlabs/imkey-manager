@@ -3,6 +3,7 @@ import type { DeviceOperation } from './useDeviceOperation'
 import { useAppStore, useDeviceStore } from '../store'
 import type { DeviceResult } from '../../shared/deviceContract'
 import { operationError } from './operationError'
+import { isFirmwareDiagnosticStage } from '../../shared/firmwareDiagnostics'
 import {
   runFirmwareRecovery,
   loadFirmwareRecovery,
@@ -36,8 +37,16 @@ export function useConnectionFirmware(
       recovery = saved.result || undefined
     return { isSuccess: true, result: Boolean(recovery) }
   }
-  function report(error: DeviceResult, stage: FirmwareFailure['stage']) {
+  function report(
+    error: DeviceResult,
+    stage: FirmwareFailure['stage'],
+    diagnosticStage: string = stage
+  ) {
     if (!active() || (!error.isSuccess && error.code === 'OPERATION_CANCELLED')) return
+    operation?.failure?.(
+      isFirmwareDiagnosticStage(diagnosticStage) ? diagnosticStage : stage,
+      error
+    )
     device.isCosUpdate = true
     const missingCode =
       !error.isSuccess &&
@@ -87,7 +96,7 @@ export function useConnectionFirmware(
         if (validation) return report(validation.error, validation.stage)
         // A completed rebind must still belong to this computer before storage or
         // address restoration resumes. Earlier phases explicitly allow unbound.
-        if (firmwareRecoveryRequiresBinding(attempt.phase)) {
+        if (firmwareRecoveryRequiresBinding(attempt.phase, attempt.needsBinding)) {
           const binding = await callDevice('deviceBindCheck', app.userPath)
           if (!current()) return
           if (!binding.isSuccess) return report(binding, 'bind')
@@ -114,7 +123,7 @@ export function useConnectionFirmware(
                       : 'update'
         }
       })
-      if (failure) return report(failure.error, failure.stage)
+      if (failure) return report(failure.error, failure.stage, attempt.phase)
       if (!current()) return
       recovery = undefined
       device.isCosUpdate = false

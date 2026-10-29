@@ -18,6 +18,7 @@ import {
   type FirmwareRecovery
 } from './firmwareRecovery'
 import type { FirmwareCheckCache } from '../models/deviceState'
+import { isFirmwareDiagnosticStage } from '../../shared/firmwareDiagnostics'
 
 type UpgradeData = {
   bindCode: string
@@ -76,7 +77,10 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
     if (!saved) return undefined
     return {
       firmwareRecovery: true,
-      requireBinding: firmwareRecoveryRequiresBinding(saved.recovery.phase),
+      requireBinding: firmwareRecoveryRequiresBinding(
+        saved.recovery.phase,
+        saved.recovery.needsBinding
+      ),
       preserveOnTransportError: true
     }
   }
@@ -117,8 +121,16 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
     if (state.busy && code !== 1) return
     state.supportCode = code
   }
-  function fail(error: unknown, stage: string) {
+  function fail(error: unknown, stage: string, diagnosticStage = stage) {
     if (!operation.active() || (error as { code?: string })?.code === 'OPERATION_CANCELLED') return
+    operation.failure?.(
+      isFirmwareDiagnosticStage(diagnosticStage)
+        ? diagnosticStage
+        : isFirmwareDiagnosticStage(stage)
+          ? stage
+          : 'check',
+      error
+    )
     const result = typeof error === 'string' ? error : (error as { result?: unknown })?.result
     if (result === 'device_session_changed' || result === 'device_bind_check_failed') {
       attempts.delete(device)
@@ -255,7 +267,8 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
       const connected = await refreshDeviceIdentity(callDevice, device, operation.active, {
         hideCachedData: false,
         firmwareRecovery: Boolean(attempt),
-        requireBinding: !attempt || firmwareRecoveryRequiresBinding(phase!),
+        requireBinding:
+          !attempt || firmwareRecoveryRequiresBinding(phase!, attempt.recovery.needsBinding),
         preserveOnTransportError: true
       })
       if (!connected.isSuccess) {
@@ -296,7 +309,8 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
             bindCode: data.bindCode,
             needsBinding,
             expectedCos: '',
-            expectedBle: ''
+            expectedBle: '',
+            ...(data.cosOldVersionData ? { previousCos: data.cosOldVersionData } : {})
           }
         }
         attempts.set(device, attempt)
@@ -323,7 +337,7 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
         }
       })
       if (!current()) return
-      if (failure) return fail(failure.error, failure.stage)
+      if (failure) return fail(failure.error, failure.stage, attempt.recovery.phase)
       // Returning to an already open home shell requires fresh binding+wallet
       // proof as well. getBTCXpub enforces bound_this in the device service.
       const wallet = await callDevice('getBTCXpub', app.userPath)

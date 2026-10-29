@@ -8,6 +8,11 @@ import type {
   DeviceOperationAction,
   DeviceOperationTrace
 } from '../../shared/deviceContract'
+import {
+  firmwareFailureCode,
+  isFirmwareDiagnosticStage,
+  type FirmwareDiagnosticStage
+} from '../../shared/firmwareDiagnostics'
 
 export interface DeviceOperation {
   call: typeof callDevice
@@ -17,6 +22,7 @@ export interface DeviceOperation {
     action?: DeviceOperationAction
   ): Promise<T | undefined>
   feedback?(action?: DeviceOperationAction): void
+  failure?(stage: FirmwareDiagnosticStage, error: unknown): void
   active(): boolean
 }
 
@@ -39,18 +45,19 @@ export function createDeviceOperation(
   let active = true
   const records = new Map<string, OperationRecord>()
   let current: OperationRecord | undefined
-  function emit(
-    record: OperationRecord,
-    phase: DeviceOperationTrace['phase'],
-    timing: Pick<DeviceOperationTrace, 'queueMs' | 'durationMs'> = {}
-  ) {
+  function send(event: DeviceOperationTrace) {
     try {
-      void Promise.resolve(
-        trace({ operationId: record.operationId, action: record.action, phase, ...timing })
-      ).catch(() => {})
+      void Promise.resolve(trace(event)).catch(() => {})
     } catch {
       // Missing bridges or failed diagnostics cannot delay or fail the workflow.
     }
+  }
+  function emit(
+    record: OperationRecord,
+    phase: Exclude<DeviceOperationTrace['phase'], 'failed'>,
+    timing: Pick<DeviceOperationTrace, 'queueMs' | 'durationMs'> = {}
+  ) {
+    send({ operationId: record.operationId, action: record.action, phase, ...timing })
   }
   return {
     active: () => active,
@@ -65,6 +72,16 @@ export function createDeviceOperation(
       if (!record || record.feedbackSent) return
       record.feedbackSent = true
       emit(record, 'feedback', { durationMs: Math.max(0, Date.now() - record.enqueuedAt) })
+    },
+    failure(stage: FirmwareDiagnosticStage, error: unknown) {
+      if (!active || !current || !isFirmwareDiagnosticStage(stage)) return
+      send({
+        operationId: current.operationId,
+        action: current.action,
+        phase: 'failed',
+        stage,
+        code: firmwareFailureCode(error)
+      })
     },
     async call<M extends DeviceMethod>(
       method: M,

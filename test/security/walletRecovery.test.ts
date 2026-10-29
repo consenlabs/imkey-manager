@@ -201,6 +201,7 @@ describe('firmware address recovery preserves failure state', () => {
       'getFirmwareVersion',
       'getBleVersion',
       'cosCheckUpdate',
+      'deviceBindCheck',
       'getUpgradeSeid',
       'saveFirmwareRecovery',
       'deviceBindCheck',

@@ -2,6 +2,7 @@ import { expect, it, vi } from 'vitest'
 import { createDeviceOperation } from '../../src/renderer/composables/useDeviceOperation'
 import type { callDevice } from '../../src/renderer/device'
 import type { DeviceOperationTrace } from '../../src/shared/deviceContract'
+import type { FirmwareDiagnosticStage } from '../../src/shared/firmwareDiagnostics'
 
 it('serializes complete workflows and ignores repeated entry', async () => {
   const steps: string[] = []
@@ -154,9 +155,89 @@ it('never delays or rejects business work when trace delivery throws or rejects'
     throw new Error('bridge unavailable')
   })
   const operation = createDeviceOperation(undefined, trace)
-  expect(await operation.run(async () => 'first')).toBe('first')
+  expect(
+    await operation.run(async () => {
+      operation.failure?.('check', new Error('private-data'))
+      return 'first'
+    })
+  ).toBe('first')
   trace.mockRejectedValue(new Error('IPC unavailable'))
-  expect(await operation.run(async () => 'second')).toBe('second')
+  expect(
+    await operation.run(async () => {
+      operation.failure?.('wallet', 'invalid_wallet_response')
+      return 'second'
+    })
+  ).toBe('second')
   trace.mockImplementation(() => new Promise(() => {}))
-  expect(await operation.run(async () => 'third')).toBe('third')
+  expect(
+    await operation.run(async () => {
+      operation.failure?.('restore', { code: 'PRIVATE_BIND_CODE' })
+      return 'third'
+    })
+  ).toBe('third')
+})
+
+it('associates safe business failures with the current run and preserves the next run', async () => {
+  const traces: DeviceOperationTrace[] = []
+  const invoke = vi.fn(async () => ({ isSuccess: true as const, result: 'private-device-data' }))
+  const operation = createDeviceOperation(invoke as typeof callDevice, trace => {
+    traces.push(trace)
+  })
+  await operation.run(
+    async () => {
+      await operation.call('getFirmwareVersion')
+      operation.failure?.('capture-versions', {
+        result: 'firmware_recovery_version_mismatch',
+        code: 'DEVICE_OPERATION_FAILED',
+        bindCode: 'A2345678',
+        seid: 'SEID-PRIVATE',
+        version: '1.9.11',
+        wallet: 'xpub-private'
+      })
+    },
+    'action',
+    'firmware-upgrade'
+  )
+  await operation.run(async () => {
+    operation.failure?.('wallet', { result: 'private-device-data', code: 'SEID-PRIVATE' })
+  })
+  const failed = traces.filter(event => event.phase === 'failed')
+  expect(failed).toHaveLength(2)
+  const firstId = ((invoke.mock.calls[0] as unknown[])[2] as { operationId: string }).operationId
+  expect(failed[0]).toEqual({
+    operationId: firstId,
+    action: 'firmware-upgrade',
+    phase: 'failed',
+    stage: 'capture-versions',
+    code: 'FIRMWARE_RECOVERY_VERSION_MISMATCH'
+  })
+  expect(failed[1]).toMatchObject({
+    action: 'action',
+    stage: 'wallet',
+    code: 'DEVICE_OPERATION_FAILED'
+  })
+  expect(failed[1].operationId).not.toBe(firstId)
+  expect(traces.filter(event => event.operationId === firstId).map(event => event.phase)).toEqual([
+    'enqueued',
+    'started',
+    'failed',
+    'finished'
+  ])
+  expect(JSON.stringify(traces)).not.toMatch(
+    /A2345678|SEID-PRIVATE|1\.9\.11|xpub-private|private-device-data/
+  )
+})
+
+it('does not invent failure IDs outside an active run or accept unknown stages', async () => {
+  const trace = vi.fn()
+  const operation = createDeviceOperation(undefined, trace)
+  operation.failure?.('check', 'device_session_changed')
+  expect(trace).not.toHaveBeenCalled()
+  await operation.run(async () => {
+    operation.failure?.('A2345678' as FirmwareDiagnosticStage, 'device_session_changed')
+    operation.dispose()
+    operation.failure?.('check', 'device_session_changed')
+  })
+  operation.failure?.('check', 'device_session_changed')
+  expect(trace.mock.calls.some(([event]) => event.phase === 'failed')).toBe(false)
 })

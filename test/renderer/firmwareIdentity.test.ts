@@ -721,6 +721,20 @@ it.each([
   expect(device.canEnterHome).toBe(false)
 })
 
+it('reports checkpoint cleanup failure as storage without completing or reading the wallet', async () => {
+  const { firmware, operation } = setup()
+  const report = vi.spyOn(operation, 'failure')
+  const failure = { isSuccess: false as const, result: 'firmware_recovery_write_failed' }
+  mocks.call.mockImplementation(async method =>
+    method === 'clearFirmwareRecovery' ? failure : response(method)
+  )
+  await firmware.updateFirmware()
+  expect(report).toHaveBeenCalledExactlyOnceWith('store', failure)
+  expect(firmware.state).toMatchObject({ supportCode: 3, phase: 'verifying' })
+  expect(methods()).not.toContain('getBTCXpub')
+  expect(useDeviceStore().canEnterHome).toBe(false)
+})
+
 it('retries only the failed address chains after firmware, binding and storage have succeeded', async () => {
   const { firmware } = setup()
   let failed = false
@@ -921,3 +935,77 @@ it.each([
     expect(mocks.offer).not.toHaveBeenCalled()
   }
 )
+
+it.each(['bound_this', 'unbound', 'bound_other'])(
+  'promotes an apparent BLE-only update when native changes COS and binding is %s',
+  async status => {
+    const { firmware, device } = setup()
+    firmware.state.bindCode = ''
+    firmware.state.cosNewVersionData = firmware.state.cosOldVersionData
+    actualCos = firmware.state.cosOldVersionData
+    mocks.call.mockImplementation(async method => {
+      if (method === 'cosUpdate') {
+        actualCos = '1.9.11'
+        binding = status
+      }
+      return response(method)
+    })
+    await firmware.updateFirmware()
+    const checkpoints = mocks.call.mock.calls
+      .filter(([method]) => method === 'saveFirmwareRecovery')
+      .map(([, value]) => value)
+    expect(checkpoints[0]).toMatchObject({ needsBinding: false, previousCos: '1.0.0' })
+    expect(checkpoints).toContainEqual(
+      expect.objectContaining({
+        phase: 'load-code',
+        needsBinding: true,
+        expectedCos: '1.9.11',
+        previousCos: '1.0.0'
+      })
+    )
+    expect(deviceWrites()).toEqual([
+      'cosUpdate',
+      'deviceBindAcquire',
+      'importBindCode',
+      'writeWalletAddress'
+    ])
+    expect(methods().filter(method => method === 'exportBindCode')).toHaveLength(1)
+    expect(firmware.state).toMatchObject({
+      phase: 'complete',
+      supportCode: 2,
+      cosOldVersionData: '1.9.11'
+    })
+    expect(device.canEnterHome).toBe(true)
+  }
+)
+
+it('retries a BLE-only final-check failure by promoting lost binding without reflashing', async () => {
+  const { firmware, device } = setup()
+  firmware.state.bindCode = ''
+  firmware.state.cosNewVersionData = firmware.state.cosOldVersionData
+  actualCos = firmware.state.cosOldVersionData
+  let checks = 0
+  let failFinal = true
+  mocks.call.mockImplementation(async method => {
+    if (method === 'cosCheckUpdate') {
+      checks += 1
+      if (checks === 2 && failFinal) return { isSuccess: false, result: 'server_unavailable' }
+    }
+    return response(method)
+  })
+  await firmware.updateFirmware()
+  expect(firmware.state).toMatchObject({ supportCode: 3, errorStage: 'check' })
+  expect(firmware.pendingRecoveryOptions()).toMatchObject({ requireBinding: false })
+  expect(device.canEnterHome).toBe(false)
+  binding = 'bound_other'
+  failFinal = false
+  await firmware.updateFirmware()
+  expect(deviceWrites()).toEqual([
+    'cosUpdate',
+    'deviceBindAcquire',
+    'importBindCode',
+    'writeWalletAddress'
+  ])
+  expect(firmware.state).toMatchObject({ phase: 'complete', supportCode: 2 })
+  expect(device.canEnterHome).toBe(true)
+})

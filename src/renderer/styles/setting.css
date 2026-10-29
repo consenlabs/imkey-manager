@@ -141,6 +141,15 @@ hover {
   margin-top: 33px;
   font-size: 22px;
 }
+.alert .alertBox.alert3 {
+  bottom: auto;
+  height: auto;
+  min-height: 240px;
+  max-height: 65vh;
+  padding-bottom: 24px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
 .alert1 h4 {
   font-weight: 500;
   font-size: 15px;

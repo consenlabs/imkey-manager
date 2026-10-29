@@ -9,6 +9,7 @@ import { useConnectionFirmware } from './useConnectionFirmware'
 import constants from '../../common/constants'
 import { useDeviceRecovery } from './useDeviceRecovery'
 import { isSessionRecoveryError } from './deviceSession'
+import { isFirmwareDiagnosticStage } from '../../shared/firmwareDiagnostics'
 
 export function useConnection() {
   const operation = useDeviceOperation()
@@ -30,7 +31,7 @@ export function useConnection() {
     changeState,
     (message, status, stage) => {
       if (stage) state.errorStage = stage
-      fail(message, status, false)
+      fail(message, status, false, false)
     },
     connect,
     operation
@@ -39,8 +40,13 @@ export function useConnection() {
   function changeState(status: number): void {
     state.status = status
   }
-  function fail(message: unknown, status = 4, allowRecovery = true): void {
+  function fail(message: unknown, status = 4, allowRecovery = true, logFailure = true): void {
     if (!operation.active()) return
+    if (logFailure)
+      operation.failure?.(
+        isFirmwareDiagnosticStage(state.errorStage) ? state.errorStage : 'check',
+        message
+      )
     binding.state.bindingStatus = 0
     state.errorInfo = operationError(message)
     changeState(status)

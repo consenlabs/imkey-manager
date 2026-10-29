@@ -26,7 +26,11 @@ export function registerDeviceIpc(
     assertTrustedSender(event, getWindow())
     validateDeviceTrace(trace)
     try {
-      log('info', 'device.operation', trace)
+      log(
+        trace.phase === 'failed' ? 'warn' : 'info',
+        trace.phase === 'failed' ? 'device.operation-failed' : 'device.operation',
+        trace
+      )
     } catch {
       // Diagnostic delivery must never change device work.
     }

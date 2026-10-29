@@ -6,6 +6,7 @@ import {
   type DeviceCallContext,
   type DeviceOperationTrace
 } from '../shared/deviceContract'
+import { isFirmwareDiagnosticCode, isFirmwareDiagnosticStage } from '../shared/firmwareDiagnostics'
 export interface SenderWindow {
   isDestroyed(): boolean
   webContents: unknown
@@ -58,14 +59,18 @@ export function validateDeviceTrace(trace: unknown): asserts trace is DeviceOper
   if (!trace || typeof trace !== 'object' || Array.isArray(trace))
     throw new Error('Invalid device trace')
   const value = trace as Record<string, unknown>
+  const allowedKeys =
+    value.phase === 'failed'
+      ? ['operationId', 'action', 'phase', 'stage', 'code']
+      : ['operationId', 'action', 'phase', 'queueMs', 'durationMs']
   if (
-    !Object.keys(value).every(key =>
-      ['operationId', 'action', 'phase', 'queueMs', 'durationMs'].includes(key)
-    ) ||
+    !Object.keys(value).every(key => allowedKeys.includes(key)) ||
     typeof value.operationId !== 'string' ||
     !/^[a-z0-9]{1,16}-[1-9][0-9]{0,12}$/.test(value.operationId) ||
     !(deviceOperationActions as readonly unknown[]).includes(value.action) ||
     !(deviceOperationPhases as readonly unknown[]).includes(value.phase) ||
+    (value.phase === 'failed' &&
+      (!isFirmwareDiagnosticStage(value.stage) || !isFirmwareDiagnosticCode(value.code))) ||
     ['queueMs', 'durationMs'].some(
       key =>
         value[key] !== undefined &&

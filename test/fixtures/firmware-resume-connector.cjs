@@ -59,7 +59,7 @@ module.exports = {
         state.firmwareVersion = control.installedCos || '1.0.0'
         state.appsInstalled = false
         state.serverComplete = false
-        state.binding = 'unbound'
+        state.binding = control.postUpdateBinding || 'unbound'
         save()
       }
       if (control.failNativeApps) return fail('imkey_tsm_app_download_fail')

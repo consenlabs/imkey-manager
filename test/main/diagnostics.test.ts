@@ -8,6 +8,7 @@ import { ServiceClient, type ServiceTransport } from '../../src/main/serviceClie
 import { DeviceQueue } from '../../src/service/queue'
 import type { DeviceMethod } from '../../src/shared/deviceContract'
 import type { Handler } from '../../src/service/handlers'
+import { createDeviceOperation } from '../../src/renderer/composables/useDeviceOperation'
 const directories: string[] = []
 afterEach(async () => {
   vi.useRealTimers()
@@ -21,6 +22,56 @@ async function temporary(): Promise<string> {
   return directory
 }
 describe('bounded privacy preserving diagnostics', () => {
+  it('persists allowlisted business failure metadata without raw device or error contents', async () => {
+    const directory = await temporary()
+    const terminal: string[] = []
+    const log = new DiagnosticLogger(directory, 10000, 2, line => terminal.push(line))
+    const operation = createDeviceOperation(undefined, trace => {
+      log.log(
+        trace.phase === 'failed' ? 'warn' : 'info',
+        trace.phase === 'failed' ? 'device.operation-failed' : 'device.operation',
+        trace
+      )
+    })
+    await operation.run(
+      async () => {
+        operation.failure?.('capture-versions', {
+          result: 'firmware_recovery_version_mismatch',
+          code: 'DEVICE_OPERATION_FAILED',
+          seid: 'PRIVATE-SEID',
+          bindCode: 'A2345678',
+          version: '1.9.11',
+          xpub: 'xpub-private'
+        })
+        operation.failure?.('wallet', new Error('A2345678 xpub-private private-device-data'))
+      },
+      'action',
+      'firmware-upgrade'
+    )
+    await log.flush()
+    const output = await readFile(path.join(directory, 'manager.jsonl'), 'utf8')
+    const entries = output
+      .trim()
+      .split('\n')
+      .map(line => JSON.parse(line))
+    const failures = entries.filter(entry => entry.event === 'device.operation-failed')
+    expect(failures).toHaveLength(2)
+    expect(failures[0]).toMatchObject({
+      level: 'warn',
+      action: 'firmware-upgrade',
+      phase: 'failed',
+      stage: 'capture-versions',
+      code: 'FIRMWARE_RECOVERY_VERSION_MISMATCH'
+    })
+    expect(failures[1]).toMatchObject({ stage: 'wallet', code: 'DEVICE_OPERATION_FAILED' })
+    expect(new Set(entries.map(entry => entry.operationId)).size).toBe(1)
+    expect(Object.keys(failures[0]).sort()).toEqual(
+      ['time', 'level', 'event', 'operationId', 'action', 'phase', 'stage', 'code'].sort()
+    )
+    expect(output + terminal.join('')).not.toMatch(
+      /PRIVATE-SEID|A2345678|1\.9\.11|xpub-private|private-device-data/
+    )
+  })
   it('rotates serial writes and bounds the number of backups', async () => {
     const directory = await temporary()
     const log = new DiagnosticLogger(directory, 180, 2, () => {})
