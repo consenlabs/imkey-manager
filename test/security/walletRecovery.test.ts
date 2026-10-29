@@ -65,8 +65,10 @@ describe('firmware address recovery preserves failure state', () => {
       await reply('getSeid', { isSuccess: true, result: 'test-device' })
       await reply('deviceBindCheck', { isSuccess: true, result: 'bound_this' })
       await reply('cosUpdate', { isSuccess: true, result: 'success' })
+      await reply('isBLStatus', { isSuccess: true, result: false })
       await reply('getFirmwareVersion', { isSuccess: true, result: 'new' })
       await reply('getBleVersion', { isSuccess: true, result: 'ble-new' })
+      await reply('cosCheckUpdate', { isSuccess: true, result: { isUpdateSuccess: true } })
       await reply('getUpgradeSeid', { isSuccess: true, result: 'test-device' })
       await reply('deviceBindAcquire', { isSuccess: true, result: 'success' })
       await reply('deviceBindCheck', { isSuccess: true, result: 'bound_this' })
@@ -97,6 +99,9 @@ describe('firmware address recovery preserves failure state', () => {
       deviceMock.mockImplementation(async method => {
         if (method === 'getInstalledApplets')
           return { isSuccess: false, result: 'installed_apps_unavailable' }
+        if (method === 'isBLStatus') return { isSuccess: true, result: false }
+        if (method === 'cosCheckUpdate')
+          return { isSuccess: true, result: { isUpdateSuccess: true } }
         return {
           isSuccess: true,
           result:
@@ -143,8 +148,10 @@ describe('firmware address recovery preserves failure state', () => {
     await reply('getSeid', { isSuccess: true, result: 'test-device' })
     await reply('deviceBindCheck', { isSuccess: true, result: 'bound_this' })
     await reply('cosUpdate', { isSuccess: true, result: 'success' })
+    await reply('isBLStatus', { isSuccess: true, result: false })
     await reply('getFirmwareVersion', { isSuccess: true, result: 'new' })
     await reply('getBleVersion', { isSuccess: true, result: 'new' })
+    await reply('cosCheckUpdate', { isSuccess: true, result: { isUpdateSuccess: true } })
     await reply('getUpgradeSeid', { isSuccess: true, result: 'test-device' })
     await reply('deviceBindAcquire', { isSuccess: true, result: 'success' })
     await reply('deviceBindCheck', { isSuccess: true, result: 'bound_this' })
@@ -190,8 +197,10 @@ describe('firmware address recovery preserves failure state', () => {
       'saveFirmwareRecovery',
       'cosUpdate',
       'saveFirmwareRecovery',
+      'isBLStatus',
       'getFirmwareVersion',
       'getBleVersion',
+      'cosCheckUpdate',
       'getUpgradeSeid',
       'saveFirmwareRecovery',
       'deviceBindCheck',
@@ -225,6 +234,111 @@ describe('firmware completion does not grant home access prematurely', () => {
     clearFirmwareRecovery: undefined,
     importBindCode: undefined
   }
+
+  it.each(['unbound', 'bound_other'])(
+    'resumes a failed capture on the same %s device without requiring an already completed rebind',
+    async bindingStatus => {
+      let nativeDone = false
+      let rebound = false
+      let failCapture = true
+      deviceMock.mockImplementation(async method => {
+        if (method === 'cosUpdate') nativeDone = true
+        if (method === 'deviceBindAcquire') rebound = true
+        if (method === 'deviceBindCheck' && nativeDone && !rebound)
+          return { isSuccess: true, result: bindingStatus }
+        if (method === 'getFirmwareVersion') {
+          if (failCapture) {
+            failCapture = false
+            return { isSuccess: false, result: 'firmware_read_unavailable' }
+          }
+          return { isSuccess: true, result: '1.9.11' }
+        }
+        if (method === 'cosCheckUpdate')
+          return {
+            isSuccess: true,
+            result: { latestCosVersion: '1.9.12', isLatest: false, isUpdateSuccess: true }
+          }
+        return {
+          isSuccess: true,
+          result: method in successfulResults ? successfulResults[method] : 'success'
+        }
+      })
+      const firmware = useFirmwareUpgrade('setting')
+      const device = useDeviceStore()
+      Object.assign(firmware.state, {
+        cosOldVersionData: '1.9.10',
+        cosNewVersionData: '1.9.12',
+        bindCode: 'A2345678'
+      })
+      await firmware.updateFirmware()
+      const session = device.sessionId
+      expect(firmware.state.supportCode).toBe(3)
+      expect(firmware.state.errorStage).toBe('check')
+      expect(firmware.pendingRecoveryOptions()).toMatchObject({ requireBinding: false })
+      expect(device.homeAuthorization).toBeNull()
+      expect(deviceMock.mock.calls.some(([method]) => method === 'deviceBindAcquire')).toBe(false)
+      await firmware.updateFirmware()
+      expect(device.sessionId).toBe(session)
+      expect(firmware.state.supportCode).toBe(2)
+      expect(firmware.state.cosOldVersionData).toBe('1.9.11')
+      expect(device.cosOldVersionData).toBe('1.9.11')
+      expect(firmware.state.isCosUpdate).toBe(true)
+      expect(device.homeAuthorization).not.toBeNull()
+      expect(deviceMock.mock.calls.filter(([method]) => method === 'cosUpdate')).toHaveLength(1)
+      expect(
+        deviceMock.mock.calls.filter(([method]) => method === 'deviceBindAcquire')
+      ).toHaveLength(1)
+    }
+  )
+
+  it('rejects an observed unknown post-acquire binding state after retrying capture', async () => {
+    let nativeDone = false
+    let failCapture = true
+    let acquired = false
+    let unknownChecks = 0
+    deviceMock.mockImplementation(async method => {
+      if (method === 'cosUpdate') nativeDone = true
+      if (method === 'deviceBindAcquire') acquired = true
+      if (method === 'deviceBindCheck' && acquired) {
+        unknownChecks += 1
+        return { isSuccess: true, result: 'unknown' }
+      }
+      if (method === 'deviceBindCheck' && nativeDone) return { isSuccess: true, result: 'unbound' }
+      if (method === 'getFirmwareVersion' && failCapture) {
+        failCapture = false
+        return { isSuccess: false, result: 'firmware_read_unavailable' }
+      }
+      return {
+        isSuccess: true,
+        result: method in successfulResults ? successfulResults[method] : 'success'
+      }
+    })
+    const firmware = useFirmwareUpgrade('setting')
+    Object.assign(firmware.state, {
+      cosOldVersionData: 'old',
+      cosNewVersionData: 'new',
+      bindCode: 'A2345678'
+    })
+    await firmware.updateFirmware()
+    expect(firmware.state.errorStage).toBe('check')
+    expect(unknownChecks).toBe(0)
+    await firmware.updateFirmware()
+    expect(unknownChecks).toBe(1)
+    expect(deviceMock.mock.calls.filter(([method]) => method === 'deviceBindAcquire')).toHaveLength(
+      1
+    )
+    expect(deviceMock.mock.calls.filter(([method]) => method === 'cosUpdate')).toHaveLength(1)
+    expect(firmware.state.supportCode).not.toBe(2)
+    expect(useDeviceStore().homeAuthorization).toBeNull()
+    for (const blocked of [
+      'importBindCode',
+      'writeWalletAddress',
+      'clearFirmwareRecovery',
+      'getBTCXpub'
+    ])
+      expect(deviceMock.mock.calls.some(([method]) => method === blocked)).toBe(false)
+  })
+
   it.each([
     {
       method: 'saveFirmwareRecovery',

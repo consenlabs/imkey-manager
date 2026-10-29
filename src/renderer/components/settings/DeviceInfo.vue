@@ -63,7 +63,7 @@ const emit = defineEmits<{
             @click="emit('isShowalert')"
           >
             <i v-if="upgrading" class="fas fa-circle-notch fa-spin" aria-hidden="true" />
-            {{ $t(upgrading ? 'm.devicePages.preparing_upgrade' : 'm.devicePages.upgrade') }}
+            {{ $t(upgrading ? 'm.devicePages.upgrading' : 'm.devicePages.upgrade') }}
           </button>
           <button
             v-else

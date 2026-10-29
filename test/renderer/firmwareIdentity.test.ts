@@ -1,4 +1,5 @@
 import { createPinia, setActivePinia } from 'pinia'
+import { watch } from 'vue'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import type { DeviceResult } from '../../src/shared/deviceContract'
 import { createDeviceOperation } from '../../src/renderer/composables/useDeviceOperation'
@@ -171,6 +172,50 @@ it.each(['manager', 'setting'] as const)(
     })
     expect(device.isCosUpdate).toBe(false)
     expect(device.verification.status).toBe('success')
+    expect(mocks.offer).not.toHaveBeenCalled()
+  }
+)
+
+it.each(['manager', 'setting'] as const)(
+  '%s completes using the installed version and keeps a different published release available',
+  async kind => {
+    const { firmware, device } = setup(kind)
+    actualCos = '1.9.11'
+    Object.assign(firmware.state, {
+      cosOldVersionData: '1.6.03',
+      cosNewVersionData: '1.9.12'
+    })
+    mocks.call.mockImplementation(async method => {
+      if (method === 'cosUpdate') {
+        expect(device.canEnterHome).toBe(false)
+        binding = 'unbound'
+      }
+      return response(method)
+    })
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      await firmware.updateFirmware()
+      expect(firmware.state).toMatchObject({
+        supportCode: 2,
+        busy: false,
+        cosOldVersionData: '1.9.11',
+        cosNewVersionData: '1.9.12',
+        isCosUpdate: true,
+        cosUpdateStatus: '1'
+      })
+      expect(device.cosOldVersionData).toBe('1.9.11')
+      expect(device.canEnterHome).toBe(true)
+      for (const method of ['cosUpdate', 'deviceBindAcquire', 'writeWalletAddress'])
+        expect(methods().filter(name => name === method)).toHaveLength(attempt)
+    }
+    const captured = mocks.call.mock.calls
+      .filter(
+        ([method, value]) =>
+          method === 'saveFirmwareRecovery' && (value as { phase?: string })?.phase === 'bind'
+      )
+      .map(([, value]) => value)
+    expect(captured).toHaveLength(2)
+    for (const checkpoint of captured)
+      expect(checkpoint).toMatchObject({ expectedCos: '1.9.11', expectedBle: '2.1.0' })
     expect(mocks.offer).not.toHaveBeenCalled()
   }
 )
@@ -522,37 +567,158 @@ it('opens preparation feedback before queueing and keeps it visible while connec
   expect(firmware.state).toMatchObject({ supportCode: 2, busy: false, phase: 'complete' })
 })
 
-it('reports the active upgrade stage without calling preparation a firmware write', async () => {
-  const { firmware } = setup()
+it('reports reading and verifying after the native update without returning to preparation', async () => {
+  const { firmware, device } = setup()
   const phases: [string, string][] = []
-  mocks.call.mockImplementation(async method => {
+  const checkpoints: [string, string][] = []
+  const phasesAfterNative: string[] = []
+  let nativeFinished = false
+  const stop = watch(
+    () => firmware.state.phase,
+    phase => {
+      if (nativeFinished) phasesAfterNative.push(phase)
+    },
+    { flush: 'sync' }
+  )
+  mocks.call.mockImplementation(async (method, params) => {
     phases.push([method, firmware.state.phase])
+    if (method === 'saveFirmwareRecovery')
+      checkpoints.push([(params as { phase: string }).phase, firmware.state.phase])
     expect(firmware.state.supportCode).toBe(1)
     expect(firmware.state.busy).toBe(true)
+    expect(firmware.state.phase).not.toBe('complete')
+    expect(device.canEnterHome).toBe(false)
+    if (method === 'cosUpdate') nativeFinished = true
     return response(method)
   })
   await firmware.updateFirmware()
-  expect(
-    phases.filter(([method]) =>
-      [
-        'connectDevice',
-        'getSeid',
-        'cosUpdate',
-        'deviceBindAcquire',
-        'importBindCode',
-        'getInstalledApplets',
-        'writeWalletAddress'
-      ].includes(method)
-    )
-  ).toEqual([
+  stop()
+  expect(phases.filter(([method]) => method !== 'saveFirmwareRecovery')).toEqual([
     ['connectDevice', 'preparing'],
     ['getSeid', 'preparing'],
+    ['deviceBindCheck', 'preparing'],
     ['cosUpdate', 'update'],
+    ['isBLStatus', 'reading'],
+    ['getFirmwareVersion', 'reading'],
+    ['getBleVersion', 'reading'],
+    ['cosCheckUpdate', 'reading'],
+    ['getUpgradeSeid', 'reading'],
     ['deviceBindAcquire', 'bind'],
+    ['deviceBindCheck', 'store'],
     ['importBindCode', 'store'],
     ['getInstalledApplets', 'restore'],
-    ['writeWalletAddress', 'restore']
+    ['writeWalletAddress', 'restore'],
+    ['deviceBindCheck', 'verifying'],
+    ['isBLStatus', 'verifying'],
+    ['getFirmwareVersion', 'verifying'],
+    ['getBleVersion', 'verifying'],
+    ['getUpgradeSeid', 'verifying'],
+    ['cosCheckUpdate', 'verifying'],
+    ['clearFirmwareRecovery', 'verifying'],
+    ['getBTCXpub', 'verifying'],
+    ['getUpgradeSeid', 'verifying']
   ])
+  expect(checkpoints).toEqual([
+    ['update', 'update'],
+    ['capture-versions', 'reading'],
+    ['bind', 'bind'],
+    ['store', 'store'],
+    ['apps', 'restore'],
+    ['restore', 'restore'],
+    ['verify', 'verifying']
+  ])
+  expect(phasesAfterNative).toEqual([
+    'reading',
+    'bind',
+    'store',
+    'restore',
+    'verifying',
+    'complete'
+  ])
+  expect(firmware.state).toMatchObject({ phase: 'complete', supportCode: 2, busy: false })
+  expect(device.canEnterHome).toBe(true)
+})
+
+it('shows binding while loading a missing in-memory recovery code after the update', async () => {
+  const { firmware } = setup()
+  firmware.state.bindCode = ''
+  let nativeFinished = false
+  const codeReadPhases: string[] = []
+  const postUpdatePhases: string[] = []
+  mocks.call.mockImplementation(async method => {
+    if (nativeFinished) postUpdatePhases.push(firmware.state.phase)
+    if (method === 'exportBindCode') {
+      codeReadPhases.push(firmware.state.phase)
+      // An empty initial read exercises the engine's load-code fallback after COS.
+      if (!nativeFinished) return { isSuccess: true, result: '' }
+    }
+    if (method === 'cosUpdate') nativeFinished = true
+    return response(method)
+  })
+  await firmware.updateFirmware()
+  expect(codeReadPhases).toEqual(['preparing', 'bind'])
+  expect(postUpdatePhases).not.toContain('preparing')
+  expect(firmware.state).toMatchObject({ phase: 'complete', supportCode: 2 })
+})
+
+it.each(['clearFirmwareRecovery', 'getBTCXpub', 'final-identity'])(
+  'keeps verifying until the pending %s proof completes',
+  async pendingProof => {
+    const { firmware, device } = setup()
+    let release!: () => void
+    let walletRead = false
+    mocks.call.mockImplementation(method => {
+      const shouldPause =
+        pendingProof === 'final-identity'
+          ? method === 'getUpgradeSeid' && walletRead
+          : method === pendingProof
+      if (method === 'getBTCXpub') walletRead = true
+      if (shouldPause)
+        return new Promise(resolve => {
+          release = () => resolve(response(method))
+          releases.push(release)
+        })
+      return Promise.resolve(response(method))
+    })
+    const pending = firmware.updateFirmware()
+    await vi.waitFor(() => expect(release).toBeTypeOf('function'))
+    expect(firmware.state).toMatchObject({ phase: 'verifying', supportCode: 1, busy: true })
+    expect(device.canEnterHome).toBe(false)
+    release()
+    await pending
+    expect(firmware.state).toMatchObject({ phase: 'complete', supportCode: 2, busy: false })
+    expect(device.canEnterHome).toBe(true)
+  }
+)
+
+it.each([
+  { isSuccess: false, result: 'wallet_verification_failed' },
+  { isSuccess: true, result: 'invalid-wallet-proof' }
+] as DeviceResult[])('never reports complete when the final wallet proof is %j', async wallet => {
+  const { firmware, device } = setup()
+  const phases: string[] = []
+  const stop = watch(
+    () => firmware.state.phase,
+    phase => phases.push(phase),
+    { flush: 'sync' }
+  )
+  mocks.call.mockImplementation(async method => {
+    if (method === 'clearFirmwareRecovery' || method === 'getBTCXpub')
+      expect(firmware.state.phase).toBe('verifying')
+    return method === 'getBTCXpub' ? wallet : response(method)
+  })
+  await firmware.updateFirmware()
+  stop()
+  expect(methods()).toContain('clearFirmwareRecovery')
+  expect(methods()).toContain('getBTCXpub')
+  expect(phases).not.toContain('complete')
+  expect(firmware.state).toMatchObject({
+    phase: 'verifying',
+    supportCode: 3,
+    busy: false,
+    errorStage: 'wallet'
+  })
+  expect(device.canEnterHome).toBe(false)
 })
 
 it('retries only the failed address chains after firmware, binding and storage have succeeded', async () => {

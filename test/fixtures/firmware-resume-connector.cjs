@@ -36,7 +36,9 @@ module.exports = {
       binding: 'bound_this',
       addressAttempts: 0,
       addressWrites: 0,
-      bindingAttempts: 0
+      bindingAttempts: 0,
+      captureReadFailures: 0,
+      firmwareVersion: control.initialCos || '2.0.0'
     })
     const save = () => {
       fs.writeFileSync(process.env.IMKEY_E2E_STATE + '.tmp', JSON.stringify(states))
@@ -51,9 +53,10 @@ module.exports = {
     if (method === 'cos_update') {
       if (control.delayNativeMs)
         Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, control.delayNativeMs)
-      if (!state.cosWritten) {
+      if (!state.cosWritten || (state.serverComplete && state.binding === 'bound_this')) {
         state.cosWritten = true
         state.physicalWrites++
+        state.firmwareVersion = control.installedCos || '1.0.0'
         state.appsInstalled = false
         state.serverComplete = false
         state.binding = 'unbound'
@@ -81,16 +84,23 @@ module.exports = {
     }
     if (method === 'bind_check' && control.failBindingCheck)
       return fail('imkey_tsm_bind_check_fail')
+    if (
+      method === 'get_firmware_version' &&
+      state.cosWritten &&
+      state.binding === 'unbound' &&
+      (control.failCaptureRead === 'persistent' ||
+        (control.failCaptureRead === 'once' && state.captureReadFailures === 0))
+    ) {
+      state.captureReadFailures++
+      save()
+      return fail('get_firmware_version_error')
+    }
     const descriptors = {
       get_seid: ['GetSeidRes', 'setSeid', seid],
       get_upgrade_seid: ['GetSeidRes', 'setSeid', seid],
       get_sn: ['GetSnRes', 'setSn', 'SN-RESUME'],
       get_ram_size: ['GetRamSizeRes', 'setRamSize', '00000080'],
-      get_firmware_version: [
-        'GetFirmwareVersionRes',
-        'setFirmwareVersion',
-        state.cosWritten ? '1.0.0' : '2.0.0'
-      ],
+      get_firmware_version: ['GetFirmwareVersionRes', 'setFirmwareVersion', state.firmwareVersion],
       get_ble_version: ['GetBleVersionRes', 'setBleVersion', state.bleDone ? '1.1.0' : '1.0.0'],
       get_sdk_info: ['GetSdkInfoRes', 'setSdkVersion', '2.10.3'],
       bind_check: ['BindCheckRes', 'setBindStatus', control.binding || state.binding],
@@ -118,13 +128,17 @@ module.exports = {
       const result = new device.CosCheckUpdateRes()
       const pending = state.cosWritten && !state.serverComplete
       const offered = control.offer || control.mode !== 'normal' || state.cosWritten
-      result.setIsLatest(!offered || (state.serverComplete && state.cosWritten))
+      const latestCos = offered ? control.latestCos || '1.0.0' : control.initialCos || '2.0.0'
+      result.setIsLatest(
+        !offered || (state.serverComplete && state.bleDone && state.firmwareVersion === latestCos)
+      )
       result.setIsUpdateSuccess(!pending)
-      result.setLatestCosVersion(offered ? '1.0.0' : '2.0.0')
+      result.setLatestCosVersion(latestCos)
       result.setLatestBleVersion(offered ? '1.1.0' : '1.0.0')
       return hex(result)
     }
     if (method === 'btc_get_xpub') {
+      if (control.failWallet) return fail('imkey_wallet_read_failed')
       if (!state.appsInstalled || (control.binding || state.binding) !== 'bound_this')
         return fail('imkey_wallet_not_created')
       return response(btc, 'BtcXpubRes', 'setXpub', 'xpub-resumed-wallet')

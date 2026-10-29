@@ -62,6 +62,8 @@
   line-height: 30px;
 }
 .device-changed-dialog .el-message-box__message {
+  width: 100%;
+  text-align: center;
   color: #2c2842;
   font-weight: 300;
 }

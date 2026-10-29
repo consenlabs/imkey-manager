@@ -1,12 +1,13 @@
 import { callDevice as defaultCall } from '../device'
 import type { DeviceOperation } from './useDeviceOperation'
 import { useAppStore, useDeviceStore } from '../store'
-import type { DeviceResult, FirmwareUpdate } from '../../shared/deviceContract'
+import type { DeviceResult } from '../../shared/deviceContract'
 import { operationError } from './operationError'
 import {
   runFirmwareRecovery,
   loadFirmwareRecovery,
   validateFirmwareResume,
+  firmwareRecoveryRequiresBinding,
   type FirmwareFailure,
   type FirmwareRecovery
 } from './firmwareRecovery'
@@ -44,10 +45,7 @@ export function useConnectionFirmware(
         error.code === 'BINDING_CODE_FILE_UNREADABLE')
     fail(operationError(error), missingCode ? 7 : stage === 'connect' ? 4 : 5, stage)
   }
-  async function toCosUpdate(
-    target?: Pick<FirmwareUpdate, 'latestCosVersion' | 'latestBleVersion'>,
-    nativeIncomplete = false
-  ): Promise<void> {
+  async function toCosUpdate(nativeIncomplete = false): Promise<void> {
     if (busy || !active()) return
     busy = true
     device.revokeHomeAccess()
@@ -71,9 +69,8 @@ export function useConnectionFirmware(
         phase: 'update',
         bindCode: '',
         needsBinding: true,
-        expectedCos: target?.latestCosVersion || '',
-        expectedBle: target?.latestBleVersion || '',
-        captureVersionsAfterUpdate: true
+        expectedCos: '',
+        expectedBle: ''
       }
       const attempt = recovery
       const current = () => active() && recovery === attempt
@@ -81,25 +78,16 @@ export function useConnectionFirmware(
         // Server-side native recovery remains authoritative when a native call
         // has not completed its application/BLE work.
         attempt.phase = 'update'
+        attempt.expectedCos = ''
+        attempt.expectedBle = ''
       }
-      if (
-        attempt.phase === 'update' &&
-        target &&
-        ((attempt.expectedCos &&
-          target.latestCosVersion &&
-          attempt.expectedCos !== target.latestCosVersion) ||
-          (attempt.expectedBle &&
-            target.latestBleVersion &&
-            attempt.expectedBle !== target.latestBleVersion))
-      )
-        return report({ isSuccess: false, result: 'firmware_recovery_target_changed' }, 'check')
       if (attempt.phase !== 'update') {
         stage = 'check'
         const validation = await validateFirmwareResume(attempt, callDevice, current)
         if (validation) return report(validation.error, validation.stage)
         // A completed rebind must still belong to this computer before storage or
         // address restoration resumes. Earlier phases explicitly allow unbound.
-        if (!['capture-versions', 'load-code', 'bind'].includes(attempt.phase)) {
+        if (firmwareRecoveryRequiresBinding(attempt.phase)) {
           const binding = await callDevice('deviceBindCheck', app.userPath)
           if (!current()) return
           if (!binding.isSuccess) return report(binding, 'bind')

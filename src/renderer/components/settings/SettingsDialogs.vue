@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import ErrorDetail from '../ErrorDetail.vue'
+import type { FirmwareUpgradePhase } from '../../composables/useFirmwareUpgrade'
 withDefaults(
   defineProps<{
     errorInfo?: string
     errorStage?: string
     supportCode: number
     bindCode: string
-    phase?: 'idle' | 'preparing' | 'update' | 'bind' | 'store' | 'restore' | 'complete'
+    phase?: FirmwareUpgradePhase
   }>(),
   { phase: 'update' }
 )

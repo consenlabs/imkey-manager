@@ -299,3 +299,117 @@ it('a checkpoint for another device cannot authorize recovery writes or home', a
   expect(useDeviceStore().canEnterHome).toBe(false)
   expect(mocks.push).not.toHaveBeenCalled()
 })
+
+it('captures installed firmware instead of the published versions when native recovery finishes', async () => {
+  bootloader = false
+  mocks.call.mockImplementation(async (method, params) => {
+    if (method === 'cosCheckUpdate')
+      return {
+        isSuccess: true,
+        result: {
+          isUpdateSuccess: updated,
+          latestCosVersion: '9.9.9',
+          latestBleVersion: '8.8.8'
+        }
+      }
+    return response(method, params)
+  })
+  await useConnection().check()
+  expect(calls('cosUpdate')).toHaveLength(1)
+  expect(calls('saveFirmwareRecovery').map(([, checkpoint]) => checkpoint)).toContainEqual(
+    expect.objectContaining({ phase: 'bind', expectedCos: '2.0.0', expectedBle: '2.1.0' })
+  )
+  expect(journal).toBeNull()
+  expect(useDeviceStore().canEnterHome).toBe(true)
+  expect(mocks.push).toHaveBeenCalledExactlyOnceWith('/home/welcomeHome')
+})
+
+it('resumes an old capture checkpoint with stale published versions while the same device is unbound', async () => {
+  bootloader = false
+  updated = true
+  journal = {
+    version: 1,
+    seid,
+    phase: 'capture-versions',
+    needsBinding: true,
+    expectedCos: '9.9.9',
+    expectedBle: '8.8.8'
+  }
+  await useConnection().check()
+  expect(calls('cosUpdate')).toHaveLength(0)
+  expect(calls('deviceBindAcquire')).toHaveLength(1)
+  expect(calls('saveFirmwareRecovery').map(([, checkpoint]) => checkpoint)).toContainEqual(
+    expect.objectContaining({ phase: 'bind', expectedCos: cos, expectedBle: ble })
+  )
+  expect(journal).toBeNull()
+  expect(useDeviceStore().canEnterHome).toBe(true)
+  expect(mocks.push).toHaveBeenCalledExactlyOnceWith('/home/welcomeHome')
+})
+
+it('a capture read failure can restart and recapture both versions without reflashing or prior binding', async () => {
+  failedMethod = 'getBleVersion'
+  await useConnection().check()
+  expect(journal?.phase).toBe('capture-versions')
+  expect(binding).toBe('unbound')
+  expect(useDeviceStore().canEnterHome).toBe(false)
+  expect(mocks.push).not.toHaveBeenCalled()
+  setActivePinia(createPinia())
+  mocks.call.mockClear()
+  failedMethod = ''
+  await useConnection().check()
+  expect(calls('cosUpdate')).toHaveLength(0)
+  expect(calls('getFirmwareVersion').length).toBeGreaterThan(0)
+  expect(calls('getBleVersion').length).toBeGreaterThan(0)
+  expect(calls('deviceBindAcquire')).toHaveLength(1)
+  expect(useDeviceStore().canEnterHome).toBe(true)
+})
+
+it.each(['query-failure', 'native-incomplete'])(
+  'capture %s cannot bind, clear recovery, or enter home',
+  async failure => {
+    mocks.call.mockImplementation(async (method, params) => {
+      if (method === 'cosCheckUpdate')
+        return failure === 'query-failure'
+          ? { isSuccess: false, result: 'imkey_tsm_device_update_check_fail' }
+          : { isSuccess: true, result: { isUpdateSuccess: false } }
+      return response(method, params)
+    })
+    await useConnection().check()
+    expect(calls('cosUpdate')).toHaveLength(1)
+    expect(calls('deviceBindAcquire')).toHaveLength(0)
+    expect(calls('clearFirmwareRecovery')).toHaveLength(0)
+    expect(journal?.phase).toBe('capture-versions')
+    expect(useDeviceStore().canEnterHome).toBe(false)
+    expect(mocks.push).not.toHaveBeenCalled()
+  }
+)
+
+it('server-confirmed native incompletion clears the old baseline before reentering native recovery', async () => {
+  failedMethod = 'writeWalletAddress'
+  const flow = useConnectionFirmware(vi.fn(), vi.fn(), async () => {})
+  await flow.toCosUpdate()
+  expect(journal?.phase).toBe('restore')
+  failedMethod = ''
+  mocks.call.mockClear()
+  mocks.call.mockImplementation(async (method, params) => {
+    const result = response(method, params)
+    if (method === 'cosUpdate') {
+      cos = '3.0.0'
+      ble = '3.1.0'
+      binding = 'unbound'
+    }
+    return result
+  })
+  await flow.toCosUpdate(true)
+  expect(calls('cosUpdate')).toHaveLength(1)
+  expect(calls('saveFirmwareRecovery')[0][1]).toMatchObject({
+    phase: 'update',
+    expectedCos: '',
+    expectedBle: ''
+  })
+  expect(calls('saveFirmwareRecovery').map(([, checkpoint]) => checkpoint)).toContainEqual(
+    expect.objectContaining({ phase: 'bind', expectedCos: '3.0.0', expectedBle: '3.1.0' })
+  )
+  expect(flow.hasPendingRecovery()).toBe(false)
+  expect(journal).toBeNull()
+})

@@ -14,6 +14,7 @@ import {
 import {
   runFirmwareRecovery,
   validateFirmwareResume,
+  firmwareRecoveryRequiresBinding,
   type FirmwareRecovery
 } from './firmwareRecovery'
 import type { FirmwareCheckCache } from '../models/deviceState'
@@ -30,6 +31,16 @@ interface UpgradeAttempt {
   data: UpgradeData
   recovery: FirmwareRecovery
 }
+export type FirmwareUpgradePhase =
+  | 'idle'
+  | 'preparing'
+  | 'update'
+  | 'reading'
+  | 'bind'
+  | 'store'
+  | 'restore'
+  | 'verifying'
+  | 'complete'
 // Retain only in-memory recovery inputs for this device session, including page reentry.
 // They are never serialized into the store or diagnostics.
 const attempts = new WeakMap<ReturnType<typeof useDeviceStore>, UpgradeAttempt>()
@@ -45,7 +56,7 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
     errorInfo: '',
     errorStage: '',
     busy: false,
-    phase: 'idle' as 'idle' | 'preparing' | 'update' | 'bind' | 'store' | 'restore' | 'complete',
+    phase: 'idle' as FirmwareUpgradePhase,
     recovering: false,
     bindCode: '',
     cosOldVersionData: '',
@@ -65,7 +76,7 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
     if (!saved) return undefined
     return {
       firmwareRecovery: true,
-      requireBinding: !['update', 'load-code', 'bind'].includes(saved.recovery.phase),
+      requireBinding: firmwareRecoveryRequiresBinding(saved.recovery.phase),
       preserveOnTransportError: true
     }
   }
@@ -200,14 +211,20 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
   }
   function completed(attempt: UpgradeAttempt) {
     const data = attempt.data
-    state.isCosUpdate = false
-    state.cosUpdateStatus = '0'
-    state.cosOldVersionData = data.cosNewVersionData || data.cosOldVersionData
-    state.bleOldVersionData = data.bleNewVersionData || data.bleOldVersionData
+    state.cosOldVersionData = attempt.recovery.expectedCos
+    state.bleOldVersionData = attempt.recovery.expectedBle
+    state.isCosUpdate = Boolean(
+      (data.cosNewVersionData && data.cosNewVersionData !== state.cosOldVersionData) ||
+      (kind === 'setting' &&
+        data.bleNewVersionData &&
+        data.bleNewVersionData !== state.bleOldVersionData)
+    )
+    state.cosUpdateStatus = state.isCosUpdate ? '1' : '0'
     invalidateFirmware(device)
     device.cosOldVersionData = state.cosOldVersionData
     device.bleOldVersionData = state.bleOldVersionData
     device.installedBleVersion = state.bleOldVersionData
+    device.isCosUpdate = state.isCosUpdate
     device.deviceInfo = null
     if (attempt.recovery.needsBinding) {
       device.isFirstGoToManagerPage = true
@@ -238,7 +255,7 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
       const connected = await refreshDeviceIdentity(callDevice, device, operation.active, {
         hideCachedData: false,
         firmwareRecovery: Boolean(attempt),
-        requireBinding: !attempt || !['update', 'load-code', 'bind'].includes(phase!),
+        requireBinding: !attempt || firmwareRecoveryRequiresBinding(phase!),
         preserveOnTransportError: true
       })
       if (!connected.isSuccess) {
@@ -278,9 +295,8 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
             phase: 'update',
             bindCode: data.bindCode,
             needsBinding,
-            captureVersionsAfterUpdate: true,
-            expectedCos: data.cosNewVersionData || data.cosOldVersionData,
-            expectedBle: data.bleNewVersionData || data.bleOldVersionData
+            expectedCos: '',
+            expectedBle: ''
           }
         }
         attempts.set(device, attempt)
@@ -292,14 +308,15 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
         userPath: app.userPath,
         onPhase(phase) {
           state.phase =
-            phase === 'load-code' ||
-            phase === 'capture-versions' ||
-            phase === 'verify' ||
-            phase === 'complete'
-              ? 'preparing'
-              : phase === 'apps'
-                ? 'restore'
-                : phase
+            phase === 'capture-versions'
+              ? 'reading'
+              : phase === 'verify' || phase === 'complete'
+                ? 'verifying'
+                : phase === 'load-code'
+                  ? 'bind'
+                  : phase === 'apps'
+                    ? 'restore'
+                    : phase
           state.errorStage = phase === 'load-code' ? 'store' : phase === 'apps' ? 'restore' : phase
           state.recovering = phase !== 'update' && phase !== 'complete'
           if (phase !== 'update') invalidateFirmware(device)

@@ -21,9 +21,10 @@ export interface FirmwareRecovery {
   phase: FirmwarePhase
   bindCode: string
   needsBinding: boolean
+  // Observed post-upgrade versions, never the advertised release versions.
+  // They become authoritative only after capture-versions completes.
   expectedCos: string
   expectedBle: string
-  captureVersionsAfterUpdate?: boolean
   pendingAddresses?: WalletChain[]
 }
 export interface FirmwareFailure {
@@ -40,11 +41,19 @@ function unsuccessful(result: DeviceResult): DeviceResult {
     : result
 }
 
+export function firmwareRecoveryRequiresBinding(phase: FirmwarePhase): boolean {
+  return !['update', 'capture-versions', 'load-code', 'bind'].includes(phase)
+}
+
 export function restoreFirmwareRecovery(checkpoint: FirmwareRecoveryCheckpoint): FirmwareRecovery {
+  const uncaptured = checkpoint.phase === 'update' || checkpoint.phase === 'capture-versions'
   return {
     ...checkpoint,
     bindCode: '',
-    captureVersionsAfterUpdate: true,
+    // Older v1 checkpoints stored advertised targets in these early phases.
+    // Those values cannot authorize or block capturing the actual installed firmware.
+    expectedCos: uncaptured ? '' : checkpoint.expectedCos,
+    expectedBle: uncaptured ? '' : checkpoint.expectedBle,
     pendingAddresses: checkpoint.pendingAddresses ? [...checkpoint.pendingAddresses] : undefined
   }
 }
@@ -137,29 +146,44 @@ export async function runFirmwareRecovery(
       if (!current()) return cancelled()
       if (!response.isSuccess || response.result !== 'success')
         return { stage: 'update', error: unsuccessful(response) }
-      recovery.phase = recovery.captureVersionsAfterUpdate
-        ? 'capture-versions'
-        : recovery.needsBinding
-          ? recovery.bindCode
-            ? 'bind'
-            : 'load-code'
-          : 'verify'
+      recovery.expectedCos = ''
+      recovery.expectedBle = ''
+      // A new native update may reinstall apps. Its address work must not inherit
+      // the failed-only subset from an earlier, already completed native attempt.
+      delete recovery.pendingAddresses
+      recovery.phase = 'capture-versions'
     } else if (phase === 'capture-versions') {
+      const bootloader = await call('isBLStatus')
+      if (!current()) return cancelled()
+      if (!bootloader.isSuccess) return { stage: 'check', error: bootloader }
+      if (bootloader.result)
+        return {
+          stage: 'check',
+          error: { isSuccess: false, result: 'firmware_recovery_not_ready' }
+        }
       const versions: string[] = []
-      for (const [method, expected] of [
-        ['getFirmwareVersion', recovery.expectedCos],
-        ['getBleVersion', recovery.expectedBle]
-      ] as const) {
+      for (const method of ['getFirmwareVersion', 'getBleVersion'] as const) {
         const response = await call(method)
         if (!current()) return cancelled()
         if (!response.isSuccess) return { stage: 'check', error: response }
-        if (!response.result || (expected && response.result !== expected))
+        if (!response.result)
           return {
             stage: 'check',
             error: { isSuccess: false, result: 'firmware_recovery_version_mismatch' }
           }
         versions.push(response.result)
       }
+      // cosUpdate follows the server's upgrade transaction, not the version label
+      // shown by the earlier update check. A completed transaction may install a
+      // different version (for example, a test release label or a resumed upgrade).
+      const status = await call('cosCheckUpdate')
+      if (!current()) return cancelled()
+      if (!status.isSuccess) return { stage: 'check', error: status }
+      if (status.result.isUpdateSuccess !== true)
+        return {
+          stage: 'check',
+          error: { isSuccess: false, result: 'firmware_recovery_not_ready' }
+        }
       const identity = await call('getUpgradeSeid')
       if (!current()) return cancelled()
       if (!identity.isSuccess) return { stage: 'connect', error: identity }
@@ -243,6 +267,7 @@ export async function runFirmwareRecovery(
 }
 
 // A retry may skip completed writes only after observing the same firmware again.
+// During capture-versions there is no established actual-version baseline yet.
 // Identity and binding are checked by the caller before entering this function.
 export async function validateFirmwareResume(
   recovery: FirmwareRecovery,
@@ -256,8 +281,8 @@ export async function validateFirmwareResume(
   if (bootloader.result)
     return { stage: 'check', error: { isSuccess: false, result: 'firmware_recovery_not_ready' } }
   for (const [method, expected] of [
-    ['getFirmwareVersion', recovery.expectedCos],
-    ['getBleVersion', recovery.expectedBle]
+    ['getFirmwareVersion', recovery.phase === 'capture-versions' ? '' : recovery.expectedCos],
+    ['getBleVersion', recovery.phase === 'capture-versions' ? '' : recovery.expectedBle]
   ] as const) {
     if (!expected) continue
     const response = await call(method)

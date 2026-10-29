@@ -117,7 +117,7 @@ export function useConnection() {
       return
     }
     if (bootloader.result) {
-      await firmware.toCosUpdate(undefined, true)
+      await firmware.toCosUpdate(true)
       return
     }
     // Native upgrade recovery must be reachable even when the normal application
@@ -138,7 +138,7 @@ export function useConnection() {
       return
     }
     if (cos.result.isUpdateSuccess !== true || pending.result) {
-      await firmware.toCosUpdate(cos.result, cos.result.isUpdateSuccess === false)
+      await firmware.toCosUpdate(cos.result.isUpdateSuccess === false)
       return
     }
     await checkIsActive()

@@ -78,6 +78,8 @@ export interface FirmwareRecoveryCheckpoint {
   seid: string
   phase: (typeof firmwareRecoveryPhases)[number]
   needsBinding: boolean
+  // Actual installed versions confirmed after native completion. Early phases
+  // have no baseline; legacy v1 files may still contain advertised targets there.
   expectedCos: string
   expectedBle: string
   pendingAddresses?: WalletChain[]
