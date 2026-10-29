@@ -2,7 +2,7 @@ import { test, expect, _electron as electron } from '@playwright/test'
 import path from 'node:path'
 import os from 'node:os'
 import { existsSync } from 'node:fs'
-import { chmod, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { chmod, mkdtemp, realpath, rm, writeFile } from 'node:fs/promises'
 
 const executable = process.env.IMKEY_PACKAGED_APP
 
@@ -27,16 +27,23 @@ test('packaged app loads native connector from Resources and ignores development
     )
     await chmod(executablePath, 0o700)
   }
-  const application = await electron.launch({ executablePath, env })
+  const userDataDirectory = await mkdtemp(path.join(os.tmpdir(), 'imkey-packaged-smoke-'))
+  const application = await electron.launch({
+    executablePath,
+    args: [`--user-data-dir=${userDataDirectory}`],
+    env
+  })
   try {
     const page = await application.firstWindow()
     await expect(page.locator('.appStart')).toBeVisible()
     const applicationInfo = await application.evaluate(({ app }) => ({
       packaged: app.isPackaged,
+      userData: app.getPath('userData'),
       resources: process.resourcesPath,
       arch: process.arch
     }))
     expect(applicationInfo.packaged).toBe(true)
+    expect(await realpath(applicationInfo.userData)).toBe(await realpath(userDataDirectory))
     if (process.env.IMKEY_PACKAGED_ARCH) {
       expect(applicationInfo.arch).toBe(process.env.IMKEY_PACKAGED_ARCH)
     }
@@ -72,6 +79,7 @@ test('packaged app loads native connector from Resources and ignores development
     )
   } finally {
     await application.close()
+    await rm(userDataDirectory, { recursive: true, force: true })
     if (wrapperDirectory) await rm(wrapperDirectory, { recursive: true, force: true })
   }
 })

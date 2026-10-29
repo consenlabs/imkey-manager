@@ -31,6 +31,7 @@ export const m = {
     firmware_latest: 'Firmware is up to date',
     firmware_check_incomplete: 'Update check incomplete. Please retry.',
     checking_firmware: 'Checking for updates…',
+    preparing_upgrade: 'Preparing upgrade…',
     upgrade: 'Upgrade',
     check_updates: 'Check for updates',
     serial_number: 'Serial number (SN)',
@@ -54,6 +55,18 @@ export const m = {
   },
   imKeyManager: {
     retry: 'Retry',
+    setup_connection_failed: 'Connection failed. Check the imKey USB connection and retry.',
+    setup_operation_failed: 'The operation did not complete. Check imKey and retry.',
+    setup_connecting_device: 'Connecting to device…',
+    setup_checking_device: 'Checking device…',
+    setup_checking_wallet: 'Checking wallet…',
+    firmware_phase_idle: 'Preparing firmware upgrade…',
+    firmware_phase_preparing: 'Preparing firmware upgrade…',
+    firmware_phase_update: 'Upgrading firmware…',
+    firmware_phase_bind: 'Restoring device binding…',
+    firmware_phase_store: 'Saving binding code…',
+    firmware_phase_restore: 'Restoring wallet addresses…',
+    firmware_phase_complete: 'Firmware upgrade complete',
     recovery_title: 'Operation incomplete',
     return_to_connection: 'Back to connection',
     device_changed_title: 'Device changed',
@@ -239,6 +252,24 @@ export const m = {
     update_tip_wait: 'After the update, the app will restart. Please be patient'
   },
   imKeyCoreErrorInfo: {
+    binding_code_file_missing:
+      'No saved binding code was found. Enter your binding code to continue.',
+    firmware_recovery_not_ready:
+      'The device is not ready to resume the upgrade. Check the device and retry.',
+    firmware_recovery_version_mismatch:
+      'The device firmware version has changed. Reconnect the device before continuing.',
+    firmware_recovery_invalid:
+      'The firmware recovery record is invalid. Reconnect the device and try again.',
+    firmware_recovery_unreadable:
+      'The firmware recovery record could not be read. Keep the local app data and contact support.',
+    firmware_recovery_write_failed:
+      'Firmware recovery progress could not be saved. Check available disk space and file permissions, then try again.',
+    firmware_recovery_device_mismatch:
+      'The connected device does not match the firmware recovery record. Connect the original device and try again.',
+    firmware_recovery_device_unavailable:
+      'The device identity could not be verified. Check the device connection and try again.',
+    firmware_recovery_unavailable:
+      'The firmware recovery service is unavailable. Restart imKey Manager and try again.',
     network_unavailable: 'Network unavailable. Check your connection and retry.',
     operation_failed: 'The operation failed. Please retry.',
     decoding_failed: 'Decoding failed',

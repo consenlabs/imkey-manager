@@ -185,12 +185,20 @@
     <div class="btnBox">
       <button
         :class="[flow.finish ? '' : 'noFinish']"
+        :disabled="!flow.finish || flow.busy"
+        :aria-busy="nextLoading"
         class="nextBtn"
         @click="flow.send({ page: 0, active: 0, isNext: false })"
       >
-        {{ $t('m.imKeyManager.done') }}
+        <span v-if="nextLoading" class="setup-button-spinner" aria-hidden="true"></span>
+        {{ $t(nextLoading ? 'm.imKeyManager.setup_checking_wallet' : 'm.imKeyManager.done') }}
       </button>
-      <button class="prevBtn" @click="flow.send({ page: 3, active: 1, isNext: false })">
+      <button
+        class="prevBtn"
+        :disabled="flow.busy"
+        :aria-busy="false"
+        @click="flow.send({ page: 3, active: 1, isNext: false })"
+      >
         {{ $t('m.imKeyManager.previous') }}
       </button>
     </div>
@@ -198,6 +206,8 @@
 </template>
 <script setup lang="ts">
 import type { UnwrapNestedRefs } from 'vue'
+import { computed } from 'vue'
 import type { useDeviceSetup } from '../../composables/useDeviceSetup'
-defineProps<{ flow: UnwrapNestedRefs<ReturnType<typeof useDeviceSetup>> }>()
+const props = defineProps<{ flow: UnwrapNestedRefs<ReturnType<typeof useDeviceSetup>> }>()
+const nextLoading = computed(() => props.flow.busy && props.flow.pendingAction === 'next')
 </script>

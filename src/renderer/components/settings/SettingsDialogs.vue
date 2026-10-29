@@ -1,18 +1,48 @@
 <script setup lang="ts">
+import { ref, watch } from 'vue'
 import ErrorDetail from '../ErrorDetail.vue'
-defineProps<{ errorInfo?: string; errorStage?: string; supportCode: number; bindCode: string }>()
+withDefaults(
+  defineProps<{
+    errorInfo?: string
+    errorStage?: string
+    supportCode: number
+    bindCode: string
+    phase?: 'idle' | 'preparing' | 'update' | 'bind' | 'store' | 'restore' | 'complete'
+  }>(),
+  { phase: 'update' }
+)
 const emit = defineEmits<{ changeCode: [code: number]; updateFirmware: [] }>()
+const progressDialog = ref<InstanceType<typeof globalThis.HTMLDialogElement>>()
+watch(
+  progressDialog,
+  dialog => {
+    if (dialog?.isConnected && !dialog.open) dialog.showModal()
+  },
+  { flush: 'post' }
+)
 </script>
 <template>
-  <div class="alert" v-if="supportCode == 1">
+  <dialog
+    ref="progressDialog"
+    class="alert firmware-progress-dialog"
+    v-if="supportCode == 1"
+    aria-modal="true"
+    aria-busy="true"
+    aria-labelledby="settings-firmware-progress-title"
+    tabindex="-1"
+    :data-phase="phase"
+    @cancel.prevent
+  >
     <div class="alertBox alert1">
-      <span class="fas fa-circle-notch fa-spin"></span>
-      <h4>{{ $t('m.imKeyManager.imKey_pro_firmware_update_wait') }}</h4>
+      <span class="fas fa-circle-notch fa-spin" aria-hidden="true"></span>
+      <h4 id="settings-firmware-progress-title" aria-live="polite">
+        {{ $t(`m.imKeyManager.firmware_phase_${phase}`) }}
+      </h4>
       <line></line>
       <p>{{ $t('m.imKeyManager.restart_automatically_after_upgrade') }}</p>
       <p>{{ $t('m.imKeyManager.upgrading_do_not_disconnect_usb_operating') }}</p>
     </div>
-  </div>
+  </dialog>
   <div class="alert" v-if="supportCode == 2">
     <div class="alertBox alert2">
       <svg
@@ -127,3 +157,19 @@ const emit = defineEmits<{ changeCode: [code: number]; updateFirmware: [] }>()
     </div>
   </div>
 </template>
+<style scoped>
+.firmware-progress-dialog {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.firmware-progress-dialog::backdrop {
+  background: transparent;
+}
+</style>

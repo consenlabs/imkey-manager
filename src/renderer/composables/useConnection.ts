@@ -28,7 +28,10 @@ export function useConnection() {
   const binding = useBindCodeInput(bindAcquire, true)
   const firmware = useConnectionFirmware(
     changeState,
-    (message, status) => fail(message, status, false),
+    (message, status, stage) => {
+      if (stage) state.errorStage = stage
+      fail(message, status, false)
+    },
     connect,
     operation
   )
@@ -99,17 +102,44 @@ export function useConnection() {
       fail(bootloader)
       return
     }
-    if (bootloader.result) {
-      await firmware.toCosUpdate()
-      return
-    }
     if (!device.connectedSeid) {
-      const identity = await callDevice('getSeid')
+      const identity = await callDevice(bootloader.result ? 'getUpgradeSeid' : 'getSeid')
       if (!identity.isSuccess || !identity.result) {
         fail(identity.isSuccess ? 'get_seid_error' : identity)
         return
       }
       device.connectedSeid = identity.result
+    }
+    device.identityReady = true
+    const pending = await firmware.loadPendingRecovery(device.connectedSeid)
+    if (!pending.isSuccess) {
+      fail(pending)
+      return
+    }
+    if (bootloader.result) {
+      await firmware.toCosUpdate(undefined, true)
+      return
+    }
+    // Native upgrade recovery must be reachable even when the normal application
+    // catalogue fails for the partly installed firmware. Never treat that error
+    // as successful binding or permission to enter home.
+    const cos = await callDevice('cosCheckUpdate')
+    if (!cos.isSuccess) {
+      if (!pending.result && cos.result === 'imkey_tsm_device_not_activated') {
+        device.activeStatus = 'inactivated'
+        await router.push('imKeySetting')
+        return
+      }
+      fail(cos)
+      return
+    }
+    if (typeof cos.result.isUpdateSuccess !== 'boolean') {
+      fail('invalid_firmware_response')
+      return
+    }
+    if (cos.result.isUpdateSuccess !== true || pending.result) {
+      await firmware.toCosUpdate(cos.result, cos.result.isUpdateSuccess === false)
+      return
     }
     await checkIsActive()
   }
@@ -121,15 +151,6 @@ export function useConnection() {
     }
     if (update.result.status !== 'latest') {
       await router.push('imKeySetting')
-      return
-    }
-    const cos = await callDevice('cosCheckUpdate')
-    if (!cos.isSuccess) {
-      fail(cos)
-      return
-    }
-    if (!cos.result.isUpdateSuccess) {
-      await firmware.toCosUpdate()
       return
     }
     state.checkFirmwareUpgrade = 3
@@ -163,15 +184,12 @@ export function useConnection() {
       fail(result)
       return
     }
-    const local = await callDevice('isExistBindCodeFile')
-    if (!local.isSuccess) return fail(local)
-    if (!local.result) {
-      changeState(7)
-      return
-    }
     const stored = await callDevice('exportBindCode')
     if (!stored.isSuccess) {
-      state.errorInfo = operationError(stored)
+      if (stored.code === 'BINDING_DEVICE_UNAVAILABLE') return fail(stored)
+      // The main process resolves the actual device SEID and reads its file once.
+      // A missing file needs code entry; an unreadable file also explains why.
+      state.errorInfo = stored.result === 'binding_code_file_missing' ? '' : operationError(stored)
       changeState(7)
       return
     }
@@ -179,10 +197,13 @@ export function useConnection() {
     await checkWallet(false)
   }
   async function checkWallet(other: boolean, isCurrent = () => operation.active()): Promise<void> {
+    device.revokeHomeAccess()
+    const sessionId = device.sessionId
+    const seid = device.connectedSeid
     state.errorStage = 'wallet'
     if (!other) state.checkPinAndWallet = 2
     const xpub = await callDevice('getBTCXpub', app.userPath)
-    if (!isCurrent()) return
+    if (!isCurrent() || device.sessionId !== sessionId) return
     if (!xpub.isSuccess) {
       if (xpub.result === 'imkey_wallet_not_created') await router.push('imKeySetting')
       else fail(xpub)
@@ -190,6 +211,14 @@ export function useConnection() {
     }
     if (!xpub.result.startsWith('xpub')) {
       fail('invalid_wallet_response')
+      return
+    }
+    const confirmed = await callDevice('getSeid')
+    if (!isCurrent() || device.sessionId !== sessionId) return
+    if (!confirmed.isSuccess) return fail(confirmed)
+    if (confirmed.result.toUpperCase() !== seid.toUpperCase()) return fail('device_session_changed')
+    if (!device.authorizeHome(sessionId, seid, xpub)) {
+      fail('device_session_changed')
       return
     }
     if (other) binding.state.bindingStatus = 2
@@ -231,6 +260,10 @@ export function useConnection() {
     if (!isCurrent()) return
     if (!imported.isSuccess) {
       fail(imported)
+      return
+    }
+    if (firmware.hasPendingRecovery()) {
+      await firmware.toCosUpdate()
       return
     }
     await checkWallet(true, isCurrent)

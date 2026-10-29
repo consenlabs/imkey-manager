@@ -16,7 +16,8 @@ interface Control {
   firmware?: string
   ble?: string
   update?: boolean
-  upgradeRecovery?: boolean
+  latestFirmware?: string
+  latestBle?: string
   snValid?: boolean
   activated?: boolean
   activatedAt?: string
@@ -215,7 +216,7 @@ test('home entry is passive and repeated device visits read cached metadata with
   expect(await count('device_secure_check')).toBe(0)
   expect(await count('device_sn_check')).toBe(0)
   const initialCalls = await calls()
-  expect(initialCalls.at(-1)).toBe('btc_get_xpub')
+  expect(initialCalls.slice(-2)).toEqual(['btc_get_xpub', 'get_seid'])
   await expect(page.getByTestId('secure-check-button')).toHaveText('Verify device')
   await expect(page.locator('body')).not.toContainText('Identifying')
   await page.screenshot({ path: '/private/tmp/imkey-home-unverified.png' })
@@ -527,7 +528,8 @@ test('explicit firmware checking caches an upgrade that reads its binding code w
     'get_seid',
     'device_connect',
     'get_seid',
-    'bind_check'
+    'bind_check',
+    'get_upgrade_seid'
   ])
   expect(await count('bind_acquire')).toBe(1)
 })
@@ -740,7 +742,7 @@ test('binding code export remains available for the same bound device', async ()
 })
 
 for (const replaced of [false, true]) {
-  test(`firmware retry after a failed rebind ${replaced ? 'rejects a replacement device' : 'accepts the same temporarily unbound device'}`, async () => {
+  test(`firmware retry after a failed rebind ${replaced ? 'rejects a replacement device' : 'requires reconnection before resuming the same unbound device'}`, async () => {
     await launch({ update: true })
     await devicePage()
     await page.getByTestId('firmware-check-button').click()
@@ -752,30 +754,46 @@ for (const replaced of [false, true]) {
     await expect(page.locator('.alert3')).toContainText('upgrade_rebind_failed')
     expect(await count('cos_update')).toBe(1)
     await page.locator('.alert3 button').click()
+    if (!replaced) {
+      await tab(0)
+      await expect(page.locator('.connectDevice')).toBeVisible()
+      await expect(page.locator('.homeBox')).toHaveCount(0)
+      expect(await count('cos_update')).toBe(1)
+    }
     const beforeRetry = (await calls()).length
     await configure({
-      binding: 'unbound',
-      upgradeRecovery: true,
       ...(replaced ? { seid: 'DEVICE-B' } : {}),
       fault: undefined
     })
-    await page.getByTestId('firmware-upgrade-button').click()
+    if (replaced) await page.getByTestId('firmware-upgrade-button').click()
+    else await page.locator('.connectDevice button').first().click()
     if (replaced) {
       await expectChangedNotice()
       expect(await count('cos_update')).toBe(1)
       expect(await count('bind_acquire')).toBe(1)
       await expect(page.getByTestId('firmware-upgrade-button')).toHaveCount(0)
     } else {
-      await expect(page.locator('.alert2')).toContainText('Update completed')
-      expect(await count('cos_update')).toBe(2)
+      await expect(page.getByTestId('device-verification-card')).toBeVisible()
+      await expect(page.locator('.homeBox')).toBeVisible()
+      expect(await count('cos_update')).toBe(1)
       expect(await count('bind_acquire')).toBe(2)
       expect(await count('register_address')).toBeGreaterThan(0)
     }
-    expect(await count('get_upgrade_seid')).toBe(1)
     const retryCalls = (await calls()).slice(beforeRetry)
-    const upgradeStart = retryCalls.indexOf('cos_update')
-    const preflight = retryCalls.slice(0, upgradeStart < 0 ? undefined : upgradeStart)
-    expect(preflight).toEqual(['device_connect', 'get_upgrade_seid'])
+    expect(retryCalls).not.toContain('cos_update')
+    if (replaced) expect(retryCalls).toEqual(['device_connect', 'get_upgrade_seid'])
+    else {
+      expect(retryCalls.slice(0, 4)).toEqual([
+        'device_connect',
+        'is_bl_status',
+        'get_seid',
+        'get_upgrade_seid'
+      ])
+      expect(retryCalls.indexOf('cos_check_update')).toBeLessThan(
+        retryCalls.indexOf('bind_acquire')
+      )
+      expect(retryCalls.slice(-2)).toEqual(['btc_get_xpub', 'get_seid'])
+    }
   })
 }
 
@@ -797,4 +815,115 @@ test('a temporary connection failure preserves the firmware upgrade action for a
   await expect(page.locator('.alert2')).toContainText('Update completed')
   expect(await count('cos_update')).toBe(1)
   expect(await count('bind_acquire')).toBe(1)
+})
+
+test('upgrade immediately opens a modal during preflight and blocks dismissal and background actions', async () => {
+  await launch({ update: true })
+  await devicePage()
+  await page.getByTestId('firmware-check-button').click()
+  const button = page.getByTestId('firmware-upgrade-button')
+  await expect(button).toBeEnabled()
+  const connections = await count('device_connect')
+  const originalUrl = page.url()
+  const appsTab = await page.locator('.routerBar li').nth(1).boundingBox()
+  await configure({ gate: true, gateMethod: 'device_connect' })
+  await button.click()
+  const progress = page.locator('dialog.firmware-progress-dialog')
+  await expect(progress).toBeVisible({ timeout: 1000 })
+  await expect(progress).toHaveAttribute('data-phase', 'preparing')
+  await expect(progress).toHaveAttribute('aria-busy', 'true')
+  await expect(button).toBeDisabled()
+  await expect(button).toHaveAttribute('aria-busy', 'true')
+  await expect.poll(() => count('device_connect')).toBe(connections + 1)
+  expect(await count('cos_update')).toBe(0)
+  await page.keyboard.press('Escape')
+  await expect(progress).toBeVisible()
+  await page.mouse.click(appsTab!.x + appsTab!.width / 2, appsTab!.y + appsTab!.height / 2)
+  await expect(page).toHaveURL(originalUrl)
+  await expect(progress).toBeVisible()
+  await button.evaluate(element => (element as HTMLButtonElement).click())
+  expect(await count('device_connect')).toBe(connections + 1)
+  await page.screenshot({ path: '/private/tmp/imkey-optimized-upgrade-preparing.png' })
+  await configure({ gate: true, gateMethod: 'cos_update' })
+  await expect.poll(() => count('cos_update')).toBe(1)
+  await expect(progress).toHaveAttribute('data-phase', 'update')
+  await page.screenshot({ path: '/private/tmp/imkey-optimized-upgrade-running.png' })
+  await configure({ gate: false })
+  await expect(page.locator('.alert2')).toContainText('Update completed')
+  await page.locator('.alert2 button').click()
+  await expect(page.locator('.device-info-primary > div').last()).toContainText('2.0.0')
+  const checks = await count('cos_check_update')
+  await checkFirmware()
+  expect(await count('cos_check_update')).toBe(checks + 1)
+  expect(await count('cos_update')).toBe(1)
+})
+
+test('Apps shares a firmware check with Device and reuses the same upgrade result on return', async () => {
+  await launch({ update: true })
+  const checks = await count('cos_check_update')
+  await tab(1)
+  await expect(page.locator('.appItem')).toHaveCount(1)
+  await expect.poll(() => count('cos_check_update')).toBe(checks + 1)
+  await expect.poll(async () => (await calls()).at(-1)).toBe('get_seid')
+  await devicePage()
+  await expect(page.getByTestId('firmware-check-result')).toHaveAttribute(
+    'data-status',
+    'available'
+  )
+  expect(await count('cos_check_update')).toBe(checks + 1)
+  const reads = await count('get_firmware_version')
+  await tab(1)
+  await expect(page.locator('.appItem')).toHaveCount(1)
+  await configure({
+    fault: { id: 'cached-app-upgrade', method: 'cos_update', error: 'cached_upgrade_started' }
+  })
+  await page.locator('.appItem a').last().click()
+  await expect(page.locator('.alert3')).toContainText('cached_upgrade_started')
+  expect(await count('app_download')).toBe(0)
+  expect(await count('cos_check_update')).toBe(checks + 1)
+  expect(await count('get_firmware_version')).toBe(reads)
+})
+
+test('a Device firmware check is reused by Apps and remains current after installation', async () => {
+  await launch()
+  await devicePage()
+  await checkFirmware()
+  const checks = await count('cos_check_update')
+  const versions = await count('get_firmware_version')
+  await tab(1)
+  await expect(page.locator('.appItem')).toHaveCount(1)
+  await page.locator('.appItem a').last().click()
+  await expect(page.locator('.appItem .col')).toBeVisible()
+  expect(await count('cos_check_update')).toBe(checks)
+  expect(await count('get_firmware_version')).toBe(versions)
+  expect(await count('cos_update')).toBe(0)
+  await devicePage()
+  await expect(page.getByTestId('firmware-check-result')).toHaveAttribute('data-status', 'latest')
+  expect(await count('cos_check_update')).toBe(checks)
+  expect(await count('get_firmware_version')).toBe(versions)
+})
+
+test('opening Apps after a failed rebind requires connection recovery before home access', async () => {
+  await launch({ update: true })
+  await devicePage()
+  await page.getByTestId('firmware-check-button').click()
+  await configure({
+    fault: { id: 'app-entry-rebind', method: 'bind_acquire', error: 'upgrade_rebind_failed' }
+  })
+  await page.getByTestId('firmware-upgrade-button').click()
+  await expect(page.locator('.alert3')).toContainText('upgrade_rebind_failed')
+  expect(await count('cos_update')).toBe(1)
+  await page.locator('.alert3 button').click()
+  await tab(1)
+  await expect(page.locator('.connectDevice')).toBeVisible()
+  await expect(page.locator('.homeBox')).toHaveCount(0)
+  await page.screenshot({ path: '/private/tmp/imkey-optimized-apps-recovery-entry.png' })
+  await page.locator('.connectDevice button').first().click()
+  await expect(page.getByTestId('device-verification-card')).toBeVisible()
+  expect(await count('cos_update')).toBe(1)
+  expect(await count('bind_acquire')).toBe(2)
+  expect(await count('register_address')).toBeGreaterThan(0)
+  await devicePage()
+  await checkFirmware()
+  expect(await count('cos_update')).toBe(1)
 })

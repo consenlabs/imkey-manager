@@ -1,4 +1,4 @@
-import { computed, onMounted, reactive } from 'vue'
+import { computed, onMounted, reactive, watch } from 'vue'
 import constants from '../../common/constants'
 import { useAppStore } from '../store/app'
 import { useDeviceStore } from '../store/device'
@@ -16,6 +16,17 @@ import { operationError } from './operationError'
 import { isSessionRecoveryError } from './deviceSession'
 import { refreshDeviceIdentity } from './deviceIdentity'
 import { useDeviceRecovery } from './useDeviceRecovery'
+import type { WalletChain } from '../../shared/deviceContract'
+
+interface PendingAddressRestore {
+  sessionId: number
+  seid: string
+  version: string
+  previousVersion: string | null
+  remaining: WalletChain[]
+}
+// Keep completed downloads across page visits, but never reuse them for another device.
+const addressRestores = new WeakMap<object, Map<string, PendingAddressRestore>>()
 
 export function useAppManagement() {
   const device = useDeviceStore()
@@ -27,10 +38,35 @@ export function useAppManagement() {
   const firmware = useFirmwareUpgrade('manager', scope)
   const state = reactive({ tip: false, appName: '', errorInfo: '', errorStage: '' })
   const operations = reactive<Record<string, AppOperation | undefined>>({})
+  let pendingRestores = addressRestores.get(device)
+  if (!pendingRestores) {
+    pendingRestores = reactive(new Map<string, PendingAddressRestore>())
+    addressRestores.set(device, pendingRestores)
+  }
+  const restores = pendingRestores
+  for (const [id, pending] of restores)
+    if (pending.sessionId !== device.sessionId) restores.delete(id)
+  watch(
+    () => device.sessionId,
+    () => restores.clear(),
+    { flush: 'sync' }
+  )
+  function pendingRestore(id: string) {
+    const pending = restores.get(id)
+    return pending?.sessionId === device.sessionId &&
+      pending.seid.toUpperCase() === device.connectedSeid.toUpperCase()
+      ? pending
+      : undefined
+  }
   const apps = computed(() =>
-    device.apps.map(entry =>
-      appletView(entry, t('m.imKeyManager.imKey_soft'), operations[entry.id])
-    )
+    device.apps.map(entry => {
+      const pending = pendingRestore(entry.id)
+      return appletView(
+        pending ? { ...entry, installedVersion: pending.previousVersion } : entry,
+        t('m.imKeyManager.imKey_soft'),
+        operations[entry.id]
+      )
+    })
   )
   const getApps = computed(() => filterApplets(apps.value, state.appName))
   function fail(
@@ -40,6 +76,7 @@ export function useAppManagement() {
     retry: () => Promise<unknown> = init
   ) {
     if (!scope.active() || (error as { code?: string })?.code === 'OPERATION_CANCELLED') return
+    if (isChanged(error)) restores.clear()
     if (
       isChanged(error) &&
       (device.identityReady || device.apps.length || device.verification.status !== 'idle')
@@ -69,7 +106,7 @@ export function useAppManagement() {
     if (!current()) return false
     if (!response.isSuccess) return fail(response, 'app')
     device.apps = toDeviceApplets(response.result.list)
-    await firmware.checkFirmwareVersion(undefined, current)
+    await firmware.ensureFirmwareVersion(current)
     return current()
   }
   async function initWithinOperation() {
@@ -77,17 +114,18 @@ export function useAppManagement() {
     const current = () => scope.active() && device.sessionId === sessionId
     try {
       const connected = await refreshDeviceIdentity(call, device, scope.active, {
-        hideCachedData: false
+        hideCachedData: false,
+        ...firmware.pendingRecoveryOptions?.()
       })
       if (!connected.isSuccess) return fail(connected, 'connect')
       if (!current()) return
-      const binding = await call('exportBindCode')
-      if (!current()) return
-      if (!binding.isSuccess) return fail(binding, 'bind', true)
-      firmware.state.bindCode = binding.result
+      if (firmware.pendingRecoveryOptions?.()) {
+        firmware.restoreCachedCheck()
+        return
+      }
       if (device.isFirstGoToManagerPage || device.apps.length === 0) {
         if (await getAppsList(current)) device.isFirstGoToManagerPage = false
-      } else await firmware.checkFirmwareVersion(undefined, current)
+      } else await firmware.ensureFirmwareVersion(current)
     } catch (error) {
       if (current()) fail(error, 'connect')
     }
@@ -105,7 +143,7 @@ export function useAppManagement() {
     const current = () => scope.active() && device.sessionId === sessionId
     const retry = () => changeApp(item, operation)
     try {
-      if (firmware.state.cosUpdateStatus === '1') {
+      if (firmware.state.cosUpdateStatus === '1' && !pendingRestore(item.id)) {
         await firmware.updateFirmwareWithinOperation()
         return
       }
@@ -114,21 +152,55 @@ export function useAppManagement() {
       })
       if (!connected.isSuccess) return fail(connected, 'connect', false, retry)
       if (!current()) return
-      const response = await call(
-        operation === 'install' ? 'downloadApplet' : 'updateApplet',
-        target.name
-      )
-      if (!current()) return
-      if (!response.isSuccess) return fail(response, 'app', false, retry)
+      let pending = pendingRestore(item.id)
+      if (pending) {
+        const catalog = await call('checkUpdate')
+        if (!current()) return
+        if (!catalog.isSuccess) return fail(catalog, 'restore', false, retry)
+        const installed = catalog.result.list.find(entry => entry.name === target.name)
+        if (installed?.installedVersion !== pending.version) {
+          restores.delete(item.id)
+          return fail('device_session_restart_required', 'restore', true)
+        }
+        // The catalog call may wait on the server; confirm identity again before writing.
+        const confirmed = await refreshDeviceIdentity(call, device, scope.active, {
+          hideCachedData: false
+        })
+        if (!confirmed.isSuccess) return fail(confirmed, 'connect', false, retry)
+        if (!current()) return
+      } else {
+        const response = await call(
+          operation === 'install' ? 'downloadApplet' : 'updateApplet',
+          target.name
+        )
+        if (!current()) return
+        if (!response.isSuccess) return fail(response, 'app', false, retry)
+        pending = {
+          sessionId,
+          seid: device.connectedSeid,
+          version: target.latestVersion,
+          previousVersion: target.installedVersion,
+          remaining: [...new Set(response.result)]
+        }
+        restores.set(item.id, pending)
+      }
       const registered = await call('writeWalletAddress', {
-        name: response.result,
+        name: [...pending.remaining],
         filePath: app.userPath
       })
       if (!current()) return
-      if (!registered.isSuccess) return fail(registered, 'restore', false, retry)
-      if (current()) target.installedVersion = target.latestVersion
+      if (!registered.isSuccess) {
+        if (registered.failed?.length) {
+          const failed = new Set(registered.failed)
+          const remaining = pending.remaining.filter(name => failed.has(name))
+          if (remaining.length) pending.remaining = remaining
+        }
+        return fail(registered, 'restore', false, retry)
+      }
+      target.installedVersion = pending.version
+      restores.delete(item.id)
     } catch (error) {
-      if (current()) fail(error, 'app', false, retry)
+      if (current()) fail(error, pendingRestore(item.id) ? 'restore' : 'app', false, retry)
     }
   }
   async function changeApp(item: AppletView, operation: 'install' | 'update'): Promise<void> {

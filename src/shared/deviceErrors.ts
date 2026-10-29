@@ -23,6 +23,9 @@ const safeCodes = new Set([
   'INVALID_RESPONSE',
   'SERVICE_UNAVAILABLE',
   'DEVICE_OPERATION_BUSY',
+  'BINDING_CODE_FILE_MISSING',
+  'BINDING_CODE_FILE_UNREADABLE',
+  'BINDING_DEVICE_UNAVAILABLE',
   'UPDATE_FAILED'
 ])
 function knownCode(value: string): string {

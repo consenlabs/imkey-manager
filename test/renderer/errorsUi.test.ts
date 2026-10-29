@@ -8,6 +8,7 @@ import { operationError } from '../../src/renderer/composables/operationError'
 import { useSettings } from '../../src/renderer/composables/useSettings'
 import { useConnectionFirmware } from '../../src/renderer/composables/useConnectionFirmware'
 import { useDeviceSetup } from '../../src/renderer/composables/useDeviceSetup'
+import { useDeviceStore } from '../../src/renderer/store/device'
 
 const mocks = vi.hoisted(() => ({
   call: vi.fn<(method: string, params?: unknown) => Promise<DeviceResult>>(),
@@ -18,10 +19,6 @@ const mocks = vi.hoisted(() => ({
 vi.mock('../../src/renderer/device', () => ({ callDevice: mocks.call }))
 vi.mock('../../src/renderer/composables/useDeviceRecovery', () => ({
   useDeviceRecovery: () => ({ offer: vi.fn(), returnToConnection: vi.fn() })
-}))
-vi.mock('../../src/renderer/composables/deviceSession', async original => ({
-  ...(await original<typeof import('../../src/renderer/composables/deviceSession')>()),
-  connectDeviceSession: (call: (method: string) => Promise<DeviceResult>) => call('connectDevice')
 }))
 vi.mock('../../src/renderer/composables/useTranslation', () => ({
   useTranslation: () => ({ t: () => 'https://imkey.im/' })
@@ -44,10 +41,33 @@ const bridge = {
     onProgress: vi.fn()
   }
 }
+function success(method: string): DeviceResult {
+  const results: Record<string, unknown> = {
+    getSeid: 'TESTDEVICE',
+    getUpgradeSeid: 'TESTDEVICE',
+    deviceBindCheck: 'bound_this',
+    getBTCXpub: 'xpub-ready',
+    getFirmwareVersion: '1.0.0',
+    getBleVersion: '1.0.0',
+    exportBindCode: 'A2345678',
+    getInstalledApplets: { list: [{ name: 'Ethereum' }] },
+    isBLStatus: false,
+    getFirmwareRecovery: null,
+    cosCheckUpdate: {
+      latestCosVersion: '1.0.0',
+      latestBleVersion: '1.0.0',
+      isLatest: true,
+      isUpdateSuccess: true
+    }
+  }
+  return { isSuccess: true, result: method in results ? results[method] : 'success' }
+}
 beforeEach(() => {
   vi.resetAllMocks()
   mocks.mounted.length = mocks.unmounted.length = 0
   setActivePinia(createPinia())
+  useDeviceStore().connectedSeid = 'TESTDEVICE'
+  useDeviceStore().identityReady = true
   mocks.call.mockResolvedValue({ isSuccess: false, result: 'device_not_connected' })
   bridge.app.getVersion.mockResolvedValue('2.2.0')
   bridge.app.isOnline.mockResolvedValue(true)
@@ -84,12 +104,7 @@ describe('firmware failures preserve the failing step', () => {
   ]) {
     it(`shows ${method} errors`, async () => {
       mocks.call.mockImplementation(async name =>
-        name === method
-          ? { isSuccess: false, result: `${method}_failed` }
-          : {
-              isSuccess: true,
-              result: name === 'getInstalledApplets' ? { list: [{ name: 'Ethereum' }] } : 'success'
-            }
+        name === method ? { isSuccess: false, result: `${method}_failed` } : success(name)
       )
       const firmware = useFirmwareUpgrade('manager')
       await firmware.updateFirmware()
@@ -169,7 +184,7 @@ describe('settings and setup do not silently stop', () => {
     mocks.call.mockImplementation(async method =>
       method === 'exportBindCode'
         ? { isSuccess: false, result: 'bind_file_unreadable' }
-        : { isSuccess: true, result: 'success' }
+        : success(method)
     )
     const settings = useSettings()
     await settings.init()
@@ -182,9 +197,9 @@ describe('settings and setup do not silently stop', () => {
   })
   it('shows activation failure and retries setup initialization', async () => {
     mocks.call.mockImplementation(async method =>
-      method === 'connectDevice'
-        ? { isSuccess: true, result: 'success' }
-        : { isSuccess: false, result: 'activation_unavailable' }
+      method === 'activeDevice'
+        ? { isSuccess: false, result: 'activation_unavailable' }
+        : success(method)
     )
     const setup = useDeviceSetup()
     await mounted()
@@ -204,17 +219,16 @@ describe('settings and setup do not silently stop', () => {
 })
 
 it('connection firmware reports the actual failed update cause', async () => {
-  mocks.call.mockResolvedValue({ isSuccess: false, result: 'cos_upgrade_failed' })
+  mocks.call.mockImplementation(async method =>
+    method === 'cosUpdate' ? { isSuccess: false, result: 'cos_upgrade_failed' } : success(method)
+  )
   const fail = vi.fn()
   const firmware = useConnectionFirmware(vi.fn(), fail, async () => {})
   await firmware.toCosUpdate()
-  expect(fail).toHaveBeenCalledWith('cos_upgrade_failed', 5)
+  expect(fail).toHaveBeenCalledWith('cos_upgrade_failed', 5, 'update')
 })
 it('connection restoration awaits its continuation before finishing', async () => {
-  mocks.call.mockImplementation(async method => ({
-    isSuccess: true,
-    result: method === 'getInstalledApplets' ? { list: [] } : 'success'
-  }))
+  mocks.call.mockImplementation(async method => success(method))
   let complete!: () => void
   const continuation = vi.fn(
     () =>
@@ -224,7 +238,7 @@ it('connection restoration awaits its continuation before finishing', async () =
   )
   const firmware = useConnectionFirmware(vi.fn(), vi.fn(), continuation)
   let finished = false
-  const recovery = firmware.cosUpdateWalletAddress().then(() => {
+  const recovery = firmware.toCosUpdate().then(() => {
     finished = true
   })
   await vi.waitFor(() => expect(continuation).toHaveBeenCalledOnce())
@@ -237,7 +251,7 @@ it('settings metadata read failures do not imply a firmware update check', async
   mocks.call.mockImplementation(async method =>
     method === 'getFirmwareVersion'
       ? { isSuccess: false, result: 'get_firmware_version_error' }
-      : { isSuccess: true, result: 'success' }
+      : success(method)
   )
   const settings = useSettings()
   await settings.init()
@@ -253,7 +267,7 @@ it('setup wallet readiness failures stay on the setup page and support retry', a
   mocks.call.mockImplementation(async method =>
     method === 'getBTCXpub'
       ? { isSuccess: false, result: 'imkey_wallet_not_created' }
-      : { isSuccess: true, result: method === 'deviceBindCheck' ? 'bound_this' : 'success' }
+      : success(method)
   )
   const setup = useDeviceSetup()
   setup.finish.value = true
@@ -265,33 +279,42 @@ it('setup wallet readiness failures stay on the setup page and support retry', a
   expect(mocks.call.mock.calls.filter(([method]) => method === 'getBTCXpub')).toHaveLength(2)
 })
 
-it('setup completion only reconnects and verifies wallet readiness before entering home', async () => {
-  mocks.call.mockImplementation(async method => ({
-    isSuccess: true,
-    result:
-      method === 'getBTCXpub'
-        ? 'xpub-ready'
-        : method === 'deviceBindCheck'
-          ? 'bound_this'
-          : 'success'
-  }))
+it('setup completion verifies wallet readiness and confirms the same device before entering home', async () => {
+  mocks.call.mockImplementation(async method => success(method))
   const setup = useDeviceSetup()
   setup.finish.value = true
   await setup.send({ page: 0, active: 0, isNext: false })
   expect(mocks.call.mock.calls.map(([method]) => method)).toEqual([
     'connectDevice',
-    'deviceBindCheck',
-    'getBTCXpub'
+    'getSeid',
+    'getBTCXpub',
+    'getSeid'
   ])
   expect(mocks.push).toHaveBeenCalledExactlyOnceWith('/home/welcomeHome')
+  expect(useDeviceStore().canEnterHome).toBe(true)
+})
+
+it('setup completion refuses a device replacement after a successful wallet read', async () => {
+  let walletRead = false
+  mocks.call.mockImplementation(async method => {
+    if (method === 'getBTCXpub') walletRead = true
+    return method === 'getSeid' && walletRead
+      ? { isSuccess: true, result: 'REPLACEMENT' }
+      : success(method)
+  })
+  const setup = useDeviceSetup()
+  setup.finish.value = true
+  await setup.send({ page: 0, active: 0, isNext: false })
+  expect(setup.errorInfo.value).toBe('device_session_changed')
+  expect(setup.errorStage.value).toBe('connect')
+  expect(useDeviceStore().canEnterHome).toBe(false)
+  expect(mocks.push).not.toHaveBeenCalled()
 })
 
 it.each(['', 'not-a-wallet'])('an unready wallet (%s) cannot finish setup', async value => {
-  mocks.call.mockImplementation(async method => ({
-    isSuccess: true,
-    result:
-      method === 'getBTCXpub' ? value : method === 'deviceBindCheck' ? 'bound_this' : 'success'
-  }))
+  mocks.call.mockImplementation(async method =>
+    method === 'getBTCXpub' ? { isSuccess: true, result: value } : success(method)
+  )
   const setup = useDeviceSetup()
   setup.finish.value = true
   await setup.send({ page: 0, active: 0, isNext: false })
@@ -303,7 +326,7 @@ it('a changed device binding prevents completion', async () => {
   mocks.call.mockImplementation(async method =>
     method === 'getBTCXpub'
       ? { isSuccess: false, result: 'device_bind_check_failed' }
-      : { isSuccess: true, result: method === 'deviceBindCheck' ? 'bound_this' : 'success' }
+      : success(method)
   )
   const setup = useDeviceSetup()
   setup.finish.value = true

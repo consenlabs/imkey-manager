@@ -18,7 +18,7 @@ describe('isolated preload bridge', () => {
   it('exposes only the prescribed API groups and methods', () => {
     expect(bridgeName).toBe('imkey')
     expect(Object.keys(api)).toEqual(['device', 'app', 'updater'])
-    expect(Object.keys(api.device)).toEqual(['call'])
+    expect(Object.keys(api.device)).toEqual(['call', 'trace'])
     expect(Object.keys(api.app)).toEqual([
       'getVersion',
       'getLocale',
@@ -36,6 +36,7 @@ describe('isolated preload bridge', () => {
   })
   it('invokes fixed channels for each API operation', async () => {
     await api.device.call('getSeid')
+    await api.device.trace({ operationId: 'operation-1', action: 'action', phase: 'enqueued' })
     await api.app.getVersion()
     await api.app.getLocale()
     await api.app.openExternal('https://imkey.im')
@@ -46,6 +47,7 @@ describe('isolated preload bridge', () => {
     await api.updater.quitAndInstall()
     expect(electron.invoke.mock.calls).toEqual([
       ['device:call', 'getSeid', undefined],
+      ['device:trace', { operationId: 'operation-1', action: 'action', phase: 'enqueued' }],
       ['app:version'],
       ['app:locale'],
       ['app:open-external', 'https://imkey.im'],

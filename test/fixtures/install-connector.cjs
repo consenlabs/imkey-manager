@@ -33,6 +33,12 @@ module.exports = {
       entry.network = params.getNetwork()
     }
     log(entry)
+    if (method === 'register_address' && options.failAddresses?.includes(entry.chain)) {
+      const failure = new api.ErrorResponse()
+      failure.setError('address_restore_failed')
+      error = hex(failure)
+      return ''
+    }
     if (method === 'device_connect' && options.gate) {
       const deadline = Date.now() + 15000
       while (options.gate && Date.now() < deadline) {

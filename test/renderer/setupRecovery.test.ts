@@ -48,7 +48,11 @@ beforeEach(() => {
     if (method === 'deviceBindCheck') return { isSuccess: true, result: bindStatus }
     if (method === 'getSeid') return { isSuccess: true, result: seid }
     if (method === 'exportBindCode') return localCode
-    if (method === 'getBTCXpub') return { isSuccess: true, result: 'xpub-ready' }
+    // Mirror the service's binding guard before its xpub read.
+    if (method === 'getBTCXpub')
+      return bindStatus === 'bound_this'
+        ? { isSuccess: true, result: 'xpub-ready' }
+        : { isSuccess: false, result: 'device_bind_check_failed' }
     if (method === 'deviceBindAcquire') bindStatus = 'bound_this'
     return { isSuccess: true, result: 'success' }
   })
@@ -85,6 +89,126 @@ async function inputPage(setup: ReturnType<typeof useDeviceSetup>) {
   expect(setup.page.value).toBe(2)
 }
 
+async function walletInstructions() {
+  const setup = await mount()
+  await inputPage(setup)
+  submit(setup)
+  await settled()
+  await setup.send({ page: 3, active: 1, isNext: true })
+  expect(setup.page.value).toBe(3)
+  return setup
+}
+
+it('instruction navigation is immediate even when the device queue is occupied', async () => {
+  const setup = await mount()
+  let release!: () => void
+  const pending = createDeviceOperation().run(
+    () =>
+      new Promise<void>(resolve => {
+        release = resolve
+      })
+  )
+  await vi.waitFor(() => expect(release).toBeTypeOf('function'))
+  mocks.call.mockClear()
+  try {
+    const navigation = setup.send({ page: 2, active: 0, isNext: true })
+    expect(setup.page.value).toBe(2)
+    expect(setup.busy.value).toBe(false)
+    expect(mocks.call).not.toHaveBeenCalled()
+    await navigation
+  } finally {
+    release()
+    await pending
+  }
+})
+
+it('binding success advances to wallet instructions without another device call', async () => {
+  const setup = await mount()
+  await inputPage(setup)
+  submit(setup)
+  await settled()
+  mocks.call.mockClear()
+  const navigation = setup.send({ page: 3, active: 1, isNext: true })
+  expect(setup.page.value).toBe(3)
+  expect(setup.busy.value).toBe(false)
+  await navigation
+  expect(mocks.call).not.toHaveBeenCalled()
+})
+
+it('wallet checks show busy before queuing and suppress repeated navigation until completion', async () => {
+  const setup = await walletInstructions()
+  let release!: () => void
+  const pending = createDeviceOperation().run(
+    () =>
+      new Promise<void>(resolve => {
+        release = resolve
+      })
+  )
+  await vi.waitFor(() => expect(release).toBeTypeOf('function'))
+  mocks.call.mockClear()
+  const navigation = setup.send({ page: 4, active: 2, isNext: true })
+  try {
+    expect(setup.busy.value).toBe(true)
+    expect(setup.pendingAction.value).toBe('next')
+    expect(setup.page.value).toBe(3)
+    await setup.send({ page: 4, active: 2, isNext: true })
+    await setup.send({ page: 2, active: 0, isNext: false })
+    expect(mocks.call).not.toHaveBeenCalled()
+  } finally {
+    release()
+    await pending
+    await navigation
+  }
+  expect(setup.page.value).toBe(4)
+  expect(useDeviceStore().canEnterHome).toBe(false)
+  expect(setup.busy.value).toBe(false)
+  expect(setup.pendingAction.value).toBe('')
+  expect(mocks.call.mock.calls.map(([method]) => method)).toEqual([
+    'connectDevice',
+    'getSeid',
+    'getBTCXpub',
+    'getSeid'
+  ])
+  for (const step of ['step1', 'step2', 'step3'] as const) setup.changeStep(step)
+  mocks.call.mockClear()
+  const completion = setup.send({ page: 0, active: 0, isNext: false })
+  expect(setup.busy.value).toBe(true)
+  expect(setup.pendingAction.value).toBe('next')
+  await completion
+  expect(mocks.call.mock.calls.map(([method]) => method)).toEqual([
+    'connectDevice',
+    'getSeid',
+    'getBTCXpub',
+    'getSeid'
+  ])
+  expect(mocks.push).toHaveBeenCalledWith('/home/welcomeHome')
+  expect(useDeviceStore().canEnterHome).toBe(true)
+})
+
+it.each(['wallet', 'completion'])(
+  '%s reconnects and rejects a replacement device before requesting xpub',
+  async boundary => {
+    const setup = await walletInstructions()
+    if (boundary === 'completion') {
+      await setup.send({ page: 4, active: 2, isNext: true })
+      for (const step of ['step1', 'step2', 'step3'] as const) setup.changeStep(step)
+    }
+    const originalPage = setup.page.value
+    seid = 'SEID-B'
+    mocks.call.mockClear()
+    await setup.send(
+      boundary === 'wallet'
+        ? { page: 4, active: 2, isNext: true }
+        : { page: 0, active: 0, isNext: false }
+    )
+    expect(setup.page.value).toBe(originalPage)
+    expect(setup.errorInfo.value).toBe('device_session_changed')
+    expect(setup.bindFinish.value).toBe(false)
+    expect(mocks.call.mock.calls.map(([method]) => method)).toEqual(['connectDevice', 'getSeid'])
+    expect(mocks.push).not.toHaveBeenCalled()
+  }
+)
+
 it('keeps the generation step until binding-code display succeeds and retries initialization', async () => {
   const normal = mocks.call.getMockImplementation()!
   let failDisplay = true
@@ -104,6 +228,189 @@ it('keeps the generation step until binding-code display succeeds and retries in
   expect(setup.bindViewFinish.value).toBe(true)
   expect(mocks.call.mock.calls.filter(([method]) => method === 'deviceBindDisplay')).toHaveLength(2)
   await inputPage(setup)
+})
+
+it('returns to generation only after checking the session and displaying the unbound device code', async () => {
+  const setup = await mount()
+  await inputPage(setup)
+  mocks.call.mockClear()
+  await setup.send({ page: 1, active: 0, isNext: false })
+  expect(setup.page.value).toBe(1)
+  expect(setup.active.value).toBe(0)
+  expect(setup.bindViewFinish.value).toBe(true)
+  expect(mocks.call.mock.calls.map(([method]) => method)).toEqual([
+    'connectDevice',
+    'getSeid',
+    'deviceBindCheck',
+    'deviceBindDisplay'
+  ])
+  await inputPage(setup)
+  mocks.call.mockClear()
+  await setup.send({ page: 1, active: 0, isNext: false })
+  expect(mocks.call.mock.calls.map(([method]) => method)).toEqual([
+    'connectDevice',
+    'getSeid',
+    'deviceBindCheck',
+    'deviceBindDisplay'
+  ])
+})
+
+it.each([
+  ['connectDevice', 'device_not_connected'],
+  ['connectDevice', 'device_operation_timeout'],
+  ['deviceBindDisplay', 'device_not_connected']
+])(
+  'a failed Previous action at %s (%s) stays editable and resumes after retry',
+  async (method, error) => {
+    const setup = await mount()
+    await inputPage(setup)
+    const normal = mocks.call.getMockImplementation()!
+    let failed = true
+    mocks.call.mockImplementation(async (name, params) =>
+      name === method && failed ? { isSuccess: false, result: error } : normal(name, params)
+    )
+    mocks.call.mockClear()
+    await setup.send({ page: 1, active: 0, isNext: false })
+    expect(setup.page.value).toBe(2)
+    expect(setup.busy.value).toBe(false)
+    expect(setup.bindingStatus.value).toBe(0)
+    expect(setup.errorInfo.value).toBe(error)
+    expect(mocks.offer).toHaveBeenLastCalledWith(
+      expect.objectContaining({ result: error }),
+      expect.any(Function),
+      expect.objectContaining({ stayOnCancel: true })
+    )
+    expect(mocks.push).not.toHaveBeenCalled()
+    failed = false
+    mocks.call.mockClear()
+    await mocks.offer.mock.lastCall![1]()
+    expect(setup.page.value).toBe(1)
+    expect(setup.bindViewFinish.value).toBe(true)
+    expect(setup.errorInfo.value).toBe('')
+    expect(mocks.call.mock.calls.map(([name]) => name)).toEqual([
+      'connectDevice',
+      'getSeid',
+      'deviceBindCheck',
+      'deviceBindDisplay'
+    ])
+    await inputPage(setup)
+    submit(setup)
+    await settled()
+    expect(setup.bindFinish.value).toBe(true)
+  }
+)
+
+it.each(['bound_this', 'bound_other'])(
+  'returning to generation preserves %s binding without displaying a new code',
+  async status => {
+    bindStatus = status
+    const setup = await mount()
+    await inputPage(setup)
+    if (status === 'bound_this') {
+      submit(setup)
+      await settled()
+      expect(setup.bindFinish.value).toBe(true)
+    }
+    mocks.call.mockClear()
+    await setup.send({ page: 1, active: 0, isNext: false })
+    expect(setup.page.value).toBe(1)
+    expect(setup.bindViewFinish.value).toBe(true)
+    expect(useDeviceStore().bindStatus).toBe(status)
+    expect(mocks.call.mock.calls.map(([method]) => method)).toEqual([
+      'connectDevice',
+      'getSeid',
+      'deviceBindCheck'
+    ])
+    await inputPage(setup)
+    if (status === 'bound_this') {
+      expect(setup.bindFinish.value).toBe(true)
+      expect(setup.bindingStatus.value).toBe(2)
+      expect(setup.code1.value).toBe('A')
+    }
+  }
+)
+
+it('generation Next is local, but binding submission reconnects and can retry after a disconnect', async () => {
+  const setup = await mount()
+  const normal = mocks.call.getMockImplementation()!
+  let disconnected = true
+  mocks.call.mockImplementation(async (method, params) =>
+    method === 'connectDevice' && disconnected
+      ? { isSuccess: false, result: 'device_not_connected' }
+      : normal(method, params)
+  )
+  mocks.call.mockClear()
+  await setup.send({ page: 2, active: 0, isNext: true })
+  expect(setup.page.value).toBe(2)
+  expect(mocks.call).not.toHaveBeenCalled()
+  submit(setup)
+  await settled()
+  expect(setup.page.value).toBe(2)
+  expect(setup.busy.value).toBe(false)
+  expect(setup.errorInfo.value).toBe('device_not_connected')
+  expect(mocks.offer).toHaveBeenLastCalledWith(
+    expect.objectContaining({ result: 'device_not_connected' }),
+    expect.any(Function),
+    expect.objectContaining({ reconnectOnly: false })
+  )
+  disconnected = false
+  mocks.call.mockClear()
+  await mocks.offer.mock.lastCall![1]()
+  expect(setup.page.value).toBe(2)
+  expect(setup.bindFinish.value).toBe(true)
+  expect(setup.errorInfo.value).toBe('')
+  expect(mocks.call.mock.calls.map(([method]) => method)).toEqual([
+    'connectDevice',
+    'getSeid',
+    'deviceBindCheck',
+    'deviceBindAcquire',
+    'importBindCode'
+  ])
+})
+
+it('Previous does not queue duplicate navigation while reconnecting', async () => {
+  const setup = await mount()
+  await inputPage(setup)
+  const normal = mocks.call.getMockImplementation()!
+  let finish!: (result: DeviceResult) => void
+  mocks.call.mockImplementation((method, params) =>
+    method === 'connectDevice'
+      ? new Promise(resolve => {
+          finish = resolve
+        })
+      : normal(method, params)
+  )
+  mocks.call.mockClear()
+  const first = setup.send({ page: 1, active: 0, isNext: false })
+  await vi.waitFor(() => expect(finish).toBeTypeOf('function'))
+  await setup.send({ page: 1, active: 0, isNext: false })
+  finish({ isSuccess: true, result: 'success' })
+  await first
+  expect(setup.page.value).toBe(1)
+  expect(setup.busy.value).toBe(false)
+  expect(mocks.call.mock.calls.filter(([method]) => method === 'connectDevice')).toHaveLength(1)
+  expect(mocks.call.mock.calls.filter(([method]) => method === 'deviceBindDisplay')).toHaveLength(1)
+})
+
+it('Previous rejects a replacement device before displaying a code', async () => {
+  const setup = await mount()
+  await inputPage(setup)
+  const originalPage = setup.page.value
+  seid = 'SEID-B'
+  mocks.call.mockClear()
+  await setup.send({
+    page: 1,
+    active: 0,
+    isNext: false
+  })
+  expect(setup.page.value).toBe(originalPage)
+  expect(setup.errorInfo.value).toBe('device_session_changed')
+  expect(mocks.call.mock.calls.map(([method]) => method)).toEqual(['connectDevice', 'getSeid'])
+  expect(mocks.offer).toHaveBeenLastCalledWith(
+    expect.objectContaining({ result: 'device_session_changed' }),
+    expect.any(Function),
+    expect.objectContaining({ reconnectOnly: true })
+  )
 })
 
 it('offers returning to connection when Next is requested before binding', async () => {
@@ -146,6 +453,7 @@ it('blocks Escape, navigation and repeated input while binding verification is p
   await vi.waitFor(() => expect(finish).toBeTypeOf('function'))
   escape()
   await setup.send({ page: 3, active: 1, isNext: true })
+  await setup.send({ page: 1, active: 0, isNext: false })
   submit(setup)
   expect(mocks.offer).not.toHaveBeenCalled()
   expect(setup.page.value).toBe(2)
@@ -157,8 +465,8 @@ it('blocks Escape, navigation and repeated input while binding verification is p
   expect(setup.busy.value).toBe(false)
 })
 
-it.each(['unbound', 'bound_other'])(
-  'detects a reset or rebound device (%s) before advancing',
+it.each(['unbound', 'bound_other', 'unknown', ''])(
+  'detects a reset or rebound device (%s) at the wallet check after local navigation',
   async changed => {
     const setup = await mount()
     await inputPage(setup)
@@ -168,17 +476,23 @@ it.each(['unbound', 'bound_other'])(
     bindStatus = changed
     mocks.call.mockClear()
     await setup.send({ page: 3, active: 1, isNext: true })
-    expect(setup.page.value).toBe(2)
+    expect(setup.page.value).toBe(3)
+    expect(mocks.call).not.toHaveBeenCalled()
+    await setup.send({ page: 4, active: 2, isNext: true })
+    expect(setup.page.value).toBe(3)
     expect(setup.bindFinish.value).toBe(false)
     expect(setup.bindingStatus.value).toBe(0)
     expect(setup.code1.value).toBe('')
-    expect(mocks.offer).toHaveBeenLastCalledWith('device_session_changed', expect.any(Function), {
-      reconnectOnly: true
-    })
+    expect(useDeviceStore().canEnterHome).toBe(false)
+    expect(mocks.offer).toHaveBeenLastCalledWith(
+      expect.objectContaining({ result: 'device_bind_check_failed' }),
+      expect.any(Function),
+      expect.any(Object)
+    )
     expect(mocks.call.mock.calls.map(([method]) => method)).toEqual([
       'connectDevice',
       'getSeid',
-      'deviceBindCheck'
+      'getBTCXpub'
     ])
   }
 )
@@ -320,6 +634,129 @@ it('reuses a valid stored code for a bound-this device and skips manual entry', 
   ])
   expect(mocks.call.mock.calls.map(([method]) => method)).not.toContain('deviceBindDisplay')
   expect(mocks.offer).not.toHaveBeenCalled()
+  expect(mocks.call.mock.calls.map(([method]) => method)).toEqual([
+    'connectDevice',
+    'getSeid',
+    'deviceBindCheck',
+    'exportBindCode',
+    'getSeid',
+    'deviceBindCheck',
+    'deviceBindAcquire',
+    'importBindCode'
+  ])
+})
+
+it.each(['identity', 'binding', 'session'])(
+  'stored binding recovery revalidates %s after reading the code without rebinding a changed device',
+  async change => {
+    bindStatus = 'bound_this'
+    const normal = mocks.call.getMockImplementation()!
+    mocks.call.mockImplementation(async (method, params) => {
+      if (method === 'exportBindCode') {
+        if (change === 'identity') seid = 'SEID-B'
+        else if (change === 'binding') bindStatus = 'unbound'
+        else useDeviceStore().invalidateDeviceData()
+        return { isSuccess: true, result: 'A2345678' }
+      }
+      return normal(method, params)
+    })
+    const setup = await mount()
+    expect(setup.bindFinish.value).toBe(false)
+    expect(setup.errorInfo.value).toBe('device_session_changed')
+    expect(mocks.offer).toHaveBeenLastCalledWith(
+      'device_session_changed',
+      expect.any(Function),
+      expect.objectContaining({ reconnectOnly: true })
+    )
+    const methods = mocks.call.mock.calls.map(([method]) => method)
+    expect(methods.filter(method => method === 'connectDevice')).toHaveLength(1)
+    expect(methods).not.toContain('deviceBindAcquire')
+    expect(methods).not.toContain('importBindCode')
+  }
+)
+
+it.each(['deviceBindCheck', 'deviceBindDisplay'])(
+  'successful activation is retained when %s fails and the same device retries',
+  async failedMethod => {
+    useDeviceStore().activeStatus = ''
+    const normal = mocks.call.getMockImplementation()!
+    let fail = true
+    mocks.call.mockImplementation(async (method, params) =>
+      method === failedMethod && fail
+        ? { isSuccess: false, result: 'imkey_command_execute_fail' }
+        : normal(method, params)
+    )
+    const setup = await mount()
+    expect(setup.bindViewFinish.value).toBe(false)
+    fail = false
+    await setup.retry()
+    expect(setup.bindViewFinish.value).toBe(true)
+    expect(mocks.call.mock.calls.filter(([method]) => method === 'activeDevice')).toHaveLength(1)
+    expect(mocks.call.mock.calls.filter(([method]) => method === 'connectDevice')).toHaveLength(2)
+    expect(mocks.call.mock.calls.filter(([method]) => method === 'getSeid')).toHaveLength(2)
+  }
+)
+
+it('failed activation is retried instead of being remembered as complete', async () => {
+  useDeviceStore().activeStatus = ''
+  const normal = mocks.call.getMockImplementation()!
+  let fail = true
+  mocks.call.mockImplementation(async (method, params) =>
+    method === 'activeDevice' && fail
+      ? { isSuccess: false, result: 'imkey_command_execute_fail' }
+      : normal(method, params)
+  )
+  const setup = await mount()
+  fail = false
+  await setup.retry()
+  expect(setup.bindViewFinish.value).toBe(true)
+  expect(mocks.call.mock.calls.filter(([method]) => method === 'activeDevice')).toHaveLength(2)
+})
+
+it('activation checkpoint is invalidated with the device session', async () => {
+  useDeviceStore().activeStatus = ''
+  const setup = await mount()
+  useDeviceStore().invalidateDeviceData()
+  await setup.retry()
+  expect(setup.bindViewFinish.value).toBe(true)
+  expect(mocks.call.mock.calls.filter(([method]) => method === 'activeDevice')).toHaveLength(2)
+})
+
+it('activation completion cannot be attached to a session that changed while it was pending', async () => {
+  useDeviceStore().activeStatus = ''
+  const normal = mocks.call.getMockImplementation()!
+  mocks.call.mockImplementation(async (method, params) => {
+    if (method === 'activeDevice') useDeviceStore().invalidateDeviceData()
+    return normal(method, params)
+  })
+  const setup = await mount()
+  expect(setup.bindViewFinish.value).toBe(false)
+  expect(setup.errorInfo.value).toBe('device_session_changed')
+  expect(mocks.call.mock.calls.map(([method]) => method)).not.toContain('deviceBindDisplay')
+})
+
+it('a reset binding state is rejected during initialization retry instead of accepting stale setup', async () => {
+  useDeviceStore().activeStatus = ''
+  bindStatus = 'bound_this'
+  const setup = await mount()
+  bindStatus = 'unbound'
+  mocks.call.mockClear()
+  await setup.retry()
+  expect(setup.bindViewFinish.value).toBe(false)
+  expect(setup.errorInfo.value).toBe('device_session_changed')
+  expect(mocks.call.mock.calls.map(([method]) => method)).not.toContain('deviceBindDisplay')
+  expect(mocks.call.mock.calls.map(([method]) => method)).not.toContain('deviceBindAcquire')
+})
+
+it('activation retry rejects a replacement device before activating or displaying its code', async () => {
+  useDeviceStore().activeStatus = ''
+  const setup = await mount()
+  seid = 'SEID-B'
+  mocks.call.mockClear()
+  await setup.retry()
+  expect(setup.bindViewFinish.value).toBe(false)
+  expect(setup.errorInfo.value).toBe('device_session_changed')
+  expect(mocks.call.mock.calls.map(([method]) => method)).toEqual(['connectDevice', 'getSeid'])
 })
 
 it.each([
@@ -409,3 +846,28 @@ it('a wallet failure can retry the same action or navigate back to manual bindin
   expect(setup.page.value).toBe(2)
   expect(setup.finish.value).toBe(false)
 })
+
+it.each(['wallet', 'completion'])(
+  '%s rejects a device replaced after a successful xpub response',
+  async boundary => {
+    const setup = await walletInstructions()
+    if (boundary === 'completion') {
+      await setup.send({ page: 4, active: 2, isNext: true })
+      for (const step of ['step1', 'step2', 'step3'] as const) setup.changeStep(step)
+    }
+    const normal = mocks.call.getMockImplementation()!
+    mocks.call.mockImplementation(async (method, params) => {
+      const result = await normal(method, params)
+      if (method === 'getBTCXpub' && result.isSuccess) seid = 'SEID-B'
+      return result
+    })
+    await setup.send(
+      boundary === 'wallet'
+        ? { page: 4, active: 2, isNext: true }
+        : { page: 0, active: 0, isNext: false }
+    )
+    expect(setup.errorInfo.value).toBe('device_session_changed')
+    expect(useDeviceStore().canEnterHome).toBe(false)
+    expect(mocks.push).not.toHaveBeenCalled()
+  }
+)

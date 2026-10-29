@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { resolve } from 'node:path'
 import fixtures from './fixtures/golden-api.json'
 import { DeviceApi } from '../src/service/deviceApi'
@@ -9,6 +9,16 @@ import type { DeviceMethod } from '../src/shared/deviceContract'
 import { isValidDeviceParams } from '../src/shared/deviceContract'
 import type { Handler } from '../src/service/handlers'
 import { api, btc, create, decode, device, invoke } from '../src/service/protobuf'
+
+// Keep the legacy wire-format baseline independent of the deployment endpoint.
+// serviceConfiguration.test.ts separately verifies configuration propagation.
+vi.mock('../src/common/constants', async original => ({
+  default: {
+    ...(await original<typeof import('../src/common/constants')>()).default,
+    serverUrl: 'https://imkey.online:1000/imkey'
+  }
+}))
+
 const direct: Record<string, string> = {
   getSeid: 'get_seid',
   getUpgradeSeid: 'get_upgrade_seid',
@@ -267,7 +277,11 @@ it('wallet registration collects failures and never reports false success', () =
     {
       callImKeyApi() {
         calls++
-        return calls === 1 ? '0a023535' : ''
+        return calls === 1
+          ? Buffer.from(
+              create(device, 'BindCheckRes', { setBindStatus: 'bound_this' }).serializeBinary()
+            ).toString('hex')
+          : ''
       },
       getLastErrorMessage() {
         return calls === 1 ? '' : '12146465766963655f6e6f745f636f6e6e6563746564'
@@ -281,6 +295,72 @@ it('wallet registration collects failures and never reports false success', () =
     failed: ['Bitcoin', 'Ethereum']
   })
   expect(calls).toBe(3)
+})
+it.each([{ names: [] }, { names: ['Nervos', 'Tezos', 'Bitcoin Cash', 'Litecoin', 'IMK'] }])(
+  'empty effective address registration skips device calls: $names',
+  ({ names }) => {
+    const native = vi.fn(() => '')
+    const handlers = createDeviceHandlers(
+      { callImKeyApi: native, getLastErrorMessage: () => '' },
+      '/user'
+    )
+    expect(handlers.writeWalletAddress({ name: names, filePath: '' })).toEqual({
+      isSuccess: true,
+      result: 'success'
+    })
+    expect(native).not.toHaveBeenCalled()
+  }
+)
+it.each(['unbound', 'bound_other'])(
+  'address registration rejects %s before any address writes',
+  status => {
+    const methods: string[] = []
+    const handlers = createDeviceHandlers(
+      {
+        callImKeyApi(request) {
+          methods.push(invoke<string>(decode(api, 'ImkeyAction', request), 'getMethod'))
+          return Buffer.from(
+            create(device, 'BindCheckRes', { setBindStatus: status }).serializeBinary()
+          ).toString('hex')
+        },
+        getLastErrorMessage: () => ''
+      },
+      '/user'
+    )
+    expect(handlers.writeWalletAddress({ name: ['Ethereum'], filePath: '' })).toEqual({
+      isSuccess: false,
+      result: 'device_bind_check_failed'
+    })
+    expect(methods).toEqual(['bind_check'])
+  }
+)
+it('deduplicates supported address tasks while preserving their first occurrence order', () => {
+  const requests: string[] = []
+  const handlers = createDeviceHandlers(
+    {
+      callImKeyApi(request) {
+        requests.push(request)
+        return invoke(decode(api, 'ImkeyAction', request), 'getMethod') === 'bind_check'
+          ? Buffer.from(
+              create(device, 'BindCheckRes', { setBindStatus: 'bound_this' }).serializeBinary()
+            ).toString('hex')
+          : ''
+      },
+      getLastErrorMessage: () => ''
+    },
+    '/user'
+  )
+  expect(
+    handlers.writeWalletAddress({
+      name: ['Ethereum', 'Nervos', 'Bitcoin', 'Ethereum', 'Bitcoin'],
+      filePath: ''
+    })
+  ).toEqual({ isSuccess: true, result: 'success' })
+  expect(requests.slice(1)).toEqual(
+    ['registerETHAddress', 'registerBTCAddress'].flatMap(
+      method => fixtures.find(fixture => fixture.method === method && !fixture.errorHex)!.requests
+    )
+  )
 })
 it.each([
   ['downloadApplet', 'app_download', 'AppDownloadRes'],

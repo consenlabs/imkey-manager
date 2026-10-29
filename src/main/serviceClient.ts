@@ -260,7 +260,10 @@ export class ServiceClient {
               stage: request.context?.stage || request.method
             }
             this.watchExecution(current, reply.id, request)
-            this.log('info', 'device.execution-started', this.activeRequest)
+            this.log('info', 'device.execution-started', {
+              ...this.activeRequest,
+              queueMs: Math.max(0, Date.now() - request.startedAt)
+            })
           } else if (reply.phase === 'end' && this.activeRequest?.requestId === reply.id) {
             this.log('info', 'device.execution-finished', {
               requestId: reply.id,

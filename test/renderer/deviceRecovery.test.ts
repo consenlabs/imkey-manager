@@ -80,6 +80,30 @@ it('returns to connection only on the explicit secondary action and clears the s
   })
   expect(retry).not.toHaveBeenCalled()
 })
+it('can cancel a setup retry in place and retry a later attempt without losing the session', async () => {
+  mocks.confirm.mockRejectedValueOnce('cancel').mockResolvedValueOnce(undefined)
+  const retry = vi.fn(async () => {})
+  const session = useDeviceStore()
+  session.connectedSeid = 'original-device'
+  session.bindStatus = 'unbound'
+  const recovery = useDeviceRecovery()
+  const options = { stayOnCancel: true, message: 'Check the USB connection and retry.' }
+  recovery.offer('device_not_connected', retry, options)
+  await settled()
+  expect(mocks.confirm.mock.calls[0][0]).toContain(options.message)
+  expect(mocks.confirm.mock.calls[0][2]).toMatchObject({
+    confirmButtonText: 'm.imKeyManager.retry',
+    cancelButtonText: 'm.imKeyManager.cancel'
+  })
+  expect(mocks.push).not.toHaveBeenCalled()
+  expect(retry).not.toHaveBeenCalled()
+  expect(session.connectedSeid).toBe('original-device')
+  expect(session.bindStatus).toBe('unbound')
+  recovery.offer('device_not_connected', retry, options)
+  await settled()
+  expect(retry).toHaveBeenCalledOnce()
+  expect(mocks.push).not.toHaveBeenCalled()
+})
 it.each(['device_session_changed', 'device_bind_check_failed'])(
   'immediately clears old data for %s and returns to connection only after confirmation',
   async error => {

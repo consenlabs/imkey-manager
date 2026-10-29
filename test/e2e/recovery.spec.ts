@@ -262,7 +262,7 @@ test('a hung native read releases the operation and retries only after explicit 
 
 for (const fileState of ['deleted', 'corrupted'] as const) {
   for (const tab of [1, 2]) {
-    test(`${fileState} local binding file can recover from ${tab === 1 ? 'management' : 'settings'} without restarting Manager`, async () => {
+    test(`${fileState} local binding file can recover from ${tab === 1 ? 'management via explicit export' : 'settings'} without restarting Manager`, async () => {
       await launch()
       await connect(true)
       await expect(page.locator('.homeBox')).toBeVisible()
@@ -272,11 +272,19 @@ for (const fileState of ['deleted', 'corrupted'] as const) {
       if (fileState === 'deleted') await rm(file)
       else await writeFile(file, '{invalid-json')
       await page.locator('.routerBar li').nth(tab).click()
-      if (tab === 2) {
-        await expect(page.getByTestId('device-info-card')).toContainText('SN123')
+      if (tab === 1) {
+        await expect(
+          page
+            .locator('.appItem')
+            .filter({ hasText: 'Ethereum' })
+            .getByRole('link', { name: 'Install', exact: true })
+        ).toBeVisible()
         await expect(page.locator('.device-recovery-dialog')).not.toBeVisible()
-        await page.locator('.exportBindCode').click()
+        await page.locator('.routerBar li').nth(2).click()
       }
+      await expect(page.getByTestId('device-info-card')).toContainText('SN123')
+      await expect(page.locator('.device-recovery-dialog')).not.toBeVisible()
+      await page.locator('.exportBindCode').click()
       await recoverToConnection()
       await connect()
       await expect(page.locator('.tip5 input')).toHaveCount(8)

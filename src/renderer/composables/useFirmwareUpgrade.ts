@@ -1,12 +1,38 @@
-import { reactive, watch } from 'vue'
-import constants from '../../common/constants'
+import { nextTick, reactive, watch } from 'vue'
 import { useDeviceOperation, type DeviceOperation } from './useDeviceOperation'
 import { useAppStore } from '../store/app'
 import { useDeviceStore } from '../store/device'
 import { operationError } from './operationError'
-import type { WalletChain } from '../../shared/deviceContract'
 import { refreshDeviceIdentity } from './deviceIdentity'
 import { useDeviceRecovery } from './useDeviceRecovery'
+import {
+  cachedFirmware,
+  firmwareAvailable,
+  invalidateFirmware,
+  publishFirmware
+} from './firmwareCache'
+import {
+  runFirmwareRecovery,
+  validateFirmwareResume,
+  type FirmwareRecovery
+} from './firmwareRecovery'
+import type { FirmwareCheckCache } from '../models/deviceState'
+
+type UpgradeData = {
+  bindCode: string
+  cosOldVersionData: string
+  cosNewVersionData: string
+  bleOldVersionData: string
+  bleNewVersionData: string
+}
+interface UpgradeAttempt {
+  sessionId: number
+  data: UpgradeData
+  recovery: FirmwareRecovery
+}
+// Retain only in-memory recovery inputs for this device session, including page reentry.
+// They are never serialized into the store or diagnostics.
+const attempts = new WeakMap<ReturnType<typeof useDeviceStore>, UpgradeAttempt>()
 
 export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOperation) {
   const operation = scope || useDeviceOperation()
@@ -19,6 +45,8 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
     errorInfo: '',
     errorStage: '',
     busy: false,
+    phase: 'idle' as 'idle' | 'preparing' | 'update' | 'bind' | 'store' | 'restore' | 'complete',
+    recovering: false,
     bindCode: '',
     cosOldVersionData: '',
     cosNewVersionData: '',
@@ -27,10 +55,30 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
     isCosUpdate: false,
     cosUpdateStatus: '0'
   })
-  // Keep the recovery inputs private while an interrupted upgrade is retried.
-  // The device may be in bootloader mode or waiting to be rebound at this point.
-  let upgradeAttempt: { seid: string; data: ReturnType<typeof upgradeData> } | undefined
-  function upgradeData() {
+  function savedAttempt() {
+    const saved = attempts.get(device)
+    if (saved && saved.sessionId === device.sessionId) return saved
+    attempts.delete(device)
+  }
+  function pendingRecoveryOptions() {
+    const saved = savedAttempt()
+    if (!saved) return undefined
+    return {
+      firmwareRecovery: true,
+      requireBinding: !['update', 'load-code', 'bind'].includes(saved.recovery.phase),
+      preserveOnTransportError: true
+    }
+  }
+  function restoreAttempt() {
+    const saved = savedAttempt()
+    if (!saved) return false
+    Object.assign(state, saved.data)
+    state.isCosUpdate = true
+    state.cosUpdateStatus = '1'
+    state.recovering = saved.recovery.phase !== 'update'
+    return true
+  }
+  function upgradeData(): UpgradeData {
     const { bindCode, cosOldVersionData, cosNewVersionData, bleOldVersionData, bleNewVersionData } =
       state
     return { bindCode, cosOldVersionData, cosNewVersionData, bleOldVersionData, bleNewVersionData }
@@ -38,6 +86,7 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
   watch(
     () => device.sessionId,
     () => {
+      attempts.delete(device)
       Object.assign(state, {
         bindCode: '',
         cosOldVersionData: '',
@@ -46,20 +95,22 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
         bleNewVersionData: '',
         isCosUpdate: false,
         cosUpdateStatus: '0',
-        supportCode: 0
+        supportCode: 0,
+        phase: 'idle',
+        recovering: false
       })
-      upgradeAttempt = undefined
     },
     { flush: 'sync' }
   )
   function changeCode(code: number) {
+    if (state.busy && code !== 1) return
     state.supportCode = code
   }
   function fail(error: unknown, stage: string) {
     if (!operation.active() || (error as { code?: string })?.code === 'OPERATION_CANCELLED') return
     const result = typeof error === 'string' ? error : (error as { result?: unknown })?.result
     if (result === 'device_session_changed' || result === 'device_bind_check_failed') {
-      upgradeAttempt = undefined
+      attempts.delete(device)
       device.invalidateDeviceData()
       state.errorInfo = operationError(error)
       state.errorStage = stage
@@ -71,7 +122,35 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
     state.isCosUpdate = true
     device.isCosUpdate = true
     state.cosUpdateStatus = '1'
-    changeCode(3)
+    state.supportCode = 3
+    state.recovering = Boolean(savedAttempt() && savedAttempt()!.recovery.phase !== 'update')
+  }
+  function applyCheck(result: FirmwareCheckCache) {
+    state.cosOldVersionData = result.firmwareVersion
+    state.bleOldVersionData = result.bleVersion
+    state.cosNewVersionData = result.latestFirmwareVersion
+    state.bleNewVersionData = result.latestBleVersion
+    state.isCosUpdate = firmwareAvailable(result, kind)
+    state.cosUpdateStatus = state.isCosUpdate ? '1' : '0'
+    state.errorInfo = ''
+    state.errorStage = ''
+    if (state.supportCode === 5) state.supportCode = 0
+    restoreAttempt()
+  }
+  function restoreCachedCheck(): boolean {
+    if (restoreAttempt()) return true
+    const cached = cachedFirmware(device)
+    if (!cached) return false
+    applyCheck(cached)
+    return true
+  }
+  function failedCheck(error: unknown) {
+    invalidateFirmware(device)
+    state.isCosUpdate = false
+    state.cosUpdateStatus = '2'
+    state.errorInfo = operationError(error)
+    state.errorStage = 'check'
+    state.supportCode = 5
   }
   async function checkFirmwareVersion(
     onVersion?: () => void,
@@ -80,177 +159,203 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
     state.errorInfo = ''
     const version = await callDevice('getFirmwareVersion')
     if (!operation.active() || !isCurrent()) return
-    if (!version.isSuccess) {
-      state.isCosUpdate = false
-      state.cosUpdateStatus = '2'
-      state.errorInfo = operationError(version)
-      state.errorStage = 'check'
-      changeCode(5)
-      return
-    }
+    if (!version.isSuccess) return failedCheck(version)
     state.cosOldVersionData = version.result
     device.cosOldVersionData = version.result
     onVersion?.()
+    const knownBle = state.bleOldVersionData || device.bleOldVersionData
+    if (!knownBle) {
+      const ble = await callDevice('getBleVersion')
+      if (!operation.active() || !isCurrent()) return
+      if (!ble.isSuccess) return failedCheck(ble)
+      state.bleOldVersionData = ble.result
+      device.bleOldVersionData = ble.result
+    } else state.bleOldVersionData = knownBle
     const update = await callDevice('cosCheckUpdate')
     if (!operation.active() || !isCurrent()) return
-    if (!update.isSuccess) {
-      state.isCosUpdate = false
-      state.cosUpdateStatus = '2'
-      state.errorInfo = operationError(update)
-      state.errorStage = 'check'
-      changeCode(5)
-      return
+    if (!update.isSuccess) return failedCheck(update)
+    if (kind === 'manager' && device.connectedSeid) {
+      // The application page also publishes this result for the device page.
+      // Verify the device after the remote query before associating its result.
+      const identity = await callDevice('getSeid')
+      if (!operation.active() || !isCurrent()) return
+      if (!identity.isSuccess) return failedCheck(identity)
+      if (identity.result.toUpperCase() !== device.connectedSeid.toUpperCase())
+        return fail('device_session_changed', 'check')
     }
-    state.cosNewVersionData = update.result.latestCosVersion
-    state.bleNewVersionData = update.result.latestBleVersion
-    const cosChanged =
-      Boolean(state.cosNewVersionData) && state.cosOldVersionData !== state.cosNewVersionData
-    if (kind === 'manager') {
-      state.isCosUpdate = cosChanged
-    } else {
-      const empty = !state.cosNewVersionData && !state.bleNewVersionData
-      state.isCosUpdate =
-        !empty &&
-        (state.cosOldVersionData !== state.cosNewVersionData ||
-          state.bleOldVersionData !== state.bleNewVersionData)
+    const result: FirmwareCheckCache = {
+      seid: device.connectedSeid,
+      firmwareVersion: version.result,
+      bleVersion: state.bleOldVersionData,
+      latestFirmwareVersion: update.result.latestCosVersion || version.result,
+      latestBleVersion: update.result.latestBleVersion || state.bleOldVersionData,
+      checkedAt: Date.now()
     }
-    state.cosUpdateStatus = state.isCosUpdate ? '1' : '0'
-    if (state.isCosUpdate) {
-      device.isCosUpdate = true
-      device.cosNewVersionData = state.cosNewVersionData
-      if (kind === 'setting')
-        device.bleNewVersionData = device.installedBleVersion || state.bleNewVersionData
-    }
+    publishFirmware(device, result)
+    applyCheck(result)
   }
-  async function cosUpdateWalletAddress(current: () => boolean = operation.active) {
-    const installed = await callDevice('getInstalledApplets')
-    if (!current()) return
-    if (!installed.isSuccess) return fail(installed, 'restore')
-    const result = await callDevice('writeWalletAddress', {
-      name: installed.result.list.map(item => item.name) as WalletChain[],
-      filePath: app.userPath
-    })
-    if (!current()) return
-    if (!result.isSuccess) return fail(result, 'restore')
+  async function ensureFirmwareVersion(isCurrent: () => boolean = operation.active) {
+    if (!isCurrent()) return
+    if (!restoreCachedCheck()) await checkFirmwareVersion(undefined, isCurrent)
+  }
+  function completed(attempt: UpgradeAttempt) {
+    const data = attempt.data
     state.isCosUpdate = false
     state.cosUpdateStatus = '0'
-    state.cosOldVersionData = state.cosNewVersionData
-    device.isCosUpdate = false
-    device.cosOldVersionData = state.cosNewVersionData
-    device.cosNewVersionData = state.cosNewVersionData
-    if (kind === 'setting') {
-      state.bleOldVersionData = state.bleNewVersionData
-      device.bleOldVersionData = state.bleNewVersionData
-      device.bleNewVersionData = state.bleNewVersionData
-    }
-    changeCode(2)
+    state.cosOldVersionData = data.cosNewVersionData || data.cosOldVersionData
+    state.bleOldVersionData = data.bleNewVersionData || data.bleOldVersionData
+    invalidateFirmware(device)
+    device.cosOldVersionData = state.cosOldVersionData
+    device.bleOldVersionData = state.bleOldVersionData
+    device.installedBleVersion = state.bleOldVersionData
     device.deviceInfo = null
-    upgradeAttempt = undefined
+    if (attempt.recovery.needsBinding) {
+      device.isFirstGoToManagerPage = true
+    }
+    state.phase = 'complete'
+    state.recovering = false
+    state.supportCode = 2
+    attempts.delete(device)
   }
-  async function updateFirmwareWithinOperation() {
-    if (state.busy || !operation.active()) return
+  function beginFeedback() {
+    device.revokeHomeAccess()
     state.busy = true
+    state.phase = 'preparing'
+    state.supportCode = 1
     state.errorInfo = ''
     state.errorStage = ''
-    let sessionId = device.sessionId
+    void nextTick(() => operation.feedback?.())
+  }
+  async function executeUpgrade() {
+    const sessionId = device.sessionId
     const current = () => operation.active() && device.sessionId === sessionId
     try {
-      if (
-        upgradeAttempt &&
-        upgradeAttempt.seid.toUpperCase() !== device.connectedSeid.toUpperCase()
-      )
+      let attempt = savedAttempt()
+      if (attempt && attempt.recovery.seid.toUpperCase() !== device.connectedSeid.toUpperCase())
         return fail('device_session_changed', 'connect')
-      const data = upgradeAttempt?.data || upgradeData()
+      const data = attempt?.data || upgradeData()
+      const phase = attempt?.recovery.phase
       const connected = await refreshDeviceIdentity(callDevice, device, operation.active, {
         hideCachedData: false,
-        firmwareRecovery: Boolean(upgradeAttempt),
+        firmwareRecovery: Boolean(attempt),
+        requireBinding: !attempt || !['update', 'load-code', 'bind'].includes(phase!),
         preserveOnTransportError: true
       })
       if (!connected.isSuccess) {
-        if (connected.code === 'OPERATION_CANCELLED') return
         if (
-          connected.result === 'device_session_changed' ||
-          connected.result === 'device_bind_check_failed'
-        ) {
-          upgradeAttempt = undefined
-          state.errorInfo = operationError(connected)
-          state.errorStage = 'connect'
-          recovery.offer(connected, updateFirmware, { reconnectOnly: true })
-          return
-        }
-        // A transport error can be retried without discarding the upgrade inputs.
-        Object.assign(state, data)
+          connected.result !== 'device_session_changed' &&
+          connected.result !== 'device_bind_check_failed'
+        )
+          Object.assign(state, data)
         return fail(connected, 'connect')
       }
-      sessionId = device.sessionId
+      if (!current()) return
       const needsBinding = kind === 'manager' || data.cosOldVersionData !== data.cosNewVersionData
-      if (needsBinding && !data.bindCode && !upgradeAttempt) {
+      if (!attempt && needsBinding && !data.bindCode) {
         const binding = await callDevice('exportBindCode')
         if (!current()) return
         if (!binding.isSuccess) return fail(binding, 'store')
+        // The file read itself obtains a device SEID. Confirm identity and binding
+        // again before using its code; page caches cannot authorize this operation.
         const confirmed = await refreshDeviceIdentity(callDevice, device, operation.active, {
           hideCachedData: false,
           preserveOnTransportError: true
         })
-        if (!confirmed.isSuccess) {
-          if (confirmed.code === 'OPERATION_CANCELLED') return
-          if (
-            confirmed.result === 'device_session_changed' ||
-            confirmed.result === 'device_bind_check_failed'
-          ) {
-            state.errorInfo = operationError(confirmed)
-            state.errorStage = 'connect'
-            recovery.offer(confirmed, updateFirmware, { reconnectOnly: true })
-            return
-          }
-          return fail(confirmed, 'connect')
-        }
+        if (!confirmed.isSuccess) return fail(confirmed, 'connect')
         if (!current()) return
         data.bindCode = binding.result
       }
-      Object.assign(state, data)
-      upgradeAttempt = { seid: device.connectedSeid, data }
-      changeCode(1)
-      const updated = await callDevice('cosUpdate')
-      if (!current()) return
-      if (!updated.isSuccess || updated.result !== constants.RESULT_STATUS_SUCCESS)
-        return fail(updated, 'update')
-      if (kind === 'manager' || state.cosOldVersionData !== state.cosNewVersionData) {
-        const bound = await callDevice('deviceBindAcquire', state.bindCode)
+      if (attempt) {
+        const failure = await validateFirmwareResume(attempt.recovery, callDevice, current)
         if (!current()) return
-        if (!bound.isSuccess || bound.result !== constants.RESULT_STATUS_SUCCESS)
-          return fail(bound, 'bind')
-        const stored = await callDevice('importBindCode', state.bindCode)
-        if (!current()) return
-        if (!stored.isSuccess) return fail(stored, 'store')
-        await cosUpdateWalletAddress(current)
-      } else if (state.bleOldVersionData !== state.bleNewVersionData) {
-        state.isCosUpdate = false
-        state.bleOldVersionData = state.bleNewVersionData
-        device.isCosUpdate = false
-        device.installedBleVersion = state.bleNewVersionData
-        changeCode(2)
-        device.deviceInfo = null
-        upgradeAttempt = undefined
+        if (failure) return fail(failure.error, failure.stage)
+      } else {
+        attempt = {
+          sessionId,
+          data,
+          recovery: {
+            seid: device.connectedSeid,
+            phase: 'update',
+            bindCode: data.bindCode,
+            needsBinding,
+            captureVersionsAfterUpdate: true,
+            expectedCos: data.cosNewVersionData || data.cosOldVersionData,
+            expectedBle: data.bleNewVersionData || data.bleOldVersionData
+          }
+        }
+        attempts.set(device, attempt)
       }
+      Object.assign(state, data)
+      const failure = await runFirmwareRecovery(attempt.recovery, {
+        call: callDevice,
+        current,
+        userPath: app.userPath,
+        onPhase(phase) {
+          state.phase =
+            phase === 'load-code' ||
+            phase === 'capture-versions' ||
+            phase === 'verify' ||
+            phase === 'complete'
+              ? 'preparing'
+              : phase === 'apps'
+                ? 'restore'
+                : phase
+          state.errorStage = phase === 'load-code' ? 'store' : phase === 'apps' ? 'restore' : phase
+          state.recovering = phase !== 'update' && phase !== 'complete'
+          if (phase !== 'update') invalidateFirmware(device)
+        }
+      })
+      if (!current()) return
+      if (failure) return fail(failure.error, failure.stage)
+      // Returning to an already open home shell requires fresh binding+wallet
+      // proof as well. getBTCXpub enforces bound_this in the device service.
+      const wallet = await callDevice('getBTCXpub', app.userPath)
+      if (!current()) return
+      if (!wallet.isSuccess) return fail(wallet, 'wallet')
+      const confirmed = await callDevice('getUpgradeSeid')
+      if (!current()) return
+      if (!confirmed.isSuccess) return fail(confirmed, 'connect')
+      if (confirmed.result.toUpperCase() !== attempt.recovery.seid.toUpperCase())
+        return fail('device_session_changed', 'connect')
+      device.identityReady = true
+      if (!device.authorizeHome(sessionId, attempt.recovery.seid, wallet))
+        return fail('invalid_wallet_response', 'wallet')
+      completed(attempt)
     } catch (error) {
       if (current()) fail(error, state.errorStage || 'update')
+    }
+  }
+  async function updateFirmwareWithinOperation() {
+    if (state.busy || !operation.active()) return
+    beginFeedback()
+    try {
+      await executeUpgrade()
     } finally {
       state.busy = false
     }
   }
-  function updateFirmware() {
-    return operation.run(updateFirmwareWithinOperation)
+  async function updateFirmware() {
+    if (state.busy || !operation.active()) return
+    beginFeedback()
+    try {
+      await operation.run(executeUpgrade, 'action', 'firmware-upgrade')
+    } finally {
+      state.busy = false
+    }
   }
   function isShowalert() {
-    if (state.bleOldVersionData !== state.bleNewVersionData) changeCode(6)
+    if (state.busy) return
+    if (!savedAttempt() && state.bleOldVersionData !== state.bleNewVersionData) changeCode(6)
     else void updateFirmware()
   }
+  restoreCachedCheck()
   return {
     state,
+    pendingRecoveryOptions,
     changeCode,
     checkFirmwareVersion,
-    cosUpdateWalletAddress,
+    ensureFirmwareVersion,
+    restoreCachedCheck,
     updateFirmware,
     updateFirmwareWithinOperation,
     isShowalert

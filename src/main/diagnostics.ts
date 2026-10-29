@@ -1,12 +1,16 @@
 import { failureCode } from '../shared/deviceErrors'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
+import { deviceOperationActions, deviceOperationPhases } from '../shared/deviceContract'
 
 export interface DiagnosticFields {
   requestId?: number
   operationId?: string
   method?: string
   durationMs?: number
+  queueMs?: number
+  action?: string
+  phase?: string
   success?: boolean
   code?: string
   stage?: string
@@ -38,6 +42,11 @@ function safeFields(fields: DiagnosticFields): DiagnosticFields {
   const numbers = ['requestId', 'durationMs', 'exitCode', 'delayMs', 'line'] as const
   for (const key of numbers)
     if (typeof fields[key] === 'number' && Number.isFinite(fields[key])) safe[key] = fields[key]
+  if (Number.isSafeInteger(fields.queueMs) && fields.queueMs! >= 0) safe.queueMs = fields.queueMs
+  if ((deviceOperationActions as readonly unknown[]).includes(fields.action))
+    safe.action = fields.action
+  if ((deviceOperationPhases as readonly unknown[]).includes(fields.phase))
+    safe.phase = fields.phase
   for (const key of ['success', 'packaged'] as const)
     if (typeof fields[key] === 'boolean') safe[key] = fields[key]
   for (const key of [

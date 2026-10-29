@@ -9,6 +9,15 @@ export interface DeviceInfoCache {
   updateAvailable: boolean
 }
 
+export interface FirmwareCheckCache {
+  seid: string
+  firmwareVersion: string
+  bleVersion: string
+  latestFirmwareVersion: string
+  latestBleVersion: string
+  checkedAt: number
+}
+
 export interface DeviceVerificationState {
   status: 'idle' | 'checking' | 'success'
   activationStatus: boolean | null

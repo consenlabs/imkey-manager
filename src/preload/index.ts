@@ -3,7 +3,8 @@ import type {
   DeviceMethod,
   DeviceParams,
   DeviceResult,
-  DeviceCallContext
+  DeviceCallContext,
+  DeviceOperationTrace
 } from '../shared/deviceContract'
 function subscribe(
   channel: 'updater:message' | 'updater:progress',
@@ -15,6 +16,7 @@ function subscribe(
 }
 export interface ImkeyApi {
   device: {
+    trace(event: DeviceOperationTrace): Promise<void>
     call<M extends DeviceMethod>(
       method: M,
       params?: DeviceParams[M],
@@ -41,7 +43,8 @@ const api: ImkeyApi = {
     call: (method, params, context) =>
       context
         ? ipcRenderer.invoke('device:call', method, params, context)
-        : ipcRenderer.invoke('device:call', method, params)
+        : ipcRenderer.invoke('device:call', method, params),
+    trace: event => ipcRenderer.invoke('device:trace', event)
   },
   app: {
     getVersion: () => ipcRenderer.invoke('app:version'),

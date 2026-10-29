@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   firmware: {
     state: { cosUpdateStatus: '0', bindCode: '' },
     checkFirmwareVersion: vi.fn(),
+    ensureFirmwareVersion: vi.fn(),
     updateFirmwareWithinOperation: vi.fn()
   }
 }))
@@ -131,6 +132,7 @@ it.each(['connectDevice', 'getSeid', 'deviceBindCheck', 'downloadApplet', 'write
       expect(manager.apps.value).toEqual([])
       expect(mocks.offer).toHaveBeenCalledOnce()
       await mocks.offer.mock.calls[0][1]()
+      expect(mocks.offer).toHaveBeenCalledOnce()
     }
     expect(manager.apps.value[0]).toMatchObject({
       installLoading: false,
@@ -140,6 +142,18 @@ it.each(['connectDevice', 'getSeid', 'deviceBindCheck', 'downloadApplet', 'write
     if (['connectDevice', 'getSeid', 'deviceBindCheck'].includes(failedMethod))
       expect(mocks.call.mock.calls.some(([method]) => method === 'downloadApplet')).toBe(false)
     manager.ok()
+    if (failedMethod === 'writeWalletAddress') {
+      mocks.call.mockImplementation(async method =>
+        method === 'checkUpdate'
+          ? {
+              isSuccess: true,
+              result: {
+                list: [{ name: 'Nervos', installedVersion: '1.0', latestVersion: '1.0', icon: '' }]
+              }
+            }
+          : response(method)
+      )
+    }
     await manager.installApp(manager.apps.value[0])
     expect(manager.apps.value[0].installed).toBe(true)
   }

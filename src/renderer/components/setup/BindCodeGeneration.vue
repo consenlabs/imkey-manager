@@ -64,16 +64,24 @@
       <button
         :class="[flow.bindViewFinish ? '' : 'noFinish']"
         :disabled="!flow.bindViewFinish || flow.busy"
+        :aria-busy="nextLoading"
         class="nextBtn"
         @click="flow.send({ page: 2, active: 0, isNext: true })"
       >
-        {{ $t('m.imKeyManager.next') }}
+        <span v-if="nextLoading" class="setup-button-spinner" aria-hidden="true"></span>
+        {{ $t(nextLoading ? 'm.imKeyManager.setup_connecting_device' : 'm.imKeyManager.next') }}
       </button>
     </div>
   </div>
 </template>
 <script setup lang="ts">
 import type { UnwrapNestedRefs } from 'vue'
+import { computed } from 'vue'
 import type { useDeviceSetup } from '../../composables/useDeviceSetup'
-defineProps<{ flow: UnwrapNestedRefs<ReturnType<typeof useDeviceSetup>> }>()
+const props = defineProps<{ flow: UnwrapNestedRefs<ReturnType<typeof useDeviceSetup>> }>()
+const nextLoading = computed(
+  () =>
+    props.flow.busy &&
+    (props.flow.pendingAction === 'initialize' || props.flow.pendingAction === 'next')
+)
 </script>

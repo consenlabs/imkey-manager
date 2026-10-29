@@ -57,6 +57,26 @@ describe('bounded privacy preserving diagnostics', () => {
     expect(terminal.join('')).toContain('native-panic')
     expect(output).toContain('device_manager.rs')
   })
+  it('keeps only approved operation actions and phases', async () => {
+    const directory = await temporary()
+    const log = new DiagnosticLogger(directory, 10000, 2, () => {})
+    log.log('info', 'device.operation', {
+      operationId: 'operation-1',
+      action: 'firmware-upgrade',
+      phase: 'started',
+      queueMs: 32
+    })
+    log.log('info', 'device.operation', {
+      action: 'private-device-data',
+      phase: 'A2345678',
+      queueMs: -1
+    })
+    await log.flush()
+    const output = await readFile(path.join(directory, 'manager.jsonl'), 'utf8')
+    expect(output).toContain('"queueMs":32')
+    expect(output).toContain('firmware-upgrade')
+    expect(output).not.toMatch(/private-device-data|A2345678|"queueMs":-1/)
+  })
   it('survives disk and terminal failures without rejecting device work', async () => {
     const directory = await temporary()
     const notDirectory = path.join(directory, 'file')

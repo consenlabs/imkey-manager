@@ -133,7 +133,8 @@ describe('BindCodeStore', () => {
     }
     expect(await store(writer).exportBindCode()).toEqual({
       isSuccess: false,
-      result: 'permission denied'
+      result: 'permission denied',
+      code: 'BINDING_CODE_FILE_UNREADABLE'
     })
     expect(JSON.parse(await readFile(file, 'utf8')).bindCode).toBe(oldestCiphertext)
   })
@@ -151,5 +152,58 @@ describe('BindCodeStore', () => {
       isSuccess: false,
       result: 'device disconnected'
     })
+  })
+
+  it('reads the actual device file with one identity request and distinguishes missing data', async () => {
+    const getSeid = vi.fn(async () => ({ isSuccess: true as const, result: 'test-seid' }))
+    const binding = new BindCodeStore({ userData: directory, safeStorage, getSeid })
+    expect(await binding.exportBindCode()).toEqual({
+      isSuccess: false,
+      result: 'binding_code_file_missing',
+      code: 'BINDING_CODE_FILE_MISSING'
+    })
+    expect(getSeid).toHaveBeenCalledOnce()
+    await writeFile(
+      file,
+      JSON.stringify({ version: 2, bindCode: Buffer.from(`encrypted:${plain}`).toString('base64') })
+    )
+    getSeid.mockClear()
+    expect(await binding.exportBindCode()).toEqual({ isSuccess: true, result: plain })
+    expect(getSeid).toHaveBeenCalledOnce()
+    getSeid.mockResolvedValue({ isSuccess: true, result: 'replacement-device' })
+    expect(await binding.exportBindCode()).toEqual({
+      isSuccess: false,
+      result: 'binding_code_file_missing',
+      code: 'BINDING_CODE_FILE_MISSING'
+    })
+  })
+
+  it('does not report corrupted storage or device errors as a missing file', async () => {
+    await writeFile(file, JSON.stringify({ version: 2, bindCode: 42 }))
+    expect(await store().exportBindCode()).toEqual({
+      isSuccess: false,
+      result: 'Invalid binding code file',
+      code: 'BINDING_CODE_FILE_UNREADABLE'
+    })
+    const unavailable = new BindCodeStore({
+      userData: directory,
+      safeStorage,
+      getSeid: async () => ({ isSuccess: false, result: 'device_not_connected' })
+    })
+    expect(await unavailable.exportBindCode()).toEqual({
+      isSuccess: false,
+      result: 'device_not_connected',
+      code: 'BINDING_DEVICE_UNAVAILABLE'
+    })
+  })
+
+  it('keeps binding-file identity reads in the initiating operation context', async () => {
+    const getSeid = vi.fn(async () => ({ isSuccess: true as const, result: 'test-seid' }))
+    const binding = new BindCodeStore({ userData: directory, safeStorage, getSeid })
+    const context = { operationId: 'binding-test-1', stage: 'exportBindCode' } as const
+    await binding.importBindCode(plain, context)
+    await binding.exportBindCode(context)
+    await binding.isExistBindCodeFile(context)
+    expect(getSeid.mock.calls).toEqual([[context], [context], [context]])
   })
 })

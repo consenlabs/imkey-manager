@@ -5,6 +5,7 @@ import { app, safeStorage, utilityProcess, type BrowserWindow, type Tray } from 
 import path from 'node:path'
 import dotenv from 'dotenv'
 import { BindCodeStore } from './BindCodeStore'
+import { FirmwareRecoveryStore } from './FirmwareRecoveryStore'
 import { ServiceClient } from './serviceClient'
 import { connectorPath, keyEnvPath } from './paths'
 import { showConnectorLoadError } from './connectorError'
@@ -85,13 +86,17 @@ if (registerSingleInstance(getWindow)) {
     )
     const store = new BindCodeStore({
       userData: app.getPath('userData'),
-      getSeid: () => service!.call('getSeid'),
+      getSeid: context => service!.call('getSeid', undefined, context),
       safeStorage,
       encryptionKey: process.env.bindCode_encryptionKey
     })
     registerAppIpc(getWindow)
     registerUpdater(getWindow, allowQuit, diagnostics.log)
-    registerDeviceIpc(getWindow, service, store, diagnostics.log)
+    const recoveryStore = new FirmwareRecoveryStore({
+      userData: app.getPath('userData'),
+      getSeid: context => service!.call('getUpgradeSeid', undefined, context)
+    })
+    registerDeviceIpc(getWindow, service, store, diagnostics.log, recoveryStore)
     createWindow()
     tray = createTray(
       app.isPackaged

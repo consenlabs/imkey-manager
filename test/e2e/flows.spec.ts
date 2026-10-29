@@ -190,8 +190,40 @@ for (const scenario of ['cos-success', 'cos-address-failure', 'ble-only']) {
       await expect(page.locator('.device-info-secondary > div').last()).toContainText('2.0.0')
       await screenshot('g-ble-updated')
     }
+    if (scenario !== 'cos-address-failure') {
+      if (scenario === 'cos-success') await settings()
+      const checks = (await calls()).filter(method => method === 'cos_check_update').length
+      await page.getByTestId('firmware-check-button').click()
+      await expect(page.getByTestId('firmware-check-result')).toHaveAttribute(
+        'data-status',
+        'latest'
+      )
+      expect((await calls()).filter(method => method === 'cos_check_update')).toHaveLength(
+        checks + 1
+      )
+      expect((await calls()).filter(method => method === 'cos_update')).toHaveLength(1)
+    }
   })
 }
+
+test('bootloader recovery resumes address restoration without repeating a completed upgrade', async () => {
+  await launch('bootloader-restore-retry')
+  await connect()
+  await expect(page.locator('.tip3')).toBeVisible()
+  const failed = await calls()
+  expect(failed.filter(method => method === 'cos_update')).toHaveLength(1)
+  expect(failed.filter(method => method === 'bind_acquire')).toHaveLength(1)
+  expect(failed.indexOf('get_upgrade_seid')).toBeLessThan(failed.indexOf('cos_update'))
+  expect(failed.indexOf('get_firmware_version')).toBeGreaterThan(failed.indexOf('cos_update'))
+  expect(failed.indexOf('get_ble_version')).toBeLessThan(failed.indexOf('bind_acquire'))
+  await page.locator('.tip3 button').click()
+  await page.locator('.connectDevice button').first().click()
+  await expect(page.locator('.homeBox')).toBeVisible()
+  const recovered = await calls()
+  expect(recovered.filter(method => method === 'cos_update')).toHaveLength(1)
+  expect(recovered.filter(method => method === 'bind_acquire')).toHaveLength(1)
+  expect(recovered.filter(method => method === 'register_address')).toHaveLength(2)
+})
 test('h settings version, clipboard, external link and updater events', async () => {
   await home()
   await settings()

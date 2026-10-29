@@ -95,10 +95,21 @@
         <el-icon class="el-icon-warning"><WarningFilled /></el-icon
         >{{ $t('m.imKeyManager.done_setting_select_next') }}
       </p>
-      <button class="nextBtn" @click="flow.send({ page: 4, active: 2, isNext: true })">
-        {{ $t('m.imKeyManager.next') }}
+      <button
+        class="nextBtn"
+        :disabled="flow.busy"
+        :aria-busy="nextLoading"
+        @click="flow.send({ page: 4, active: 2, isNext: true })"
+      >
+        <span v-if="nextLoading" class="setup-button-spinner" aria-hidden="true"></span>
+        {{ $t(nextLoading ? 'm.imKeyManager.setup_checking_wallet' : 'm.imKeyManager.next') }}
       </button>
-      <button class="prevBtn" @click="flow.send({ page: 2, active: 0, isNext: false })">
+      <button
+        class="prevBtn"
+        :disabled="flow.busy"
+        :aria-busy="false"
+        @click="flow.send({ page: 2, active: 0, isNext: false })"
+      >
         {{ $t('m.imKeyManager.previous') }}
       </button>
     </div>
@@ -106,7 +117,9 @@
 </template>
 <script setup lang="ts">
 import type { UnwrapNestedRefs } from 'vue'
+import { computed } from 'vue'
 import type { useDeviceSetup } from '../../composables/useDeviceSetup'
 import { WarningFilled } from '@element-plus/icons-vue'
-defineProps<{ flow: UnwrapNestedRefs<ReturnType<typeof useDeviceSetup>> }>()
+const props = defineProps<{ flow: UnwrapNestedRefs<ReturnType<typeof useDeviceSetup>> }>()
+const nextLoading = computed(() => props.flow.busy && props.flow.pendingAction === 'next')
 </script>

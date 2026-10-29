@@ -28,6 +28,7 @@ vi.mock('../../src/renderer/composables/useFirmwareUpgrade', () => ({
   useFirmwareUpgrade: () => ({
     state: { cosUpdateStatus: '0', bindCode: '' },
     checkFirmwareVersion: vi.fn(),
+    ensureFirmwareVersion: vi.fn(),
     updateFirmwareWithinOperation: vi.fn()
   })
 }))
@@ -130,6 +131,7 @@ describe('canonical app identity and presentation state', () => {
     locale.imkey = 'imKey Software'
     const second = useAppManagement()
     await second.init()
+    expect(second.state.errorInfo).toBe('')
     expect(second.apps.value[0].displayName).toBe('imKey Software')
     expect(device.apps[0].name).toBe('IMK')
     await second.updateApp(second.apps.value[0])

@@ -4,28 +4,67 @@ import type {
   DeviceMethod,
   DeviceParams,
   DeviceResult,
-  DeviceValues
+  DeviceValues,
+  DeviceOperationAction,
+  DeviceOperationTrace
 } from '../../shared/deviceContract'
 
 export interface DeviceOperation {
   call: typeof callDevice
-  run<T>(task: () => Promise<T>, key?: string): Promise<T | undefined>
+  run<T>(
+    task: () => Promise<T>,
+    key?: string,
+    action?: DeviceOperationAction
+  ): Promise<T | undefined>
+  feedback?(action?: DeviceOperationAction): void
   active(): boolean
 }
 
 // Queue whole user operations, not just their individual native requests.
 let operationCount = 0
 let tail: Promise<void> = Promise.resolve()
+function traceOperation(event: DeviceOperationTrace): void | Promise<void> {
+  if (typeof window !== 'undefined') return window.imkey?.device?.trace?.(event)
+}
+interface OperationRecord {
+  operationId: string
+  action: DeviceOperationAction
+  enqueuedAt: number
+  feedbackSent: boolean
+}
 export function createDeviceOperation(
-  invoke: typeof callDevice = callDevice
+  invoke: typeof callDevice = callDevice,
+  trace: (event: DeviceOperationTrace) => void | Promise<void> = traceOperation
 ): DeviceOperation & { dispose(): void } {
   let active = true
-  const busy = new Set<string>()
-  let operationId: string | undefined
+  const records = new Map<string, OperationRecord>()
+  let current: OperationRecord | undefined
+  function emit(
+    record: OperationRecord,
+    phase: DeviceOperationTrace['phase'],
+    timing: Pick<DeviceOperationTrace, 'queueMs' | 'durationMs'> = {}
+  ) {
+    try {
+      void Promise.resolve(
+        trace({ operationId: record.operationId, action: record.action, phase, ...timing })
+      ).catch(() => {})
+    } catch {
+      // Missing bridges or failed diagnostics cannot delay or fail the workflow.
+    }
+  }
   return {
     active: () => active,
     dispose() {
       active = false
+    },
+    feedback(action?: DeviceOperationAction) {
+      if (!active) return
+      const record = action
+        ? [...records.values()].reverse().find(item => item.action === action)
+        : current || [...records.values()].at(-1)
+      if (!record || record.feedbackSent) return
+      record.feedbackSent = true
+      emit(record, 'feedback', { durationMs: Math.max(0, Date.now() - record.enqueuedAt) })
     },
     async call<M extends DeviceMethod>(
       method: M,
@@ -41,7 +80,7 @@ export function createDeviceOperation(
       const result = await invoke(
         method,
         params,
-        operationId ? { operationId, stage: method } : undefined
+        current ? { operationId: current.operationId, stage: method } : undefined
       )
       // A running native firmware call is allowed to finish; no new step follows disposal.
       if (!active)
@@ -53,9 +92,20 @@ export function createDeviceOperation(
         }
       return result
     },
-    async run<T>(task: () => Promise<T>, key = 'action'): Promise<T | undefined> {
-      if (!active || busy.has(key)) return undefined
-      busy.add(key)
+    async run<T>(
+      task: () => Promise<T>,
+      key = 'action',
+      action: DeviceOperationAction = key === 'initialize' ? 'initialize' : 'action'
+    ): Promise<T | undefined> {
+      if (!active || records.has(key)) return undefined
+      const record: OperationRecord = {
+        operationId: `${Date.now().toString(36)}-${++operationCount}`,
+        action,
+        enqueuedAt: Date.now(),
+        feedbackSent: false
+      }
+      records.set(key, record)
+      emit(record, 'enqueued')
       const previous = tail
       let release!: () => void
       tail = new Promise<void>(resolve => {
@@ -64,11 +114,13 @@ export function createDeviceOperation(
       try {
         await previous
         if (!active) return undefined
-        operationId = `${Date.now().toString(36)}-${++operationCount}`
+        current = record
+        emit(record, 'started', { queueMs: Math.max(0, Date.now() - record.enqueuedAt) })
         return await task()
       } finally {
-        busy.delete(key)
-        operationId = undefined
+        emit(record, 'finished', { durationMs: Math.max(0, Date.now() - record.enqueuedAt) })
+        records.delete(key)
+        if (current === record) current = undefined
         release()
       }
     }

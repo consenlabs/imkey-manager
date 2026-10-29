@@ -44,15 +44,16 @@ it('waits for connection and all version checks before marking firmware complete
   await reply('connectDevice', { isSuccess: true, result: 'success' })
   await reply('isBLStatus', { isSuccess: true, result: false })
   await reply('getSeid', { isSuccess: true, result: 'test-device' })
+  await reply('getFirmwareRecovery', { isSuccess: true, result: null })
   expect(flow.checkFirmwareUpgrade.value).toBe(2)
   expect(flow.checkDeviceBindingCode.value).toBe(1)
-  await reply('checkUpdate', { isSuccess: true, result: { status: 'latest', list: [] } })
+  await reply('cosCheckUpdate', { isSuccess: true, result: { isUpdateSuccess: true } })
   expect(flow.checkFirmwareUpgrade.value).toBe(2)
   expect(flow.checkDeviceBindingCode.value).toBe(1)
   // A repeated click must not reset the running progress.
   flow.check()
   expect(flow.checkFirmwareUpgrade.value).toBe(2)
-  await reply('cosCheckUpdate', { isSuccess: true, result: { isUpdateSuccess: true } })
+  await reply('checkUpdate', { isSuccess: true, result: { status: 'latest', list: [] } })
   expect(flow.checkFirmwareUpgrade.value).toBe(3)
   expect(flow.checkDeviceBindingCode.value).toBe(2)
   expect(flow.checkPinAndWallet.value).toBe(1)
@@ -68,6 +69,8 @@ it('stops on a TSM version-query rejection before binding or wallet calls, then 
   await reply('connectDevice', { isSuccess: true, result: 'success' })
   await reply('isBLStatus', { isSuccess: true, result: false })
   await reply('getSeid', { isSuccess: true, result: 'test-device' })
+  await reply('getFirmwareRecovery', { isSuccess: true, result: null })
+  await reply('cosCheckUpdate', { isSuccess: true, result: { isUpdateSuccess: true } })
   await reply('checkUpdate', {
     isSuccess: false,
     result: 'imkey_tsm_device_illegal',
@@ -84,6 +87,8 @@ it('stops on a TSM version-query rejection before binding or wallet calls, then 
     'connectDevice',
     'isBLStatus',
     'getSeid',
+    'getFirmwareRecovery',
+    'cosCheckUpdate',
     'checkUpdate'
   ])
   flow.changeState(1)

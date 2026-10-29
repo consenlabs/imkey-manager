@@ -13,6 +13,7 @@ interface Control {
   gate?: boolean
   failConnect?: boolean
   addresses?: string[]
+  failAddresses?: string[]
 }
 interface NativeCall {
   method: string
@@ -65,8 +66,10 @@ async function launch(): Promise<void> {
   await expect(page.locator('.homeBox')).toBeVisible()
   await page.locator('.routerBar li').nth(1).click()
   await expect(page.locator('.appItem')).toHaveCount(5)
-  // The list is populated before the final firmware-version read has finished.
-  await expect.poll(async () => (await calls()).at(-1)?.method).toBe('cos_check_update')
+  // Wait for the identity confirmation after the initial remote firmware query.
+  await expect
+    .poll(async () => (await calls()).slice(-2).map(call => call.method))
+    .toEqual(['cos_check_update', 'get_seid'])
 }
 function applet(name: string) {
   return page.locator('.appItem').filter({ has: page.getByText(name, { exact: true }) })
@@ -117,12 +120,18 @@ test('a failed pre-install connection removes busy feedback and allows an explic
     )
     .toHaveLength(1)
   await configure({ gate: false, failConnect: true })
-  await expect(page.locator('.dioBox')).toBeVisible()
+  const recovery = page.locator('.device-recovery-dialog')
+  await expect(recovery).toBeVisible()
+  await expect(recovery).toContainText('device_not_connected')
   await expect(selected.locator('.fa-spin')).toHaveCount(0)
-  await expect(selected.getByRole('link', { name: 'Install', exact: true })).toBeVisible()
+  // A lost connection invalidates the old device list until identity is checked again.
+  await expect(page.locator('.appItem')).toHaveCount(0)
   expect((await calls()).slice(before).map(call => call.method)).not.toContain('app_download')
   await configure({ failConnect: false })
-  await page.locator('.dioBox button').click()
+  await recovery.getByRole('button', { name: 'Retry', exact: true }).click()
+  await expect(page.locator('.appItem')).toHaveCount(5)
+  await expect(selected.getByRole('link', { name: 'Install', exact: true })).toBeVisible()
+  expect((await calls()).slice(before).map(call => call.method)).not.toContain('app_download')
   await selected.getByRole('link', { name: 'Install', exact: true }).click()
   await expect(selected.locator('.col')).toBeVisible()
   expect((await calls()).slice(before).filter(call => call.method === 'app_download')).toHaveLength(
@@ -165,4 +174,26 @@ test('a mixed connector address list retains the existing Ethereum registration 
     }
   ])
   expect(completed.map(call => call.method)).not.toContain('register_pub_key')
+})
+
+test('a partial address recovery retries only failed chains without downloading the app again', async () => {
+  await launch()
+  await configure({ addresses: ['Ethereum', 'Bitcoin'], failAddresses: ['ETHEREUM'] })
+  const before = (await calls()).length
+  const selected = applet('Nervos')
+  await selected.getByRole('link', { name: 'Install', exact: true }).click()
+  await expect(page.locator('.dioBox')).toContainText('address_restore_failed')
+  await expect(selected.getByRole('link', { name: 'Install', exact: true })).toBeVisible()
+  await configure({ failAddresses: [] })
+  await page.locator('.dioBox button').click()
+  await selected.getByRole('link', { name: 'Install', exact: true }).click()
+  await expect(selected.locator('.col')).toBeVisible()
+  const completed = (await calls()).slice(before)
+  expect(completed.filter(call => call.method === 'app_download')).toHaveLength(1)
+  expect(
+    completed.filter(call => call.method === 'register_address' && call.chain === 'BITCOIN')
+  ).toHaveLength(1)
+  expect(
+    completed.filter(call => call.method === 'register_address' && call.chain === 'ETHEREUM')
+  ).toHaveLength(2)
 })

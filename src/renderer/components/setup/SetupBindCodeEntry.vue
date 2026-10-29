@@ -155,16 +155,32 @@
         :class="[flow.bindFinish ? '' : 'noFinish']"
         :disabled="flow.busy || flow.bindingStatus === 1"
         class="nextBtn"
+        :aria-busy="nextLoading"
         @click="flow.send({ page: 3, active: 1, isNext: true })"
       >
-        {{ $t('m.imKeyManager.next') }}
+        <span v-if="nextLoading" class="setup-button-spinner" aria-hidden="true"></span>
+        {{ $t(nextLoading ? 'm.imKeyManager.setup_checking_device' : 'm.imKeyManager.next') }}
+      </button>
+      <button
+        :disabled="flow.busy || flow.bindingStatus === 1"
+        class="prevBtn"
+        :aria-busy="previousLoading"
+        @click="flow.send({ page: 1, active: 0, isNext: false })"
+      >
+        <span v-if="previousLoading" class="setup-button-spinner" aria-hidden="true"></span>
+        {{
+          $t(previousLoading ? 'm.imKeyManager.setup_checking_device' : 'm.imKeyManager.previous')
+        }}
       </button>
     </div>
   </div>
 </template>
 <script setup lang="ts">
 import type { UnwrapNestedRefs } from 'vue'
+import { computed } from 'vue'
 import type { useDeviceSetup } from '../../composables/useDeviceSetup'
 import { SuccessFilled, WarningFilled } from '@element-plus/icons-vue'
-defineProps<{ flow: UnwrapNestedRefs<ReturnType<typeof useDeviceSetup>> }>()
+const props = defineProps<{ flow: UnwrapNestedRefs<ReturnType<typeof useDeviceSetup>> }>()
+const nextLoading = computed(() => props.flow.busy && props.flow.pendingAction === 'next')
+const previousLoading = computed(() => props.flow.busy && props.flow.pendingAction === 'previous')
 </script>

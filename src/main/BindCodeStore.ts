@@ -1,7 +1,7 @@
 import { createCipheriv, createDecipheriv, createHash, pbkdf2Sync, randomBytes } from 'node:crypto'
 import { access, mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises'
 import path from 'node:path'
-import type { DeviceResult } from '../shared/deviceContract'
+import type { DeviceCallContext, DeviceResult } from '../shared/deviceContract'
 
 export interface SafeStorageApi {
   isEncryptionAvailable(): boolean
@@ -11,7 +11,7 @@ export interface SafeStorageApi {
 
 interface BindCodeStoreOptions {
   userData: string
-  getSeid: () => Promise<DeviceResult>
+  getSeid: (context?: DeviceCallContext) => Promise<DeviceResult>
   safeStorage: SafeStorageApi
   encryptionKey?: string
   writeAtomic?: (file: string, data: string) => Promise<void>
@@ -81,8 +81,8 @@ export class BindCodeStore {
     this.writeAtomic = options.writeAtomic ?? atomicWrite
   }
 
-  private async filePath(): Promise<string> {
-    const response = await this.options.getSeid()
+  private async filePath(context?: DeviceCallContext): Promise<string> {
+    const response = await this.options.getSeid(context)
     if (!response.isSuccess) throw new Error(response.result)
     const seid = response.result
     if (typeof seid !== 'string' || !seid || /[/\\]/.test(seid))
@@ -106,19 +106,33 @@ export class BindCodeStore {
     await this.writeAtomic(file, JSON.stringify(data))
   }
 
-  async importBindCode(bindCode: string): Promise<DeviceResult> {
+  async importBindCode(bindCode: string, context?: DeviceCallContext): Promise<DeviceResult> {
     try {
-      await this.write(await this.filePath(), bindCode.toUpperCase())
+      await this.write(await this.filePath(context), bindCode.toUpperCase())
       return { isSuccess: true, result: undefined }
     } catch (error) {
       return failure(error)
     }
   }
 
-  async exportBindCode(): Promise<DeviceResult> {
+  async exportBindCode(context?: DeviceCallContext): Promise<DeviceResult> {
+    let identityResolved = false
     try {
-      const file = await this.filePath()
-      const parsed: unknown = JSON.parse(await readFile(file, 'utf8'))
+      const file = await this.filePath(context)
+      identityResolved = true
+      let contents: string
+      try {
+        contents = await readFile(file, 'utf8')
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT')
+          return {
+            isSuccess: false,
+            result: 'binding_code_file_missing',
+            code: 'BINDING_CODE_FILE_MISSING'
+          }
+        throw error
+      }
+      const parsed: unknown = JSON.parse(contents)
       if (
         !parsed ||
         typeof parsed !== 'object' ||
@@ -138,13 +152,17 @@ export class BindCodeStore {
         await this.write(file, bindCode)
       return { isSuccess: true, result: bindCode }
     } catch (error) {
-      return failure(error)
+      return {
+        isSuccess: false,
+        result: error instanceof Error ? error.message : String(error),
+        code: identityResolved ? 'BINDING_CODE_FILE_UNREADABLE' : 'BINDING_DEVICE_UNAVAILABLE'
+      }
     }
   }
 
-  async isExistBindCodeFile(): Promise<DeviceResult> {
+  async isExistBindCodeFile(context?: DeviceCallContext): Promise<DeviceResult> {
     try {
-      const file = await this.filePath()
+      const file = await this.filePath(context)
       try {
         await access(file)
         return { isSuccess: true, result: true }

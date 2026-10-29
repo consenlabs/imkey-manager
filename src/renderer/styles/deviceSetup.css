@@ -162,6 +162,41 @@ set3 {
   margin-right: 20px;
   border: 1px solid #000;
 }
+.setKeyPage .btnBox button:disabled {
+  cursor: not-allowed;
+}
+.setKeyPage .btnBox button[aria-busy='true'] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: auto;
+  min-width: 200px;
+  padding: 0 18px;
+  box-sizing: border-box;
+  white-space: nowrap;
+  cursor: progress;
+}
+.setKeyPage .setup-button-spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: setup-button-spin 0.75s linear infinite;
+}
+@keyframes setup-button-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .setKeyPage .setup-button-spinner {
+    animation: none;
+  }
+}
 .setKeyPage .course {
   width: 177px;
   cursor: pointer;

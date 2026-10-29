@@ -27,6 +27,9 @@ export const deviceMethods = [
   'importBindCode',
   'exportBindCode',
   'isExistBindCodeFile',
+  'getFirmwareRecovery',
+  'saveFirmwareRecovery',
+  'clearFirmwareRecovery',
   'writeWalletAddress'
 ] as const
 export type DeviceMethod = (typeof deviceMethods)[number]
@@ -60,6 +63,27 @@ export interface DeviceSnCheck {
   isActivate: boolean
   activateTime: string
 }
+export const firmwareRecoveryPhases = [
+  'update',
+  'capture-versions',
+  'load-code',
+  'bind',
+  'store',
+  'apps',
+  'restore',
+  'verify'
+] as const
+export interface FirmwareRecoveryCheckpoint {
+  version: 1
+  seid: string
+  phase: (typeof firmwareRecoveryPhases)[number]
+  needsBinding: boolean
+  expectedCos: string
+  expectedBle: string
+  pendingAddresses?: WalletChain[]
+}
+export type FirmwareRecoveryMethod =
+  'getFirmwareRecovery' | 'saveFirmwareRecovery' | 'clearFirmwareRecovery'
 export type DeviceValues = {
   [M in DeviceMethod]: M extends 'checkUpdate'
     ? AppletList
@@ -75,9 +99,11 @@ export type DeviceValues = {
               ? boolean
               : M extends 'getRamSize'
                 ? number
-                : M extends 'importBindCode'
-                  ? undefined
-                  : string
+                : M extends 'getFirmwareRecovery'
+                  ? FirmwareRecoveryCheckpoint | null
+                  : M extends 'importBindCode' | 'saveFirmwareRecovery' | 'clearFirmwareRecovery'
+                    ? undefined
+                    : string
 }
 export type DeviceResult<T = unknown> =
   | { isSuccess: true; result: T }
@@ -118,11 +144,25 @@ export type DeviceParams = {
       ? string | undefined
       : M extends 'writeWalletAddress'
         ? { filePath: string; name: WalletChain[] }
-        : undefined
+        : M extends 'saveFirmwareRecovery'
+          ? FirmwareRecoveryCheckpoint
+          : M extends 'clearFirmwareRecovery'
+            ? { seid: string }
+            : undefined
 }
 export interface DeviceCallContext {
   operationId: string
   stage?: DeviceMethod
+}
+export const deviceOperationActions = ['action', 'initialize', 'firmware-upgrade'] as const
+export type DeviceOperationAction = (typeof deviceOperationActions)[number]
+export const deviceOperationPhases = ['enqueued', 'started', 'feedback', 'finished'] as const
+export interface DeviceOperationTrace {
+  operationId: string
+  action: DeviceOperationAction
+  phase: (typeof deviceOperationPhases)[number]
+  queueMs?: number
+  durationMs?: number
 }
 export interface DeviceRequest {
   id: number
@@ -156,8 +196,43 @@ function object(value: unknown): value is Record<string, unknown> {
 function keys(value: Record<string, unknown>, expected: string[]): boolean {
   return Object.keys(value).every(key => expected.includes(key))
 }
+export function isValidFirmwareRecoverySeid(value: unknown): value is string {
+  return typeof value === 'string' && /^[a-zA-Z0-9_-]{1,128}$/.test(value)
+}
+export function isFirmwareRecoveryCheckpoint(value: unknown): value is FirmwareRecoveryCheckpoint {
+  if (!object(value)) return false
+  return (
+    keys(value, [
+      'version',
+      'seid',
+      'phase',
+      'needsBinding',
+      'expectedCos',
+      'expectedBle',
+      'pendingAddresses'
+    ]) &&
+    value.version === 1 &&
+    isValidFirmwareRecoverySeid(value.seid) &&
+    (firmwareRecoveryPhases as readonly unknown[]).includes(value.phase) &&
+    typeof value.needsBinding === 'boolean' &&
+    [value.expectedCos, value.expectedBle].every(
+      version => typeof version === 'string' && /^[a-zA-Z0-9._-]{0,64}$/.test(version)
+    ) &&
+    (value.pendingAddresses === undefined ||
+      (Array.isArray(value.pendingAddresses) &&
+        value.pendingAddresses.length <= walletChains.length &&
+        new Set(value.pendingAddresses).size === value.pendingAddresses.length &&
+        value.pendingAddresses.every(chain =>
+          (walletChains as readonly unknown[]).includes(chain)
+        )))
+  )
+}
 export function isValidDeviceParams(method: DeviceMethod, params: unknown): boolean {
   switch (method) {
+    case 'saveFirmwareRecovery':
+      return isFirmwareRecoveryCheckpoint(params)
+    case 'clearFirmwareRecovery':
+      return object(params) && keys(params, ['seid']) && isValidFirmwareRecoverySeid(params.seid)
     case 'downloadApplet':
     case 'updateApplet':
     case 'deleteApplet':

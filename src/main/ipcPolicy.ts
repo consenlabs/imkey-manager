@@ -1,7 +1,10 @@
 import {
   isDeviceMethod,
   isValidDeviceParams,
-  type DeviceCallContext
+  deviceOperationActions,
+  deviceOperationPhases,
+  type DeviceCallContext,
+  type DeviceOperationTrace
 } from '../shared/deviceContract'
 export interface SenderWindow {
   isDestroyed(): boolean
@@ -49,4 +52,25 @@ export function validateDeviceContext(
     (value.stage !== undefined && !isDeviceMethod(value.stage))
   )
     throw new Error('Invalid device context')
+}
+
+export function validateDeviceTrace(trace: unknown): asserts trace is DeviceOperationTrace {
+  if (!trace || typeof trace !== 'object' || Array.isArray(trace))
+    throw new Error('Invalid device trace')
+  const value = trace as Record<string, unknown>
+  if (
+    !Object.keys(value).every(key =>
+      ['operationId', 'action', 'phase', 'queueMs', 'durationMs'].includes(key)
+    ) ||
+    typeof value.operationId !== 'string' ||
+    !/^[a-z0-9]{1,16}-[1-9][0-9]{0,12}$/.test(value.operationId) ||
+    !(deviceOperationActions as readonly unknown[]).includes(value.action) ||
+    !(deviceOperationPhases as readonly unknown[]).includes(value.phase) ||
+    ['queueMs', 'durationMs'].some(
+      key =>
+        value[key] !== undefined &&
+        (!Number.isSafeInteger(value[key]) || (value[key] as number) < 0)
+    )
+  )
+    throw new Error('Invalid device trace')
 }

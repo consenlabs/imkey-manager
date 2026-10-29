@@ -8,6 +8,7 @@ import { useDeviceRecovery } from './useDeviceRecovery'
 import { refreshDeviceIdentity } from './deviceIdentity'
 import { useSecureCheck } from './useSecureCheck'
 import type { DeviceInfoCache } from '../models/deviceState'
+import { cachedFirmware, invalidateFirmware } from './firmwareCache'
 
 export function useSettings() {
   const device = useDeviceStore()
@@ -90,15 +91,16 @@ export function useSettings() {
   }
   function restoreCachedInfo(info: DeviceInfoCache) {
     state.SN = info.sn
-    state.firmwareChecked = info.firmwareChecked
+    state.firmwareChecked = false
     Object.assign(firmware.state, {
       cosOldVersionData: info.firmwareVersion,
       bleOldVersionData: info.bleVersion,
-      cosNewVersionData: info.latestFirmwareVersion,
-      bleNewVersionData: info.latestBleVersion,
-      isCosUpdate: info.updateAvailable,
-      cosUpdateStatus: info.updateAvailable ? '1' : '0'
+      cosNewVersionData: '',
+      bleNewVersionData: '',
+      isCosUpdate: false,
+      cosUpdateStatus: '0'
     })
+    state.firmwareChecked = firmware.restoreCachedCheck()
   }
   function usableCachedInfo() {
     const cached = device.deviceInfo
@@ -114,6 +116,7 @@ export function useSettings() {
     return cached
   }
   function clearCachedUpdateResult() {
+    invalidateFirmware(device)
     const cached = device.deviceInfo
     if (!cached || !device.identityReady || cached.seid !== device.connectedSeid) return
     device.deviceInfo = {
@@ -160,7 +163,8 @@ export function useSettings() {
     try {
       const connected = await refreshDeviceIdentity(callDevice, device, operation.active, {
         hideCachedData: !keepPage,
-        requireBinding: !force
+        requireBinding: !force,
+        ...firmware.pendingRecoveryOptions()
       })
       if (!connected.isSuccess) {
         if (connected.code === 'OPERATION_CANCELLED') return
@@ -169,6 +173,13 @@ export function useSettings() {
         return
       }
       if (!current()) return
+      if (firmware.pendingRecoveryOptions()) {
+        // An interrupted upgrade can leave normal firmware metadata unavailable.
+        // Keep its explicit recovery entry reachable; the retry validates its stage.
+        firmware.restoreCachedCheck()
+        state.firmwareChecked = true
+        return
+      }
       const cached = device.deviceInfo
       const sameDevice = cached?.seid === device.connectedSeid
       if (!force) device.deviceInfo = null
@@ -186,8 +197,9 @@ export function useSettings() {
         fail(ble, 'check')
         return
       }
-      firmware.state.bleOldVersionData = device.installedBleVersion || ble.result
+      firmware.state.bleOldVersionData = ble.result
       device.bleOldVersionData = firmware.state.bleOldVersionData
+      device.installedBleVersion = ble.result
       if (cached && sameDevice) state.SN = cached.sn
       else {
         const serial = await callDevice('getSn')
@@ -214,11 +226,13 @@ export function useSettings() {
         firmware.state.bleNewVersionData = ''
         firmware.state.isCosUpdate = false
         firmware.state.cosUpdateStatus = '0'
+        firmware.restoreCachedCheck()
       }
       if (!current()) return
       const confirmed = await refreshDeviceIdentity(callDevice, device, operation.active, {
         hideCachedData: false,
-        requireBinding: !force
+        requireBinding: !force,
+        ...firmware.pendingRecoveryOptions()
       })
       if (!confirmed.isSuccess) {
         state.SN = ''
@@ -226,7 +240,7 @@ export function useSettings() {
         return
       }
       if (!current()) return
-      state.firmwareChecked = force
+      state.firmwareChecked = force || Boolean(cachedFirmware(device)) || firmware.state.recovering
       if (force && firmware.state.supportCode === 5) clearCachedUpdateResult()
       if (active && operation.active() && firmware.state.supportCode !== 5) {
         device.deviceInfo = {

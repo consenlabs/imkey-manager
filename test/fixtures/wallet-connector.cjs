@@ -25,6 +25,27 @@ module.exports = {
     error = ''
     const method = api.ImkeyAction.deserializeBinary(Buffer.from(request, 'hex')).getMethod()
     const scenario = process.env.IMKEY_E2E_WALLET_FAILURE
+    const controlFile = process.env.IMKEY_E2E_SETUP_CONTROL_FILE
+    const control =
+      controlFile && fs.existsSync(controlFile)
+        ? JSON.parse(fs.readFileSync(controlFile, 'utf8'))
+        : {}
+    if (control.delayMethod === method && control.delayMs > 0)
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, control.delayMs)
+    if (control.failMethod === method) return failure(method, 'device_not_connected')
+    if (method === 'get_seid' && control.seid) {
+      record(method)
+      return response(device, 'GetSeidRes', 'setSeid', control.seid)
+    }
+    if (method === 'bind_check' && control.bindStatus) {
+      record(method)
+      return response(device, 'BindCheckRes', 'setBindStatus', control.bindStatus)
+    }
+    const setupFailure = process.env.IMKEY_E2E_SETUP_FAILURE_FILE
+    if (setupFailure && fs.existsSync(setupFailure)) {
+      if (fs.readFileSync(setupFailure, 'utf8') === method)
+        return failure(method, 'device_not_connected')
+    }
     // Address prefetch is forbidden regardless of which applets the device has installed.
     if (method === 'get_address') return failure(method, 'imkey_command_format_error')
     // The first xpub read advances from wallet instructions to the completion page.

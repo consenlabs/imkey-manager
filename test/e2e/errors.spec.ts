@@ -89,6 +89,7 @@ test('address restoration displays its stage and plain native cause', async () =
   await launch('cos-address-plain')
   await connect()
   await settings()
+  await page.getByTestId('firmware-check-button').click()
   await expect(page.getByTestId('firmware-upgrade-button')).toBeVisible()
   await page.getByTestId('firmware-upgrade-button').click()
   await expect(page.locator('.alert3 .operation-error')).toContainText('Restore addresses')

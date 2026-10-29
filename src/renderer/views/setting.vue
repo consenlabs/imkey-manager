@@ -12,6 +12,8 @@ const { status, SN, copyTooltipDisabled, checkingUpdate, initializing } = toRefs
 const verification = settings.secureCheck
 const {
   supportCode,
+  busy,
+  phase,
   errorInfo,
   errorStage,
   bindCode,
@@ -38,19 +40,20 @@ defineExpose({ checkSoftUpdate })
       :checking-update="checkingUpdate"
       :firmware-checked="settings.state.firmwareChecked"
       :initializing="initializing"
+      :upgrading="busy"
       :identity-checking="verification.state.identityChecking"
-      @is-showalert="isShowalert"
+      @is-showalert="!busy && isShowalert()"
       @copy-text="copyText"
-      @export-bind-code="exportBindCode"
-      @check-update="settings.checkUpdate"
+      @export-bind-code="!busy && exportBindCode()"
+      @check-update="!busy && settings.checkUpdate()"
     />
     <DeviceVerificationCard
       variant="device"
       :status="verification.state.identityChecking ? 'idle' : verification.state.status"
       :activation-status="verification.state.activationStatus"
       :activated-at="verification.state.activatedAt"
-      :disabled="initializing || verification.state.identityChecking"
-      @verify="verification.check"
+      :disabled="initializing || verification.state.identityChecking || busy"
+      @verify="!busy && verification.check()"
     />
     <ErrorDetail
       :message="settings.state.errorInfo || updater.state.errorInfo"
@@ -58,6 +61,7 @@ defineExpose({ checkSoftUpdate })
     />
     <SettingsDialogs
       :support-code="supportCode"
+      :phase="phase"
       :error-info="errorInfo"
       :error-stage="errorStage"
       :bind-code="bindCode"
@@ -66,7 +70,9 @@ defineExpose({ checkSoftUpdate })
     />
     <div class="tip6" v-if="supportCode != 6 && status == 6">
       <p>{{ $t('m.imKeyManager.found_imKey_manager_new_version') }}</p>
-      <button @click="updateNowTip">{{ $t('m.imKeyManager.update') }}</button>
+      <button :disabled="busy" @click="!busy && updateNowTip()">
+        {{ $t('m.imKeyManager.update') }}
+      </button>
     </div>
   </div>
   <UpdateStatus

@@ -11,6 +11,7 @@ defineProps<{
   firmwareCheckFailed?: boolean
   identityChecking?: boolean
   initializing?: boolean
+  upgrading?: boolean
 }>()
 const emit = defineEmits<{
   isShowalert: []
@@ -57,16 +58,18 @@ const emit = defineEmits<{
             "
             type="button"
             data-testid="firmware-upgrade-button"
-            :disabled="identityChecking"
+            :disabled="identityChecking || upgrading"
+            :aria-busy="Boolean(upgrading)"
             @click="emit('isShowalert')"
           >
-            {{ $t('m.devicePages.upgrade') }}
+            <i v-if="upgrading" class="fas fa-circle-notch fa-spin" aria-hidden="true" />
+            {{ $t(upgrading ? 'm.devicePages.preparing_upgrade' : 'm.devicePages.upgrade') }}
           </button>
           <button
             v-else
             type="button"
             data-testid="firmware-check-button"
-            :disabled="checkingUpdate || initializing || identityChecking"
+            :disabled="checkingUpdate || initializing || identityChecking || upgrading"
             :aria-busy="Boolean(checkingUpdate)"
             @click="emit('checkUpdate')"
           >
@@ -93,7 +96,7 @@ const emit = defineEmits<{
                   class="copy-sn el-icon-copy-document"
                   type="button"
                   :aria-label="$t('m.devicePages.copy_serial_number')"
-                  :disabled="!SN || initializing || identityChecking"
+                  :disabled="!SN || initializing || identityChecking || upgrading"
                   @click="emit('copyText')"
                 >
                   <img :src="copyIcon" alt="" />
@@ -113,7 +116,7 @@ const emit = defineEmits<{
               <button
                 class="exportBindCode"
                 type="button"
-                :disabled="initializing || identityChecking"
+                :disabled="initializing || identityChecking || upgrading"
                 @click="emit('exportBindCode')"
               >
                 {{ $t('m.devicePages.export_binding_code') }}

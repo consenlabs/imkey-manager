@@ -32,7 +32,7 @@ module.exports = {
       acquired = true
     }
     if (method === 'cos_update') upgraded = true
-    if (method === 'app_download') installed = true
+    if (method === 'app_download' || method === 'app_update') installed = true
     if (method === 'app_delete') installed = false
     if (method === 'register_address') registrations++
     if (method === 'device_secure_check') {
@@ -44,9 +44,11 @@ module.exports = {
     }
     if (
       (scenario.startsWith('disconnected') && method === 'device_connect') ||
-      ((scenario === 'register-failure' || scenario.startsWith('cos-address')) &&
+      ((scenario === 'register-failure' ||
+        scenario === 'bootloader-restore-retry' ||
+        scenario.startsWith('cos-address')) &&
         method === 'register_address' &&
-        (scenario !== 'register-failure' || registrations === 1))
+        (scenario.startsWith('cos-address') || registrations === 1))
     ) {
       error = scenario.endsWith('-plain')
         ? 'get_seid_error'
@@ -61,21 +63,31 @@ module.exports = {
       get_firmware_version: [
         'GetFirmwareVersionRes',
         'setFirmwareVersion',
-        upgraded && scenario.startsWith('cos-') ? '2.0.0' : '1.0.0'
+        upgraded && (scenario.startsWith('cos-') || scenario === 'bootloader-restore-retry')
+          ? '2.0.0'
+          : '1.0.0'
       ],
-      get_ble_version: ['GetBleVersionRes', 'setBleVersion', '1.0.0'],
+      get_ble_version: [
+        'GetBleVersionRes',
+        'setBleVersion',
+        upgraded && scenario === 'ble-only' ? '2.0.0' : '1.0.0'
+      ],
       get_sdk_info: ['GetSdkInfoRes', 'setSdkVersion', '2.10.3'],
       bind_check: [
         'BindCheckRes',
         'setBindStatus',
-        scenario === 'unbound'
+        scenario === 'unbound' || (scenario === 'bootloader-restore-retry' && upgraded && !acquired)
           ? 'unbound'
           : scenario === 'bound-other' && !acquired
             ? 'bound_other'
             : 'bound_this'
       ],
       bind_acquire: ['BindAcquireRes', 'setBindResult', 'success'],
-      is_bl_status: ['IsBlStatusRes', 'setCheckResult', false]
+      is_bl_status: [
+        'IsBlStatusRes',
+        'setCheckResult',
+        scenario === 'bootloader-restore-retry' && !upgraded
+      ]
     }
     if (descriptors[method]) return response(device, ...descriptors[method])
     if (method === 'check_update') {
@@ -84,7 +96,7 @@ module.exports = {
       const entry = new device.AvailableAppBean()
       entry.setAppName('Ethereum')
       entry.setInstalledVersion(
-        upgraded ? '1.0' : installed || scenario === 'app-update' ? '0.9' : 'none'
+        upgraded || installed ? '1.0' : scenario === 'app-update' ? '0.9' : 'none'
       )
       entry.setLatestVersion('1.0')
       entry.setAppLogo('')
@@ -95,7 +107,9 @@ module.exports = {
       const result = new device.CosCheckUpdateRes()
       checks++
       const offer =
-        (checks > 1 && scenario.startsWith('cos-')) || (checks > 1 && scenario === 'ble-only')
+        (checks > 1 && scenario.startsWith('cos-')) ||
+        (checks > 1 && scenario === 'ble-only') ||
+        (scenario === 'bootloader-restore-retry' && upgraded)
       result.setIsLatest(!offer || upgraded)
       result.setIsUpdateSuccess(true)
       result.setLatestCosVersion(offer && scenario !== 'ble-only' ? '2.0.0' : '1.0.0')

@@ -1,6 +1,7 @@
 import { expect, it, vi } from 'vitest'
 import { createDeviceOperation } from '../../src/renderer/composables/useDeviceOperation'
 import type { callDevice } from '../../src/renderer/device'
+import type { DeviceOperationTrace } from '../../src/shared/deviceContract'
 
 it('serializes complete workflows and ignores repeated entry', async () => {
   const steps: string[] = []
@@ -104,4 +105,58 @@ it('queues a first user action during initialization instead of dropping the cli
   release()
   await Promise.all([initialized, clicked, repeated])
   expect(steps).toEqual(['initialize', 'connect'])
+})
+
+it('correlates immediate feedback, queue waiting and native work without exposing results', async () => {
+  const clock = vi.spyOn(Date, 'now').mockReturnValue(1000)
+  const traces: DeviceOperationTrace[] = []
+  const invoke = vi.fn(async () => ({ isSuccess: true as const, result: 'private-device-data' }))
+  const operation = createDeviceOperation(invoke as typeof callDevice, event => {
+    traces.push(event)
+  })
+  let release!: () => void
+  const gate = new Promise<void>(resolve => {
+    release = resolve
+  })
+  try {
+    const initializing = operation.run(() => gate, 'initialize')
+    await Promise.resolve()
+    clock.mockReturnValue(1100)
+    const upgrading = operation.run(() => operation.call('cosUpdate'), 'action', 'firmware-upgrade')
+    const duplicate = operation.run(async () => {}, 'action', 'firmware-upgrade')
+    const upgradeId = traces.find(event => event.action === 'firmware-upgrade')!.operationId
+    expect(invoke).not.toHaveBeenCalled()
+    clock.mockReturnValue(1120)
+    operation.feedback?.('firmware-upgrade')
+    operation.feedback?.('firmware-upgrade')
+    clock.mockReturnValue(1500)
+    release()
+    await Promise.all([initializing, upgrading, duplicate])
+    expect(traces.filter(event => event.operationId === upgradeId)).toEqual([
+      { operationId: upgradeId, action: 'firmware-upgrade', phase: 'enqueued' },
+      { operationId: upgradeId, action: 'firmware-upgrade', phase: 'feedback', durationMs: 20 },
+      { operationId: upgradeId, action: 'firmware-upgrade', phase: 'started', queueMs: 400 },
+      { operationId: upgradeId, action: 'firmware-upgrade', phase: 'finished', durationMs: 400 }
+    ])
+    expect(invoke).toHaveBeenCalledExactlyOnceWith('cosUpdate', undefined, {
+      operationId: upgradeId,
+      stage: 'cosUpdate'
+    })
+    expect(JSON.stringify(traces)).not.toContain('private-device-data')
+  } finally {
+    release()
+    clock.mockRestore()
+  }
+})
+
+it('never delays or rejects business work when trace delivery throws or rejects', async () => {
+  const trace = vi.fn((): Promise<void> => {
+    throw new Error('bridge unavailable')
+  })
+  const operation = createDeviceOperation(undefined, trace)
+  expect(await operation.run(async () => 'first')).toBe('first')
+  trace.mockRejectedValue(new Error('IPC unavailable'))
+  expect(await operation.run(async () => 'second')).toBe('second')
+  trace.mockImplementation(() => new Promise(() => {}))
+  expect(await operation.run(async () => 'third')).toBe('third')
 })

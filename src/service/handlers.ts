@@ -25,6 +25,10 @@ export function createDeviceHandlers(
     isSuccess: false,
     result: 'Bind code storage belongs to main process'
   })
+  const recoveryStorage: Handler = () => ({
+    isSuccess: false,
+    result: 'Firmware recovery storage belongs to main process'
+  })
   return {
     initImKeyCore: () => api.initImKeyCore(),
     connectDevice: () => api.connect(),
@@ -60,14 +64,21 @@ export function createDeviceHandlers(
     importBindCode: storage,
     exportBindCode: storage,
     isExistBindCodeFile: storage,
+    getFirmwareRecovery: recoveryStorage,
+    saveFirmwareRecovery: recoveryStorage,
+    clearFirmwareRecovery: recoveryStorage,
     writeWalletAddress: p => {
+      const requested = (p as { name: string[] }).name
+      const names = [...new Set(requested)].filter(name => Object.hasOwn(chains, name))
+      if (names.length === 0) return { isSuccess: true, result: 'success' }
       const binding = api.deviceMethod('bind_check')
       if (!binding.isSuccess) return binding
+      if (binding.result !== 'bound_this')
+        return { isSuccess: false, result: 'device_bind_check_failed' }
       const failed: string[] = []
       let firstError = ''
-      for (const name of (p as { name: string[] }).name) {
+      for (const name of names) {
         const chain = chains[name]
-        if (!chain) continue // Legacy dormant registrations remain dormant.
         let response: DeviceResult
         try {
           response =

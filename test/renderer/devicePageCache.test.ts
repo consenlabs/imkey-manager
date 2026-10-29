@@ -38,7 +38,10 @@ beforeEach(() => {
   mocks.online.mockReset().mockResolvedValue(true)
   mocks.offer.mockReset()
   mocks.call.mockReset().mockImplementation(async method => {
-    if (method === 'getSeid') return { isSuccess: true, result: seid }
+    if (method === 'getSeid' || method === 'getUpgradeSeid')
+      return { isSuccess: true, result: seid }
+    if (method === 'getBTCXpub') return { isSuccess: true, result: 'xpub-ready' }
+    if (method === 'isBLStatus') return { isSuccess: true, result: false }
     if (method === 'deviceBindCheck') return { isSuccess: true, result: 'bound_this' }
     if (method === 'exportBindCode') return { isSuccess: true, result: 'test-binding-code' }
     if (method === 'getSn') return { isSuccess: true, result: `SN-${seid}` }
@@ -50,7 +53,8 @@ beforeEach(() => {
         result: {
           latestCosVersion: latestFirmware,
           latestBleVersion: latestBle,
-          isLatest: firmwareVersion === latestFirmware && bleVersion === latestBle
+          isLatest: firmwareVersion === latestFirmware && bleVersion === latestBle,
+          isUpdateSuccess: true
         }
       }
     return { isSuccess: true, result: 'success' }
@@ -140,6 +144,7 @@ it('reloads metadata on the first entry after a successful firmware upgrade clea
   })
   await first.firmware.updateFirmware()
   expect(first.firmware.state.supportCode).toBe(2)
+  expect(useDeviceStore().canEnterHome).toBe(true)
   expect(useDeviceStore().deviceInfo).toBeNull()
   mocks.call.mockClear()
   const second = useSettings()

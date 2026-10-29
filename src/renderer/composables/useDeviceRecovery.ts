@@ -27,7 +27,11 @@ export function useDeviceRecovery(operation?: Pick<DeviceOperation, 'active'>) {
   function offer(
     error: unknown,
     retry: () => Promise<unknown>,
-    { reconnectOnly = false }: { reconnectOnly?: boolean } = {}
+    {
+      reconnectOnly = false,
+      stayOnCancel = false,
+      message: customMessage
+    }: { reconnectOnly?: boolean; stayOnCancel?: boolean; message?: string } = {}
   ): void {
     if (!active()) return
     const raw = typeof error === 'string' ? error : (error as { result?: string })?.result
@@ -79,9 +83,11 @@ export function useDeviceRecovery(operation?: Pick<DeviceOperation, 'active'>) {
     const cause = diagnostic ? detail.slice(0, -diagnostic.length) : detail
     const causeKey = `m.imKeyCoreErrorInfo.${cause}`
     const translated = te?.(causeKey) ? `${t(causeKey)}${diagnostic}` : detail
-    const message = key
-      ? t(`m.imKeyManager.${key}`)
-      : `${t('m.imKeyManager.recovery_message')}\n\n${translated}`
+    const message = customMessage
+      ? `${customMessage}\n\n${translated}`
+      : key
+        ? t(`m.imKeyManager.${key}`)
+        : `${t('m.imKeyManager.recovery_message')}\n\n${translated}`
     void (async () => {
       let action: 'retry' | 'reconnect' | undefined
       try {
@@ -89,7 +95,9 @@ export function useDeviceRecovery(operation?: Pick<DeviceOperation, 'active'>) {
           confirmButtonText: t(
             reconnectOnly ? 'm.imKeyManager.return_to_connection' : 'm.imKeyManager.retry'
           ),
-          cancelButtonText: t('m.imKeyManager.return_to_connection'),
+          cancelButtonText: t(
+            stayOnCancel ? 'm.imKeyManager.cancel' : 'm.imKeyManager.return_to_connection'
+          ),
           showCancelButton: !reconnectOnly,
           showClose: !reconnectOnly,
           customClass: 'device-recovery-dialog',
@@ -99,7 +107,7 @@ export function useDeviceRecovery(operation?: Pick<DeviceOperation, 'active'>) {
         })
         action = reconnectOnly ? 'reconnect' : 'retry'
       } catch (reason) {
-        if (reason === 'cancel' && !reconnectOnly) action = 'reconnect'
+        if (reason === 'cancel' && !reconnectOnly && !stayOnCancel) action = 'reconnect'
       } finally {
         if (promptOwner === owner) promptOwner = undefined
       }
@@ -108,7 +116,7 @@ export function useDeviceRecovery(operation?: Pick<DeviceOperation, 'active'>) {
         if (action === 'reconnect') await returnToConnection()
         else await retry()
       } catch (failure) {
-        if (active()) offer(failure, retry, { reconnectOnly })
+        if (active()) offer(failure, retry, { reconnectOnly, stayOnCancel, message: customMessage })
       }
     })()
   }

@@ -6,7 +6,8 @@ import Home from '../views/home.vue'
 import WelcomeHome from '../views/welcomeHome.vue'
 import Manager from '../views/manager.vue'
 import Setting from '../views/setting.vue'
-export default createRouter({
+import { installHomeAccessGuard } from './homeAccess'
+const router = createRouter({
   history: createWebHashHistory(),
   routes: [
     { path: '/', name: '/', component: AppStart },
@@ -25,3 +26,5 @@ export default createRouter({
     }
   ]
 })
+installHomeAccessGuard(router)
+export default router
