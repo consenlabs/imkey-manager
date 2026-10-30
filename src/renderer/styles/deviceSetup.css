@@ -1,0 +1,302 @@
+.nav:hover,
+hover {
+  cursor: pointer;
+}
+.link2:hover,
+hover {
+  cursor: pointer;
+}
+.link2 {
+  border-bottom: 0.1px solid #ec6d62;
+}
+.setKeyPage {
+  height: 100%;
+  display: flex;
+}
+.setKeyPage .routerBar {
+  width: 260px;
+  padding-left: 40px;
+}
+.setKeyPage h2 {
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 25px;
+  color: #000000;
+  margin-top: 62px;
+}
+.setKeyPage .routerBar > p {
+  margin-top: 60px;
+  font-size: 15px;
+  line-height: 21px;
+}
+.setKeyPage .routerBar > div {
+  margin-top: 26px;
+  height: 140px;
+  margin-left: 4px;
+}
+.el-step__head.is-wait {
+  color: #fff;
+  border-color: #acb1c6;
+}
+#app .el-step__head.is-wait .el-step__icon.is-text {
+  background: #acb1c6;
+}
+
+.el-step__head.is-finish .el-step__icon.is-text,
+#app .el-step__head.is-process .el-step__icon.is-text {
+  background: #000;
+  stroke: #000;
+}
+.el-step__head.is-finish .el-step__icon.is-text,
+#app .el-step__head.is-finish .el-step__icon.is-text {
+  background: #acb1c6;
+  stroke: #acb1c6;
+}
+.el-step__title.is-finish,
+.el-step__title.is-process {
+  color: #000;
+  font-weight: 700;
+}
+.setKeyPage .el-step__line {
+  background-color: transparent;
+}
+.setKeyPage .el-step.is-vertical .el-step__line {
+  border-left: 0.5px dashed #8189a7;
+}
+.setKeyPage .el-step__head.is-finish {
+  color: #acb1c6;
+  border-color: #acb1c6;
+}
+.setKeyPage .el-step__title.is-finish {
+  color: #acb1c6;
+}
+.el-step.is-vertical .el-step__line {
+  width: 0;
+  border-left: 1px dashed #000;
+}
+.el-step__line-inner {
+  border: none !important;
+}
+.setKeyPage .el-step__icon-inner {
+  color: #fff;
+}
+.setKeyPage .routerView {
+  box-shadow: 3px 0px 20px rgba(0, 0, 0, 0.06);
+  flex: 1;
+  padding-left: 38px;
+  position: relative;
+}
+.set1,
+.set2,
+set3 {
+  height: 100%;
+}
+.setKeyPage h3 {
+  margin-top: 57px;
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 34px;
+}
+.setKeyPage .nav {
+  margin-top: 10px;
+  width: 800px;
+  display: flex;
+  justify-content: space-between;
+}
+.setKeyPage .mattersNeedingAttention {
+  width: 730px;
+  height: 90px;
+  background: #fafafa;
+  border-radius: 4px;
+  padding: 30px 35px;
+  margin-top: 20px;
+  display: block;
+  overflow: hidden;
+}
+.setKeyPage .set2 .mattersNeedingAttention {
+  height: 60px;
+}
+.setKeyPage .set3 .mattersNeedingAttention {
+  height: 30px;
+  margin-bottom: 15px;
+}
+.setKeyPage .set3 {
+  margin-top: 60px;
+}
+.setKeyPage .set3 h3 {
+  margin-top: 10px;
+}
+.setKeyPage .set3 .course {
+  margin-top: -30px;
+}
+.setKeyPage .mattersNeedingAttention p {
+  font-size: 15px;
+  line-height: 30px;
+  color: #8189a7;
+}
+.setKeyPage .btnBox {
+  width: 800px;
+  height: 90px;
+  border-top: 1px solid #f1f2fa;
+  position: fixed;
+  margin-top: 10px;
+  bottom: 0;
+  display: block;
+  padding-top: 23px;
+}
+.setKeyPage .nextBtn,
+.setKeyPage .prevBtn {
+  width: 120px;
+  height: 44px;
+  background: #2e3035;
+  border-radius: 44px;
+  color: #ffffff;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  float: right;
+}
+.setKeyPage .prevBtn {
+  background: #fff;
+  color: #000;
+  margin-right: 20px;
+  border: 1px solid #000;
+}
+.setKeyPage .btnBox button:disabled {
+  cursor: not-allowed;
+}
+.setKeyPage .btnBox button[aria-busy='true'] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: auto;
+  min-width: 200px;
+  padding: 0 18px;
+  box-sizing: border-box;
+  white-space: nowrap;
+  cursor: progress;
+}
+.setKeyPage .setup-button-spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: setup-button-spin 0.75s linear infinite;
+}
+@keyframes setup-button-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .setKeyPage .setup-button-spinner {
+    animation: none;
+  }
+}
+.setKeyPage .course {
+  width: 177px;
+  cursor: pointer;
+  height: 70px;
+  background: #faf8f6;
+  border-radius: 4px;
+}
+.setKeyPage .msg {
+  margin-top: 20px;
+  font-size: 15px;
+  line-height: 21px;
+}
+.setKeyPage .set3 .msg {
+  margin-top: 0px;
+  color: #8189a7;
+}
+.setKeyPage .course {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.setKeyPage .course span {
+  padding: 0 11px;
+  color: #b8ac95;
+}
+.setKeyPage .set3 .careful {
+  margin-top: 10px;
+}
+.setKeyPage .careful {
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 21px;
+  color: #0e1019;
+  margin-top: 80px;
+}
+
+.set2 .codeBox {
+  width: 388px;
+  height: 47px;
+  margin: 0 -8px;
+  display: flex;
+}
+.set2 .codeBox input {
+  width: 38px;
+  height: 47px;
+  border: 0.5px solid #000000;
+  box-sizing: border-box;
+  margin: 0 8px;
+  text-align: center;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 24px;
+  line-height: 29px;
+}
+.set2 .verification-pending {
+  font-style: normal;
+  font-weight: normal;
+  font-size: 12px;
+  line-height: 17px;
+  color: #000000;
+}
+.set2 .verification-success {
+  font-style: normal;
+  font-weight: normal;
+  font-size: 12px;
+  line-height: 17px;
+  color: #1bad3b;
+}
+.set2 .codeTit {
+  font-size: 12px;
+  line-height: 17px;
+  color: #ec6d62;
+  margin-top: 13px;
+}
+.set3 .btnBox .codeTit {
+  font-size: 12px;
+  line-height: 17px;
+  color: #ec6d62;
+  margin-top: 13px;
+}
+.set4 .codeTit {
+  font-size: 12px;
+  line-height: 17px;
+  color: #ec6d62;
+  margin-top: 74px;
+}
+.step {
+  margin-top: 10px;
+}
+.step svg {
+  vertical-align: middle;
+}
+.step p {
+  font-size: 15px;
+  line-height: 30px;
+  color: #8189a7;
+}
+.step span {
+  margin-left: 24px;
+}
+#app .noFinish {
+  background: #e0e0e0;
+}
