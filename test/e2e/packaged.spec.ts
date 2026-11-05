@@ -15,6 +15,7 @@ test('packaged app loads native connector from Resources and ignores development
   )
   delete env.ELECTRON_RUN_AS_NODE
   env.IMKEY_CONNECTOR_MOCK = path.resolve('test/fixtures/absent-mock.cjs')
+  env.ELECTRON_RENDERER_URL = 'https://attacker.example/renderer'
   let executablePath = executable!
   let wrapperDirectory: string | undefined
   if (process.env.IMKEY_PACKAGED_ARCH === 'x64') {
@@ -35,6 +36,7 @@ test('packaged app loads native connector from Resources and ignores development
   })
   try {
     const page = await application.firstWindow()
+    expect(page.url()).toMatch(/^file:/)
     await expect(page.locator('.appStart')).toBeVisible()
     const applicationInfo = await application.evaluate(({ app }) => ({
       packaged: app.isPackaged,

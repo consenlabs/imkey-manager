@@ -3,7 +3,7 @@ import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 export function createMainWindow(allowQuit: () => boolean): BrowserWindow {
   const url =
-    process.env.ELECTRON_RENDERER_URL ||
+    (!app.isPackaged && process.env.ELECTRON_RENDERER_URL) ||
     pathToFileURL(path.join(__dirname, '../renderer/index.html')).toString()
   const window = new BrowserWindow({
     show: false,

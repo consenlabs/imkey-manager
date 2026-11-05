@@ -198,9 +198,9 @@ for (const scenario of ['cos-success', 'cos-address-failure', 'ble-only']) {
         'data-status',
         'latest'
       )
-      expect((await calls()).filter(method => method === 'cos_check_update')).toHaveLength(
-        checks + 1
-      )
+      await expect
+        .poll(async () => (await calls()).filter(method => method === 'cos_check_update').length)
+        .toBe(checks + 1)
       expect((await calls()).filter(method => method === 'cos_update')).toHaveLength(1)
     }
   })
