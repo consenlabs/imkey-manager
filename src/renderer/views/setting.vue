@@ -8,7 +8,9 @@ import UpdateStatus from '../components/settings/UpdateStatus.vue'
 import { useSettings } from '../composables/useSettings'
 import { useSoftwareUpdate } from '../composables/useSoftwareUpdate'
 const settings = useSettings()
-const { status, SN, copyTooltipDisabled, checkingUpdate, initializing } = toRefs(settings.state)
+const { status, SN, copyTooltipDisabled, checkingUpdate, initializing, autoChecking } = toRefs(
+  settings.state
+)
 const verification = settings.secureCheck
 const {
   supportCode,
@@ -40,20 +42,21 @@ defineExpose({ checkSoftUpdate })
       :checking-update="checkingUpdate"
       :firmware-checked="settings.state.firmwareChecked"
       :initializing="initializing"
+      :auto-checking="autoChecking"
       :upgrading="busy"
       :identity-checking="verification.state.identityChecking"
-      @is-showalert="!busy && isShowalert()"
+      @is-showalert="!busy && !autoChecking && isShowalert()"
       @copy-text="copyText"
-      @export-bind-code="!busy && exportBindCode()"
-      @check-update="!busy && settings.checkUpdate()"
+      @export-bind-code="!busy && !autoChecking && exportBindCode()"
+      @check-update="!busy && !autoChecking && settings.checkUpdate()"
     />
     <DeviceVerificationCard
       variant="device"
       :status="verification.state.identityChecking ? 'idle' : verification.state.status"
       :activation-status="verification.state.activationStatus"
       :activated-at="verification.state.activatedAt"
-      :disabled="initializing || verification.state.identityChecking || busy"
-      @verify="!busy && verification.check()"
+      :disabled="initializing || autoChecking || verification.state.identityChecking || busy"
+      @verify="!busy && !autoChecking && verification.check()"
     />
     <ErrorDetail
       :message="settings.state.errorInfo || updater.state.errorInfo"

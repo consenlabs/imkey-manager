@@ -20,7 +20,8 @@ vi.mock('../../src/renderer/composables/useFirmwareUpgrade', () => ({
     state: { cosUpdateStatus: '0' },
     checkFirmwareVersion: vi.fn(),
     ensureFirmwareVersion: vi.fn(),
-    updateFirmwareWithinOperation: vi.fn()
+    updateFirmwareWithinOperation: vi.fn(),
+    recoverBeforeAppOperation: vi.fn().mockResolvedValue('ready')
   })
 }))
 vi.mock('vue', async original => ({

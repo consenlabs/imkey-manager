@@ -159,10 +159,12 @@ for (const gateMethod of ['device_connect', 'get_firmware_version']) {
     await expect(page.getByTestId('device-info-card')).toContainText('PAGE-SN-A')
     await expect(page.locator('.device-info-primary > div').last()).toContainText('1.9.05')
     await expect(page.locator('.device-info-secondary > div').last()).toContainText('3.0.03')
-    await expect(page.getByTestId('firmware-check-result')).toHaveCount(0)
-    await expect(page.getByTestId('firmware-upgrade-button')).toHaveCount(0)
-    await expect(page.getByTestId('firmware-check-button')).toBeEnabled()
-    expect(await count('cos_check_update')).toBe(firmwareChecks)
+    await expect(page.getByTestId('firmware-check-result')).toHaveAttribute(
+      'data-status',
+      'available'
+    )
+    await expect(page.getByTestId('firmware-upgrade-button')).toBeEnabled()
+    expect(await count('cos_check_update')).toBe(firmwareChecks + 1)
     await expect(page.locator('.exportBindCode')).toBeEnabled()
     await expect(page.getByTestId('secure-check-button')).toBeEnabled()
     expect(await count('device_secure_check')).toBe(0)
@@ -202,14 +204,14 @@ test('leaving initial loading discards its late response before a fresh device p
   await expect(page.getByTestId('device-info-card')).toContainText('PAGE-SN-REFRESHED')
   await expect(page.getByTestId('device-info-card')).not.toContainText('PAGE-SN-A')
   await expect(page.locator('.device-info-primary > div').last()).toContainText('2.0.0')
-  await expect(page.getByTestId('firmware-check-result')).toHaveCount(0)
+  await expect(page.getByTestId('firmware-check-result')).toHaveAttribute('data-status', 'latest')
   await expect(page.getByTestId('firmware-check-button')).toBeEnabled()
   expect(await count('get_firmware_version')).toBe(readsBeforeEntry + 2)
-  expect(await count('cos_check_update')).toBe(checksBeforeEntry)
+  expect(await count('cos_check_update')).toBe(checksBeforeEntry + 1)
   await expect(page.getByRole('dialog')).toHaveCount(0)
 })
 
-test('home entry is passive and repeated device visits read cached metadata without checking updates', async () => {
+test('home entry is passive and device visits reuse the automatic firmware check', async () => {
   await launch()
   await expect(page.getByTestId('device-verification-card')).toHaveAttribute('data-status', 'idle')
   expect(await count('device_connect')).toBe(1)
@@ -222,8 +224,8 @@ test('home entry is passive and repeated device visits read cached metadata with
   await page.screenshot({ path: '/private/tmp/imkey-home-unverified.png' })
   const firmwareChecks = await count('cos_check_update')
   await devicePage()
-  await expect(page.getByTestId('firmware-check-result')).toHaveCount(0)
-  expect(await count('cos_check_update')).toBe(firmwareChecks)
+  await expect(page.getByTestId('firmware-check-result')).toHaveAttribute('data-status', 'latest')
+  expect(await count('cos_check_update')).toBe(firmwareChecks + 1)
   await expect(page.getByTestId('device-verification-card')).toHaveAttribute('data-status', 'idle')
   const methods = ['get_sn', 'get_ble_version', 'get_firmware_version', 'cos_check_update']
   const cached = await Promise.all(methods.map(count))
@@ -235,7 +237,7 @@ test('home entry is passive and repeated device visits read cached metadata with
   expect(await calls()).toEqual(beforeHome)
   await devicePage()
   expect(await Promise.all(methods.map(count))).toEqual(cached)
-  await expect(page.getByTestId('firmware-check-result')).toHaveCount(0)
+  await expect(page.getByTestId('firmware-check-result')).toHaveAttribute('data-status', 'latest')
   expect(await calls()).toEqual(beforeHome)
   expect(await count('device_secure_check')).toBe(0)
   const before = await calls()
@@ -278,7 +280,7 @@ test('device-page verification is reused when returning home without checking fi
   await devicePage()
   const firmwareChecks = await count('cos_check_update')
   await verify()
-  await expect(page.getByTestId('firmware-check-result')).toHaveCount(0)
+  await expect(page.getByTestId('firmware-check-result')).toHaveAttribute('data-status', 'latest')
   expect(await count('cos_check_update')).toBe(firmwareChecks)
   const beforeHome = await calls()
   await tab(0)
@@ -291,14 +293,11 @@ test('device-page verification is reused when returning home without checking fi
   expect(await calls()).toEqual(beforeHome)
 })
 
-test('the first explicit firmware check is pending without a result until the response arrives', async () => {
+test('the first automatic firmware check is pending without a result until the response arrives', async () => {
   await launch()
   const firmwareChecks = await count('cos_check_update')
-  await devicePage()
-  expect(await count('cos_check_update')).toBe(firmwareChecks)
-  await expect(page.getByTestId('firmware-check-result')).toHaveCount(0)
   await configure({ gate: true, gateMethod: 'cos_check_update' })
-  await page.getByTestId('firmware-check-button').click()
+  await tab(2)
   await expect.poll(() => count('cos_check_update')).toBe(firmwareChecks + 1)
   await expect(page.getByTestId('firmware-check-button')).toBeDisabled()
   await expect(page.getByTestId('firmware-check-button')).toHaveText('Checking for updates…')
@@ -306,14 +305,20 @@ test('the first explicit firmware check is pending without a result until the re
   await expect(page.getByTestId('firmware-check-result')).toHaveCount(0)
   await expect(page.getByTestId('firmware-upgrade-button')).toHaveCount(0)
   await expect(page.getByTestId('device-info-card')).toContainText('PAGE-SN-A')
+  await expect(page.getByTestId('secure-check-button')).toBeDisabled()
+  await expect(page.locator('.exportBindCode')).toBeDisabled()
+  await expect(page.locator('.copy-sn')).toBeDisabled()
   await configure({ gate: false })
   await expect(page.getByTestId('firmware-check-result')).toHaveAttribute('data-status', 'latest')
   await expect(page.getByTestId('firmware-check-button')).toBeEnabled()
+  await expect(page.getByTestId('secure-check-button')).toBeEnabled()
+  await expect(page.locator('.exportBindCode')).toBeEnabled()
+  await expect(page.locator('.copy-sn')).toBeEnabled()
   expect(await count('device_secure_check')).toBe(0)
   expect(await count('device_sn_check')).toBe(0)
 })
 
-test('initial metadata failure retries device reads without starting a firmware check', async () => {
+test('initial metadata failure retries device reads and then checks firmware', async () => {
   await launch()
   const firmwareChecks = await count('cos_check_update')
   await configure({
@@ -329,8 +334,8 @@ test('initial metadata failure retries device reads without starting a firmware 
   await expect(dialog).not.toBeVisible()
   await expect(page.getByTestId('device-info-card')).toContainText('PAGE-SN-A')
   await expect(page.getByTestId('firmware-check-button')).toBeEnabled()
-  await expect(page.getByTestId('firmware-check-result')).toHaveCount(0)
-  expect(await count('cos_check_update')).toBe(firmwareChecks)
+  await expect(page.getByTestId('firmware-check-result')).toHaveAttribute('data-status', 'latest')
+  expect(await count('cos_check_update')).toBe(firmwareChecks + 1)
 })
 
 for (const gateMethod of ['device_connect', 'cos_check_update']) {
@@ -694,7 +699,6 @@ for (const changed of ['identity', 'binding'] as const) {
     await launch({ update: true })
     await verify()
     await devicePage()
-    await page.getByTestId('firmware-check-button').click()
     await expect(page.getByTestId('firmware-upgrade-button')).toBeEnabled()
     await tab(0)
     await devicePage()
@@ -745,7 +749,6 @@ for (const replaced of [false, true]) {
   test(`firmware retry after a failed rebind ${replaced ? 'rejects a replacement device' : 'requires reconnection before resuming the same unbound device'}`, async () => {
     await launch({ update: true })
     await devicePage()
-    await page.getByTestId('firmware-check-button').click()
     await expect(page.getByTestId('firmware-upgrade-button')).toBeEnabled()
     await configure({
       fault: { id: 'upgrade-rebind', method: 'bind_acquire', error: 'upgrade_rebind_failed' }
@@ -800,7 +803,6 @@ for (const replaced of [false, true]) {
 test('a temporary connection failure preserves the firmware upgrade action for a successful retry', async () => {
   await launch({ update: true })
   await devicePage()
-  await page.getByTestId('firmware-check-button').click()
   await expect(page.getByTestId('firmware-upgrade-button')).toBeEnabled()
   await configure({
     fault: { id: 'upgrade-connect', method: 'device_connect', error: 'device_not_connected' }
@@ -820,7 +822,6 @@ test('a temporary connection failure preserves the firmware upgrade action for a
 test('upgrade immediately opens a modal during preflight and blocks dismissal and background actions', async () => {
   await launch({ update: true })
   await devicePage()
-  await page.getByTestId('firmware-check-button').click()
   const button = page.getByTestId('firmware-upgrade-button')
   await expect(button).toBeEnabled()
   const connections = await count('device_connect')
@@ -858,7 +859,7 @@ test('upgrade immediately opens a modal during preflight and blocks dismissal an
   expect(await count('cos_update')).toBe(1)
 })
 
-test('Apps shares a firmware check with Device and reuses the same upgrade result on return', async () => {
+test('Apps reuses the displayed firmware check but does not start an available upgrade', async () => {
   await launch({ update: true })
   const checks = await count('cos_check_update')
   await tab(1)
@@ -878,9 +879,10 @@ test('Apps shares a firmware check with Device and reuses the same upgrade resul
     fault: { id: 'cached-app-upgrade', method: 'cos_update', error: 'cached_upgrade_started' }
   })
   await page.locator('.appItem a').last().click()
-  await expect(page.locator('.alert3')).toContainText('cached_upgrade_started')
-  expect(await count('app_download')).toBe(0)
-  expect(await count('cos_check_update')).toBe(checks + 1)
+  await expect(page.locator('.appItem .col')).toBeVisible()
+  expect(await count('app_download')).toBe(1)
+  expect(await count('cos_update')).toBe(0)
+  expect(await count('cos_check_update')).toBe(checks + 2)
   expect(await count('get_firmware_version')).toBe(reads)
 })
 
@@ -894,19 +896,18 @@ test('a Device firmware check is reused by Apps and remains current after instal
   await expect(page.locator('.appItem')).toHaveCount(1)
   await page.locator('.appItem a').last().click()
   await expect(page.locator('.appItem .col')).toBeVisible()
-  expect(await count('cos_check_update')).toBe(checks)
+  expect(await count('cos_check_update')).toBe(checks + 1)
   expect(await count('get_firmware_version')).toBe(versions)
   expect(await count('cos_update')).toBe(0)
   await devicePage()
   await expect(page.getByTestId('firmware-check-result')).toHaveAttribute('data-status', 'latest')
-  expect(await count('cos_check_update')).toBe(checks)
+  expect(await count('cos_check_update')).toBe(checks + 1)
   expect(await count('get_firmware_version')).toBe(versions)
 })
 
 test('opening Apps after a failed rebind requires connection recovery before home access', async () => {
   await launch({ update: true })
   await devicePage()
-  await page.getByTestId('firmware-check-button').click()
   await configure({
     fault: { id: 'app-entry-rebind', method: 'bind_acquire', error: 'upgrade_rebind_failed' }
   })
@@ -926,4 +927,46 @@ test('opening Apps after a failed rebind requires connection recovery before hom
   await devicePage()
   await checkFirmware()
   expect(await count('cos_update')).toBe(1)
+})
+
+test('returning after firmware cache expiry reads the current device version before checking', async () => {
+  await launch()
+  await devicePage()
+  await expect(page.getByTestId('firmware-check-result')).toHaveAttribute('data-status', 'latest')
+  const checks = await count('cos_check_update')
+  const reads = await count('get_firmware_version')
+  await page.clock.install()
+  await page.clock.fastForward(5 * 60 * 1000 + 1000)
+  await configure({ firmware: '2.0.0', latestFirmware: '3.0.0' })
+  await tab(0)
+  await devicePage()
+  await expect(page.locator('.device-info-primary > div').last()).toContainText('2.0.0')
+  await expect(page.getByTestId('firmware-check-result')).toHaveAttribute(
+    'data-status',
+    'available'
+  )
+  await expect(page.getByTestId('firmware-upgrade-button')).toBeEnabled()
+  expect(await count('cos_check_update')).toBe(checks + 1)
+  expect(await count('get_firmware_version')).toBe(reads + 1)
+  expect(await count('cos_update')).toBe(0)
+})
+
+test('a failed automatic check releases the controls and allows a retry', async () => {
+  await launch()
+  await configure({
+    fault: {
+      id: 'initial-firmware-error',
+      method: 'cos_check_update',
+      error: 'firmware_check_failed'
+    }
+  })
+  await tab(2)
+  await expect(page.locator('.alert3')).toContainText('firmware_check_failed')
+  await page.locator('.alert3 button').click()
+  await expect(page.getByTestId('firmware-check-result')).toHaveAttribute('data-status', 'failed')
+  await expect(page.getByTestId('firmware-check-button')).toBeEnabled()
+  await expect(page.getByTestId('secure-check-button')).toBeEnabled()
+  await expect(page.locator('.exportBindCode')).toBeEnabled()
+  await page.getByTestId('firmware-check-button').click()
+  await expect(page.getByTestId('firmware-check-result')).toHaveAttribute('data-status', 'latest')
 })

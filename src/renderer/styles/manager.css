@@ -13,11 +13,14 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  left: 35.42%;
-  top: 30.56%;
-  bottom: 42.78%;
-  width: 420px;
-  height: 225px;
+  transform: translate(-50%, -50%);
+  width: min(420px, calc(100vw - 48px));
+  height: auto;
+  min-height: 225px;
+  max-height: calc(100vh - 48px);
+  padding-bottom: 24px;
+  box-sizing: border-box;
+  overflow-y: auto;
   text-align: center;
 }
 
@@ -29,7 +32,7 @@
   bottom: auto;
   height: auto;
   min-height: 225px;
-  max-height: 65vh;
+  max-height: calc(100vh - 48px);
   padding-bottom: 24px;
   box-sizing: border-box;
   overflow-y: auto;
@@ -103,17 +106,18 @@
 
 .container :deep(.dioBox .box) {
   position: absolute;
-  left: 35.42%;
-  right: 35.42%;
-  top: 30.56%;
-  bottom: 45.33%;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(450px, calc(100vw - 48px));
+  min-height: 220px;
+  max-height: calc(100vh - 48px);
+  padding-bottom: 24px;
+  box-sizing: border-box;
+  overflow-y: auto;
   background: #fafbfc;
   border-radius: 12px;
   text-align: center;
-  /*width: 33%;*/
-  /*height: 30%;*/
-  width: 450px;
-  height: 220px;
 }
 
 .container :deep(.dioBox svg) {

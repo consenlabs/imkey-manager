@@ -152,8 +152,6 @@ for (const scenario of ['cos-success', 'cos-address-failure', 'ble-only']) {
   test(`${scenario === 'cos-success' ? 'e' : scenario === 'cos-address-failure' ? 'f' : 'g'} ${scenario} firmware flow`, async () => {
     await home(scenario)
     await settings()
-    await expect(page.getByTestId('firmware-upgrade-button')).toHaveCount(0)
-    await page.getByTestId('firmware-check-button').click()
     await expect(page.getByTestId('firmware-upgrade-button')).toBeVisible()
     const before = await calls()
     await page.getByTestId('firmware-upgrade-button').click()

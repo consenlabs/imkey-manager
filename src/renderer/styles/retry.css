@@ -39,7 +39,7 @@ button.retry-button.retry-inline {
   min-height: 288px;
   margin-top: 0;
   padding-bottom: 24px;
-  transform: translateY(-50%);
+  transform: translate(-50%, -50%);
 }
 .update-error-dialog :deep(.operation-error) {
   margin-right: 35px;

@@ -101,7 +101,7 @@ test('install immediately shows busy feedback while connection is pending and ig
   await configure({ gate: false })
   await expect(selected.locator('.col')).toBeVisible()
   const completed = (await calls()).slice(before)
-  expect(completed.filter(call => call.method === 'device_connect')).toHaveLength(1)
+  expect(completed.filter(call => call.method === 'device_connect')).toHaveLength(2)
   expect(completed.filter(call => call.method === 'app_download')).toEqual([
     { method: 'app_download', name: 'Nervos' }
   ])

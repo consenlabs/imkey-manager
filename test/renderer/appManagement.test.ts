@@ -6,6 +6,10 @@ import { appletView, filterApplets, toDeviceApplets } from '../../src/renderer/m
 import { useDeviceStore } from '../../src/renderer/store/device'
 
 const call = vi.hoisted(() => vi.fn<(method: string, params?: unknown) => Promise<DeviceResult>>())
+const recoverBeforeAppOperation = vi.hoisted(() =>
+  vi.fn<() => Promise<'ready' | 'recovered' | 'failed'>>()
+)
+const pendingRecoveryOptions = vi.hoisted(() => vi.fn<() => object | undefined>())
 const locale = vi.hoisted(() => ({ imkey: 'imKey 软件' }))
 vi.mock('../../src/renderer/composables/useDeviceRecovery', () => ({
   useDeviceRecovery: () => ({ offer: vi.fn(), returnToConnection: vi.fn() })
@@ -29,7 +33,10 @@ vi.mock('../../src/renderer/composables/useFirmwareUpgrade', () => ({
     state: { cosUpdateStatus: '0', bindCode: '' },
     checkFirmwareVersion: vi.fn(),
     ensureFirmwareVersion: vi.fn(),
-    updateFirmwareWithinOperation: vi.fn()
+    updateFirmwareWithinOperation: vi.fn(),
+    restoreCachedCheck: vi.fn(),
+    recoverBeforeAppOperation,
+    pendingRecoveryOptions
   })
 }))
 vi.mock('vue', async importOriginal => ({
@@ -39,6 +46,8 @@ vi.mock('vue', async importOriginal => ({
 
 beforeEach(() => {
   setActivePinia(createPinia())
+  recoverBeforeAppOperation.mockReset().mockResolvedValue('ready')
+  pendingRecoveryOptions.mockReset().mockReturnValue(undefined)
   call.mockReset()
   call.mockImplementation(async method => ({
     isSuccess: true,
@@ -136,5 +145,173 @@ describe('canonical app identity and presentation state', () => {
     expect(device.apps[0].name).toBe('IMK')
     await second.updateApp(second.apps.value[0])
     expect(call).toHaveBeenCalledWith('updateApplet', 'IMK')
+  })
+})
+
+describe('application operations and firmware recovery', () => {
+  it('continues the selected installation after completing firmware recovery', async () => {
+    const device = useDeviceStore()
+    device.apps = [catalog('Polkadot')]
+    recoverBeforeAppOperation.mockResolvedValue('recovered')
+    call.mockImplementation(async method => ({
+      isSuccess: true,
+      result:
+        method === 'checkUpdate'
+          ? { list: [{ name: 'Polkadot', installedVersion: null, latestVersion: '2.0', icon: '' }] }
+          : method === 'downloadApplet'
+            ? ['Polkadot']
+            : 'success'
+    }))
+    const manager = useAppManagement()
+    await manager.installApp(manager.apps.value[0])
+    expect(call.mock.calls.map(([method]) => method)).toEqual([
+      'checkUpdate',
+      'connectDevice',
+      'downloadApplet',
+      'writeWalletAddress'
+    ])
+    expect(call).toHaveBeenCalledWith('downloadApplet', 'Polkadot')
+    expect(device.apps[0].installedVersion).toBe('2.0')
+  })
+
+  it('continues the original installation after recovery fails and the user retries', async () => {
+    const device = useDeviceStore()
+    device.apps = [catalog('Polkadot')]
+    pendingRecoveryOptions.mockReturnValue({})
+    recoverBeforeAppOperation.mockResolvedValueOnce('failed').mockResolvedValueOnce('recovered')
+    call.mockImplementation(async method => ({
+      isSuccess: true,
+      result:
+        method === 'checkUpdate'
+          ? { list: [{ name: 'Polkadot', installedVersion: null, latestVersion: '2.0', icon: '' }] }
+          : method === 'downloadApplet'
+            ? ['Polkadot']
+            : 'success'
+    }))
+    const manager = useAppManagement()
+    await manager.installApp(manager.apps.value[0])
+    expect(call).not.toHaveBeenCalledWith('downloadApplet', 'Polkadot')
+    await manager.retryFirmwareRecovery()
+    expect(call).toHaveBeenCalledWith('downloadApplet', 'Polkadot')
+    expect(device.apps[0].installedVersion).toBe('2.0')
+  })
+
+  it('refreshes the app catalog after recovery when there is no pending app action', async () => {
+    const device = useDeviceStore()
+    device.apps = [catalog('Polkadot', '0.9')]
+    recoverBeforeAppOperation.mockResolvedValue('recovered')
+    call.mockImplementation(async method => ({
+      isSuccess: true,
+      result:
+        method === 'checkUpdate'
+          ? {
+              list: [{ name: 'Polkadot', installedVersion: '1.0', latestVersion: '1.0', icon: '' }]
+            }
+          : 'success'
+    }))
+    const manager = useAppManagement()
+    await manager.retryFirmwareRecovery()
+    expect(device.apps[0].installedVersion).toBe('1.0')
+    expect(call.mock.calls.map(([method]) => method)).toEqual(['checkUpdate'])
+  })
+  it('continues the installation after a recovery preflight error is retried', async () => {
+    const device = useDeviceStore()
+    device.apps = [catalog('Polkadot')]
+    pendingRecoveryOptions.mockReturnValue({})
+    recoverBeforeAppOperation
+      .mockRejectedValueOnce({ isSuccess: false, result: 'binding_code_file_missing' })
+      .mockResolvedValueOnce('recovered')
+    call.mockImplementation(async method => ({
+      isSuccess: true,
+      result:
+        method === 'checkUpdate'
+          ? { list: [{ name: 'Polkadot', installedVersion: null, latestVersion: '2.0', icon: '' }] }
+          : method === 'downloadApplet'
+            ? ['Polkadot']
+            : 'success'
+    }))
+    const manager = useAppManagement()
+    await manager.installApp(manager.apps.value[0])
+    expect(manager.state.errorInfo).toBe('binding_code_file_missing')
+    manager.ok()
+    await manager.retryFirmwareRecovery()
+    expect(call).toHaveBeenCalledWith('downloadApplet', 'Polkadot')
+    expect(device.apps[0].installedVersion).toBe('2.0')
+  })
+
+  it('retries the catalog before installing when the first post-recovery refresh failed', async () => {
+    const device = useDeviceStore()
+    device.apps = [catalog('Polkadot')]
+    recoverBeforeAppOperation.mockResolvedValueOnce('recovered').mockResolvedValueOnce('ready')
+    let catalogCalls = 0
+    call.mockImplementation(async method => {
+      if (method === 'checkUpdate') {
+        if (++catalogCalls === 1) return { isSuccess: false, result: 'catalog_unavailable' }
+        return {
+          isSuccess: true,
+          result: {
+            list: [{ name: 'Polkadot', installedVersion: null, latestVersion: '2.0', icon: '' }]
+          }
+        }
+      }
+      return { isSuccess: true, result: method === 'downloadApplet' ? ['Polkadot'] : 'success' }
+    })
+    const manager = useAppManagement()
+    await manager.installApp(manager.apps.value[0])
+    expect(manager.state.errorInfo).toBe('catalog_unavailable')
+    expect(call).not.toHaveBeenCalledWith('downloadApplet', 'Polkadot')
+    manager.ok()
+    await manager.installApp(manager.apps.value[0])
+    expect(catalogCalls).toBe(2)
+    expect(call).toHaveBeenCalledWith('downloadApplet', 'Polkadot')
+    expect(device.apps[0].installedVersion).toBe('2.0')
+  })
+
+  it('refreshes the catalog on page reentry if the post-recovery refresh failed', async () => {
+    const device = useDeviceStore()
+    device.apps = [catalog('Polkadot')]
+    device.isFirstGoToManagerPage = false
+    recoverBeforeAppOperation.mockResolvedValue('recovered')
+    let catalogCalls = 0
+    call.mockImplementation(async method => {
+      if (method === 'checkUpdate') {
+        if (++catalogCalls === 1) return { isSuccess: false, result: 'catalog_unavailable' }
+        return {
+          isSuccess: true,
+          result: {
+            list: [{ name: 'Polkadot', installedVersion: '1.0', latestVersion: '2.0', icon: '' }]
+          }
+        }
+      }
+      return { isSuccess: true, result: 'success' }
+    })
+    const first = useAppManagement()
+    await first.installApp(first.apps.value[0])
+    expect(first.state.errorInfo).toBe('catalog_unavailable')
+    const reopened = useAppManagement()
+    await reopened.init()
+    expect(catalogCalls).toBe(2)
+    expect(device.apps[0].installedVersion).toBe('1.0')
+    expect(call).not.toHaveBeenCalledWith('downloadApplet', 'Polkadot')
+  })
+
+  it('does not install an app when firmware recovery fails', async () => {
+    const device = useDeviceStore()
+    device.apps = [catalog('Polkadot')]
+    recoverBeforeAppOperation.mockResolvedValue('failed')
+    const manager = useAppManagement()
+    await manager.installApp(manager.apps.value[0])
+    expect(call).not.toHaveBeenCalledWith('downloadApplet', 'Polkadot')
+    expect(device.apps[0].installedVersion).toBeNull()
+  })
+
+  it('surfaces a failed recovery check without starting an app operation', async () => {
+    const device = useDeviceStore()
+    device.apps = [catalog('Polkadot')]
+    recoverBeforeAppOperation.mockRejectedValue({ isSuccess: false, result: 'check_failed' })
+    const manager = useAppManagement()
+    await manager.installApp(manager.apps.value[0])
+    expect(manager.state).toMatchObject({ tip: true, errorInfo: 'check_failed' })
+    expect(call).not.toHaveBeenCalledWith('downloadApplet', 'Polkadot')
   })
 })

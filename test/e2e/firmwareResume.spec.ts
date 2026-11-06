@@ -14,6 +14,7 @@ interface Control {
   seid?: string
   offer?: boolean
   failNativeApps?: boolean
+  failCosCheck?: boolean
   failBinding?: boolean
   failAddress?: boolean
   failBindingCheck?: boolean
@@ -25,6 +26,7 @@ interface Control {
   failCaptureRead?: 'once' | 'persistent' | false
   failWallet?: boolean
   postUpdateBinding?: string
+  extraApplet?: boolean
 }
 interface DeviceState {
   cosWritten: boolean
@@ -671,3 +673,105 @@ for (const recoveryPath of ['direct-retry', 'reopen'] as const) {
     expect((await calls()).filter(call => call.method === 'cos_update')).toHaveLength(1)
   })
 }
+
+for (const incomplete of [false, true]) {
+  test(`app installation ${incomplete ? 'resumes a pending upgrade first' : 'does not start an available upgrade'}`, async () => {
+    await launch({
+      mode: 'normal',
+      offer: true,
+      extraApplet: true,
+      initialCos: '1.9.11',
+      latestCos: '1.9.12'
+    })
+    await connect(true)
+    await expect(page.locator('.homeBox')).toBeVisible()
+    await page.locator('.routerBar li').nth(1).click()
+    const applet = page.locator('.appItem').filter({ hasText: 'Polkadot' })
+    await expect(applet.getByRole('link', { name: 'Install', exact: true })).toBeVisible()
+    if (incomplete) {
+      const file = path.join(directory, 'device-state.json')
+      const states = JSON.parse(await readFile(file, 'utf8'))
+      states.RESUMEDEVICEA.cosWritten = true
+      states.RESUMEDEVICEA.serverComplete = false
+      await writeFile(file, JSON.stringify(states))
+    }
+    const before = (await calls()).length
+    await applet.getByRole('link', { name: 'Install', exact: true }).click()
+    await expect(applet.locator('.col')).toBeVisible()
+    const methods = (await calls()).slice(before).map(call => call.method)
+    expect(methods.filter(method => method === 'cos_update')).toHaveLength(incomplete ? 1 : 0)
+    expect(methods).toContain('app_download')
+    if (incomplete)
+      expect(methods.indexOf('cos_update')).toBeLessThan(methods.indexOf('app_download'))
+  })
+}
+
+test('the recovery retry banner is hidden while firmware is updating and shown after a failure', async () => {
+  await launch({ mode: 'normal', extraApplet: true, initialCos: '1.9.11', latestCos: '1.9.12' })
+  await connect(true)
+  await expect(page.locator('.homeBox')).toBeVisible()
+  await page.locator('.routerBar li').nth(1).click()
+  const applet = page.locator('.appItem').filter({ hasText: 'Polkadot' })
+  await expect(applet.getByRole('link', { name: 'Install', exact: true })).toBeVisible()
+  const file = path.join(directory, 'device-state.json')
+  const states = JSON.parse(await readFile(file, 'utf8'))
+  states.RESUMEDEVICEA.cosWritten = true
+  states.RESUMEDEVICEA.serverComplete = false
+  await writeFile(file, JSON.stringify(states))
+  await configure({ failNativeApps: true, delayNativeMs: 2000 })
+  const banner = page.getByTestId('firmware-recovery-entry')
+  const progress = page.locator('dialog.firmware-progress-dialog')
+  await applet.getByRole('link', { name: 'Install', exact: true }).click()
+  await expect(progress).toBeVisible()
+  await expect(banner).toHaveCount(0)
+  await expect(page.locator('.alert3')).toBeVisible()
+  await expect(banner).toHaveCount(0)
+  await page.locator('.alert3 button').click()
+  await expect(banner).toBeVisible()
+  await configure({ failNativeApps: false, failCosCheck: true })
+  await banner.getByRole('button').click()
+  await expect(page.locator('.dioBox')).toContainText('firmware_check_unavailable')
+  await expect(banner).toHaveCount(0)
+  await page.locator('.dioBox button').click()
+  await expect(banner).toBeVisible()
+  expect((await calls()).filter(call => call.method === 'app_download')).toHaveLength(0)
+  await configure({ failCosCheck: false })
+  await banner.getByRole('button').click()
+  await expect(progress).toBeVisible()
+  await expect(banner).toHaveCount(0)
+  await expect(progress).toHaveCount(0)
+  await expect(banner).toHaveCount(0)
+  await expect(applet.locator('.col')).toBeVisible()
+  const resumed = (await calls()).map(call => call.method)
+  expect(resumed.filter(method => method === 'app_download')).toHaveLength(1)
+  expect(resumed.lastIndexOf('check_update')).toBeLessThan(resumed.indexOf('app_download'))
+})
+
+test('a bound device with a missing local binding code cannot start native recovery', async () => {
+  await launch({ mode: 'normal', extraApplet: true })
+  await connect(true)
+  await expect(page.locator('.homeBox')).toBeVisible()
+  await page.locator('.routerBar li').nth(1).click()
+  const applet = page.locator('.appItem').filter({ hasText: 'Polkadot' })
+  await expect(applet.getByRole('link', { name: 'Install', exact: true })).toBeVisible()
+  const file = path.join(directory, 'device-state.json')
+  const states = JSON.parse(await readFile(file, 'utf8'))
+  states.RESUMEDEVICEA.cosWritten = true
+  states.RESUMEDEVICEA.serverComplete = false
+  await writeFile(file, JSON.stringify(states))
+  await rm(path.join(directory, 'RESUMEDEVICEAbindCode.json'))
+  const before = (await calls()).length
+  await applet.getByRole('link', { name: 'Install', exact: true }).click()
+  await expect(page.locator('.dioBox')).toBeVisible()
+  const attempted = (await calls()).slice(before).map(call => call.method)
+  expect(attempted).toContain('bind_check')
+  expect(attempted).not.toContain('cos_update')
+  expect(attempted).not.toContain('app_download')
+  await page.evaluate(() => window.imkey.device.call('importBindCode', 'A2345678'))
+  await page.locator('.dioBox button').click()
+  const banner = page.getByTestId('firmware-recovery-entry')
+  await expect(banner).toBeVisible()
+  await banner.getByRole('button').click()
+  await expect(applet.locator('.col')).toBeVisible()
+  expect((await calls()).filter(call => call.method === 'app_download')).toHaveLength(1)
+})

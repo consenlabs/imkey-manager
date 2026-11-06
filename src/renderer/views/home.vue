@@ -126,7 +126,7 @@
           </p>
           <UpdateReleaseNotes :notes="softUpdateInfo" />
 
-          <div class="view_button" style="display: inline-block; float: left">
+          <div class="update-actions">
             <button class="later" @click="later">{{ $t('m.imKeyManager.update_later') }}</button>
             <button
               class="updateNow"
@@ -289,12 +289,26 @@ hover {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 500px;
-  height: 288px;
-  margin-left: -250px;
-  margin-top: -144px;
+  width: min(500px, calc(100vw - 48px));
+  min-height: 288px;
+  max-height: calc(100vh - 48px);
+  padding-bottom: 24px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  display: flow-root;
+  transform: translate(-50%, -50%);
   background: #fafbfc;
   border-radius: 12px;
+}
+.status4AlertBox .update-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin: 30px 35px 0;
+}
+.status4AlertBox .update-actions .later,
+.status4AlertBox .update-actions .updateNow {
+  margin: 0;
 }
 .status4AlertBox h4,
 .status5AlertBox h4 {

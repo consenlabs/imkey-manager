@@ -246,10 +246,16 @@ hover {
   border-radius: 50%;
 }
 
-.tip1 .tipBox {
+.tip1 .tipBox,
+.tip3 .tipBox3 {
+  top: 50%;
   height: auto;
   min-height: 217px;
+  max-height: calc(100vh - 48px);
+  margin-top: 0;
   padding-bottom: 26px;
+  overflow-y: auto;
+  transform: translateY(-50%);
 }
 
 .tip4 span {

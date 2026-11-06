@@ -11,6 +11,7 @@ defineProps<{
   firmwareCheckFailed?: boolean
   identityChecking?: boolean
   initializing?: boolean
+  autoChecking?: boolean
   upgrading?: boolean
 }>()
 const emit = defineEmits<{
@@ -58,7 +59,7 @@ const emit = defineEmits<{
             "
             type="button"
             data-testid="firmware-upgrade-button"
-            :disabled="identityChecking || upgrading"
+            :disabled="autoChecking || identityChecking || upgrading"
             :aria-busy="Boolean(upgrading)"
             @click="emit('isShowalert')"
           >
@@ -69,7 +70,9 @@ const emit = defineEmits<{
             v-else
             type="button"
             data-testid="firmware-check-button"
-            :disabled="checkingUpdate || initializing || identityChecking || upgrading"
+            :disabled="
+              checkingUpdate || initializing || autoChecking || identityChecking || upgrading
+            "
             :aria-busy="Boolean(checkingUpdate)"
             @click="emit('checkUpdate')"
           >
@@ -96,7 +99,7 @@ const emit = defineEmits<{
                   class="copy-sn el-icon-copy-document"
                   type="button"
                   :aria-label="$t('m.devicePages.copy_serial_number')"
-                  :disabled="!SN || initializing || identityChecking || upgrading"
+                  :disabled="!SN || initializing || autoChecking || identityChecking || upgrading"
                   @click="emit('copyText')"
                 >
                   <img :src="copyIcon" alt="" />
@@ -116,7 +119,7 @@ const emit = defineEmits<{
               <button
                 class="exportBindCode"
                 type="button"
-                :disabled="initializing || identityChecking || upgrading"
+                :disabled="initializing || autoChecking || identityChecking || upgrading"
                 @click="emit('exportBindCode')"
               >
                 {{ $t('m.devicePages.export_binding_code') }}

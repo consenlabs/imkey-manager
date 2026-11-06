@@ -27,6 +27,9 @@ interface PendingAddressRestore {
 }
 // Keep completed downloads across page visits, but never reuse them for another device.
 const addressRestores = new WeakMap<object, Map<string, PendingAddressRestore>>()
+// A completed firmware recovery may have reinstalled applications. Keep this
+// marker until the refreshed catalog succeeds, even across page visits.
+const recoveryCatalogRefresh = new WeakMap<object, number>()
 
 export function useAppManagement() {
   const device = useDeviceStore()
@@ -38,6 +41,7 @@ export function useAppManagement() {
   const firmware = useFirmwareUpgrade('manager', scope)
   const state = reactive({ tip: false, appName: '', errorInfo: '', errorStage: '' })
   const operations = reactive<Record<string, AppOperation | undefined>>({})
+  let pendingFirmwareAction: { sessionId: number; resume: () => Promise<unknown> } | undefined
   let pendingRestores = addressRestores.get(device)
   if (!pendingRestores) {
     pendingRestores = reactive(new Map<string, PendingAddressRestore>())
@@ -48,7 +52,11 @@ export function useAppManagement() {
     if (pending.sessionId !== device.sessionId) restores.delete(id)
   watch(
     () => device.sessionId,
-    () => restores.clear(),
+    () => {
+      restores.clear()
+      pendingFirmwareAction = undefined
+      recoveryCatalogRefresh.delete(device)
+    },
     { flush: 'sync' }
   )
   function pendingRestore(id: string) {
@@ -106,6 +114,7 @@ export function useAppManagement() {
     if (!current()) return false
     if (!response.isSuccess) return fail(response, 'app')
     device.apps = toDeviceApplets(response.result.list)
+    recoveryCatalogRefresh.delete(device)
     await firmware.ensureFirmwareVersion(current)
     return current()
   }
@@ -123,7 +132,11 @@ export function useAppManagement() {
         firmware.restoreCachedCheck()
         return
       }
-      if (device.isFirstGoToManagerPage || device.apps.length === 0) {
+      if (
+        device.isFirstGoToManagerPage ||
+        device.apps.length === 0 ||
+        recoveryCatalogRefresh.get(device) === sessionId
+      ) {
         if (await getAppsList(current)) device.isFirstGoToManagerPage = false
       } else await firmware.ensureFirmwareVersion(current)
     } catch (error) {
@@ -137,15 +150,32 @@ export function useAppManagement() {
     item: AppletView,
     operation: 'install' | 'update'
   ): Promise<void> {
-    const target = device.apps.find(entry => entry.id === item.id)
+    let target = device.apps.find(entry => entry.id === item.id)
     if (!target) return
     const sessionId = device.sessionId
     const current = () => scope.active() && device.sessionId === sessionId
     const retry = () => changeApp(item, operation)
     try {
-      if (firmware.state.cosUpdateStatus === '1' && !pendingRestore(item.id)) {
-        await firmware.updateFirmwareWithinOperation()
+      const recoveryResult = await firmware.recoverBeforeAppOperation(error =>
+        fail(error, 'connect', false, retry)
+      )
+      if (recoveryResult === 'failed') {
+        if (current() && firmware.pendingRecoveryOptions?.())
+          pendingFirmwareAction = { sessionId, resume: retry }
         return
+      }
+      if (!current()) return
+      pendingFirmwareAction = undefined
+      if (recoveryResult === 'recovered') recoveryCatalogRefresh.set(device, sessionId)
+      if (recoveryCatalogRefresh.get(device) === sessionId) {
+        const catalog = await call('checkUpdate')
+        if (!current()) return
+        if (!catalog.isSuccess) return fail(catalog, 'app', false, retry)
+        device.apps = toDeviceApplets(catalog.result.list)
+        recoveryCatalogRefresh.delete(device)
+        device.isFirstGoToManagerPage = false
+        target = device.apps.find(entry => entry.id === item.id)
+        if (!target) return fail('imkey_app_name_not_exist', 'app', false, retry)
       }
       const connected = await refreshDeviceIdentity(call, device, scope.active, {
         hideCachedData: false
@@ -157,7 +187,7 @@ export function useAppManagement() {
         const catalog = await call('checkUpdate')
         if (!current()) return
         if (!catalog.isSuccess) return fail(catalog, 'restore', false, retry)
-        const installed = catalog.result.list.find(entry => entry.name === target.name)
+        const installed = catalog.result.list.find(entry => entry.name === item.name)
         if (installed?.installedVersion !== pending.version) {
           restores.delete(item.id)
           return fail('device_session_restart_required', 'restore', true)
@@ -200,7 +230,13 @@ export function useAppManagement() {
       target.installedVersion = pending.version
       restores.delete(item.id)
     } catch (error) {
-      if (current()) fail(error, pendingRestore(item.id) ? 'restore' : 'app', false, retry)
+      if (current()) {
+        if (firmware.pendingRecoveryOptions?.()) {
+          pendingFirmwareAction = { sessionId, resume: retry }
+          firmware.restoreCachedCheck?.()
+        }
+        fail(error, pendingRestore(item.id) ? 'restore' : 'app', false, retry)
+      }
     }
   }
   async function changeApp(item: AppletView, operation: 'install' | 'update'): Promise<void> {
@@ -221,15 +257,32 @@ export function useAppManagement() {
     return changeApp(item, 'update')
   }
   async function deleteWithinOperation(item: AppletView): Promise<void> {
-    const target = device.apps.find(entry => entry.id === item.id)
+    let target = device.apps.find(entry => entry.id === item.id)
     if (!target) return
     const sessionId = device.sessionId
     const current = () => scope.active() && device.sessionId === sessionId
     const retry = () => scope.run(() => deleteWithinOperation(item))
     try {
-      if (firmware.state.cosUpdateStatus === '1') {
-        await firmware.updateFirmwareWithinOperation()
+      const recoveryResult = await firmware.recoverBeforeAppOperation(error =>
+        fail(error, 'connect', false, retry)
+      )
+      if (recoveryResult === 'failed') {
+        if (current() && firmware.pendingRecoveryOptions?.())
+          pendingFirmwareAction = { sessionId, resume: retry }
         return
+      }
+      if (!current()) return
+      pendingFirmwareAction = undefined
+      if (recoveryResult === 'recovered') recoveryCatalogRefresh.set(device, sessionId)
+      if (recoveryCatalogRefresh.get(device) === sessionId) {
+        const catalog = await call('checkUpdate')
+        if (!current()) return
+        if (!catalog.isSuccess) return fail(catalog, 'app', false, retry)
+        device.apps = toDeviceApplets(catalog.result.list)
+        recoveryCatalogRefresh.delete(device)
+        device.isFirstGoToManagerPage = false
+        target = device.apps.find(entry => entry.id === item.id)
+        if (!target) return fail('imkey_app_name_not_exist', 'app', false, retry)
       }
       const connected = await refreshDeviceIdentity(call, device, scope.active, {
         hideCachedData: false
@@ -243,16 +296,60 @@ export function useAppManagement() {
         return fail(result, 'app', false, retry)
       if (current()) target.installedVersion = null
     } catch (error) {
-      if (current()) fail(error, 'app', false, retry)
+      if (current()) {
+        if (firmware.pendingRecoveryOptions?.()) {
+          pendingFirmwareAction = { sessionId, resume: retry }
+          firmware.restoreCachedCheck?.()
+        }
+        fail(error, 'app', false, retry)
+      }
     } finally {
-      delete operations[target.id]
+      delete operations[item.id]
     }
   }
   function deleteApp(item: AppletView) {
     return scope.run(() => deleteWithinOperation(item))
   }
+  async function retryFirmwareRecovery(): Promise<unknown> {
+    const pending = pendingFirmwareAction
+    if (pending && pending.sessionId === device.sessionId) return pending.resume()
+    pendingFirmwareAction = undefined
+    return scope.run(async () => {
+      const sessionId = device.sessionId
+      const current = () => scope.active() && device.sessionId === sessionId
+      try {
+        const result = await firmware.recoverBeforeAppOperation(error =>
+          fail(error, 'connect', false, retryFirmwareRecovery)
+        )
+        if (result !== 'recovered' || !current()) return
+        recoveryCatalogRefresh.set(device, sessionId)
+        const catalog = await call('checkUpdate')
+        if (!current()) return
+        if (!catalog.isSuccess) return fail(catalog, 'app', false, init)
+        device.apps = toDeviceApplets(catalog.result.list)
+        recoveryCatalogRefresh.delete(device)
+        device.isFirstGoToManagerPage = false
+      } catch (error) {
+        if (current()) {
+          if (firmware.pendingRecoveryOptions?.()) firmware.restoreCachedCheck?.()
+          fail(error, 'app', false, retryFirmwareRecovery)
+        }
+      }
+    }, 'firmwareRecovery')
+  }
   onMounted(() => {
     void init()
   })
-  return { state, apps, firmware, getApps, ok, init, installApp, updateApp, deleteApp }
+  return {
+    state,
+    apps,
+    firmware,
+    getApps,
+    ok,
+    init,
+    installApp,
+    updateApp,
+    deleteApp,
+    retryFirmwareRecovery
+  }
 }

@@ -13,6 +13,7 @@ import {
 } from './firmwareCache'
 import {
   runFirmwareRecovery,
+  loadFirmwareRecovery,
   validateFirmwareResume,
   firmwareRecoveryRequiresBinding,
   type FirmwareRecovery
@@ -177,10 +178,13 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
   }
   async function checkFirmwareVersion(
     onVersion?: () => void,
-    isCurrent: () => boolean = operation.active
+    isCurrent: () => boolean = operation.active,
+    knownFirmwareVersion?: string
   ) {
     state.errorInfo = ''
-    const version = await callDevice('getFirmwareVersion')
+    const version = knownFirmwareVersion
+      ? { isSuccess: true as const, result: knownFirmwareVersion }
+      : await callDevice('getFirmwareVersion')
     if (!operation.active() || !isCurrent()) return
     if (!version.isSuccess) return failedCheck(version)
     state.cosOldVersionData = version.result
@@ -365,6 +369,119 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
       state.busy = false
     }
   }
+  // App operations may resume an interrupted upgrade, but must never start one
+  // solely because a newer release is available.
+  async function recoverBeforeAppOperation(
+    onConnectionFailure?: (error: unknown) => void
+  ): Promise<'ready' | 'recovered' | 'failed'> {
+    if (state.busy || !operation.active()) return 'failed'
+    const sessionId = device.sessionId
+    const current = () => operation.active() && device.sessionId === sessionId
+    try {
+      const connected = await refreshDeviceIdentity(callDevice, device, operation.active, {
+        hideCachedData: false,
+        firmwareRecovery: true,
+        requireBinding: false
+      })
+      if (!connected.isSuccess) {
+        if (connected.code === 'OPERATION_CANCELLED' || !operation.active()) return 'failed'
+        if (onConnectionFailure) {
+          onConnectionFailure(connected)
+          return 'failed'
+        }
+        throw connected
+      }
+      if (!current()) return 'failed'
+      const bootloader = await callDevice('isBLStatus')
+      if (!current()) return 'failed'
+      if (!bootloader.isSuccess) {
+        throw bootloader
+      }
+      const saved = await loadFirmwareRecovery(callDevice, device.connectedSeid)
+      if (!current()) return 'failed'
+      if (!saved.isSuccess) {
+        throw saved
+      }
+      let nativeIncomplete = bootloader.result
+      if (!nativeIncomplete) {
+        const status = await callDevice('cosCheckUpdate')
+        if (!current()) return 'failed'
+        if (!status.isSuccess) {
+          throw status
+        }
+        if (typeof status.result.isUpdateSuccess !== 'boolean') {
+          throw 'invalid_firmware_response'
+        }
+        nativeIncomplete = !status.result.isUpdateSuccess
+      }
+      let attempt = savedAttempt()
+      if (!nativeIncomplete && !saved.result && !attempt) return 'ready'
+      if (!attempt) {
+        attempt = {
+          sessionId,
+          data: upgradeData(),
+          recovery: saved.result || {
+            seid: device.connectedSeid,
+            phase: 'update',
+            bindCode: '',
+            needsBinding: true,
+            expectedCos: '',
+            expectedBle: ''
+          }
+        }
+        attempts.set(device, attempt)
+      }
+      // A checkpoint written immediately before the native call cannot prove
+      // that an upgrade started when the server reports no pending transaction.
+      // Do not issue cosUpdate in this ambiguous case.
+      if (!nativeIncomplete && attempt.recovery.phase === 'update') {
+        throw 'firmware_recovery_not_ready'
+      }
+      if (nativeIncomplete && attempt.recovery.phase !== 'update') {
+        attempt.recovery.phase = 'update'
+        attempt.recovery.expectedCos = ''
+        attempt.recovery.expectedBle = ''
+      }
+      if (nativeIncomplete && !bootloader.result && !attempt.recovery.bindCode) {
+        // If the device is still bound, secure the local recovery code before
+        // a native call can change that binding. Bootloader recovery cannot
+        // necessarily read the normal binding state and retains its old path.
+        const binding = await callDevice('deviceBindCheck')
+        if (!current()) return 'failed'
+        if (!binding.isSuccess) throw binding
+        if (binding.result === 'bound_this') {
+          const code = await callDevice('exportBindCode')
+          if (!current()) return 'failed'
+          if (!code.isSuccess) throw code
+          const confirmed = await refreshDeviceIdentity(callDevice, device, operation.active, {
+            hideCachedData: false,
+            firmwareRecovery: true,
+            requireBinding: true
+          })
+          if (!confirmed.isSuccess) {
+            if (confirmed.code === 'OPERATION_CANCELLED' || !operation.active()) return 'failed'
+            if (onConnectionFailure) {
+              onConnectionFailure(confirmed)
+              return 'failed'
+            }
+            throw confirmed
+          }
+          if (!current()) return 'failed'
+          attempt.recovery.bindCode = code.result
+          attempt.data.bindCode = code.result
+        } else if (binding.result !== 'unbound') {
+          throw 'device_bind_check_failed'
+        }
+      }
+      await updateFirmwareWithinOperation()
+      if (!current() || state.supportCode !== 2) return 'failed'
+      state.supportCode = 0
+      return 'recovered'
+    } catch (error) {
+      if (current()) throw error
+      return 'failed'
+    }
+  }
   async function updateFirmware() {
     if (state.busy || !operation.active()) return
     beginFeedback()
@@ -387,6 +504,7 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
     checkFirmwareVersion,
     ensureFirmwareVersion,
     restoreCachedCheck,
+    recoverBeforeAppOperation,
     updateFirmware,
     updateFirmwareWithinOperation,
     isShowalert

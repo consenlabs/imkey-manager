@@ -1009,3 +1009,131 @@ it('retries a BLE-only final-check failure by promoting lost binding without ref
   expect(firmware.state).toMatchObject({ phase: 'complete', supportCode: 2 })
   expect(device.canEnterHome).toBe(true)
 })
+
+it('does not start an upgrade for an available release when no recovery is pending', async () => {
+  const { firmware } = setup('manager')
+  mocks.call.mockImplementation(async method => {
+    if (method === 'getFirmwareRecovery') return { isSuccess: true, result: null }
+    if (method === 'cosCheckUpdate')
+      return {
+        isSuccess: true,
+        result: { isUpdateSuccess: true, latestCosVersion: '1.9.12', latestBleVersion: '2.1.0' }
+      }
+    return response(method)
+  })
+  expect(await firmware.recoverBeforeAppOperation()).toBe('ready')
+  expect(methods()).toContain('cosCheckUpdate')
+  expect(methods()).not.toContain('cosUpdate')
+})
+
+it('resumes an incomplete native transaction before an app operation', async () => {
+  const { firmware } = setup('manager')
+  let complete = false
+  mocks.call.mockImplementation(async method => {
+    if (method === 'getFirmwareRecovery') return { isSuccess: true, result: null }
+    if (method === 'cosCheckUpdate')
+      return {
+        isSuccess: true,
+        result: { isUpdateSuccess: complete, latestCosVersion: '1.9.12', latestBleVersion: '2.1.0' }
+      }
+    if (method === 'cosUpdate') complete = true
+    return response(method)
+  })
+  expect(await firmware.recoverBeforeAppOperation()).toBe('recovered')
+  expect(methods().filter(method => method === 'cosUpdate')).toHaveLength(1)
+  expect(firmware.state.supportCode).toBe(0)
+})
+
+it('does not start an ambiguous checkpoint when the server reports no incomplete update', async () => {
+  const { firmware } = setup('manager')
+  mocks.call.mockImplementation(async method => {
+    if (method === 'getFirmwareRecovery')
+      return {
+        isSuccess: true,
+        result: {
+          version: 1,
+          seid,
+          phase: 'update',
+          needsBinding: true,
+          expectedCos: '',
+          expectedBle: ''
+        }
+      }
+    return response(method)
+  })
+  await expect(firmware.recoverBeforeAppOperation()).rejects.toBe('firmware_recovery_not_ready')
+  expect(firmware.pendingRecoveryOptions()).toBeDefined()
+  await expect(firmware.recoverBeforeAppOperation()).rejects.toBe('firmware_recovery_not_ready')
+  expect(methods()).not.toContain('cosUpdate')
+})
+
+it('does not resume a native update on a bound device when its local binding code is unavailable', async () => {
+  const { firmware } = setup('manager')
+  mocks.call.mockImplementation(async method => {
+    if (method === 'getFirmwareRecovery') return { isSuccess: true, result: null }
+    if (method === 'cosCheckUpdate')
+      return {
+        isSuccess: true,
+        result: { isUpdateSuccess: false, latestCosVersion: '1.9.12', latestBleVersion: '2.1.0' }
+      }
+    if (method === 'exportBindCode')
+      return { isSuccess: false, result: 'binding_code_file_missing' }
+    return response(method)
+  })
+  await expect(firmware.recoverBeforeAppOperation()).rejects.toMatchObject({
+    result: 'binding_code_file_missing'
+  })
+  expect(methods()).toContain('deviceBindCheck')
+  expect(methods()).toContain('exportBindCode')
+  expect(methods()).not.toContain('cosUpdate')
+})
+
+it('does not resume a native update if identity changes while reading the binding code', async () => {
+  const { firmware } = setup('manager')
+  mocks.call.mockImplementation(async method => {
+    if (method === 'getFirmwareRecovery') return { isSuccess: true, result: null }
+    if (method === 'cosCheckUpdate')
+      return {
+        isSuccess: true,
+        result: { isUpdateSuccess: false, latestCosVersion: '1.9.12', latestBleVersion: '2.1.0' }
+      }
+    if (method === 'exportBindCode') seid = 'SEID-B'
+    return response(method)
+  })
+  const failure = vi.fn()
+  expect(await firmware.recoverBeforeAppOperation(failure)).toBe('failed')
+  expect(failure).toHaveBeenCalledWith(
+    expect.objectContaining({ result: 'device_session_changed' })
+  )
+  expect(methods()).not.toContain('cosUpdate')
+})
+
+it.each(['bootloader', 'unbound'] as const)(
+  'continues native recovery when the device is already in %s mode',
+  async mode => {
+    const { firmware } = setup('manager')
+    bootloader = mode === 'bootloader'
+    if (mode === 'unbound') binding = 'unbound'
+    let complete = false
+    mocks.call.mockImplementation(async method => {
+      if (method === 'getFirmwareRecovery') return { isSuccess: true, result: null }
+      if (method === 'cosCheckUpdate')
+        return {
+          isSuccess: true,
+          result: {
+            isUpdateSuccess: complete,
+            latestCosVersion: '1.9.12',
+            latestBleVersion: '2.1.0'
+          }
+        }
+      if (method === 'cosUpdate') {
+        complete = true
+        bootloader = false
+      }
+      return response(method)
+    })
+    expect(await firmware.recoverBeforeAppOperation()).toBe('recovered')
+    expect(methods()).toContain('cosUpdate')
+    expect(methods().indexOf('exportBindCode')).toBeGreaterThan(methods().indexOf('cosUpdate'))
+  }
+)

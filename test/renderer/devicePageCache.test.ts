@@ -63,7 +63,7 @@ beforeEach(() => {
 })
 afterEach(() => vi.unstubAllGlobals())
 
-it('reads device information once and restores it synchronously without any calls on reentry', async () => {
+it('checks firmware on first entry and restores the result without calls on reentry', async () => {
   const first = useSettings()
   await first.init()
   expect(first.state.status).toBe(1)
@@ -71,10 +71,10 @@ it('reads device information once and restores it synchronously without any call
     seid: 'SEID-A',
     sn: 'SN-SEID-A',
     updateAvailable: false,
-    firmwareChecked: false
+    firmwareChecked: true
   })
-  expect(count('cosCheckUpdate')).toBe(0)
-  expect(first.state.firmwareChecked).toBe(false)
+  expect(count('cosCheckUpdate')).toBe(1)
+  expect(first.state.firmwareChecked).toBe(true)
   expect(count('getSn')).toBe(1)
   const callsBeforeReentry = mocks.call.mock.calls.length
   const second = useSettings()
@@ -85,12 +85,12 @@ it('reads device information once and restores it synchronously without any call
   expect(mocks.call).toHaveBeenCalledTimes(callsBeforeReentry)
   expect(second.state.SN).toBe('SN-SEID-A')
   expect(second.firmware.state.cosOldVersionData).toBe('1.0.0')
-  expect(count('cosCheckUpdate')).toBe(0)
-  expect(second.state.firmwareChecked).toBe(false)
+  expect(count('cosCheckUpdate')).toBe(1)
+  expect(second.state.firmwareChecked).toBe(true)
   expect(count('getFirmwareVersion')).toBe(1)
   expect(count('getBleVersion')).toBe(1)
   expect(count('getSn')).toBe(1)
-  expect(mocks.online).not.toHaveBeenCalled()
+  expect(mocks.online).toHaveBeenCalledOnce()
   expect(count('checkDevice')).toBe(0)
   expect(count('deviceSnCheck')).toBe(0)
   expect(count('exportBindCode')).toBe(0)
@@ -101,12 +101,13 @@ it('reads and reuses device information while offline without contacting the upd
   const first = useSettings()
   await first.init()
   expect(first.state.SN).toBe('SN-SEID-A')
-  expect(first.state.firmwareChecked).toBe(false)
+  expect(first.state.firmwareChecked).toBe(true)
+  expect(first.firmware.state.cosUpdateStatus).toBe('2')
   const second = useSettings()
   await second.init()
   expect(second.state.status).toBe(1)
   expect(count('cosCheckUpdate')).toBe(0)
-  expect(mocks.online).not.toHaveBeenCalled()
+  expect(mocks.online).toHaveBeenCalledOnce()
 })
 
 it.each(['identity-not-ready', 'different-seid', 'new-session'])(
@@ -220,7 +221,7 @@ it('manually refreshes firmware information while preserving verification metada
   expect(settings.state.checkingUpdate).toBe(true)
   await refreshing
   expect(settings.state.checkingUpdate).toBe(false)
-  expect(count('cosCheckUpdate')).toBe(1)
+  expect(count('cosCheckUpdate')).toBe(2)
   expect(settings.state.firmwareChecked).toBe(true)
   expect(settings.firmware.state.isCosUpdate).toBe(true)
   expect(useDeviceStore().deviceInfo?.latestFirmwareVersion).toBe('1.1.0')
@@ -241,9 +242,9 @@ it.each(['firmware', 'ble'] as const)(
     }
     const second = useSettings()
     await second.init()
-    expect(count('cosCheckUpdate')).toBe(1)
-    expect(second.state.firmwareChecked).toBe(false)
-    expect(useDeviceStore().deviceInfo?.firmwareChecked).toBe(false)
+    expect(count('cosCheckUpdate')).toBe(3)
+    expect(second.state.firmwareChecked).toBe(true)
+    expect(useDeviceStore().deviceInfo?.firmwareChecked).toBe(true)
     expect(useDeviceStore().deviceInfo?.firmwareVersion).toBe(firmwareVersion)
     expect(useDeviceStore().deviceInfo?.bleVersion).toBe(bleVersion)
   }
@@ -280,7 +281,7 @@ it('shows cached information on reentry and detects a replacement only on an exp
   expect(useDeviceStore().deviceInfo).toBeNull()
   expect(useDeviceStore().verification.status).toBe('idle')
   expect(second.state.firmwareChecked).toBe(false)
-  expect(count('cosCheckUpdate')).toBe(1)
+  expect(count('cosCheckUpdate')).toBe(2)
   expect(mocks.offer).toHaveBeenLastCalledWith(expect.anything(), expect.any(Function), {
     reconnectOnly: true
   })
@@ -296,9 +297,8 @@ it('does not cache failed update checks and allows a later successful retry to p
   )
   const settings = useSettings()
   await settings.init()
-  expect(settings.state.firmwareChecked).toBe(false)
-  await settings.checkUpdate()
   expect(settings.state.firmwareChecked).toBe(true)
+  expect(settings.firmware.state.cosUpdateStatus).toBe('2')
   expect(useDeviceStore().deviceInfo).toMatchObject({
     seid: 'SEID-A',
     firmwareChecked: false,
@@ -537,9 +537,9 @@ it('keeps partially read information after an initial metadata failure and offer
   await mocks.offer.mock.calls[0][1]()
   expect(settings.state.SN).toBe('SN-SEID-A')
   expect(settings.state.errorInfo).toBe('')
-  expect(settings.state.firmwareChecked).toBe(false)
-  expect(count('cosCheckUpdate')).toBe(0)
-  expect(mocks.online).not.toHaveBeenCalled()
+  expect(settings.state.firmwareChecked).toBe(true)
+  expect(count('cosCheckUpdate')).toBe(1)
+  expect(mocks.online).toHaveBeenCalledOnce()
 })
 
 it('preserves a software update notice arriving during the initial device check', async () => {
@@ -666,7 +666,7 @@ it.each([false, true])(
   async updateAvailable => {
     const first = useSettings()
     await first.init()
-    expect(first.state.firmwareChecked).toBe(false)
+    expect(first.state.firmwareChecked).toBe(true)
     if (updateAvailable) latestFirmware = '1.1.0'
     await first.checkUpdate()
     expect(first.state.firmwareChecked).toBe(true)
@@ -684,9 +684,76 @@ it.each([false, true])(
     expect(second.state.firmwareChecked).toBe(true)
     expect(second.firmware.state.isCosUpdate).toBe(updateAvailable)
     expect(second.firmware.state.cosNewVersionData).toBe(latestFirmware)
-    expect(count('cosCheckUpdate')).toBe(1)
-    expect(mocks.online).toHaveBeenCalledOnce()
+    expect(count('cosCheckUpdate')).toBe(2)
+    expect(mocks.online).toHaveBeenCalledTimes(2)
     const entryRequests = mocks.call.mock.calls.slice(requestsBeforeEntry).map(([method]) => method)
     expect(entryRequests).toEqual([])
   }
 )
+
+it.each(['cos', 'ble'] as const)(
+  'automatically reports an available %s update and reuses it across visits',
+  async kind => {
+    if (kind === 'cos') latestFirmware = '1.1.0'
+    else latestBle = '2.1.0'
+    const first = useSettings()
+    await first.init()
+    expect(first.state.firmwareChecked).toBe(true)
+    expect(first.firmware.state.isCosUpdate).toBe(true)
+    expect(count('cosCheckUpdate')).toBe(1)
+    expect(count('cosUpdate')).toBe(0)
+    const second = useSettings()
+    await second.init()
+    expect(second.firmware.state.isCosUpdate).toBe(true)
+    expect(count('cosCheckUpdate')).toBe(1)
+    expect(count('getFirmwareVersion')).toBe(1)
+    expect(count('getBleVersion')).toBe(1)
+  }
+)
+
+it('checks again on entry after the shared firmware result expires', async () => {
+  const first = useSettings()
+  await first.init()
+  const device = useDeviceStore()
+  device.firmwareInfo!.checkedAt -= 5 * 60 * 1000
+  firmwareVersion = '1.1.0'
+  latestFirmware = '1.2.0'
+  const second = useSettings()
+  await second.init()
+  expect(count('cosCheckUpdate')).toBe(2)
+  expect(second.firmware.state.cosOldVersionData).toBe('1.1.0')
+  expect(second.firmware.state.cosNewVersionData).toBe('1.2.0')
+  expect(second.firmware.state.isCosUpdate).toBe(true)
+  expect(count('cosUpdate')).toBe(0)
+})
+
+it('keeps device information visible while the first automatic update check is pending', async () => {
+  const normal = mocks.call.getMockImplementation()!
+  let release!: (value: DeviceResult) => void
+  mocks.call.mockImplementation(method =>
+    method === 'cosCheckUpdate'
+      ? new Promise(resolve => {
+          release = resolve
+        })
+      : normal(method)
+  )
+  const settings = useSettings()
+  const pending = settings.init()
+  await vi.waitFor(() => expect(release).toBeTypeOf('function'))
+  expect(settings.state).toMatchObject({
+    SN: 'SN-SEID-A',
+    initializing: false,
+    checkingUpdate: true,
+    autoChecking: true,
+    firmwareChecked: false
+  })
+  expect(settings.exportBindCode()).toBeUndefined()
+  expect(count('exportBindCode')).toBe(0)
+  release(await normal('cosCheckUpdate'))
+  await pending
+  expect(settings.state).toMatchObject({
+    checkingUpdate: false,
+    autoChecking: false,
+    firmwareChecked: true
+  })
+})

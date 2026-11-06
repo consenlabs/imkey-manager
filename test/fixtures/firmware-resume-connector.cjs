@@ -121,10 +121,20 @@ module.exports = {
       entry.setInstalledVersion('1.0')
       entry.setLatestVersion('1.0')
       entry.setAppLogo('')
-      result.setAvailableAppListList([entry])
+      const entries = [entry]
+      if (control.extraApplet) {
+        const extra = new device.AvailableAppBean()
+        extra.setAppName('Polkadot')
+        extra.setInstalledVersion(state.polkadotInstalled ? '1.0' : 'none')
+        extra.setLatestVersion('1.0')
+        extra.setAppLogo('')
+        entries.push(extra)
+      }
+      result.setAvailableAppListList(entries)
       return hex(result)
     }
     if (method === 'cos_check_update') {
+      if (control.failCosCheck) return fail('firmware_check_unavailable')
       const result = new device.CosCheckUpdateRes()
       const pending = state.cosWritten && !state.serverComplete
       const offered = control.offer || control.mode !== 'normal' || state.cosWritten
@@ -135,6 +145,13 @@ module.exports = {
       result.setIsUpdateSuccess(!pending)
       result.setLatestCosVersion(latestCos)
       result.setLatestBleVersion(offered ? '1.1.0' : '1.0.0')
+      return hex(result)
+    }
+    if (method === 'app_download') {
+      state.polkadotInstalled = true
+      save()
+      const result = new device.AppDownloadRes()
+      result.setAddressRegisterListList(['Polkadot'])
       return hex(result)
     }
     if (method === 'btc_get_xpub') {

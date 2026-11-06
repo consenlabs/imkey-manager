@@ -13,12 +13,18 @@ defineExpose({ apps, deleteApp })
 <template>
   <div class="container">
     <div
-      v-if="management.firmware.state.isCosUpdate && management.firmware.pendingRecoveryOptions()"
+      v-if="
+        !busy &&
+        !tip &&
+        supportCode === 0 &&
+        management.firmware.state.isCosUpdate &&
+        management.firmware.pendingRecoveryOptions()
+      "
       class="firmware-recovery-entry"
       data-testid="firmware-recovery-entry"
     >
       <p>{{ $t('m.imKeyManager.check_usb_internet_connect_click_upgrade_retry') }}</p>
-      <button :disabled="busy" @click="management.firmware.updateFirmware()">
+      <button :disabled="busy" @click="management.retryFirmwareRecovery()">
         {{ $t('m.imKeyManager.upgrade') }}
       </button>
     </div>

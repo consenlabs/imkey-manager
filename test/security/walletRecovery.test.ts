@@ -449,7 +449,12 @@ it('manager stops update spinner and enables retry after address registration fa
   useDeviceStore().apps = toDeviceApplets([
     { name: app.name, installedVersion: 'old', latestVersion: app.lastVersion, icon: app.icon }
   ])
+  useDeviceStore().connectedSeid = 'test-device'
   const update = manager.updateApp(manager.apps.value[0])
+  await reply('connectDevice', { isSuccess: true, result: 'success' })
+  await reply('getUpgradeSeid', { isSuccess: true, result: 'test-device' })
+  await reply('isBLStatus', { isSuccess: true, result: false })
+  await reply('cosCheckUpdate', { isSuccess: true, result: { isUpdateSuccess: true } })
   await reply('connectDevice', { isSuccess: true, result: 'success' })
   await reply('getSeid', { isSuccess: true, result: 'test-device' })
   await reply('deviceBindCheck', { isSuccess: true, result: 'bound_this' })

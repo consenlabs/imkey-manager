@@ -12,7 +12,8 @@ const mocks = vi.hoisted(() => ({
     state: { cosUpdateStatus: '0', bindCode: '' },
     checkFirmwareVersion: vi.fn(),
     ensureFirmwareVersion: vi.fn(),
-    updateFirmwareWithinOperation: vi.fn()
+    updateFirmwareWithinOperation: vi.fn(),
+    recoverBeforeAppOperation: vi.fn()
   }
 }))
 vi.mock('../../src/renderer/device', () => ({ callDevice: mocks.call }))
@@ -62,6 +63,7 @@ beforeEach(() => {
   mocks.offer.mockReset()
   mocks.firmware.state.cosUpdateStatus = '0'
   mocks.firmware.updateFirmwareWithinOperation.mockReset()
+  mocks.firmware.recoverBeforeAppOperation.mockReset().mockResolvedValue('ready')
 })
 afterEach(async () => {
   releases.splice(0).forEach(release => release())
@@ -176,21 +178,19 @@ it('keeps feedback active until address registration completes', async () => {
   expect(manager.apps.value[0]).toMatchObject({ installed: true, installLoading: false })
 })
 
-it('preserves the firmware branch and clears feedback when it finishes', async () => {
-  mocks.firmware.state.cosUpdateStatus = '1'
-  const firmware = gate(undefined)
-  mocks.firmware.updateFirmwareWithinOperation.mockReturnValue(firmware.promise)
+it('keeps feedback active during firmware recovery and continues the installation', async () => {
+  const firmware = gate('recovered')
+  mocks.firmware.recoverBeforeAppOperation.mockReturnValue(firmware.promise)
   const manager = useAppManagement()
   const pending = manager.installApp(manager.apps.value[0])
   expect(manager.apps.value[0].installLoading).toBe(true)
-  await vi.waitFor(() =>
-    expect(mocks.firmware.updateFirmwareWithinOperation).toHaveBeenCalledOnce()
-  )
+  await vi.waitFor(() => expect(mocks.firmware.recoverBeforeAppOperation).toHaveBeenCalledOnce())
   expect(mocks.call).not.toHaveBeenCalled()
   firmware.release()
   await pending
   expect(manager.apps.value[0].installLoading).toBe(false)
-  expect(useDeviceStore().apps[0].installedVersion).toBeNull()
+  expect(mocks.call).toHaveBeenCalledWith('downloadApplet', 'Nervos', expect.anything())
+  expect(useDeviceStore().apps[0].installedVersion).toBe('1.0')
 })
 
 it.each(['init', 'install', 'update', 'delete'] as const)(

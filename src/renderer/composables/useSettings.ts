@@ -10,6 +10,9 @@ import { useSecureCheck } from './useSecureCheck'
 import type { DeviceInfoCache } from '../models/deviceState'
 import { cachedFirmware, invalidateFirmware } from './firmwareCache'
 
+// Failed checks remain retryable without repeatedly checking on page changes.
+const failedChecks = new WeakMap<ReturnType<typeof useDeviceStore>, number>()
+
 export function useSettings() {
   const device = useDeviceStore()
   const operation = useDeviceOperation()
@@ -23,6 +26,7 @@ export function useSettings() {
     SN: '',
     copyTooltipDisabled: false,
     checkingUpdate: false,
+    autoChecking: false,
     firmwareChecked: false,
     errorInfo: '',
     errorStage: ''
@@ -133,9 +137,10 @@ export function useSettings() {
   if (initialCache) {
     restoreCachedInfo(initialCache)
     state.initializing = false
+    state.autoChecking = !state.firmwareChecked && failedChecks.get(device) !== device.sessionId
   } else device.prepareIdentityCheck()
 
-  async function initialize(force = false) {
+  async function initialize(force = false, reuseInfo = false) {
     const sessionId = device.sessionId
     const current = () => active && operation.active() && device.sessionId === sessionId
     const keepPage = force && (state.status === 1 || state.status === 6)
@@ -191,28 +196,37 @@ export function useSettings() {
           return
         }
       }
-      const ble = await callDevice('getBleVersion')
-      if (!current()) return
-      if (!ble.isSuccess) {
-        fail(ble, 'check')
-        return
-      }
-      firmware.state.bleOldVersionData = ble.result
-      device.bleOldVersionData = firmware.state.bleOldVersionData
-      device.installedBleVersion = ble.result
-      if (cached && sameDevice) state.SN = cached.sn
-      else {
-        const serial = await callDevice('getSn')
+      if (reuseInfo && cached && sameDevice) {
+        firmware.state.bleOldVersionData = cached.bleVersion
+        state.SN = cached.sn
+      } else {
+        const ble = await callDevice('getBleVersion')
         if (!current()) return
-        if (!serial.isSuccess) {
-          fail(serial, 'check')
+        if (!ble.isSuccess) {
+          fail(ble, 'check')
           return
         }
-        state.SN = serial.result
+        firmware.state.bleOldVersionData = ble.result
+        device.bleOldVersionData = firmware.state.bleOldVersionData
+        device.installedBleVersion = ble.result
+        if (cached && sameDevice) state.SN = cached.sn
+        else {
+          const serial = await callDevice('getSn')
+          if (!current()) return
+          if (!serial.isSuccess) {
+            fail(serial, 'check')
+            return
+          }
+          state.SN = serial.result
+        }
       }
       if (firmware.state.supportCode === 5) firmware.changeCode(0)
       if (force) {
-        await firmware.checkFirmwareVersion(undefined, current)
+        await firmware.checkFirmwareVersion(
+          undefined,
+          current,
+          reuseInfo && sameDevice ? cached?.firmwareVersion : undefined
+        )
       } else {
         const version = await callDevice('getFirmwareVersion')
         if (!current()) return
@@ -265,20 +279,49 @@ export function useSettings() {
     if (cached) {
       restoreCachedInfo(cached)
       state.initializing = false
-      return
+      if (state.firmwareChecked) {
+        failedChecks.delete(device)
+        return
+      }
+      if (failedChecks.get(device) === device.sessionId) return
     }
+    const sessionId = device.sessionId
     loading = true
-    if (!force) state.initializing = true
+    state.autoChecking = !force
+    if (!force && !cached) state.initializing = true
     if (state.status === 2) {
       state.initializing = true
       state.status = 1
     }
     state.checkingUpdate = force
     return operation
-      .run(() => initialize(force), 'initialize')
+      .run(async () => {
+        if (force || !cached) await initialize(force)
+        if (
+          !force &&
+          active &&
+          operation.active() &&
+          device.sessionId === sessionId &&
+          (state.status === 1 || state.status === 6) &&
+          Boolean(device.deviceInfo) &&
+          !state.firmwareChecked &&
+          !firmware.pendingRecoveryOptions()
+        ) {
+          state.initializing = false
+          state.checkingUpdate = true
+          // Only reuse metadata freshly read in this operation. An expired
+          // cached result needs fresh device versions before comparison.
+          await initialize(true, !cached)
+        }
+        if (active && operation.active() && device.sessionId === sessionId) {
+          if (firmware.state.cosUpdateStatus === '2') failedChecks.set(device, sessionId)
+          else if (cachedFirmware(device)) failedChecks.delete(device)
+        }
+      }, 'initialize')
       .finally(() => {
         loading = false
         state.checkingUpdate = false
+        state.autoChecking = false
         state.initializing = false
       })
   }
@@ -289,7 +332,7 @@ export function useSettings() {
     return runInitialization(true)
   }
   function exportBindCode() {
-    if (state.initializing) return
+    if (state.initializing || state.autoChecking) return
     return operation.run(exportBindCodeWithinOperation)
   }
   onMounted(() => {

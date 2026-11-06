@@ -130,11 +130,14 @@ hover {
   position: absolute;
   left: 50%;
   top: 50%;
-  left: 35.42%;
-  top: 23.5%;
-  bottom: 42.78%;
-  width: 420px;
-  height: 240px;
+  transform: translate(-50%, -50%);
+  width: min(420px, calc(100vw - 48px));
+  height: auto;
+  min-height: 240px;
+  max-height: calc(100vh - 48px);
+  padding-bottom: 24px;
+  box-sizing: border-box;
+  overflow-y: auto;
   text-align: center;
 }
 .alert1 span {
@@ -145,7 +148,7 @@ hover {
   bottom: auto;
   height: auto;
   min-height: 240px;
-  max-height: 65vh;
+  max-height: calc(100vh - 48px);
   padding-bottom: 24px;
   box-sizing: border-box;
   overflow-y: auto;
@@ -245,12 +248,26 @@ hover {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 500px;
-  height: 288px;
-  margin-left: -250px;
-  margin-top: -144px;
+  width: min(500px, calc(100vw - 48px));
+  min-height: 288px;
+  max-height: calc(100vh - 48px);
+  padding-bottom: 24px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  display: flow-root;
+  transform: translate(-50%, -50%);
   background: #fafbfc;
   border-radius: 12px;
+}
+.status4AlertBox .update-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin: 30px 35px 0;
+}
+.status4AlertBox .update-actions .later,
+.status4AlertBox .update-actions .updateNow {
+  margin: 0;
 }
 .status4AlertBox h4,
 .status5AlertBox h4 {
