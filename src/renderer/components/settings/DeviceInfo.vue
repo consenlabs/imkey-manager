@@ -76,9 +76,17 @@ const emit = defineEmits<{
             :aria-busy="Boolean(checkingUpdate)"
             @click="emit('checkUpdate')"
           >
-            <i v-if="checkingUpdate" class="fas fa-circle-notch fa-spin" aria-hidden="true" />
+            <i
+              v-if="checkingUpdate && !autoChecking"
+              class="fas fa-circle-notch fa-spin"
+              aria-hidden="true"
+            />
             {{
-              $t(checkingUpdate ? 'm.devicePages.checking_firmware' : 'm.devicePages.check_updates')
+              $t(
+                checkingUpdate && !autoChecking
+                  ? 'm.devicePages.checking_firmware'
+                  : 'm.devicePages.check_updates'
+              )
             }}
           </button>
         </div>
