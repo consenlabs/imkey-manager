@@ -43,6 +43,7 @@ function gate<T>(value: T) {
 function response(method: string): DeviceResult {
   const values: Record<string, unknown> = {
     getSeid: 'device-A',
+    getLifeTime: 'life_time_wallet_ready',
     deviceBindCheck: 'bound_this',
     downloadApplet: ['Nervos'],
     updateApplet: ['Nervos'],
@@ -70,6 +71,103 @@ afterEach(async () => {
   await createDeviceOperation().run(async () => {})
 })
 
+it.each(['install', 'update', 'delete'] as const)(
+  'blocks %s before changing applications when the wallet is not created',
+  async kind => {
+    if (kind !== 'install') useDeviceStore().apps[0].installedVersion = '0.9'
+    mocks.call.mockImplementation(async method =>
+      method === 'getLifeTime'
+        ? { isSuccess: true, result: 'life_time_wallet_unready' }
+        : response(method)
+    )
+    const manager = useAppManagement()
+    const action =
+      kind === 'install'
+        ? manager.installApp
+        : kind === 'update'
+          ? manager.updateApp
+          : manager.deleteApp
+    await action(manager.apps.value[0])
+    expect(mocks.firmware.recoverBeforeAppOperation).toHaveBeenCalledOnce()
+    expect(mocks.call.mock.calls.map(([method]) => method)).not.toContain(
+      kind === 'install' ? 'downloadApplet' : kind === 'update' ? 'updateApplet' : 'deleteApplet'
+    )
+    expect(manager.state).toMatchObject({
+      tip: true,
+      errorStage: 'wallet',
+      errorInfo: 'life_time_wallet_unready'
+    })
+  }
+)
+
+it('preserves an unknown wallet error without treating it as an uncreated wallet', async () => {
+  mocks.call.mockImplementation(async method =>
+    method === 'getLifeTime'
+      ? { isSuccess: false, result: 'imkey_command_data_error' }
+      : response(method)
+  )
+  const manager = useAppManagement()
+  await manager.installApp(manager.apps.value[0])
+  expect(manager.state).toMatchObject({
+    errorStage: 'wallet',
+    errorInfo: 'imkey_command_data_error'
+  })
+  expect(mocks.call.mock.calls.map(([method]) => method)).not.toContain('downloadApplet')
+})
+
+it('blocks application changes when the device is replaced during the wallet check', async () => {
+  let identityReads = 0
+  mocks.call.mockImplementation(async method => {
+    if (method === 'getSeid' && ++identityReads === 2)
+      return { isSuccess: true, result: 'device-B' }
+    return response(method)
+  })
+  const manager = useAppManagement()
+  await manager.installApp(manager.apps.value[0])
+  expect(mocks.call.mock.calls.map(([method]) => method)).not.toContain('downloadApplet')
+  expect(mocks.offer).toHaveBeenCalledWith(
+    'device_session_changed',
+    expect.any(Function),
+    expect.objectContaining({ reconnectOnly: true })
+  )
+})
+
+it('blocks address registration when the device is replaced after application installation', async () => {
+  let identityReads = 0
+  mocks.call.mockImplementation(async method => {
+    if (method === 'getSeid' && ++identityReads === 3)
+      return { isSuccess: true, result: 'device-B' }
+    return response(method)
+  })
+  const manager = useAppManagement()
+  await manager.installApp(manager.apps.value[0])
+  expect(mocks.call.mock.calls.map(([method]) => method)).toContain('downloadApplet')
+  expect(mocks.call.mock.calls.map(([method]) => method)).not.toContain('writeWalletAddress')
+  expect(mocks.offer).toHaveBeenCalledWith(
+    'device_session_changed',
+    expect.any(Function),
+    expect.objectContaining({ reconnectOnly: true })
+  )
+})
+
+it('stops before registering addresses if the wallet disappears during installation', async () => {
+  let walletReads = 0
+  mocks.call.mockImplementation(async method => {
+    if (method === 'getLifeTime' && ++walletReads === 2)
+      return { isSuccess: true, result: 'life_time_wallet_unready' }
+    return response(method)
+  })
+  const manager = useAppManagement()
+  await manager.installApp(manager.apps.value[0])
+  expect(mocks.call.mock.calls.map(([method]) => method)).toContain('downloadApplet')
+  expect(mocks.call.mock.calls.map(([method]) => method)).not.toContain('writeWalletAddress')
+  expect(manager.state).toMatchObject({
+    errorStage: 'wallet',
+    errorInfo: 'life_time_wallet_unready'
+  })
+  expect(manager.apps.value[0].installed).toBe(false)
+})
+
 it.each(['install', 'update'] as const)(
   '%s shows feedback immediately while queued and suppresses repeated clicks',
   async kind => {
@@ -94,7 +192,11 @@ it.each(['install', 'update'] as const)(
       'connectDevice',
       'getSeid',
       'deviceBindCheck',
+      'getLifeTime',
+      'getSeid',
       kind === 'install' ? 'downloadApplet' : 'updateApplet',
+      'getLifeTime',
+      'getSeid',
       'writeWalletAddress'
     ])
     expect(mocks.call.mock.calls.find(([method]) => method === 'writeWalletAddress')?.[1]).toEqual({

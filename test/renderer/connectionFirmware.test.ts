@@ -62,7 +62,8 @@ function response(method: string, params?: unknown): DeviceResult {
       latestCosVersion: '2.0.0',
       latestBleVersion: '2.1.0'
     },
-    getBTCXpub: 'xpub-ready'
+    getBTCXpub: 'xpub-ready',
+    getLifeTime: 'life_time_wallet_ready'
   }
   return { isSuccess: true, result: values[method] ?? 'success' }
 }
@@ -87,7 +88,7 @@ it('bootloader recovery captures actual firmware versions and confirms identity 
   const fail = vi.fn()
   const done = vi.fn(async () => {})
   const flow = useConnectionFirmware(vi.fn(), fail, done)
-  await flow.toCosUpdate()
+  await flow.toCosUpdate(true)
   expect(fail).not.toHaveBeenCalled()
   expect(done).toHaveBeenCalledOnce()
   expect(calls('cosUpdate')).toHaveLength(1)
@@ -106,7 +107,7 @@ it.each(['deviceBindAcquire', 'importBindCode', 'writeWalletAddress'])(
     const fail = vi.fn()
     const done = vi.fn(async () => {})
     const flow = useConnectionFirmware(vi.fn(), fail, done)
-    await flow.toCosUpdate()
+    await flow.toCosUpdate(true)
     expect(flow.hasPendingRecovery()).toBe(true)
     expect(done).not.toHaveBeenCalled()
     expect(calls('cosUpdate')).toHaveLength(1)
@@ -125,7 +126,7 @@ it('an interrupted version capture retries the capture without reflashing', asyn
   failedMethod = 'getFirmwareVersion'
   const fail = vi.fn()
   const flow = useConnectionFirmware(vi.fn(), fail, async () => {})
-  await flow.toCosUpdate()
+  await flow.toCosUpdate(true)
   expect(fail).toHaveBeenLastCalledWith('getFirmwareVersion_failed', 5, 'check')
   expect(calls('deviceBindAcquire')).toHaveLength(0)
   failedMethod = ''
@@ -141,7 +142,7 @@ it.each(['identity', 'cos', 'ble', 'bootloader', 'binding'])(
     failedMethod = 'writeWalletAddress'
     const fail = vi.fn()
     const flow = useConnectionFirmware(vi.fn(), fail, async () => {})
-    await flow.toCosUpdate()
+    await flow.toCosUpdate(true)
     failedMethod = ''
     if (change === 'identity') seid = 'SEID-B'
     if (change === 'cos') cos = 'unexpected-cos'
@@ -198,9 +199,9 @@ it('reconnecting cannot skip pending address recovery when firmware now reports 
 it('a failed firmware write is retried after confirming the same bootloader identity', async () => {
   failedMethod = 'cosUpdate'
   const flow = useConnectionFirmware(vi.fn(), vi.fn(), async () => {})
-  await flow.toCosUpdate()
+  await flow.toCosUpdate(true)
   failedMethod = ''
-  await flow.toCosUpdate()
+  await flow.toCosUpdate(true)
   expect(calls('cosUpdate')).toHaveLength(2)
   expect(flow.hasPendingRecovery()).toBe(false)
 })
@@ -255,6 +256,56 @@ it('a restart resumes durable address recovery even when firmware now reports co
   expect(mocks.push).toHaveBeenCalledExactlyOnceWith('/home/welcomeHome')
 })
 
+it('does not start an ambiguous update checkpoint when the server reports completion', async () => {
+  bootloader = false
+  updated = true
+  binding = 'bound_this'
+  journal = {
+    version: 1,
+    seid: 'SEID-A',
+    phase: 'update',
+    needsBinding: true,
+    expectedCos: '',
+    expectedBle: ''
+  }
+  const before = structuredClone(journal)
+  const flow = useConnection()
+  await flow.check()
+  expect(flow.status.value).toBe(5)
+  expect(flow.errorInfo.value).toBe('firmware_recovery_not_ready')
+  expect(flow.errorStage.value).toBe('check')
+  expect(journal).toEqual(before)
+  for (const method of [
+    'cosUpdate',
+    'saveFirmwareRecovery',
+    'clearFirmwareRecovery',
+    'checkUpdate'
+  ])
+    expect(calls(method)).toHaveLength(0)
+  expect(useDeviceStore().canEnterHome).toBe(false)
+  expect(mocks.push).not.toHaveBeenCalled()
+})
+
+it.each(['bootloader', 'server-incomplete'] as const)(
+  'continues an update checkpoint when %s confirms native recovery',
+  async reason => {
+    bootloader = reason === 'bootloader'
+    updated = reason === 'bootloader'
+    journal = {
+      version: 1,
+      seid: 'SEID-A',
+      phase: 'update',
+      needsBinding: true,
+      expectedCos: '',
+      expectedBle: ''
+    }
+    await useConnection().check()
+    expect(calls('cosUpdate')).toHaveLength(1)
+    expect(journal).toBeNull()
+    expect(useDeviceStore().canEnterHome).toBe(true)
+  }
+)
+
 it.each(['unknown', 'unbound', 'bound_other'])(
   'a successful acquire followed by %s cannot store recovery data or enter home',
   async status => {
@@ -279,7 +330,7 @@ it('a failed durable checkpoint clear keeps recovery pending and prevents home e
   failedMethod = 'clearFirmwareRecovery'
   await useConnection().check()
   expect(journal?.phase).toBe('verify')
-  expect(calls('getBTCXpub')).toHaveLength(0)
+  expect(calls('getLifeTime')).toHaveLength(1) // Wallet readiness before address recovery only.
   expect(useDeviceStore().canEnterHome).toBe(false)
   expect(mocks.push).not.toHaveBeenCalled()
 })
@@ -387,7 +438,7 @@ it.each(['query-failure', 'native-incomplete'])(
 it('server-confirmed native incompletion clears the old baseline before reentering native recovery', async () => {
   failedMethod = 'writeWalletAddress'
   const flow = useConnectionFirmware(vi.fn(), vi.fn(), async () => {})
-  await flow.toCosUpdate()
+  await flow.toCosUpdate(true)
   expect(journal?.phase).toBe('restore')
   failedMethod = ''
   mocks.call.mockClear()

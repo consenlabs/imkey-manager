@@ -38,6 +38,7 @@ export function createDeviceHandlers(
     getRamSize: () => api.getRamSize(),
     getFirmwareVersion: manage('get_firmware_version'),
     getBleVersion: manage('get_ble_version'),
+    getLifeTime: manage('get_life_time'),
     getSdkInfo: manage('get_sdk_info'),
     activeDevice: manage('device_activate'),
     cosUpdate: manage('cos_update'),

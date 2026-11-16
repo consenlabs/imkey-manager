@@ -5,7 +5,7 @@ import {
   type ElectronApplication,
   type Page
 } from '@playwright/test'
-import { mkdtemp, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 
@@ -15,16 +15,23 @@ interface Control {
   offer?: boolean
   failNativeApps?: boolean
   failCosCheck?: boolean
+  failIncompleteResponse?: boolean
   failBinding?: boolean
   failAddress?: boolean
   failBindingCheck?: boolean
   binding?: string
   delayNativeMs?: number
+  delayAddressMs?: number
   initialCos?: string
   installedCos?: string
   latestCos?: string
   failCaptureRead?: 'once' | 'persistent' | false
   failWallet?: boolean
+  walletMissing?: boolean
+  walletDataError?: boolean
+  walletState?: string
+  failBtcRead?: boolean
+  injectNativeIncomplete?: boolean
   postUpdateBinding?: string
   extraApplet?: boolean
 }
@@ -237,6 +244,108 @@ async function retryDeviceUpgrade(): Promise<void> {
   await page.getByTestId('firmware-upgrade-button').click()
 }
 
+test('connection does not start an ambiguous update checkpoint when the server reports completion', async () => {
+  await launch({ mode: 'normal', initialCos: '1.9.11', latestCos: '1.9.12' })
+  const recoveryDirectory = path.join(directory, 'firmware-recovery')
+  await mkdir(recoveryDirectory, { recursive: true })
+  const checkpointFile = path.join(recoveryDirectory, 'RESUMEDEVICEA.json')
+  const checkpoint = {
+    version: 1,
+    seid: 'RESUMEDEVICEA',
+    phase: 'update',
+    needsBinding: true,
+    expectedCos: '',
+    expectedBle: ''
+  }
+  await writeFile(checkpointFile, JSON.stringify(checkpoint))
+  await connect(true)
+  await pending()
+  await expect(page.locator('.tip3')).toContainText('not ready')
+  const methods = (await calls()).map(call => call.method)
+  expect(methods).toContain('cos_check_update')
+  expect(methods).not.toContain('cos_update')
+  expect(methods).not.toContain('register_address')
+  expect(JSON.parse(await readFile(checkpointFile, 'utf8'))).toEqual(checkpoint)
+})
+
+test('an incomplete firmware response keeps recovery pending without claiming cancellation or a crash', async () => {
+  await startDeviceUpgrade({ failIncompleteResponse: true })
+  const failure = page.locator('.alert3')
+  await expect(failure).toContainText('Update failed')
+  await expect(failure).toContainText('The firmware upgrade response was incomplete')
+  await expect(failure).not.toContainText('missing field')
+  await expect(failure).not.toContainText('USB connection or network connection')
+  const file = path.join(directory, 'firmware-recovery/RESUMEDEVICEA.json')
+  expect(JSON.parse(await readFile(file, 'utf8')).phase).toBe('update')
+  const beforeRestart = (await calls()).length
+  await application!.close()
+  application = undefined
+  await reopen()
+  await connect()
+  const recovery = page.locator('.tip3')
+  await expect(recovery).toContainText('The firmware upgrade is incomplete')
+  await expect(recovery).toContainText('The device is not ready to resume the upgrade')
+  await expect(recovery).not.toContainText('application exit abnormal')
+  expect((await calls()).slice(beforeRestart).map(call => call.method)).not.toContain('cos_update')
+  expect(JSON.parse(await readFile(file, 'utf8')).phase).toBe('update')
+})
+
+test('a missing wallet prevents starting a new firmware upgrade', async () => {
+  await startDeviceUpgrade({ walletMissing: true })
+  await expect(page.locator('.alert3')).toContainText('The device wallet is not ready')
+  expect((await calls()).filter(call => call.method === 'cos_update')).toHaveLength(0)
+  expect((await calls()).filter(call => call.method === 'register_address')).toHaveLength(0)
+})
+
+for (const [walletState, message] of [
+  ['life_time_wallet_creatting', 'The device is creating a wallet'],
+  ['life_time_wallet_recovering', 'The device is restoring a wallet'],
+  ['life_time_unknown', 'Unable to confirm the device wallet status']
+] as const) {
+  test(`wallet lifecycle ${walletState} blocks a new upgrade with an accurate message`, async () => {
+    await startDeviceUpgrade({ walletState })
+    await expect(page.locator('.alert3')).toContainText(message)
+    expect((await calls()).filter(call => call.method === 'cos_update')).toHaveLength(0)
+  })
+}
+
+test('an ambiguous wallet command error keeps its cause and gives conditional reset guidance', async () => {
+  await startDeviceUpgrade({ walletDataError: true })
+  const failure = page.locator('.alert3')
+  await expect(failure).toContainText('command data error')
+  await expect(failure).toContainText('If the device was reset')
+  await expect(failure).not.toContainText('The device wallet is not ready')
+  expect((await calls()).filter(call => call.method === 'cos_update')).toHaveLength(0)
+})
+
+test('a missing Bitcoin applet does not prevent the firmware lifecycle preflight', async () => {
+  await startDeviceUpgrade({ failBtcRead: true })
+  await expect(page.locator('.alert3')).toBeVisible()
+  const methods = (await calls()).map(call => call.method)
+  expect(methods).toContain('get_life_time')
+  expect(methods).toContain('cos_update')
+  expect(methods).toContain('register_address')
+  expect(methods.lastIndexOf('btc_get_xpub')).toBeGreaterThan(methods.indexOf('register_address'))
+})
+
+test('an interrupted COS upgrade finishes native recovery but waits for a missing wallet before addresses', async () => {
+  await launch({ mode: 'bootloader', ...publishedMismatch, walletMissing: true })
+  await connect(true)
+  await pending()
+  await expect(page.locator('.tip3')).toContainText('The device wallet is not ready')
+  expect((await calls()).filter(call => call.method === 'cos_update')).toHaveLength(1)
+  expect((await calls()).filter(call => call.method === 'register_address')).toHaveLength(0)
+  const checkpoint = JSON.parse(
+    await readFile(path.join(directory, 'firmware-recovery/RESUMEDEVICEA.json'), 'utf8')
+  )
+  expect(checkpoint.phase).toBe('apps')
+  expect(checkpoint).not.toHaveProperty('pendingAddresses')
+  await configure({ walletMissing: false })
+  await retry()
+  await completed()
+  expect((await calls()).filter(call => call.method === 'cos_update')).toHaveLength(1)
+})
+
 async function prepareBleOnlyUpgrade(fault: Control = {}): Promise<void> {
   await launch({ mode: 'normal', ...unexpectedCosUpdate })
   await connect(true)
@@ -302,7 +411,7 @@ test('an advertised BLE-only update restores binding and addresses when native C
   expect(upgraded.indexOf('get_firmware_version')).toBeGreaterThan(upgraded.indexOf('cos_update'))
   expect(upgraded.indexOf('bind_acquire')).toBeGreaterThan(upgraded.indexOf('get_firmware_version'))
   expect(upgraded.indexOf('register_address')).toBeGreaterThan(upgraded.indexOf('bind_acquire'))
-  expect(upgraded.indexOf('btc_get_xpub')).toBeGreaterThan(upgraded.indexOf('register_address'))
+  expect(upgraded.lastIndexOf('btc_get_xpub')).toBeGreaterThan(upgraded.indexOf('register_address'))
   await page.locator('.alert2 button').click()
   await expect(page.locator('.device-info-primary > div').last()).toContainText('1.9.12')
   await page.screenshot({ path: test.info().outputPath('ble-only-actual-cos-recovered.png') })
@@ -339,7 +448,9 @@ for (const recoveryPath of ['direct-retry', 'reopen'] as const) {
     const resumed = (await calls()).slice(beforeRetry).map(call => call.method)
     expect(resumed.filter(method => method === 'bind_acquire')).toHaveLength(1)
     expect(resumed.indexOf('register_address')).toBeGreaterThan(resumed.indexOf('bind_acquire'))
-    expect(resumed.indexOf('btc_get_xpub')).toBeGreaterThan(resumed.indexOf('register_address'))
+    expect(resumed.indexOf('get_life_time')).toBeGreaterThan(resumed.indexOf('bind_acquire'))
+    expect(resumed.indexOf('get_life_time')).toBeLessThan(resumed.indexOf('register_address'))
+    expect(resumed.lastIndexOf('btc_get_xpub')).toBeGreaterThan(resumed.indexOf('register_address'))
     await page.screenshot({
       path: test.info().outputPath(`ble-only-${recoveryPath}-completed.png`)
     })
@@ -362,6 +473,8 @@ for (const rejection of ['missing-code', 'unknown-binding'] as const) {
     expect(rejected.filter(method => method === 'cos_update')).toHaveLength(1)
     expect(rejected).not.toContain('bind_acquire')
     expect(rejected).not.toContain('register_address')
+    expect(rejected.filter(method => method === 'get_life_time')).toHaveLength(1)
+    expect(rejected.indexOf('get_life_time')).toBeLessThan(rejected.indexOf('cos_update'))
     expect(rejected).not.toContain('btc_get_xpub')
     expect(await readdir(path.join(directory, 'firmware-recovery'))).toEqual(['RESUMEDEVICEA.json'])
     if (rejection === 'missing-code') {
@@ -411,7 +524,9 @@ test('a legacy BLE-only verify checkpoint restores lost binding before wallet au
   const resumed = (await calls()).slice(beforeRestart).map(call => call.method)
   expect(resumed.indexOf('bind_acquire')).toBeGreaterThanOrEqual(0)
   expect(resumed.indexOf('register_address')).toBeGreaterThan(resumed.indexOf('bind_acquire'))
-  expect(resumed.indexOf('btc_get_xpub')).toBeGreaterThan(resumed.indexOf('register_address'))
+  expect(resumed.indexOf('get_life_time')).toBeGreaterThan(resumed.indexOf('bind_acquire'))
+  expect(resumed.indexOf('get_life_time')).toBeLessThan(resumed.indexOf('register_address'))
+  expect(resumed.lastIndexOf('btc_get_xpub')).toBeGreaterThan(resumed.indexOf('register_address'))
   await page.screenshot({ path: test.info().outputPath('legacy-ble-only-verify-recovered.png') })
 })
 
@@ -489,6 +604,54 @@ for (const failure of ['failNativeApps', 'failBinding', 'failAddress'] as const)
     }
   })
 }
+
+test('a failed address recovery remains a recovery on reconnect without reflashing', async () => {
+  await launch({
+    mode: 'bootloader',
+    ...publishedMismatch,
+    failAddress: true,
+    delayAddressMs: 1500
+  })
+  await connect(true)
+  await expect(page.locator('.tip4')).toContainText('firmware')
+  await pending()
+  await expect(page.locator('.tip3')).toContainText('Firmware upgrade')
+  expect((await calls()).filter(call => call.method === 'cos_update')).toHaveLength(1)
+
+  await reopen()
+  const beforeReconnect = (await calls()).length
+  await connect()
+  await expect(page.locator('.tip4')).toContainText('firmware')
+  await pending()
+  await expect(page.locator('.tip3')).toContainText('Firmware upgrade')
+  const resumed = (await calls()).slice(beforeReconnect).map(call => call.method)
+  expect(resumed).toContain('register_address')
+  expect(resumed).not.toContain('cos_update')
+})
+
+test('device-page recovery no longer promises another restart', async () => {
+  await startDeviceUpgrade({ failAddress: true, delayAddressMs: 1500 })
+  const progress = page.locator('dialog.firmware-progress-dialog')
+  await expect(progress).toHaveAttribute('data-phase', 'restore')
+  await expect(progress).toContainText('Do not disconnect the USB cable')
+  await expect(progress).not.toContainText('automatically restart')
+  await expect(page.locator('.alert3')).toBeVisible()
+  await expect(page.locator('.alert3')).toContainText('Update failed')
+})
+
+test('app-page address recovery failure has a firmware upgrade title', async () => {
+  await launch({ mode: 'normal', extraApplet: true, initialCos: '1.9.11', latestCos: '1.9.12' })
+  await connect(true)
+  await expect(page.locator('.homeBox')).toBeVisible()
+  await page.locator('.routerBar li').nth(1).click()
+  const applet = page.locator('.appItem').filter({ hasText: 'Polkadot' })
+  await expect(applet.getByRole('link', { name: 'Install', exact: true })).toBeVisible()
+  await configure({ injectNativeIncomplete: true, failAddress: true })
+  await applet.getByRole('link', { name: 'Install', exact: true }).click()
+  const failure = page.locator('.alert3')
+  await expect(failure).toContainText('Update failed')
+  await expect(failure).toContainText('imkey_address_registration_fail')
+})
 
 for (const rejection of ['error', 'unknown'] as const) {
   test(`${rejection} binding checks never grant home access, including direct navigation`, async () => {
@@ -631,7 +794,7 @@ for (const recoveryPath of ['direct-retry', 'reopen'] as const) {
   test(`wallet read failure after mismatched published-version recovery stays outside home through ${recoveryPath} without native writes`, async () => {
     await launch({ mode: 'bootloader', ...publishedMismatch, failWallet: true })
     await connect(true)
-    await expect(page.locator('.tip1')).toBeVisible()
+    await pending()
     await expect(page.locator('.homeBox')).toHaveCount(0)
     expect(await state()).toMatchObject({
       physicalWrites: 1,
@@ -639,7 +802,7 @@ for (const recoveryPath of ['direct-retry', 'reopen'] as const) {
       firmwareVersion: '1.9.11',
       serverComplete: true
     })
-    expect(await readdir(path.join(directory, 'firmware-recovery'))).toEqual([])
+    expect((await calls()).map(call => call.method)).not.toContain('register_address')
     await page.screenshot({
       path: test.info().outputPath('wallet-read-denied.png'),
       fullPage: true
@@ -648,15 +811,15 @@ for (const recoveryPath of ['direct-retry', 'reopen'] as const) {
       const beforeRestart = (await calls()).length
       await reopen()
       await connect()
-      await expect(page.locator('.tip1')).toBeVisible()
+      await pending()
       await expect(page.locator('.homeBox')).toHaveCount(0)
       const resumed = (await calls()).slice(beforeRestart).map(call => call.method)
       expect(resumed).toContain('cos_check_update')
       expect(resumed).toContain('bind_check')
-      expect(resumed).toContain('btc_get_xpub')
-      expect(resumed.indexOf('bind_check')).toBeLessThan(resumed.indexOf('btc_get_xpub'))
+      expect(resumed).toContain('get_life_time')
+      expect(resumed.indexOf('bind_check')).toBeLessThan(resumed.indexOf('get_life_time'))
       expect(resumed).not.toContain('cos_update')
-      expect(await readdir(path.join(directory, 'firmware-recovery'))).toEqual([])
+      expect(resumed).not.toContain('register_address')
       await page.screenshot({
         path: test.info().outputPath('reopened-wallet-read-denied.png'),
         fullPage: true
@@ -667,8 +830,7 @@ for (const recoveryPath of ['direct-retry', 'reopen'] as const) {
       result: { latestCosVersion: '1.9.12', isLatest: false, isUpdateSuccess: true }
     })
     await configure({ failWallet: false })
-    await page.locator('.tip1 button').click()
-    await connect()
+    await retry()
     await completed()
     expect((await calls()).filter(call => call.method === 'cos_update')).toHaveLength(1)
   })
@@ -688,16 +850,15 @@ for (const incomplete of [false, true]) {
     await page.locator('.routerBar li').nth(1).click()
     const applet = page.locator('.appItem').filter({ hasText: 'Polkadot' })
     await expect(applet.getByRole('link', { name: 'Install', exact: true })).toBeVisible()
-    if (incomplete) {
-      const file = path.join(directory, 'device-state.json')
-      const states = JSON.parse(await readFile(file, 'utf8'))
-      states.RESUMEDEVICEA.cosWritten = true
-      states.RESUMEDEVICEA.serverComplete = false
-      await writeFile(file, JSON.stringify(states))
-    }
+    if (incomplete) await configure({ injectNativeIncomplete: true })
     const before = (await calls()).length
     await applet.getByRole('link', { name: 'Install', exact: true }).click()
     await expect(applet.locator('.col')).toBeVisible()
+    // The page can settle before the mock call log has been observed. Wait for
+    // the actual download rather than sampling the log immediately.
+    await expect
+      .poll(async () => (await calls()).slice(before).map(call => call.method))
+      .toContain('app_download')
     const methods = (await calls()).slice(before).map(call => call.method)
     expect(methods.filter(method => method === 'cos_update')).toHaveLength(incomplete ? 1 : 0)
     expect(methods).toContain('app_download')
@@ -713,12 +874,7 @@ test('the recovery retry banner is hidden while firmware is updating and shown a
   await page.locator('.routerBar li').nth(1).click()
   const applet = page.locator('.appItem').filter({ hasText: 'Polkadot' })
   await expect(applet.getByRole('link', { name: 'Install', exact: true })).toBeVisible()
-  const file = path.join(directory, 'device-state.json')
-  const states = JSON.parse(await readFile(file, 'utf8'))
-  states.RESUMEDEVICEA.cosWritten = true
-  states.RESUMEDEVICEA.serverComplete = false
-  await writeFile(file, JSON.stringify(states))
-  await configure({ failNativeApps: true, delayNativeMs: 2000 })
+  await configure({ injectNativeIncomplete: true, failNativeApps: true, delayNativeMs: 2000 })
   const banner = page.getByTestId('firmware-recovery-entry')
   const progress = page.locator('dialog.firmware-progress-dialog')
   await applet.getByRole('link', { name: 'Install', exact: true }).click()
@@ -754,11 +910,7 @@ test('a bound device with a missing local binding code cannot start native recov
   await page.locator('.routerBar li').nth(1).click()
   const applet = page.locator('.appItem').filter({ hasText: 'Polkadot' })
   await expect(applet.getByRole('link', { name: 'Install', exact: true })).toBeVisible()
-  const file = path.join(directory, 'device-state.json')
-  const states = JSON.parse(await readFile(file, 'utf8'))
-  states.RESUMEDEVICEA.cosWritten = true
-  states.RESUMEDEVICEA.serverComplete = false
-  await writeFile(file, JSON.stringify(states))
+  await configure({ injectNativeIncomplete: true })
   await rm(path.join(directory, 'RESUMEDEVICEAbindCode.json'))
   const before = (await calls()).length
   await applet.getByRole('link', { name: 'Install', exact: true }).click()

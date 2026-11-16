@@ -47,6 +47,10 @@ beforeEach(() => {
   mocks.call.mockImplementation(async method => {
     if (method === 'deviceBindCheck') return { isSuccess: true, result: bindStatus }
     if (method === 'getSeid') return { isSuccess: true, result: seid }
+    if (method === 'isBLStatus') return { isSuccess: true, result: false }
+    if (method === 'cosCheckUpdate') return { isSuccess: true, result: { isUpdateSuccess: true } }
+    if (method === 'getFirmwareRecovery') return { isSuccess: true, result: null }
+    if (method === 'getLifeTime') return { isSuccess: true, result: 'life_time_wallet_ready' }
     if (method === 'exportBindCode') return localCode
     // Mirror the service's binding guard before its xpub read.
     if (method === 'getBTCXpub')
@@ -166,6 +170,8 @@ it('wallet checks show busy before queuing and suppress repeated navigation unti
   expect(mocks.call.mock.calls.map(([method]) => method)).toEqual([
     'connectDevice',
     'getSeid',
+    'getLifeTime',
+    'getSeid',
     'getBTCXpub',
     'getSeid'
   ])
@@ -177,6 +183,11 @@ it('wallet checks show busy before queuing and suppress repeated navigation unti
   await completion
   expect(mocks.call.mock.calls.map(([method]) => method)).toEqual([
     'connectDevice',
+    'getSeid',
+    'isBLStatus',
+    'cosCheckUpdate',
+    'getFirmwareRecovery',
+    'getLifeTime',
     'getSeid',
     'getBTCXpub',
     'getSeid'
@@ -491,6 +502,8 @@ it.each(['unbound', 'bound_other', 'unknown', ''])(
     )
     expect(mocks.call.mock.calls.map(([method]) => method)).toEqual([
       'connectDevice',
+      'getSeid',
+      'getLifeTime',
       'getSeid',
       'getBTCXpub'
     ])
@@ -837,7 +850,7 @@ it('a wallet failure can retry the same action or navigate back to manual bindin
   )
   await setup.send({ page: 0, active: 0, isNext: false })
   expect(setup.page.value).toBe(4)
-  expect(setup.errorInfo.value).toBe('imkey_wallet_not_created')
+  expect(setup.errorInfo.value).toBe('invalid_wallet_response')
   ready = true
   await mocks.offer.mock.lastCall![1]()
   expect(mocks.push).toHaveBeenCalledWith('/home/welcomeHome')
@@ -845,6 +858,137 @@ it('a wallet failure can retry the same action or navigate back to manual bindin
   await setup.send({ page: 2, active: 0, isNext: false })
   expect(setup.page.value).toBe(2)
   expect(setup.finish.value).toBe(false)
+})
+
+it('preserves the explicit wallet-not-created error during setup', async () => {
+  const setup = await walletInstructions()
+  const normal = mocks.call.getMockImplementation()!
+  mocks.call.mockImplementation(async (method, params) =>
+    method === 'getBTCXpub'
+      ? { isSuccess: false, result: 'imkey_wallet_not_created' }
+      : normal(method, params)
+  )
+  await setup.send({ page: 4, active: 2, isNext: true })
+  expect(setup.errorInfo.value).toBe('imkey_wallet_not_created')
+  expect(useDeviceStore().canEnterHome).toBe(false)
+  expect(mocks.push).not.toHaveBeenCalledWith('/home/welcomeHome')
+})
+
+it.each([
+  {
+    name: 'pending recovery',
+    response: {
+      isSuccess: true as const,
+      result: {
+        version: 1,
+        seid: 'SEID-A',
+        phase: 'restore',
+        needsBinding: true,
+        expectedCos: '1.9.07',
+        expectedBle: '3.0.03',
+        pendingAddresses: ['Bitcoin']
+      }
+    },
+    error: 'firmware_recovery_not_ready'
+  },
+  {
+    name: 'unreadable recovery',
+    response: { isSuccess: false as const, result: 'firmware_recovery_unreadable' },
+    error: 'firmware_recovery_unreadable'
+  }
+])('blocks home authorization for $name without deleting the checkpoint', async scenario => {
+  const setup = await walletInstructions()
+  await setup.send({ page: 4, active: 2, isNext: true })
+  for (const step of ['step1', 'step2', 'step3'] as const) setup.changeStep(step)
+  const normal = mocks.call.getMockImplementation()!
+  mocks.call.mockImplementation(async (method, params) =>
+    method === 'getFirmwareRecovery' ? scenario.response : normal(method, params)
+  )
+  mocks.call.mockClear()
+  await setup.send({ page: 0, active: 0, isNext: false })
+  expect(setup.errorInfo.value).toBe(scenario.error)
+  expect(useDeviceStore().canEnterHome).toBe(false)
+  expect(mocks.push).not.toHaveBeenCalledWith('/home/welcomeHome')
+  expect(mocks.call.mock.calls.map(([method]) => method)).not.toContain('clearFirmwareRecovery')
+  if (scenario.name === 'pending recovery')
+    expect(mocks.offer).toHaveBeenLastCalledWith(
+      'firmware_recovery_not_ready',
+      expect.any(Function),
+      { reconnectOnly: true }
+    )
+})
+
+it('rejects a device replacement after reading the recovery checkpoint', async () => {
+  const setup = await walletInstructions()
+  await setup.send({ page: 4, active: 2, isNext: true })
+  for (const step of ['step1', 'step2', 'step3'] as const) setup.changeStep(step)
+  const normal = mocks.call.getMockImplementation()!
+  mocks.call.mockImplementation(async (method, params) => {
+    const result = await normal(method, params)
+    if (method === 'getFirmwareRecovery') seid = 'SEID-B'
+    return result
+  })
+  await setup.send({ page: 0, active: 0, isNext: false })
+  expect(setup.errorInfo.value).toBe('device_session_changed')
+  expect(useDeviceStore().canEnterHome).toBe(false)
+  expect(mocks.push).not.toHaveBeenCalledWith('/home/welcomeHome')
+})
+
+it.each([
+  {
+    name: 'bootloader mode',
+    method: 'isBLStatus',
+    response: { isSuccess: true as const, result: true },
+    error: 'firmware_recovery_not_ready'
+  },
+  {
+    name: 'failed bootloader check',
+    method: 'isBLStatus',
+    response: { isSuccess: false as const, result: 'device_not_connected' },
+    error: 'device_not_connected'
+  },
+  {
+    name: 'invalid bootloader result',
+    method: 'isBLStatus',
+    response: { isSuccess: true as const, result: 'invalid' },
+    error: 'invalid_firmware_response'
+  },
+  {
+    name: 'unfinished server transaction',
+    method: 'cosCheckUpdate',
+    response: { isSuccess: true as const, result: { isUpdateSuccess: false } },
+    error: 'firmware_recovery_not_ready'
+  },
+  {
+    name: 'failed server check',
+    method: 'cosCheckUpdate',
+    response: { isSuccess: false as const, result: 'device_not_connected' },
+    error: 'device_not_connected'
+  },
+  {
+    name: 'invalid server status',
+    method: 'cosCheckUpdate',
+    response: { isSuccess: true as const, result: {} },
+    error: 'invalid_firmware_response'
+  }
+])('blocks setup home authorization for $name', async scenario => {
+  const setup = await walletInstructions()
+  await setup.send({ page: 4, active: 2, isNext: true })
+  for (const step of ['step1', 'step2', 'step3'] as const) setup.changeStep(step)
+  const normal = mocks.call.getMockImplementation()!
+  mocks.call.mockImplementation(async (method, params) =>
+    method === scenario.method ? scenario.response : normal(method, params)
+  )
+  mocks.call.mockClear()
+  await setup.send({ page: 0, active: 0, isNext: false })
+  expect(setup.errorInfo.value).toBe(scenario.error)
+  expect(useDeviceStore().canEnterHome).toBe(false)
+  expect(mocks.push).not.toHaveBeenCalledWith('/home/welcomeHome')
+  const methods = mocks.call.mock.calls.map(([method]) => method)
+  expect(methods).not.toContain('cosUpdate')
+  expect(methods).not.toContain('clearFirmwareRecovery')
+  expect(methods).not.toContain('getBTCXpub')
+  if (scenario.method === 'isBLStatus') expect(methods).not.toContain('cosCheckUpdate')
 })
 
 it.each(['wallet', 'completion'])(

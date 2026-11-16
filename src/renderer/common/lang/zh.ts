@@ -111,9 +111,11 @@ export const m = {
     check_usb_connect: '请拔出 USB 重试或检查 USB 接口是否松动，确认无误后再次点击「连接」',
     ok: '确定',
     firmware_update_fail: '固件升级未完成',
-    find_firmware_update_fail_continue:
-      '检测到因应用异常退出导致固件升级未完成，请继续升级，完成后可正常使用 imKey Manager',
+    find_firmware_update_fail_continue: '检测到固件升级尚未完成，请检查设备状态后继续升级。',
     imKey_pro_firmware_update_wait: 'imKey Pro 固件版本升级中，请耐心等待',
+    firmware_recovery_no_disconnect: '操作过程中请勿断开 USB 连接或操作 imKey。',
+    wallet_status_unknown_hint:
+      '无法确认钱包状态。如果设备已重置，请先在设备上创建或恢复钱包，然后重试。',
     imKey_pro_firmware_update_no_disconnect:
       '注意：升级完成后 imKey Pro 将自动重启升级过程中请勿断开 USB 连接，同时中止 imKey 操作',
     notice: '升级提示',
@@ -199,6 +201,7 @@ export const m = {
     upgrade_done: '升级完成',
     can_used_imKey_manager: '当前可以正常使用 imKey Manager',
     upgrade_fail: '升级失败',
+    firmware_upgrade_failed_instructions: '请检查设备状态后重试；如果问题持续，请联系支持团队。',
     check_usb_internet_connect_click_upgrade_retry:
       '请检查 USB 连接或网络连接情况，确认无误后点击升级重试',
     bind_code_8_bit_world_uppercase: '8 位绑定码，英文字母均为大写',
@@ -231,6 +234,8 @@ export const m = {
     update_tip_wait: '更新完成后 App 将自动重启，请耐心等待'
   },
   imKeyCoreErrorInfo: {
+    firmware_response_incomplete:
+      '固件升级响应不完整，无法确认升级结果。请检查设备并联系支持团队。',
     binding_code_file_missing: '未找到已保存的绑定码，请输入绑定码后继续。',
     firmware_recovery_not_ready: '设备尚未准备好继续升级，请检查设备后重试。',
     firmware_recovery_version_mismatch: '设备固件版本已变化，请重新连接设备后继续。',
@@ -250,7 +255,14 @@ export const m = {
     get_ram_size_error: '获取内存空间失败',
     get_firmware_version_error: '获取固件版本失败',
     get_battery_power_error: '获取电量失败',
-    get_life_time_error: '获取生命周期失败',
+    get_life_time_error: '无法读取设备钱包状态，请检查设备连接后重试。',
+    wallet_status_unknown: '无法确认设备钱包状态，请检查设备后重试。',
+    life_time_device_inited: '设备尚未完成设置，请先按设备提示继续。',
+    life_time_device_activated: '设备尚未完成钱包设置，请先按设备提示完成设置。',
+    life_time_unset_pin: '设备尚未设置 PIN，请先按设备提示完成设置。',
+    life_time_wallet_unready: '设备钱包尚未就绪，请先在设备上创建或恢复钱包，然后重试。',
+    life_time_wallet_creatting: '设备正在创建钱包，请完成创建后重试。',
+    life_time_wallet_recovering: '设备正在恢复钱包，请完成恢复后重试。',
     get_ble_name_error: '获取蓝牙名称失败',
     get_ble_version_error: '获取蓝牙版本失败',
     parse_arguments_to_str: '解析api传入的字符失败',
@@ -274,7 +286,7 @@ export const m = {
     imkey_applet_function_not_supported: '该应用不支持这个方法',
     imkey_exceeded_max_utxo_number: '超过了最大utxo数量',
     imkey_command_execute_fail: '指令执行失败',
-    imkey_wallet_not_created: '钱包没有创建',
+    imkey_wallet_not_created: '设备尚未创建钱包，请先在设备上创建或恢复钱包，然后重试。',
     device_session_changed: '设备或绑定状态已变化，请返回连接页重新连接',
     device_operation_timeout: '设备长时间未响应，请重试或返回连接页',
     device_recovery_pending: '旧设备通信服务尚未退出，请稍后重试',

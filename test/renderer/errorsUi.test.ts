@@ -4,7 +4,10 @@ import { ref } from 'vue'
 import type { DeviceResult } from '../../src/shared/deviceContract'
 import { useFirmwareUpgrade } from '../../src/renderer/composables/useFirmwareUpgrade'
 import { useSoftwareUpdate } from '../../src/renderer/composables/useSoftwareUpdate'
-import { operationError } from '../../src/renderer/composables/operationError'
+import {
+  firmwareOperationError,
+  operationError
+} from '../../src/renderer/composables/operationError'
 import { useSettings } from '../../src/renderer/composables/useSettings'
 import { useConnectionFirmware } from '../../src/renderer/composables/useConnectionFirmware'
 import { useDeviceSetup } from '../../src/renderer/composables/useDeviceSetup'
@@ -47,6 +50,7 @@ function success(method: string): DeviceResult {
     getUpgradeSeid: 'TESTDEVICE',
     deviceBindCheck: 'bound_this',
     getBTCXpub: 'xpub-ready',
+    getLifeTime: 'life_time_wallet_ready',
     getFirmwareVersion: '1.0.0',
     getBleVersion: '1.0.0',
     exportBindCode: 'A2345678',
@@ -95,6 +99,27 @@ async function mounted() {
 }
 
 describe('firmware failures preserve the failing step', () => {
+  it.each(['manager', 'setting'] as const)(
+    'reports an incomplete native response without treating it as cancellation in %s',
+    async kind => {
+      mocks.call.mockImplementation(async name =>
+        name === 'cosUpdate'
+          ? {
+              isSuccess: false,
+              result: 'missing field `_ReturnData` at line 1 column 100',
+              operationId: 'op-123'
+            }
+          : success(name)
+      )
+      const firmware = useFirmwareUpgrade(kind)
+      await firmware.updateFirmware()
+      expect(firmware.state.errorInfo).toBe('firmware_response_incomplete [op-123]')
+      expect(firmware.state.errorStage).toBe('update')
+      expect(firmware.state.supportCode).toBe(3)
+      expect(useDeviceStore().isCosUpdate).toBe(true)
+      expect(mocks.call.mock.calls.some(([name]) => name === 'clearFirmwareRecovery')).toBe(false)
+    }
+  )
   for (const [method, stage] of [
     ['connectDevice', 'connect'],
     ['cosUpdate', 'update'],
@@ -114,6 +139,21 @@ describe('firmware failures preserve the failing step', () => {
       expect(firmware.state.busy).toBe(false)
     })
   }
+})
+
+it('maps only the known incomplete firmware response, retaining diagnostics', () => {
+  expect(
+    firmwareOperationError({
+      result: 'missing field _ReturnData at line 2 column 31',
+      operationId: 'op-456'
+    })
+  ).toBe('firmware_response_incomplete [op-456]')
+  expect(firmwareOperationError({ result: 'imkey_user_not_confirmed' })).toBe(
+    'imkey_user_not_confirmed'
+  )
+  expect(firmwareOperationError({ result: 'missing field other at line 2 column 31' })).toBe(
+    'missing field other at line 2 column 31'
+  )
 })
 describe('software updates fail visibly and support retry', () => {
   it('handles check rejection without an unhandled promise', async () => {
@@ -224,8 +264,25 @@ it('connection firmware reports the actual failed update cause', async () => {
   )
   const fail = vi.fn()
   const firmware = useConnectionFirmware(vi.fn(), fail, async () => {})
-  await firmware.toCosUpdate()
+  await firmware.toCosUpdate(true)
   expect(fail).toHaveBeenCalledWith('cos_upgrade_failed', 5, 'update')
+})
+it('connection recovery keeps the pending record when the firmware response is incomplete', async () => {
+  mocks.call.mockImplementation(async method =>
+    method === 'cosUpdate'
+      ? {
+          isSuccess: false,
+          result: 'missing field `_ReturnData` at line 1 column 100',
+          operationId: 'op-789'
+        }
+      : success(method)
+  )
+  const fail = vi.fn()
+  const firmware = useConnectionFirmware(vi.fn(), fail, async () => {})
+  await firmware.toCosUpdate(true)
+  expect(fail).toHaveBeenCalledWith('firmware_response_incomplete [op-789]', 5, 'update')
+  expect(firmware.hasPendingRecovery()).toBe(true)
+  expect(mocks.call.mock.calls.some(([name]) => name === 'clearFirmwareRecovery')).toBe(false)
 })
 it('connection restoration awaits its continuation before finishing', async () => {
   mocks.call.mockImplementation(async method => success(method))
@@ -238,7 +295,7 @@ it('connection restoration awaits its continuation before finishing', async () =
   )
   const firmware = useConnectionFirmware(vi.fn(), vi.fn(), continuation)
   let finished = false
-  const recovery = firmware.toCosUpdate().then(() => {
+  const recovery = firmware.toCosUpdate(true).then(() => {
     finished = true
   })
   await vi.waitFor(() => expect(continuation).toHaveBeenCalledOnce())
@@ -287,12 +344,94 @@ it('setup completion verifies wallet readiness and confirms the same device befo
   expect(mocks.call.mock.calls.map(([method]) => method)).toEqual([
     'connectDevice',
     'getSeid',
+    'isBLStatus',
+    'cosCheckUpdate',
+    'getFirmwareRecovery',
+    'getLifeTime',
+    'getSeid',
     'getBTCXpub',
     'getSeid'
   ])
   expect(mocks.push).toHaveBeenCalledExactlyOnceWith('/home/welcomeHome')
   expect(useDeviceStore().canEnterHome).toBe(true)
 })
+
+for (const entry of ['wallet instructions', 'setup completion'] as const) {
+  const navigation =
+    entry === 'wallet instructions'
+      ? { page: 4, active: 2, isNext: true }
+      : { page: 0, active: 0, isNext: false }
+  it.each([
+    ['life_time_wallet_unready', 'life_time_wallet_unready'],
+    ['life_time_wallet_creatting', 'life_time_wallet_creatting'],
+    ['life_time_wallet_recovering', 'life_time_wallet_recovering'],
+    ['life_time_unknown', 'wallet_status_unknown']
+  ])('%s blocks unready lifecycle %s before reading xpub', async (lifecycle, expected) => {
+    mocks.call.mockImplementation(async method =>
+      method === 'getLifeTime' ? { isSuccess: true, result: lifecycle } : success(method)
+    )
+    const setup = useDeviceSetup()
+    setup.page.value = entry === 'wallet instructions' ? 3 : 4
+    setup.finish.value = true
+    await setup.send(navigation)
+    expect(setup.errorInfo.value).toBe(expected)
+    expect(setup.errorStage.value).toBe('wallet')
+    expect(mocks.call.mock.calls.some(([method]) => method === 'getBTCXpub')).toBe(false)
+    expect(mocks.push).not.toHaveBeenCalled()
+  })
+  it(`${entry} preserves lifecycle read failure and never reads xpub`, async () => {
+    mocks.call.mockImplementation(async method =>
+      method === 'getLifeTime'
+        ? { isSuccess: false, result: 'get_life_time_error', operationId: 'op-123' }
+        : success(method)
+    )
+    const setup = useDeviceSetup()
+    setup.page.value = entry === 'wallet instructions' ? 3 : 4
+    setup.finish.value = true
+    await setup.send(navigation)
+    expect(setup.errorInfo.value).toBe('get_life_time_error [op-123]')
+    expect(setup.errorStage.value).toBe('wallet')
+    expect(mocks.call.mock.calls.some(([method]) => method === 'getBTCXpub')).toBe(false)
+    expect(mocks.push).not.toHaveBeenCalled()
+  })
+  it(`${entry} preserves xpub failure after readiness and retries the whole check`, async () => {
+    let xpubFails = true
+    mocks.call.mockImplementation(async method =>
+      method === 'getBTCXpub' && xpubFails
+        ? { isSuccess: false, result: 'imkey_command_data_error' }
+        : success(method)
+    )
+    const setup = useDeviceSetup()
+    setup.page.value = entry === 'wallet instructions' ? 3 : 4
+    setup.finish.value = true
+    await setup.send(navigation)
+    expect(setup.errorInfo.value).toBe('imkey_command_data_error')
+    expect(setup.errorStage.value).toBe('wallet')
+    expect(mocks.push).not.toHaveBeenCalled()
+    xpubFails = false
+    await setup.retry()
+    expect(mocks.call.mock.calls.filter(([method]) => method === 'getLifeTime')).toHaveLength(2)
+    expect(mocks.call.mock.calls.filter(([method]) => method === 'getBTCXpub')).toHaveLength(2)
+    if (entry === 'wallet instructions') expect(setup.page.value).toBe(4)
+    else expect(mocks.push).toHaveBeenCalledExactlyOnceWith('/home/welcomeHome')
+  })
+  it(`${entry} rejects a device replaced while reading its lifecycle`, async () => {
+    let lifeTimeRead = false
+    mocks.call.mockImplementation(async method => {
+      if (method === 'getLifeTime') lifeTimeRead = true
+      return method === 'getSeid' && lifeTimeRead
+        ? { isSuccess: true, result: 'REPLACEMENT' }
+        : success(method)
+    })
+    const setup = useDeviceSetup()
+    setup.page.value = entry === 'wallet instructions' ? 3 : 4
+    setup.finish.value = true
+    await setup.send(navigation)
+    expect(setup.errorInfo.value).toBe('device_session_changed')
+    expect(mocks.call.mock.calls.some(([method]) => method === 'getBTCXpub')).toBe(false)
+    expect(mocks.push).not.toHaveBeenCalled()
+  })
+}
 
 it('setup completion refuses a device replacement after a successful wallet read', async () => {
   let walletRead = false
@@ -318,7 +457,7 @@ it.each(['', 'not-a-wallet'])('an unready wallet (%s) cannot finish setup', asyn
   const setup = useDeviceSetup()
   setup.finish.value = true
   await setup.send({ page: 0, active: 0, isNext: false })
-  expect(setup.errorInfo.value).toBe('imkey_wallet_not_created')
+  expect(setup.errorInfo.value).toBe('invalid_wallet_response')
   expect(mocks.push).not.toHaveBeenCalled()
 })
 

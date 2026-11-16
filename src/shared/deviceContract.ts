@@ -9,6 +9,7 @@ export const deviceMethods = [
   'getRamSize',
   'getFirmwareVersion',
   'getBleVersion',
+  'getLifeTime',
   'getSdkInfo',
   'activeDevice',
   'cosUpdate',

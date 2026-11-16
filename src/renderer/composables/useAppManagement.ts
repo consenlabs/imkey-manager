@@ -16,6 +16,7 @@ import { operationError } from './operationError'
 import { isSessionRecoveryError } from './deviceSession'
 import { refreshDeviceIdentity } from './deviceIdentity'
 import { useDeviceRecovery } from './useDeviceRecovery'
+import { checkWalletReadiness } from './walletReadiness'
 import type { WalletChain } from '../../shared/deviceContract'
 
 interface PendingAddressRestore {
@@ -23,7 +24,7 @@ interface PendingAddressRestore {
   seid: string
   version: string
   previousVersion: string | null
-  remaining: WalletChain[]
+  addresses: WalletChain[]
 }
 // Keep completed downloads across page visits, but never reuse them for another device.
 const addressRestores = new WeakMap<object, Map<string, PendingAddressRestore>>()
@@ -109,6 +110,34 @@ export function useAppManagement() {
     state.errorInfo = ''
     state.errorStage = ''
   }
+  async function walletReady(
+    current: () => boolean,
+    retry: () => Promise<unknown>
+  ): Promise<boolean> {
+    const expectedSeid = device.connectedSeid
+    const result = await checkWalletReadiness(call)
+    if (!current()) return false
+    if (!result.isSuccess) {
+      fail(result, 'wallet', false, retry)
+      return false
+    }
+    const identity = await call('getSeid')
+    if (!current()) return false
+    if (!identity.isSuccess) {
+      fail(identity, 'wallet', false, retry)
+      return false
+    }
+    if (
+      !expectedSeid ||
+      !identity.result ||
+      identity.result.toUpperCase() !== expectedSeid.toUpperCase() ||
+      device.connectedSeid.toUpperCase() !== expectedSeid.toUpperCase()
+    ) {
+      fail('device_session_changed', 'connect', true, retry)
+      return false
+    }
+    return true
+  }
   async function getAppsList(current: () => boolean) {
     const response = await call('checkUpdate')
     if (!current()) return false
@@ -183,6 +212,7 @@ export function useAppManagement() {
       if (!connected.isSuccess) return fail(connected, 'connect', false, retry)
       if (!current()) return
       let pending = pendingRestore(item.id)
+      if (!(await walletReady(current, retry))) return
       if (pending) {
         const catalog = await call('checkUpdate')
         if (!current()) return
@@ -210,23 +240,20 @@ export function useAppManagement() {
           seid: device.connectedSeid,
           version: target.latestVersion,
           previousVersion: target.installedVersion,
-          remaining: [...new Set(response.result)]
+          addresses: [...new Set(response.result)]
         }
         restores.set(item.id, pending)
       }
+      if (!(await walletReady(current, retry))) return
+      // A reset can be followed by a newly created wallet between attempts,
+      // without an observable empty-wallet state. Restore every address for the
+      // current wallet instead of relying on an earlier wallet's successes.
       const registered = await call('writeWalletAddress', {
-        name: [...pending.remaining],
+        name: [...pending.addresses],
         filePath: app.userPath
       })
       if (!current()) return
-      if (!registered.isSuccess) {
-        if (registered.failed?.length) {
-          const failed = new Set(registered.failed)
-          const remaining = pending.remaining.filter(name => failed.has(name))
-          if (remaining.length) pending.remaining = remaining
-        }
-        return fail(registered, 'restore', false, retry)
-      }
+      if (!registered.isSuccess) return fail(registered, 'restore', false, retry)
       target.installedVersion = pending.version
       restores.delete(item.id)
     } catch (error) {
@@ -289,6 +316,7 @@ export function useAppManagement() {
       })
       if (!connected.isSuccess) return fail(connected, 'connect', false, retry)
       if (!current()) return
+      if (!(await walletReady(current, retry))) return
       operations[target.id] = 'delete'
       const result = await call('deleteApplet', target.name)
       if (!current()) return

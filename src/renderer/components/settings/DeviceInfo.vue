@@ -13,6 +13,7 @@ defineProps<{
   initializing?: boolean
   autoChecking?: boolean
   upgrading?: boolean
+  unavailable?: boolean
 }>()
 const emit = defineEmits<{
   isShowalert: []
@@ -35,7 +36,7 @@ const emit = defineEmits<{
           :class="{ 'firmware-available': isCosUpdate && !firmwareCheckFailed }"
         >
           <span
-            v-if="firmwareChecked && !initializing && !identityChecking"
+            v-if="firmwareChecked && !initializing && !identityChecking && !unavailable"
             data-testid="firmware-check-result"
             :data-status="firmwareCheckFailed ? 'failed' : isCosUpdate ? 'available' : 'latest'"
             aria-live="polite"
@@ -55,6 +56,7 @@ const emit = defineEmits<{
               isCosUpdate &&
               !checkingUpdate &&
               !initializing &&
+              !unavailable &&
               !firmwareCheckFailed
             "
             type="button"
@@ -71,7 +73,12 @@ const emit = defineEmits<{
             type="button"
             data-testid="firmware-check-button"
             :disabled="
-              checkingUpdate || initializing || autoChecking || identityChecking || upgrading
+              checkingUpdate ||
+              initializing ||
+              autoChecking ||
+              identityChecking ||
+              upgrading ||
+              unavailable
             "
             :aria-busy="Boolean(checkingUpdate)"
             @click="emit('checkUpdate')"
@@ -96,7 +103,7 @@ const emit = defineEmits<{
           <div class="serial-number-row">
             <dt>{{ $t('m.devicePages.serial_number') }}</dt>
             <dd>
-              <span>{{ initializing ? '—' : SN || '—' }}</span>
+              <span>{{ initializing || unavailable ? '—' : SN || '—' }}</span>
               <el-tooltip
                 trigger="manual"
                 :visible="copyTooltipDisabled"
@@ -107,7 +114,14 @@ const emit = defineEmits<{
                   class="copy-sn el-icon-copy-document"
                   type="button"
                   :aria-label="$t('m.devicePages.copy_serial_number')"
-                  :disabled="!SN || initializing || autoChecking || identityChecking || upgrading"
+                  :disabled="
+                    !SN ||
+                    initializing ||
+                    autoChecking ||
+                    identityChecking ||
+                    upgrading ||
+                    unavailable
+                  "
                   @click="emit('copyText')"
                 >
                   <img :src="copyIcon" alt="" />
@@ -117,7 +131,7 @@ const emit = defineEmits<{
           </div>
           <div>
             <dt>{{ $t('m.devicePages.firmware_version') }}</dt>
-            <dd>{{ initializing ? '—' : cosOldVersionData || '—' }}</dd>
+            <dd>{{ initializing || unavailable ? '—' : cosOldVersionData || '—' }}</dd>
           </div>
         </dl>
         <dl class="device-info-secondary">
@@ -127,7 +141,9 @@ const emit = defineEmits<{
               <button
                 class="exportBindCode"
                 type="button"
-                :disabled="initializing || autoChecking || identityChecking || upgrading"
+                :disabled="
+                  initializing || autoChecking || identityChecking || upgrading || unavailable
+                "
                 @click="emit('exportBindCode')"
               >
                 {{ $t('m.devicePages.export_binding_code') }}
@@ -136,7 +152,7 @@ const emit = defineEmits<{
           </div>
           <div>
             <dt>{{ $t('m.devicePages.bluetooth_version') }}</dt>
-            <dd>{{ initializing ? '—' : bleOldVersionData || '—' }}</dd>
+            <dd>{{ initializing || unavailable ? '—' : bleOldVersionData || '—' }}</dd>
           </div>
         </dl>
       </div>

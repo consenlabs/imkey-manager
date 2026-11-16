@@ -40,6 +40,14 @@ module.exports = {
       captureReadFailures: 0,
       firmwareVersion: control.initialCos || '2.0.0'
     })
+    // Apply test-controlled transaction changes in the serialized connector
+    // process. External writes to device-state.json can race a native call's
+    // read/save cycle and be silently overwritten by its older snapshot.
+    if (control.injectNativeIncomplete && !state.injectNativeIncompleteApplied) {
+      state.injectNativeIncompleteApplied = true
+      state.cosWritten = true
+      state.serverComplete = false
+    }
     const save = () => {
       fs.writeFileSync(process.env.IMKEY_E2E_STATE + '.tmp', JSON.stringify(states))
       fs.renameSync(process.env.IMKEY_E2E_STATE + '.tmp', process.env.IMKEY_E2E_STATE)
@@ -53,6 +61,8 @@ module.exports = {
     if (method === 'cos_update') {
       if (control.delayNativeMs)
         Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, control.delayNativeMs)
+      if (control.failIncompleteResponse)
+        return fail('missing field `_ReturnData` at line 1 column 100')
       if (!state.cosWritten || (state.serverComplete && state.binding === 'bound_this')) {
         state.cosWritten = true
         state.physicalWrites++
@@ -76,6 +86,8 @@ module.exports = {
       save()
     }
     if (method === 'register_address') {
+      if (control.delayAddressMs)
+        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, control.delayAddressMs)
       state.addressAttempts++
       save()
       if (control.failAddress) return fail('imkey_address_registration_fail')
@@ -84,6 +96,17 @@ module.exports = {
     }
     if (method === 'bind_check' && control.failBindingCheck)
       return fail('imkey_tsm_bind_check_fail')
+    if (method === 'get_life_time') {
+      if (control.walletDataError) return fail('imkey_command_data_error')
+      if (control.failWallet) return fail('imkey_wallet_read_failed')
+      return response(
+        device,
+        'GetLifeTimeRes',
+        'setLifeTime',
+        control.walletState ||
+          (control.walletMissing ? 'life_time_wallet_unready' : 'life_time_wallet_ready')
+      )
+    }
     if (
       method === 'get_firmware_version' &&
       state.cosWritten &&
@@ -155,6 +178,9 @@ module.exports = {
       return hex(result)
     }
     if (method === 'btc_get_xpub') {
+      if (control.failBtcRead) return fail('imkey_applet_not_exist')
+      if (control.walletMissing) return fail('imkey_wallet_not_created')
+      if (control.walletDataError) return fail('imkey_command_data_error')
       if (control.failWallet) return fail('imkey_wallet_read_failed')
       if (!state.appsInstalled || (control.binding || state.binding) !== 'bound_this')
         return fail('imkey_wallet_not_created')

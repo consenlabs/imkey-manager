@@ -31,7 +31,15 @@ const { later, updateNow, updateNowTip, checkSoftUpdate } = updater
 defineExpose({ checkSoftUpdate })
 </script>
 <template>
-  <div v-if="status == 1 || status == 6" class="container device-page" data-testid="device-page">
+  <div
+    v-if="
+      status == 1 ||
+      status == 6 ||
+      (status == 2 && (!updater.state.errorInfo || settings.state.deviceUnavailable))
+    "
+    class="container device-page"
+    data-testid="device-page"
+  >
     <DeviceInfo
       :SN="SN"
       :ble-old-version-data="bleOldVersionData"
@@ -45,24 +53,55 @@ defineExpose({ checkSoftUpdate })
       :auto-checking="autoChecking"
       :upgrading="busy"
       :identity-checking="verification.state.identityChecking"
+      :unavailable="settings.state.deviceUnavailable"
       @is-showalert="!busy && !autoChecking && isShowalert()"
       @copy-text="copyText"
       @export-bind-code="!busy && !autoChecking && exportBindCode()"
       @check-update="!busy && !autoChecking && settings.checkUpdate()"
     />
+    <div
+      v-if="settings.state.deviceUnavailable"
+      class="device-page-error"
+      data-testid="device-page-error"
+    >
+      <p>{{ $t('m.imKeyManager.access_error_please_check_your_network_connection') }}</p>
+      <ErrorDetail :message="settings.state.errorInfo" :stage="settings.state.errorStage" />
+      <button
+        type="button"
+        class="retry-button"
+        data-testid="device-page-retry"
+        :disabled="initializing || autoChecking || busy"
+        @click="settings.init()"
+      >
+        {{ $t('m.imKeyManager.retry') }}
+      </button>
+    </div>
     <DeviceVerificationCard
       variant="device"
-      :status="verification.state.identityChecking ? 'idle' : verification.state.status"
+      :status="
+        settings.state.deviceUnavailable || verification.state.identityChecking
+          ? 'idle'
+          : verification.state.status
+      "
       :activation-status="verification.state.activationStatus"
       :activated-at="verification.state.activatedAt"
-      :disabled="initializing || autoChecking || verification.state.identityChecking || busy"
+      :disabled="
+        settings.state.deviceUnavailable ||
+        initializing ||
+        autoChecking ||
+        verification.state.identityChecking ||
+        busy
+      "
       @verify="!busy && !autoChecking && verification.check()"
     />
     <ErrorDetail
-      :message="settings.state.errorInfo || updater.state.errorInfo"
+      :message="
+        settings.state.deviceUnavailable ? '' : settings.state.errorInfo || updater.state.errorInfo
+      "
       :stage="settings.state.errorInfo ? settings.state.errorStage : updater.state.errorStage"
     />
     <SettingsDialogs
+      v-if="!settings.state.deviceUnavailable"
       :support-code="supportCode"
       :phase="phase"
       :error-info="errorInfo"
@@ -93,3 +132,17 @@ defineExpose({ checkSoftUpdate })
   />
 </template>
 <style src="../styles/setting.css"></style>
+<style scoped src="../styles/retry.css"></style>
+<style scoped>
+.device-page-error {
+  max-width: 800px;
+  margin-top: 20px;
+  color: #8189a7;
+}
+.device-page-error p {
+  margin: 0;
+}
+.device-page-error :deep(.operation-error) {
+  margin-top: 8px;
+}
+</style>

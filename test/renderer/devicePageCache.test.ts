@@ -41,6 +41,7 @@ beforeEach(() => {
     if (method === 'getSeid' || method === 'getUpgradeSeid')
       return { isSuccess: true, result: seid }
     if (method === 'getBTCXpub') return { isSuccess: true, result: 'xpub-ready' }
+    if (method === 'getLifeTime') return { isSuccess: true, result: 'life_time_wallet_ready' }
     if (method === 'isBLStatus') return { isSuccess: true, result: false }
     if (method === 'deviceBindCheck') return { isSuccess: true, result: 'bound_this' }
     if (method === 'exportBindCode') return { isSuccess: true, result: 'test-binding-code' }

@@ -52,6 +52,7 @@ beforeEach(() => {
   mocks.offer.mockReset()
   mocks.call.mockReset().mockImplementation(async method => {
     if (method === 'getSeid') return { isSuccess: true, result: seid }
+    if (method === 'getLifeTime') return { isSuccess: true, result: 'life_time_wallet_ready' }
     if (method === 'deviceBindCheck') return { isSuccess: true, result: binding }
     if (method === 'downloadApplet' || method === 'updateApplet') {
       installedVersion = '1.0'
@@ -67,7 +68,7 @@ beforeEach(() => {
 })
 
 it.each(['install', 'update'] as const)(
-  '%s retries only failed addresses after checking identity and actual installed version',
+  '%s restores all addresses after checking identity and actual installed version',
   async kind => {
     if (kind === 'update') {
       installedVersion = '0.9'
@@ -90,20 +91,69 @@ it.each(['install', 'update'] as const)(
       'connectDevice',
       'getSeid',
       'deviceBindCheck',
+      'getLifeTime',
+      'getSeid',
       'checkUpdate',
       'connectDevice',
       'getSeid',
       'deviceBindCheck',
+      'getLifeTime',
+      'getSeid',
       'writeWalletAddress'
     ])
     expect(mocks.call).toHaveBeenLastCalledWith(
       'writeWalletAddress',
-      { name: ['Ethereum'], filePath: '' },
+      { name: ['Bitcoin', 'Ethereum'], filePath: '' },
       expect.anything()
     )
     expect(manager.apps.value[0].installed).toBe(true)
   }
 )
+
+it('retries all installed addresses after observing that the wallet was reset', async () => {
+  const manager = useAppManagement()
+  await manager.installApp(manager.apps.value[0])
+  const normal = mocks.call.getMockImplementation()!
+  mocks.call.mockImplementation(async (method, params) =>
+    method === 'getLifeTime'
+      ? { isSuccess: true, result: 'life_time_wallet_unready' }
+      : normal(method, params)
+  )
+  manager.ok()
+  await manager.installApp(manager.apps.value[0])
+  expect(manager.state.errorInfo).toBe('life_time_wallet_unready')
+  mocks.call.mockImplementation(normal)
+  mocks.call.mockClear()
+  manager.ok()
+  await manager.installApp(manager.apps.value[0])
+  expect(mocks.call).toHaveBeenCalledWith(
+    'writeWalletAddress',
+    { name: ['Bitcoin', 'Ethereum'], filePath: '' },
+    expect.anything()
+  )
+})
+
+it('restores all addresses when a wallet changes between attempts without an observed empty state', async () => {
+  let currentXpub = 'life_time_wallet_ready'
+  const normal = mocks.call.getMockImplementation()!
+  mocks.call.mockImplementation(async (method, params) =>
+    method === 'getLifeTime' ? { isSuccess: true, result: currentXpub } : normal(method, params)
+  )
+  const manager = useAppManagement()
+  await manager.installApp(manager.apps.value[0])
+  expect(manager.state.errorStage).toBe('restore')
+  currentXpub = 'life_time_wallet_ready'
+  mocks.call.mockClear()
+  manager.ok()
+  await manager.installApp(manager.apps.value[0])
+  expect(mocks.call).toHaveBeenCalledWith(
+    'writeWalletAddress',
+    { name: ['Bitcoin', 'Ethereum'], filePath: '' },
+    expect.anything()
+  )
+  expect(methods()).not.toContain('downloadApplet')
+  expect(manager.apps.value[0].installed).toBe(true)
+})
 
 it('retains the restore stage across a page revisit even after refreshing the installed catalog', async () => {
   const first = useAppManagement()
@@ -191,7 +241,7 @@ it('does not read a binding code while entering the application page', async () 
   expect(methods()).toContain('checkUpdate')
 })
 
-it('sends cloneable plain IPC parameters on the initial operation and partial retry', async () => {
+it('sends cloneable plain IPC parameters on the initial operation and retry', async () => {
   const normal = mocks.call.getMockImplementation()!
   const addressPayloads: unknown[] = []
   mocks.call.mockImplementation(async (method, params) => {
@@ -208,7 +258,7 @@ it('sends cloneable plain IPC parameters on the initial operation and partial re
   expect(manager.apps.value[0].installed).toBe(true)
   expect(addressPayloads).toEqual([
     { name: ['Bitcoin', 'Ethereum'], filePath: '' },
-    { name: ['Ethereum'], filePath: '' }
+    { name: ['Bitcoin', 'Ethereum'], filePath: '' }
   ])
   expect(methods().filter(method => method === 'downloadApplet')).toHaveLength(1)
 })

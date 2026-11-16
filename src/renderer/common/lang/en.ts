@@ -119,9 +119,13 @@ export const m = {
     ok: 'Confirm',
     firmware_update_fail: 'Firmware upgrade is not completed',
     find_firmware_update_fail_continue:
-      'It is detected that the application exit abnormal, please continue to upgrade, and imKey Manager can be used normally after completion',
+      'The firmware upgrade is incomplete. Check the device before continuing the upgrade.',
     imKey_pro_firmware_update_wait:
       'The imKey Pro firmware version is being upgraded, please wait patiently',
+    firmware_recovery_no_disconnect:
+      'Do not disconnect the USB cable or operate imKey during this operation.',
+    wallet_status_unknown_hint:
+      'Unable to confirm the wallet status. If the device was reset, create or restore a wallet on the device, then retry.',
     imKey_pro_firmware_update_no_disconnect:
       'Note: After the upgrade is completed, imKey Pro will automatically restart. During the upgrade process, please do not disconnect the USB connection and terminate the imKey operation at the same time',
     notice: 'upgrade tips',
@@ -220,6 +224,8 @@ export const m = {
     upgrade_done: 'Update completed',
     can_used_imKey_manager: 'Currently imKey Manager can be used normally',
     upgrade_fail: 'Update failed',
+    firmware_upgrade_failed_instructions:
+      'Check the device and try again. If the problem persists, contact support.',
     check_usb_internet_connect_click_upgrade_retry:
       'Please check the USB connection or network connection and try again after confirming that it is normal',
     bind_code_8_bit_world_uppercase: '8-digit binding code, English letters are all uppercase',
@@ -254,6 +260,8 @@ export const m = {
     update_tip_wait: 'After the update, the app will restart. Please be patient'
   },
   imKeyCoreErrorInfo: {
+    firmware_response_incomplete:
+      'The firmware upgrade response was incomplete, so its outcome could not be confirmed. Check the device and contact support.',
     binding_code_file_missing:
       'No saved binding code was found. Enter your binding code to continue.',
     firmware_recovery_not_ready:
@@ -282,7 +290,18 @@ export const m = {
     get_ram_size_error: 'get ram size error',
     get_firmware_version_error: 'get firmware version error',
     get_battery_power_error: 'get battery power error',
-    get_life_time_error: 'get life time error',
+    get_life_time_error:
+      'Unable to read the device wallet status. Check the device connection and retry.',
+    wallet_status_unknown:
+      'Unable to confirm the device wallet status. Check the device and retry.',
+    life_time_device_inited: 'Device setup is incomplete. Follow the instructions on the device.',
+    life_time_device_activated:
+      'Wallet setup is incomplete. Follow the instructions on the device.',
+    life_time_unset_pin: 'The device PIN has not been set. Follow the instructions on the device.',
+    life_time_wallet_unready:
+      'The device wallet is not ready. Create or restore a wallet on the device, then retry.',
+    life_time_wallet_creatting: 'The device is creating a wallet. Finish setup, then retry.',
+    life_time_wallet_recovering: 'The device is restoring a wallet. Finish recovery, then retry.',
     get_ble_name_error: 'get ble name error',
     get_ble_version_error: 'get ble version error',
     parse_arguments_to_str: 'parse arguments to str',
@@ -308,7 +327,8 @@ export const m = {
     imkey_applet_function_not_supported: 'applet function not supported',
     imkey_exceeded_max_utxo_number: 'exceeded max utxo number',
     imkey_command_execute_fail: 'command execute fail',
-    imkey_wallet_not_created: 'wallet not created',
+    imkey_wallet_not_created:
+      'No wallet has been created on this device. Create or restore a wallet on the device, then retry.',
     device_session_changed: 'The device or binding has changed. Return to the connection page.',
     device_operation_timeout:
       'The device stopped responding. Retry or return to the connection page.',

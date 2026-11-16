@@ -17,3 +17,13 @@ export function operationError(value: unknown): string {
   }
   return 'operation_failed'
 }
+
+// A missing response field can occur for multiple server errors, including a
+// rejected upgrade. It does not prove that the user cancelled the operation.
+export function firmwareOperationError(value: unknown): string {
+  const message = operationError(value)
+  const match = message.match(
+    /^missing field [`']?_ReturnData[`']? at line \d+ column \d+( \[[a-z0-9-]{1,64}\])?$/
+  )
+  return match ? `firmware_response_incomplete${match[1] || ''}` : message
+}

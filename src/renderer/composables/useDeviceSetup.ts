@@ -7,6 +7,8 @@ import { useBindCodeInput } from './useBindCodeInput'
 import { useTranslation } from './useTranslation'
 import { useDeviceRecovery } from './useDeviceRecovery'
 import { connectDeviceSession } from './deviceSession'
+import { loadFirmwareRecovery } from './firmwareRecovery'
+import { checkWalletReadiness } from './walletReadiness'
 import constants from '../../common/constants'
 
 type SetupStep = 'step1' | 'step2' | 'step3'
@@ -31,6 +33,7 @@ export function useDeviceSetup() {
   const state = reactive({
     errorInfo: '',
     errorStage: '',
+    walletStatusChecked: false,
     active: 0,
     page: 1,
     step1: false,
@@ -84,6 +87,7 @@ export function useDeviceSetup() {
     // Show feedback and prevent duplicate clicks even while another operation owns the queue.
     actionRevision++
     state.errorInfo = ''
+    state.walletStatusChecked = false
     state.busy = true
     state.pendingAction = pendingAction
     retryAction = action
@@ -295,14 +299,78 @@ export function useDeviceSetup() {
     state.errorStage = 'wallet'
     device.revokeHomeAccess()
     const connection = currentConnection()
+    if (authorizeHome) {
+      // A device can also have an unfinished native transaction without any
+      // local checkpoint. Leave recovery to the connection flow before home.
+      const bootloader = await callDevice('isBLStatus')
+      if (!operation.active() || !sameConnection(connection)) return false
+      if (!bootloader.isSuccess) {
+        failed(bootloader, 'check')
+        return false
+      }
+      if (typeof bootloader.result !== 'boolean') {
+        failed('invalid_firmware_response', 'check')
+        return false
+      }
+      if (bootloader.result) {
+        failed('firmware_recovery_not_ready', 'check', true)
+        return false
+      }
+      const status = await callDevice('cosCheckUpdate')
+      if (!operation.active() || !sameConnection(connection)) return false
+      if (!status.isSuccess) {
+        failed(status, 'check')
+        return false
+      }
+      if (
+        !status.result ||
+        typeof status.result !== 'object' ||
+        typeof status.result.isUpdateSuccess !== 'boolean'
+      ) {
+        failed('invalid_firmware_response', 'check')
+        return false
+      }
+      if (!status.result.isUpdateSuccess) {
+        failed('firmware_recovery_not_ready', 'check', true)
+        return false
+      }
+      // A setup flow may be reached while local firmware recovery is pending.
+      const pending = await loadFirmwareRecovery(callDevice, connection.seid)
+      if (!operation.active() || !sameConnection(connection)) return false
+      if (!pending.isSuccess) {
+        failed(pending, 'check')
+        return false
+      }
+      if (pending.result) {
+        failed('firmware_recovery_not_ready', 'check', true)
+        return false
+      }
+    }
+    const wallet = await checkWalletReadiness(callDevice)
+    if (!operation.active() || !sameConnection(connection)) return false
+    if (!wallet.isSuccess) {
+      failed(wallet, 'wallet')
+      return false
+    }
+    state.walletStatusChecked = true
+    const identity = await callDevice('getSeid')
+    if (!operation.active() || !sameConnection(connection)) return false
+    if (!identity.isSuccess) {
+      failed(identity, 'connect')
+      return false
+    }
+    if (identity.result.toUpperCase() !== connection.seid) {
+      failed('device_session_changed', 'connect', true)
+      return false
+    }
     const xpub = await callDevice('getBTCXpub', app.userPath)
     if (!operation.active() || !sameConnection(connection)) return false
     if (!xpub.isSuccess) {
       failed(xpub, 'wallet')
       return false
     }
-    if (!xpub.result.startsWith('xpub')) {
-      failed('imkey_wallet_not_created', 'wallet')
+    if (typeof xpub.result !== 'string' || !xpub.result.startsWith('xpub')) {
+      failed('invalid_wallet_response', 'wallet')
       return false
     }
     const confirmed = await callDevice('getSeid')

@@ -1,4 +1,5 @@
 import type { callDevice } from '../device'
+import { checkWalletReadiness } from './walletReadiness'
 import {
   isFirmwareRecoveryCheckpoint,
   type DeviceResult,
@@ -29,7 +30,7 @@ export interface FirmwareRecovery {
   pendingAddresses?: WalletChain[]
 }
 export interface FirmwareFailure {
-  stage: 'connect' | 'check' | 'update' | 'bind' | 'store' | 'restore'
+  stage: 'connect' | 'check' | 'update' | 'bind' | 'store' | 'restore' | 'wallet'
   error: DeviceResult
 }
 const cancelled = (): FirmwareFailure => ({
@@ -255,6 +256,39 @@ export async function runFirmwareRecovery(
         : [...new Set(installed)]
       recovery.phase = 'restore'
     } else if (phase === 'restore') {
+      if (recovery.pendingAddresses?.length === 0) {
+        recovery.phase = 'verify'
+        continue
+      }
+      const wallet = await checkWalletReadiness(call)
+      if (!current()) return cancelled()
+      if (!wallet.isSuccess) {
+        if (
+          [
+            'imkey_wallet_not_created',
+            'life_time_device_inited',
+            'life_time_device_activated',
+            'life_time_unset_pin',
+            'life_time_wallet_unready',
+            'life_time_wallet_creatting',
+            'life_time_wallet_recovering'
+          ].includes(wallet.result)
+        ) {
+          // A wallet recreated after reset can have different addresses despite
+          // the same SEID. Refresh the whole app list before retrying.
+          delete recovery.pendingAddresses
+          recovery.phase = 'apps'
+          const reset = await saveRecovery(recovery, call)
+          if (!current()) return cancelled()
+          if (!reset.isSuccess) return { stage: 'store', error: reset }
+        }
+        return { stage: 'wallet', error: wallet }
+      }
+      const identity = await call('getUpgradeSeid')
+      if (!current()) return cancelled()
+      if (!identity.isSuccess) return { stage: 'connect', error: identity }
+      if (identity.result.toUpperCase() !== recovery.seid.toUpperCase())
+        return { stage: 'connect', error: { isSuccess: false, result: 'device_session_changed' } }
       const response = await call('writeWalletAddress', {
         name: [...(recovery.pendingAddresses || [])],
         filePath: userPath
@@ -264,7 +298,14 @@ export async function runFirmwareRecovery(
         const failed = response.failed?.filter(name =>
           recovery.pendingAddresses?.includes(name as WalletChain)
         ) as WalletChain[] | undefined
-        if (failed?.length) recovery.pendingAddresses = [...new Set(failed)]
+        if (failed?.length) {
+          recovery.pendingAddresses = [...new Set(failed)]
+          // Record failed chains for diagnostics. A verified resume must rebuild
+          // the full list because the wallet may have changed on the same device.
+          const persisted = await saveRecovery(recovery, call)
+          if (!current()) return cancelled()
+          if (!persisted.isSuccess) return { stage: 'store', error: persisted }
+        }
         return { stage: 'restore', error: response }
       }
       recovery.phase = 'verify'
@@ -277,7 +318,8 @@ export async function runFirmwareRecovery(
         (recovery.needsBinding || !['unbound', 'bound_other'].includes(binding.result))
       )
         return { stage: 'bind', error: { isSuccess: false, result: 'device_bind_check_failed' } }
-      const validation = await validateFirmwareResume(recovery, call, current)
+      // This is the uninterrupted verification step, not a resumed checkpoint.
+      const validation = await validateFirmwareResume(recovery, call, current, false)
       if (validation) return validation
       const status = await call('cosCheckUpdate')
       if (!current()) return cancelled()
@@ -306,7 +348,8 @@ export async function runFirmwareRecovery(
 export async function validateFirmwareResume(
   recovery: FirmwareRecovery,
   call: typeof callDevice,
-  current: () => boolean
+  current: () => boolean,
+  restarting = true
 ): Promise<FirmwareFailure | undefined> {
   if (recovery.phase === 'update') return
   const bootloader = await call('isBLStatus')
@@ -333,5 +376,16 @@ export async function validateFirmwareResume(
   if (!identity.isSuccess) return { stage: 'connect', error: identity }
   if (identity.result.toUpperCase() !== recovery.seid.toUpperCase())
     return { stage: 'connect', error: { isSuccess: false, result: 'device_session_changed' } }
-  if (recovery.phase === 'restore') recovery.phase = 'apps'
+  if (
+    restarting &&
+    (recovery.phase === 'restore' ||
+      recovery.phase === 'apps' ||
+      (recovery.phase === 'verify' && recovery.needsBinding))
+  ) {
+    // The SEID identifies the device, not the wallet. Even without observing an
+    // empty-wallet state, the user may have restored a different wallet while the
+    // operation was interrupted. Re-register all currently installed addresses.
+    delete recovery.pendingAddresses
+    recovery.phase = 'apps'
+  }
 }

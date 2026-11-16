@@ -28,6 +28,7 @@ export function useSettings() {
     checkingUpdate: false,
     autoChecking: false,
     firmwareChecked: false,
+    deviceUnavailable: false,
     errorInfo: '',
     errorStage: ''
   })
@@ -38,6 +39,7 @@ export function useSettings() {
     if (!active || !operation.active()) return
     state.errorInfo = operationError(error)
     state.errorStage = stage
+    state.deviceUnavailable = true
     state.status = 2
     if (bindingFile || isSessionRecoveryError(error)) {
       const result = typeof error === 'string' ? error : (error as { result?: unknown })?.result
@@ -275,7 +277,7 @@ export function useSettings() {
   }
   function runInitialization(force: boolean) {
     if (!active || !operation.active() || loading || firmware.state.busy) return
-    const cached = !force && usableCachedInfo()
+    const cached = !force && !state.deviceUnavailable && usableCachedInfo()
     if (cached) {
       restoreCachedInfo(cached)
       state.initializing = false
@@ -314,6 +316,7 @@ export function useSettings() {
           await initialize(true, !cached)
         }
         if (active && operation.active() && device.sessionId === sessionId) {
+          if (device.identityReady && !state.errorInfo) state.deviceUnavailable = false
           if (firmware.state.cosUpdateStatus === '2') failedChecks.set(device, sessionId)
           else if (cachedFirmware(device)) failedChecks.delete(device)
         }
@@ -344,6 +347,7 @@ export function useSettings() {
       if (!active || !operation.active()) return
       state.SN = ''
       state.firmwareChecked = false
+      state.deviceUnavailable = true
       if (state.status === 1 || state.status === 6) state.status = 2
     }
   )

@@ -65,7 +65,7 @@
       </p>
       <h3>{{ $t('m.imKeyManager.firmware_update_fail') }}</h3>
       <p>{{ $t('m.imKeyManager.find_firmware_update_fail_continue') }}</p>
-      <ErrorDetail :message="flow.errorInfo" />
+      <ErrorDetail :message="flow.errorInfo" :stage="flow.errorStage" />
       <button @click="flow.changeState(1)">{{ $t('m.imKeyManager.ok') }}</button>
     </div>
   </div>

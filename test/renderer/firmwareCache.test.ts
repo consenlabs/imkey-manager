@@ -34,6 +34,7 @@ function response(method: string): DeviceResult {
     getUpgradeSeid: seid,
     isBLStatus: false,
     getBTCXpub: 'xpub-ready',
+    getLifeTime: 'life_time_wallet_ready',
     deviceBindCheck: 'bound_this',
     getFirmwareVersion: installedCos,
     getBleVersion: '3.0.03',

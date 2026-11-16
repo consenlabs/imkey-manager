@@ -7,7 +7,11 @@
       <WalletSetupInstructions :flow="flow" />
       <SetupCompletion :flow="flow" />
       <div v-if="flow.errorInfo" class="setup-error">
-        <ErrorDetail :message="flow.errorInfo" :stage="flow.errorStage" />
+        <ErrorDetail
+          :message="flow.errorInfo"
+          :stage="flow.errorStage"
+          :wallet-status-checked="flow.walletStatusChecked"
+        />
         <button type="button" class="retry-button retry-inline" @click="flow.retry">
           {{ $t('m.imKeyManager.retry') }}
         </button>

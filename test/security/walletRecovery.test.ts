@@ -64,6 +64,8 @@ describe('firmware address recovery preserves failure state', () => {
       await reply('connectDevice', { isSuccess: true, result: 'success' })
       await reply('getSeid', { isSuccess: true, result: 'test-device' })
       await reply('deviceBindCheck', { isSuccess: true, result: 'bound_this' })
+      await reply('getLifeTime', { isSuccess: true, result: 'life_time_wallet_ready' })
+      await reply('getSeid', { isSuccess: true, result: 'test-device' })
       await reply('cosUpdate', { isSuccess: true, result: 'success' })
       await reply('isBLStatus', { isSuccess: true, result: false })
       await reply('getFirmwareVersion', { isSuccess: true, result: 'new' })
@@ -77,6 +79,8 @@ describe('firmware address recovery preserves failure state', () => {
         isSuccess: true,
         result: { list: [{ name: 'Ethereum' }] }
       })
+      await reply('getLifeTime', { isSuccess: true, result: 'life_time_wallet_ready' })
+      await reply('getUpgradeSeid', { isSuccess: true, result: 'test-device' })
       await vi.waitFor(() =>
         expect(deviceMock.mock.calls.at(-1)?.slice(0, 2)).toEqual([
           'writeWalletAddress',
@@ -105,17 +109,21 @@ describe('firmware address recovery preserves failure state', () => {
         return {
           isSuccess: true,
           result:
-            method === 'getSeid' || method === 'getUpgradeSeid'
-              ? 'test-device'
-              : method === 'getFirmwareVersion'
-                ? 'new'
-                : method === 'getBleVersion'
-                  ? 'ble-new'
-                  : method === 'deviceBindCheck'
-                    ? 'bound_this'
-                    : method === 'importBindCode'
-                      ? undefined
-                      : 'success'
+            method === 'getLifeTime'
+              ? 'life_time_wallet_ready'
+              : method === 'getBTCXpub'
+                ? 'xpub-ready'
+                : method === 'getSeid' || method === 'getUpgradeSeid'
+                  ? 'test-device'
+                  : method === 'getFirmwareVersion'
+                    ? 'new'
+                    : method === 'getBleVersion'
+                      ? 'ble-new'
+                      : method === 'deviceBindCheck'
+                        ? 'bound_this'
+                        : method === 'importBindCode'
+                          ? undefined
+                          : 'success'
         }
       })
       const firmware = useFirmwareUpgrade(kind)
@@ -147,6 +155,8 @@ describe('firmware address recovery preserves failure state', () => {
     await reply('connectDevice', { isSuccess: true, result: 'success' })
     await reply('getSeid', { isSuccess: true, result: 'test-device' })
     await reply('deviceBindCheck', { isSuccess: true, result: 'bound_this' })
+    await reply('getLifeTime', { isSuccess: true, result: 'life_time_wallet_ready' })
+    await reply('getSeid', { isSuccess: true, result: 'test-device' })
     await reply('cosUpdate', { isSuccess: true, result: 'success' })
     await reply('isBLStatus', { isSuccess: true, result: false })
     await reply('getFirmwareVersion', { isSuccess: true, result: 'new' })
@@ -160,6 +170,8 @@ describe('firmware address recovery preserves failure state', () => {
       isSuccess: true,
       result: { list: [{ name: 'Ethereum' }] }
     })
+    await reply('getLifeTime', { isSuccess: true, result: 'life_time_wallet_ready' })
+    await reply('getUpgradeSeid', { isSuccess: true, result: 'test-device' })
     expect(firmware.state.supportCode).toBe(1)
     await reply('writeWalletAddress', { isSuccess: false, result: 'registration failed' })
     await upgrade
@@ -175,6 +187,7 @@ describe('firmware address recovery preserves failure state', () => {
       isBLStatus: false,
       cosCheckUpdate: { isUpdateSuccess: true },
       getBTCXpub: 'xpub-ready',
+      getLifeTime: 'life_time_wallet_ready',
       saveFirmwareRecovery: undefined,
       clearFirmwareRecovery: undefined
     }
@@ -194,6 +207,8 @@ describe('firmware address recovery preserves failure state', () => {
       'connectDevice',
       'getSeid',
       'deviceBindCheck',
+      'getLifeTime',
+      'getSeid',
       'saveFirmwareRecovery',
       'cosUpdate',
       'saveFirmwareRecovery',
@@ -228,6 +243,7 @@ describe('firmware completion does not grant home access prematurely', () => {
     getFirmwareVersion: 'new',
     getBleVersion: 'ble-new',
     getBTCXpub: 'xpub-ready',
+    getLifeTime: 'life_time_wallet_ready',
     isBLStatus: false,
     cosCheckUpdate: { isLatest: true, isUpdateSuccess: true },
     getInstalledApplets: { list: [{ name: 'Ethereum' }] },
@@ -331,13 +347,9 @@ describe('firmware completion does not grant home access prematurely', () => {
     expect(deviceMock.mock.calls.filter(([method]) => method === 'cosUpdate')).toHaveLength(1)
     expect(firmware.state.supportCode).not.toBe(2)
     expect(useDeviceStore().homeAuthorization).toBeNull()
-    for (const blocked of [
-      'importBindCode',
-      'writeWalletAddress',
-      'clearFirmwareRecovery',
-      'getBTCXpub'
-    ])
+    for (const blocked of ['importBindCode', 'writeWalletAddress', 'clearFirmwareRecovery'])
       expect(deviceMock.mock.calls.some(([method]) => method === blocked)).toBe(false)
+    expect(deviceMock.mock.calls.filter(([method]) => method === 'getBTCXpub')).toHaveLength(0)
   })
 
   it.each([
@@ -372,8 +384,9 @@ describe('firmware completion does not grant home access prematurely', () => {
       blocked: undefined
     }
   ])('blocks home when $method does not complete', async ({ method, result, stage, blocked }) => {
+    let walletReads = 0
     deviceMock.mockImplementation(async called =>
-      called === method
+      called === method && (method !== 'getBTCXpub' || ++walletReads === 1)
         ? (result as DeviceResult)
         : {
             isSuccess: true,
@@ -392,7 +405,15 @@ describe('firmware completion does not grant home access prematurely', () => {
     expect(firmware.state.errorStage).toBe(stage)
     expect(firmware.state.cosOldVersionData).toBe('old')
     expect(device.homeAuthorization).toBeNull()
-    if (blocked) expect(deviceMock.mock.calls.some(([called]) => called === blocked)).toBe(false)
+    if (blocked === 'getBTCXpub') {
+      const clearIndex = deviceMock.mock.calls.findIndex(
+        ([called]) => called === 'clearFirmwareRecovery'
+      )
+      expect(
+        deviceMock.mock.calls.slice(clearIndex + 1).some(([called]) => called === blocked)
+      ).toBe(false)
+    } else if (blocked)
+      expect(deviceMock.mock.calls.some(([called]) => called === blocked)).toBe(false)
     for (const [called, params] of deviceMock.mock.calls)
       if (called === 'saveFirmwareRecovery')
         expect(JSON.stringify(params)).not.toContain('A2345678')
@@ -419,13 +440,9 @@ describe('firmware completion does not grant home access prematurely', () => {
       await firmware.updateFirmware()
       expect(firmware.state.supportCode).not.toBe(2)
       expect(useDeviceStore().homeAuthorization).toBeNull()
-      for (const blocked of [
-        'importBindCode',
-        'writeWalletAddress',
-        'clearFirmwareRecovery',
-        'getBTCXpub'
-      ])
+      for (const blocked of ['importBindCode', 'writeWalletAddress', 'clearFirmwareRecovery'])
         expect(deviceMock.mock.calls.some(([method]) => method === blocked)).toBe(false)
+      expect(deviceMock.mock.calls.filter(([method]) => method === 'getBTCXpub')).toHaveLength(0)
     }
   )
 })
@@ -459,7 +476,11 @@ it('manager stops update spinner and enables retry after address registration fa
   await reply('getSeid', { isSuccess: true, result: 'test-device' })
   await reply('deviceBindCheck', { isSuccess: true, result: 'bound_this' })
   expect(manager.apps.value[0].updateLoading).toBe(true)
+  await reply('getLifeTime', { isSuccess: true, result: 'life_time_wallet_ready' })
+  await reply('getSeid', { isSuccess: true, result: 'test-device' })
   await reply('updateApplet', { isSuccess: true, result: ['Ethereum'] })
+  await reply('getLifeTime', { isSuccess: true, result: 'life_time_wallet_ready' })
+  await reply('getSeid', { isSuccess: true, result: 'test-device' })
   await reply('writeWalletAddress', { isSuccess: false, result: 'registration failed' })
   await update
   expect(manager.apps.value[0].updateLoading).toBe(false)

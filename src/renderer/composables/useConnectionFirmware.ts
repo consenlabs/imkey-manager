@@ -2,7 +2,7 @@ import { callDevice as defaultCall } from '../device'
 import type { DeviceOperation } from './useDeviceOperation'
 import { useAppStore, useDeviceStore } from '../store'
 import type { DeviceResult } from '../../shared/deviceContract'
-import { operationError } from './operationError'
+import { firmwareOperationError, operationError } from './operationError'
 import { isFirmwareDiagnosticStage } from '../../shared/firmwareDiagnostics'
 import {
   runFirmwareRecovery,
@@ -52,7 +52,11 @@ export function useConnectionFirmware(
       !error.isSuccess &&
       (error.result === 'binding_code_file_missing' ||
         error.code === 'BINDING_CODE_FILE_UNREADABLE')
-    fail(operationError(error), missingCode ? 7 : stage === 'connect' ? 4 : 5, stage)
+    fail(
+      stage === 'update' ? firmwareOperationError(error) : operationError(error),
+      missingCode ? 7 : stage === 'connect' ? 4 : 5,
+      stage
+    )
   }
   async function toCosUpdate(nativeIncomplete = false): Promise<void> {
     if (busy || !active()) return
@@ -83,6 +87,11 @@ export function useConnectionFirmware(
       }
       const attempt = recovery
       const current = () => active() && recovery === attempt
+      // An update checkpoint is persisted before the native call. If neither
+      // bootloader nor the server confirms an unfinished transaction, it is
+      // ambiguous whether that call ever started; do not initiate an upgrade.
+      if (!nativeIncomplete && attempt.phase === 'update')
+        return report({ isSuccess: false, result: 'firmware_recovery_not_ready' }, 'check')
       if (nativeIncomplete && attempt.phase !== 'update') {
         // Server-side native recovery remains authoritative when a native call
         // has not completed its application/BLE work.

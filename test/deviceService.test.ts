@@ -6,7 +6,7 @@ import { createDeviceHandlers } from '../src/service/handlers'
 import { DeviceQueue } from '../src/service/queue'
 import { ConnectorClient, allowedMockPath } from '../src/service/connector/ConnectorClient'
 import type { DeviceMethod } from '../src/shared/deviceContract'
-import { isValidDeviceParams } from '../src/shared/deviceContract'
+import { isDeviceMethod, isValidDeviceParams } from '../src/shared/deviceContract'
 import type { Handler } from '../src/service/handlers'
 import { api, btc, create, decode, device, invoke } from '../src/service/protobuf'
 
@@ -51,6 +51,58 @@ it('routes upgrade identity reads through the existing SEID response schema', as
   )
   expect(await handlers.getUpgradeSeid()).toEqual({ isSuccess: true, result: seid })
   expect(requests).toEqual(['get_upgrade_seid'])
+})
+it.each([
+  'life_time_wallet_unready',
+  'life_time_wallet_creatting',
+  'life_time_wallet_recovering',
+  'life_time_wallet_ready',
+  'life_time_unknown'
+])('routes getLifeTime and decodes the native lifecycle %s', async lifecycle => {
+  const requests: string[] = []
+  const handlers = createDeviceHandlers(
+    {
+      callImKeyApi(request) {
+        requests.push(request)
+        return Buffer.from(
+          create(device, 'GetLifeTimeRes', { setLifeTime: lifecycle }).serializeBinary()
+        ).toString('hex')
+      },
+      getLastErrorMessage: () => ''
+    },
+    '/fixture/userData'
+  )
+  expect(isDeviceMethod('getLifeTime')).toBe(true)
+  expect(isValidDeviceParams('getLifeTime', undefined)).toBe(true)
+  expect(isValidDeviceParams('getLifeTime', {})).toBe(false)
+  expect(await handlers.getLifeTime()).toEqual({ isSuccess: true, result: lifecycle })
+  expect(requests).toHaveLength(1)
+  const action = decode(api, 'ImkeyAction', requests[0])
+  expect(invoke<string>(action, 'getMethod')).toBe('get_life_time')
+  expect(invoke<boolean>(action, 'hasParam')).toBe(false)
+})
+
+it.each(['', '1001', 'xyz', 'ff'])('rejects malformed lifecycle response %j', async hex => {
+  const handlers = createDeviceHandlers(
+    { callImKeyApi: () => hex, getLastErrorMessage: () => '' },
+    '/fixture/userData'
+  )
+  expect(await handlers.getLifeTime()).toEqual({
+    isSuccess: false,
+    result: 'Invalid connector response for get_life_time',
+    code: 'INVALID_RESPONSE'
+  })
+})
+
+it('preserves native lifecycle query errors', async () => {
+  const handlers = createDeviceHandlers(
+    { callImKeyApi: () => '', getLastErrorMessage: () => 'get_life_time_error' },
+    '/fixture/userData'
+  )
+  expect(await handlers.getLifeTime()).toEqual({
+    isSuccess: false,
+    result: 'get_life_time_error'
+  })
 })
 function execute(api: DeviceApi, method: string, args: unknown[]): unknown {
   if (direct[method]) return api.deviceMethod(direct[method])

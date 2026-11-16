@@ -56,6 +56,7 @@ module.exports = {
       return ''
     }
     const descriptors = {
+      get_life_time: ['GetLifeTimeRes', 'setLifeTime', 'life_time_wallet_ready'],
       get_seid: ['GetSeidRes', 'setSeid', 'E2ESEID'],
       get_upgrade_seid: ['GetSeidRes', 'setSeid', 'E2ESEID'],
       get_sn: ['GetSnRes', 'setSn', 'SN123'],

@@ -13,7 +13,7 @@ let application: ElectronApplication
 let page: Page
 let directory: string
 
-async function launch(scenario = 'unbound', failure = ''): Promise<void> {
+async function launch(scenario = 'unbound', failure = '', language = 'en-US'): Promise<void> {
   directory = await mkdtemp(path.join(os.tmpdir(), 'imkey-wallet-setup-'))
   const env = Object.fromEntries(
     Object.entries(process.env).filter(
@@ -30,7 +30,7 @@ async function launch(scenario = 'unbound', failure = ''): Promise<void> {
     IMKEY_E2E_SETUP_CONTROL_FILE: path.join(directory, 'setup-control.json'),
     IMKEY_E2E_LOG: path.join(directory, 'calls.log')
   })
-  application = await electron.launch({ args: [path.resolve('.'), '--lang=en-US'], env })
+  application = await electron.launch({ args: [path.resolve('.'), `--lang=${language}`], env })
   page = await application.firstWindow()
   await expect(page.locator('.appStart')).toBeVisible()
 }
@@ -43,6 +43,8 @@ async function control(value: {
   delayMethod?: string
   delayMs?: number
   failMethod?: string
+  failReason?: string
+  lifeTime?: string
   seid?: string
   bindStatus?: string
 }): Promise<void> {
@@ -77,7 +79,30 @@ async function reachWalletInstructions(): Promise<void> {
   expect(await calls()).toEqual(beforeInstructions)
 }
 
-const walletCheckCalls = ['device_connect', 'get_seid', 'bind_check', 'btc_get_xpub', 'get_seid']
+const walletCheckCalls = [
+  'device_connect',
+  'get_seid',
+  'get_life_time',
+  'get_seid',
+  'bind_check',
+  'btc_get_xpub',
+  'get_seid'
+]
+const completionCheckPrefix = [
+  'device_connect',
+  'get_seid',
+  'is_bl_status',
+  'cos_check_update',
+  'get_upgrade_seid'
+]
+const completionWalletCheckCalls = [
+  ...completionCheckPrefix,
+  'get_life_time',
+  'get_seid',
+  'bind_check',
+  'btc_get_xpub',
+  'get_seid'
+]
 
 async function confirmBackup(): Promise<void> {
   await expect(page.locator('.set4 .nextBtn')).toBeDisabled()
@@ -108,7 +133,7 @@ test('completing setup checks wallet readiness and enters home without prefetchi
   const before = await calls()
   await page.locator('.set4 .nextBtn').click()
   await expect(page.locator('.homeBox')).toBeVisible()
-  expect((await calls()).slice(before.length)).toEqual(walletCheckCalls)
+  expect((await calls()).slice(before.length)).toEqual(completionWalletCheckCalls)
   expect((await calls()).filter(method => method === 'btc_get_xpub')).toHaveLength(2)
   expect(await calls()).not.toContain('get_address')
   await page.screenshot({ path: 'test-results/wallet-setup-complete.png' })
@@ -198,7 +223,7 @@ test('wallet checks show loading, disable navigation and perform one binding che
       await confirmBackup()
     } else {
       await expect(page.locator('.homeBox')).toBeVisible()
-      expect((await calls()).slice(before.length)).toEqual(walletCheckCalls)
+      expect((await calls()).slice(before.length)).toEqual(completionWalletCheckCalls)
     }
   }
 })
@@ -234,7 +259,9 @@ for (const boundary of ['wallet', 'completion'] as const) {
       expect((await calls()).slice(before.length)).toEqual(
         change === 'identity'
           ? ['device_connect', 'get_seid']
-          : ['device_connect', 'get_seid', 'bind_check']
+          : boundary === 'completion'
+            ? [...completionCheckPrefix, 'get_life_time', 'get_seid', 'bind_check']
+            : ['device_connect', 'get_seid', 'get_life_time', 'get_seid', 'bind_check']
       )
     })
   }
@@ -256,6 +283,79 @@ test('wallet instructions recheck a disconnected device and resume through the r
   await dialog.getByRole('button', { name: /retry/i }).click()
   await expect(page.locator('.set4')).toBeVisible()
   expect((await calls()).slice(beforeRetry.length)).toEqual(walletCheckCalls)
+})
+
+for (const boundary of ['wallet', 'completion'] as const) {
+  for (const [lifeTime, message] of [
+    ['life_time_wallet_unready', 'The device wallet is not ready'],
+    ['life_time_wallet_creatting', 'The device is creating a wallet'],
+    ['life_time_wallet_recovering', 'The device is restoring a wallet'],
+    ['life_time_unknown', 'Unable to confirm the device wallet status']
+  ]) {
+    test(`${boundary} reports ${lifeTime} before xpub and allows retry`, async () => {
+      await launch()
+      if (boundary === 'wallet') await reachWalletInstructions()
+      else await completeSetupSteps()
+      await control({ lifeTime })
+      const current = boundary === 'wallet' ? '.set3' : '.set4'
+      const before = await calls()
+      await page.locator(`${current} .nextBtn`).click()
+      await expect(page.locator('.setup-error')).toContainText(message)
+      await expect(page.locator(current)).toBeVisible()
+      await expect(page.locator('.homeBox')).toHaveCount(0)
+      expect((await calls()).slice(before.length)).toContain('get_life_time')
+      expect((await calls()).slice(before.length)).not.toContain('btc_get_xpub')
+      await control({})
+      await page.locator('.device-recovery-dialog').getByRole('button', { name: /retry/i }).click()
+      await expect(page.locator(boundary === 'wallet' ? '.set4' : '.homeBox')).toBeVisible()
+    })
+  }
+
+  test(`${boundary} reports lifecycle read failure without attempting xpub`, async () => {
+    await launch()
+    if (boundary === 'wallet') await reachWalletInstructions()
+    else await completeSetupSteps()
+    await control({ failMethod: 'get_life_time', failReason: 'get_life_time_error' })
+    const current = boundary === 'wallet' ? '.set3' : '.set4'
+    const before = await calls()
+    await page.locator(`${current} .nextBtn`).click()
+    await expect(page.locator('.setup-error')).toContainText(
+      'Unable to read the device wallet status'
+    )
+    expect((await calls()).slice(before.length)).not.toContain('btc_get_xpub')
+    await expect(page.locator(current)).toBeVisible()
+    await expect(page.locator('.homeBox')).toHaveCount(0)
+  })
+
+  test(`${boundary} preserves a post-readiness xpub error and retries`, async () => {
+    await launch()
+    if (boundary === 'wallet') await reachWalletInstructions()
+    else await completeSetupSteps()
+    await control({ failMethod: 'btc_get_xpub', failReason: 'imkey_command_data_error' })
+    const current = boundary === 'wallet' ? '.set3' : '.set4'
+    const before = await calls()
+    await page.locator(`${current} .nextBtn`).click()
+    await expect(page.locator('.setup-error')).toContainText('command')
+    await expect(page.locator('.setup-error')).not.toContainText('If the device was reset')
+    const methods = (await calls()).slice(before.length)
+    expect(methods).toContain('get_life_time')
+    expect(methods).toContain('btc_get_xpub')
+    expect(methods.indexOf('get_life_time')).toBeLessThan(methods.indexOf('btc_get_xpub'))
+    await control({})
+    await page.locator('.device-recovery-dialog').getByRole('button', { name: /retry/i }).click()
+    await expect(page.locator(boundary === 'wallet' ? '.set4' : '.homeBox')).toBeVisible()
+  })
+}
+
+test('wallet instructions show the Chinese wallet-not-ready guidance', async () => {
+  await launch('unbound', '', 'zh-CN')
+  await reachWalletInstructions()
+  await control({ lifeTime: 'life_time_wallet_unready' })
+  const before = await calls()
+  await page.locator('.set3 .nextBtn').click()
+  await expect(page.locator('.setup-error')).toContainText('设备钱包尚未就绪')
+  await expect(page.locator('.setup-error')).toContainText('创建或恢复钱包')
+  expect((await calls()).slice(before.length)).not.toContain('btc_get_xpub')
 })
 
 for (const failure of ['not-ready', 'disconnected']) {

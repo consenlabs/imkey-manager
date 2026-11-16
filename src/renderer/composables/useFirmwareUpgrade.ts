@@ -2,9 +2,10 @@ import { nextTick, reactive, watch } from 'vue'
 import { useDeviceOperation, type DeviceOperation } from './useDeviceOperation'
 import { useAppStore } from '../store/app'
 import { useDeviceStore } from '../store/device'
-import { operationError } from './operationError'
+import { firmwareOperationError, operationError } from './operationError'
 import { refreshDeviceIdentity } from './deviceIdentity'
 import { useDeviceRecovery } from './useDeviceRecovery'
+import { checkWalletReadiness } from './walletReadiness'
 import {
   cachedFirmware,
   firmwareAvailable,
@@ -141,7 +142,7 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
       recovery.offer(error, updateFirmware, { reconnectOnly: true })
       return
     }
-    state.errorInfo = operationError(error)
+    state.errorInfo = stage === 'update' ? firmwareOperationError(error) : operationError(error)
     state.errorStage = stage
     state.isCosUpdate = true
     device.isCosUpdate = true
@@ -284,6 +285,19 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
         return fail(connected, 'connect')
       }
       if (!current()) return
+      if (!attempt) {
+        // A new upgrade must not start when its post-upgrade address work cannot
+        // derive a wallet. An existing recovery must continue even in bootloader.
+        const wallet = await checkWalletReadiness(callDevice)
+        if (!current()) return
+        if (!wallet.isSuccess) return fail(wallet, 'wallet')
+        // Do not trust a wallet read from a device that was replaced during it.
+        const identity = await callDevice('getSeid')
+        if (!current()) return
+        if (!identity.isSuccess) return fail(identity, 'connect')
+        if (identity.result.toUpperCase() !== device.connectedSeid.toUpperCase())
+          return fail('device_session_changed', 'connect')
+      }
       const needsBinding = kind === 'manager' || data.cosOldVersionData !== data.cosNewVersionData
       if (!attempt && needsBinding && !data.bindCode) {
         const binding = await callDevice('exportBindCode')

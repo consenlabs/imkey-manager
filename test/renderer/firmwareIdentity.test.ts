@@ -37,6 +37,7 @@ function response(method: string): DeviceResult {
       latestBleVersion: actualBle
     },
     getBTCXpub: 'xpub-ready',
+    getLifeTime: 'life_time_wallet_ready',
     exportBindCode: 'binding-code-A',
     getInstalledApplets: { list: [{ name: 'Nervos' }] }
   }
@@ -151,7 +152,10 @@ it.each(['manager', 'setting'] as const)(
       'writeWalletAddress'
     ])
     expect(methods().indexOf('saveFirmwareRecovery')).toBeLessThan(methods().indexOf('cosUpdate'))
-    expect(methods().lastIndexOf('deviceBindCheck')).toBeLessThan(methods().indexOf('getBTCXpub'))
+    expect(methods().indexOf('getLifeTime')).toBeLessThan(methods().indexOf('cosUpdate'))
+    expect(methods().lastIndexOf('deviceBindCheck')).toBeLessThan(
+      methods().lastIndexOf('getBTCXpub')
+    )
     expect(device.canEnterHome).toBe(true)
     expect(mocks.call.mock.calls.find(([method]) => method === 'deviceBindAcquire')?.[1]).toBe(
       'binding-code-A'
@@ -175,6 +179,48 @@ it.each(['manager', 'setting'] as const)(
     expect(mocks.offer).not.toHaveBeenCalled()
   }
 )
+
+it.each([
+  { isSuccess: true, result: 'life_time_wallet_unready' },
+  { isSuccess: true, result: 'life_time_wallet_creatting' },
+  { isSuccess: true, result: 'life_time_wallet_recovering' },
+  { isSuccess: false, result: 'imkey_command_data_error' },
+  { isSuccess: false, result: 'device_not_connected' },
+  { isSuccess: true, result: 'invalid-proof' }
+] as DeviceResult[])('blocks a new upgrade when the wallet check returns %j', async wallet => {
+  const { firmware, device } = setup()
+  mocks.call.mockImplementation(async method =>
+    method === 'getLifeTime' ? wallet : response(method)
+  )
+  await firmware.updateFirmware()
+  expect(firmware.state).toMatchObject({
+    supportCode: 3,
+    errorStage: 'wallet',
+    errorInfo:
+      wallet.isSuccess && wallet.result === 'invalid-proof'
+        ? 'wallet_status_unknown'
+        : wallet.result,
+    busy: false
+  })
+  expect(methods()).not.toContain('saveFirmwareRecovery')
+  expect(deviceWrites()).toEqual([])
+  expect(device.canEnterHome).toBe(false)
+})
+
+it('rejects device replacement during the wallet check before an upgrade starts', async () => {
+  const { firmware, device } = setup()
+  mocks.call.mockImplementation(async method => {
+    if (method === 'getLifeTime') seid = 'SEID-B'
+    return response(method)
+  })
+  await firmware.updateFirmware()
+  expect(methods()).not.toContain('saveFirmwareRecovery')
+  expect(deviceWrites()).toEqual([])
+  expect(device.canEnterHome).toBe(false)
+  expect(mocks.offer).toHaveBeenCalledWith(expect.anything(), expect.any(Function), {
+    reconnectOnly: true
+  })
+})
 
 it.each(['manager', 'setting'] as const)(
   '%s completes using the installed version and keeps a different published release available',
@@ -257,6 +303,8 @@ it('loads an uncached binding code after identity confirmation and reuses it dur
     'connectDevice',
     'getSeid',
     'deviceBindCheck',
+    'getLifeTime',
+    'getSeid',
     'exportBindCode',
     'connectDevice',
     'getSeid',
@@ -319,10 +367,12 @@ it('stops before cosUpdate when an uncached binding code cannot be read and retr
   expect(firmware.state).toMatchObject({ supportCode: 3, errorStage: 'store', bindCode: '' })
   mocks.call.mockClear().mockImplementation(async method => response(method))
   await firmware.updateFirmware()
-  expect(methods().slice(0, 9)).toEqual([
+  expect(methods().slice(0, 11)).toEqual([
     'connectDevice',
     'getSeid',
     'deviceBindCheck',
+    'getLifeTime',
+    'getSeid',
     'exportBindCode',
     'connectDevice',
     'getSeid',
@@ -345,6 +395,8 @@ it('does not retain the lazily read binding code or upgrade if the device change
     'connectDevice',
     'getSeid',
     'deviceBindCheck',
+    'getLifeTime',
+    'getSeid',
     'exportBindCode',
     'connectDevice',
     'getSeid'
@@ -597,6 +649,8 @@ it('reports reading and verifying after the native update without returning to p
     ['connectDevice', 'preparing'],
     ['getSeid', 'preparing'],
     ['deviceBindCheck', 'preparing'],
+    ['getLifeTime', 'preparing'],
+    ['getSeid', 'preparing'],
     ['cosUpdate', 'update'],
     ['isBLStatus', 'reading'],
     ['getFirmwareVersion', 'reading'],
@@ -607,6 +661,8 @@ it('reports reading and verifying after the native update without returning to p
     ['deviceBindCheck', 'store'],
     ['importBindCode', 'store'],
     ['getInstalledApplets', 'restore'],
+    ['getLifeTime', 'restore'],
+    ['getUpgradeSeid', 'restore'],
     ['writeWalletAddress', 'restore'],
     ['deviceBindCheck', 'verifying'],
     ['isBLStatus', 'verifying'],
@@ -669,10 +725,11 @@ it.each(['clearFirmwareRecovery', 'getBTCXpub', 'final-identity'])(
     let walletRead = false
     mocks.call.mockImplementation(method => {
       const shouldPause =
-        pendingProof === 'final-identity'
+        firmware.state.phase === 'verifying' &&
+        (pendingProof === 'final-identity'
           ? method === 'getUpgradeSeid' && walletRead
-          : method === pendingProof
-      if (method === 'getBTCXpub') walletRead = true
+          : method === pendingProof)
+      if (method === 'getBTCXpub' && firmware.state.phase === 'verifying') walletRead = true
       if (shouldPause)
         return new Promise(resolve => {
           release = () => resolve(response(method))
@@ -703,9 +760,10 @@ it.each([
     { flush: 'sync' }
   )
   mocks.call.mockImplementation(async method => {
-    if (method === 'clearFirmwareRecovery' || method === 'getBTCXpub')
-      expect(firmware.state.phase).toBe('verifying')
-    return method === 'getBTCXpub' ? wallet : response(method)
+    if (method === 'clearFirmwareRecovery') expect(firmware.state.phase).toBe('verifying')
+    return method === 'getBTCXpub' && firmware.state.phase === 'verifying'
+      ? wallet
+      : response(method)
   })
   await firmware.updateFirmware()
   stop()
@@ -731,11 +789,11 @@ it('reports checkpoint cleanup failure as storage without completing or reading 
   await firmware.updateFirmware()
   expect(report).toHaveBeenCalledExactlyOnceWith('store', failure)
   expect(firmware.state).toMatchObject({ supportCode: 3, phase: 'verifying' })
-  expect(methods()).not.toContain('getBTCXpub')
+  expect(methods().filter(method => method === 'getLifeTime')).toHaveLength(2)
   expect(useDeviceStore().canEnterHome).toBe(false)
 })
 
-it('retries only the failed address chains after firmware, binding and storage have succeeded', async () => {
+it('retries all installed address chains without repeating firmware, binding or storage', async () => {
   const { firmware } = setup()
   let failed = false
   mocks.call.mockImplementation(async method => {
@@ -759,7 +817,7 @@ it('retries only the failed address chains after firmware, binding and storage h
     mocks.call.mock.calls.filter(([method]) => method === 'writeWalletAddress').map(([, p]) => p)
   ).toEqual([
     { name: ['Bitcoin', 'Ethereum'], filePath: '/test/user' },
-    { name: ['Ethereum'], filePath: '/test/user' }
+    { name: ['Bitcoin', 'Ethereum'], filePath: '/test/user' }
   ])
   expect(firmware.state).toMatchObject({ supportCode: 2, recovering: false })
 })

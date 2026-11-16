@@ -40,8 +40,11 @@ watch(
         {{ $t(`m.imKeyManager.firmware_phase_${phase}`) }}
       </h4>
       <line></line>
-      <p>{{ $t('m.imKeyManager.restart_automatically_after_upgrade') }}</p>
-      <p>{{ $t('m.imKeyManager.upgrading_do_not_disconnect_usb_operating') }}</p>
+      <template v-if="phase === 'update'">
+        <p>{{ $t('m.imKeyManager.restart_automatically_after_upgrade') }}</p>
+        <p>{{ $t('m.imKeyManager.upgrading_do_not_disconnect_usb_operating') }}</p>
+      </template>
+      <p v-else>{{ $t('m.imKeyManager.firmware_recovery_no_disconnect') }}</p>
     </div>
   </dialog>
   <div class="alert" v-if="supportCode == 2">
@@ -85,7 +88,7 @@ watch(
       </svg>
 
       <h5>{{ $t('m.imKeyManager.upgrade_fail') }}</h5>
-      <p>{{ $t('m.imKeyManager.check_usb_internet_connect_click_upgrade_retry') }}</p>
+      <p>{{ $t('m.imKeyManager.firmware_upgrade_failed_instructions') }}</p>
       <ErrorDetail :message="errorInfo" :stage="errorStage" />
       <button @click="emit('changeCode', 0)">{{ $t('m.imKeyManager.ok') }}</button>
     </div>

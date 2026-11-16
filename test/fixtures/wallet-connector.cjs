@@ -32,7 +32,12 @@ module.exports = {
         : {}
     if (control.delayMethod === method && control.delayMs > 0)
       Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, control.delayMs)
-    if (control.failMethod === method) return failure(method, 'device_not_connected')
+    if (control.failMethod === method)
+      return failure(method, control.failReason || 'device_not_connected')
+    if (method === 'get_life_time' && control.lifeTime) {
+      record(method)
+      return response(device, 'GetLifeTimeRes', 'setLifeTime', control.lifeTime)
+    }
     if (method === 'get_seid' && control.seid) {
       record(method)
       return response(device, 'GetSeidRes', 'setSeid', control.seid)

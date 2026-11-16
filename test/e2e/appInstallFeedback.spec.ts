@@ -176,7 +176,7 @@ test('a mixed connector address list retains the existing Ethereum registration 
   expect(completed.map(call => call.method)).not.toContain('register_pub_key')
 })
 
-test('a partial address recovery retries only failed chains without downloading the app again', async () => {
+test('a partial address recovery retries all chains without downloading the app again', async () => {
   await launch()
   await configure({ addresses: ['Ethereum', 'Bitcoin'], failAddresses: ['ETHEREUM'] })
   const before = (await calls()).length
@@ -192,7 +192,7 @@ test('a partial address recovery retries only failed chains without downloading 
   expect(completed.filter(call => call.method === 'app_download')).toHaveLength(1)
   expect(
     completed.filter(call => call.method === 'register_address' && call.chain === 'BITCOIN')
-  ).toHaveLength(1)
+  ).toHaveLength(2)
   expect(
     completed.filter(call => call.method === 'register_address' && call.chain === 'ETHEREUM')
   ).toHaveLength(2)

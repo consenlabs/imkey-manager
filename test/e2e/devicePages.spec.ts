@@ -339,6 +339,60 @@ test('initial metadata failure retries device reads and then checks firmware', a
   expect(await count('cos_check_update')).toBe(firmwareChecks + 1)
 })
 
+test('device connection failure keeps placeholders and allows an explicit retry', async () => {
+  await launch()
+  await verify()
+  await configure({
+    fault: { id: 'initial-disconnect', method: 'device_connect', error: 'device_not_connected' }
+  })
+  await tab(2)
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toBeVisible()
+  await closeError()
+
+  const card = page.getByTestId('device-info-card')
+  await expect(card).toBeVisible()
+  await expect(card).not.toContainText('PAGE-SN-A')
+  await expect(page.locator('.device-info-primary > div').first().locator('dd span')).toHaveText(
+    '—'
+  )
+  await expect(page.locator('.device-info-primary > div').last().locator('dd')).toHaveText('—')
+  await expect(page.locator('.device-info-secondary > div').last().locator('dd')).toHaveText('—')
+  await expect(page.getByTestId('firmware-check-button')).toBeDisabled()
+  await expect(page.locator('.exportBindCode')).toBeDisabled()
+  await expect(page.getByTestId('secure-check-button')).toBeDisabled()
+  await expect(page.getByTestId('device-verification-card')).toHaveAttribute('data-status', 'idle')
+  await expect(page.locator('.activation-row dd')).toHaveText('—')
+  await expect(page.locator('.activation-date-row dd')).toHaveText('—')
+  await expect(page.getByTestId('secure-check-result')).not.toContainText('2026-10-18')
+  await expect(page.getByTestId('device-page-error')).toBeVisible()
+
+  // A background Manager software update result must not clear a device error.
+  for (const available of [true, false]) {
+    await application.evaluate(({ app }, updateAvailable) => {
+      const require = process
+        .getBuiltinModule('module')
+        .createRequire(app.getAppPath() + '/package.json')
+      const updater = require('electron-updater').autoUpdater
+      updater.emit(updateAvailable ? 'update-available' : 'update-not-available', {
+        version: '2.2.1',
+        releaseNotes: ''
+      })
+    }, available)
+    await expect(page.locator('.tip6')).toHaveCount(available ? 1 : 0)
+    await expect(page.getByTestId('device-page-error')).toBeVisible()
+    await expect(page.locator('.serial-number-row dd > span')).toHaveText('—')
+    await expect(page.getByTestId('firmware-check-button')).toBeDisabled()
+    await expect(page.getByTestId('secure-check-button')).toBeDisabled()
+  }
+
+  await page.getByTestId('device-page-retry').click()
+  await expect(page.getByTestId('device-page-error')).toHaveCount(0)
+  await expect(card).toContainText('PAGE-SN-A')
+  await expect(page.getByTestId('firmware-check-button')).toBeEnabled()
+  await expect(page.getByTestId('secure-check-button')).toBeEnabled()
+})
+
 for (const gateMethod of ['device_connect', 'cos_check_update']) {
   test(`firmware refresh keeps the current page and verification visible while ${gateMethod} is pending`, async () => {
     await launch()
@@ -532,6 +586,8 @@ test('explicit firmware checking caches an upgrade that reads its binding code w
     'device_connect',
     'get_seid',
     'bind_check',
+    'get_life_time',
+    'get_seid',
     'get_seid',
     'device_connect',
     'get_seid',

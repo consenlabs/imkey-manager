@@ -19,6 +19,7 @@ const deviceResponses: Record<string, [string, string | null]> = {
   get_ram_size: ['GetRamSizeRes', 'getRamSize'],
   get_firmware_version: ['GetFirmwareVersionRes', 'getFirmwareVersion'],
   get_ble_version: ['GetBleVersionRes', 'getBleVersion'],
+  get_life_time: ['GetLifeTimeRes', 'getLifeTime'],
   get_sdk_info: ['GetSdkInfoRes', 'getSdkVersion'],
   check_update: ['CheckUpdateRes', null],
   cos_check_update: ['CosCheckUpdateRes', null],
@@ -57,6 +58,7 @@ export class DeviceApi {
           'GetSnRes',
           'GetFirmwareVersionRes',
           'GetBleVersionRes',
+          'GetLifeTimeRes',
           'DeviceSnCheckRes',
           'BtcXpubRes'
         ].includes(response))
@@ -68,9 +70,16 @@ export class DeviceApi {
       }
     try {
       const message = decode(schema, response, hex)
+      const result = getter ? invoke<unknown>(message, getter) : message.toObject()
+      if (response === 'GetLifeTimeRes' && (typeof result !== 'string' || !result))
+        return {
+          isSuccess: false,
+          result: `Invalid connector response for ${method}`,
+          code: 'INVALID_RESPONSE'
+        }
       return {
         isSuccess: true,
-        result: getter ? invoke<unknown>(message, getter) : message.toObject()
+        result
       }
     } catch {
       return {

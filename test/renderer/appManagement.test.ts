@@ -46,12 +46,18 @@ vi.mock('vue', async importOriginal => ({
 
 beforeEach(() => {
   setActivePinia(createPinia())
+  useDeviceStore().connectedSeid = 'success'
   recoverBeforeAppOperation.mockReset().mockResolvedValue('ready')
   pendingRecoveryOptions.mockReset().mockReturnValue(undefined)
   call.mockReset()
   call.mockImplementation(async method => ({
     isSuccess: true,
-    result: method === 'downloadApplet' || method === 'updateApplet' ? [] : 'success'
+    result:
+      method === 'downloadApplet' || method === 'updateApplet'
+        ? []
+        : method === 'getLifeTime'
+          ? 'life_time_wallet_ready'
+          : 'success'
   }))
 })
 function catalog(name: string, current: string | null = null) {
@@ -97,7 +103,10 @@ describe('canonical app identity and presentation state', () => {
     call.mockImplementation(async method =>
       method === 'deleteApplet'
         ? { isSuccess: false, result: 'device_not_connected' }
-        : { isSuccess: true, result: 'success' }
+        : {
+            isSuccess: true,
+            result: method === 'getLifeTime' ? 'life_time_wallet_ready' : 'success'
+          }
     )
     const manager = useAppManagement()
     await manager.deleteApp(manager.apps.value[0])
@@ -118,13 +127,22 @@ describe('canonical app identity and presentation state', () => {
     device.apps = [catalog('Kusama')]
     call.mockImplementation(async method => ({
       isSuccess: true,
-      result: method === 'downloadApplet' ? ['Kusama'] : 'success'
+      result:
+        method === 'downloadApplet'
+          ? ['Kusama']
+          : method === 'getLifeTime'
+            ? 'life_time_wallet_ready'
+            : 'success'
     }))
     const manager = useAppManagement()
     await manager.installApp(manager.apps.value[0])
     expect(call.mock.calls.map(([method]) => method)).toEqual([
       'connectDevice',
+      'getLifeTime',
+      'getSeid',
       'downloadApplet',
+      'getLifeTime',
+      'getSeid',
       'writeWalletAddress'
     ])
     expect(call).toHaveBeenCalledWith('writeWalletAddress', { name: ['Kusama'], filePath: '' })
@@ -160,14 +178,20 @@ describe('application operations and firmware recovery', () => {
           ? { list: [{ name: 'Polkadot', installedVersion: null, latestVersion: '2.0', icon: '' }] }
           : method === 'downloadApplet'
             ? ['Polkadot']
-            : 'success'
+            : method === 'getLifeTime'
+              ? 'life_time_wallet_ready'
+              : 'success'
     }))
     const manager = useAppManagement()
     await manager.installApp(manager.apps.value[0])
     expect(call.mock.calls.map(([method]) => method)).toEqual([
       'checkUpdate',
       'connectDevice',
+      'getLifeTime',
+      'getSeid',
       'downloadApplet',
+      'getLifeTime',
+      'getSeid',
       'writeWalletAddress'
     ])
     expect(call).toHaveBeenCalledWith('downloadApplet', 'Polkadot')
@@ -186,7 +210,9 @@ describe('application operations and firmware recovery', () => {
           ? { list: [{ name: 'Polkadot', installedVersion: null, latestVersion: '2.0', icon: '' }] }
           : method === 'downloadApplet'
             ? ['Polkadot']
-            : 'success'
+            : method === 'getLifeTime'
+              ? 'life_time_wallet_ready'
+              : 'success'
     }))
     const manager = useAppManagement()
     await manager.installApp(manager.apps.value[0])
@@ -207,7 +233,9 @@ describe('application operations and firmware recovery', () => {
           ? {
               list: [{ name: 'Polkadot', installedVersion: '1.0', latestVersion: '1.0', icon: '' }]
             }
-          : 'success'
+          : method === 'getLifeTime'
+            ? 'life_time_wallet_ready'
+            : 'success'
     }))
     const manager = useAppManagement()
     await manager.retryFirmwareRecovery()
@@ -228,7 +256,9 @@ describe('application operations and firmware recovery', () => {
           ? { list: [{ name: 'Polkadot', installedVersion: null, latestVersion: '2.0', icon: '' }] }
           : method === 'downloadApplet'
             ? ['Polkadot']
-            : 'success'
+            : method === 'getLifeTime'
+              ? 'life_time_wallet_ready'
+              : 'success'
     }))
     const manager = useAppManagement()
     await manager.installApp(manager.apps.value[0])
@@ -254,7 +284,15 @@ describe('application operations and firmware recovery', () => {
           }
         }
       }
-      return { isSuccess: true, result: method === 'downloadApplet' ? ['Polkadot'] : 'success' }
+      return {
+        isSuccess: true,
+        result:
+          method === 'downloadApplet'
+            ? ['Polkadot']
+            : method === 'getLifeTime'
+              ? 'life_time_wallet_ready'
+              : 'success'
+      }
     })
     const manager = useAppManagement()
     await manager.installApp(manager.apps.value[0])
@@ -283,7 +321,10 @@ describe('application operations and firmware recovery', () => {
           }
         }
       }
-      return { isSuccess: true, result: 'success' }
+      return {
+        isSuccess: true,
+        result: method === 'getLifeTime' ? 'life_time_wallet_ready' : 'success'
+      }
     })
     const first = useAppManagement()
     await first.installApp(first.apps.value[0])

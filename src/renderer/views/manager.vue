@@ -23,7 +23,7 @@ defineExpose({ apps, deleteApp })
       class="firmware-recovery-entry"
       data-testid="firmware-recovery-entry"
     >
-      <p>{{ $t('m.imKeyManager.check_usb_internet_connect_click_upgrade_retry') }}</p>
+      <p>{{ $t('m.imKeyManager.firmware_upgrade_failed_instructions') }}</p>
       <button :disabled="busy" @click="management.retryFirmwareRecovery()">
         {{ $t('m.imKeyManager.upgrade') }}
       </button>

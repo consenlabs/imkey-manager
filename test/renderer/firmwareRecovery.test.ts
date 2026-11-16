@@ -30,6 +30,7 @@ function setup(overrides: Partial<FirmwareRecovery> = {}) {
   const defaults: Partial<Record<DeviceMethod, unknown>> = {
     getUpgradeSeid: 'SEID-A',
     isBLStatus: false,
+    getLifeTime: 'life_time_wallet_ready',
     getFirmwareVersion: '1.1.0',
     getBleVersion: '2.1.0',
     exportBindCode: 'A2345678',
@@ -148,7 +149,7 @@ describe('firmware recovery stages', () => {
     expect(context.count('cosUpdate')).toBe(2)
   })
 
-  it('rechecks the installed set and retries only failed addresses that remain installed', async () => {
+  it('rechecks and restores all installed addresses after an interrupted restore', async () => {
     const context = setup()
     context.responses.getInstalledApplets = {
       isSuccess: true,
@@ -170,9 +171,142 @@ describe('firmware recovery stages', () => {
     expect(context.count('cosUpdate')).toBe(1)
     expect(context.count('getInstalledApplets')).toBe(2)
     const attempts = context.invoke.mock.calls.filter(([method]) => method === 'writeWalletAddress')
-    expect(attempts[1][1]).toEqual({ name: ['Ethereum'], filePath: '/user' })
+    expect(attempts[1][1]).toEqual({ name: ['Ethereum', 'Bitcoin'], filePath: '/user' })
     expect(context.count('deviceBindAcquire')).toBe(1)
     expect(context.count('importBindCode')).toBe(1)
+  })
+
+  it('restores every installed address after a restart even if the same device has a different wallet', async () => {
+    const context = setup({ phase: 'restore', pendingAddresses: ['Bitcoin', 'Ethereum'] })
+    context.responses.getLifeTime = { isSuccess: true, result: 'life_time_wallet_ready' }
+    context.responses.writeWalletAddress = {
+      isSuccess: false,
+      result: 'restore_failed',
+      failed: ['Ethereum']
+    }
+    expect(await context.run()).toMatchObject({ stage: 'restore' })
+    const saves = context.invoke.mock.calls.filter(([method]) => method === 'saveFirmwareRecovery')
+    const saved = saves.at(-1)?.[1] as FirmwareRecoveryCheckpoint
+    expect(saved).toMatchObject({ phase: 'restore', pendingAddresses: ['Ethereum'] })
+
+    const restarted = setup(restoreFirmwareRecovery(saved))
+    restarted.responses.getLifeTime = { isSuccess: true, result: 'life_time_wallet_ready' }
+    expect(await restarted.retry()).toBeUndefined()
+    expect(
+      restarted.invoke.mock.calls.find(([method]) => method === 'writeWalletAddress')?.[1]
+    ).toEqual({
+      name: ['Ethereum', 'Bitcoin'],
+      filePath: '/user'
+    })
+    expect(restarted.count('cosUpdate')).toBe(0)
+  })
+
+  it('discards a failed-only subset saved by an older version in the apps phase', async () => {
+    const context = setup({ phase: 'apps', pendingAddresses: ['Ethereum'] })
+    expect(await context.retry()).toBeUndefined()
+    expect(
+      context.invoke.mock.calls.find(([method]) => method === 'writeWalletAddress')?.[1]
+    ).toEqual({ name: ['Ethereum', 'Bitcoin'], filePath: '/user' })
+    expect(context.count('cosUpdate')).toBe(0)
+  })
+
+  it('restores all addresses when a post-upgrade verify checkpoint resumes on the same device with another wallet', async () => {
+    const context = setup({
+      phase: 'verify',
+      needsBinding: true,
+      pendingAddresses: ['Ethereum']
+    })
+    context.responses.getLifeTime = { isSuccess: true, result: 'life_time_wallet_ready' }
+    expect(await context.retry()).toBeUndefined()
+    expect(
+      context.invoke.mock.calls.find(([method]) => method === 'writeWalletAddress')?.[1]
+    ).toEqual({ name: ['Ethereum', 'Bitcoin'], filePath: '/user' })
+    expect(context.count('cosUpdate')).toBe(0)
+    expect(context.count('clearFirmwareRecovery')).toBe(1)
+  })
+
+  it('preserves the BLE-only verify checkpoint without restoring addresses', async () => {
+    const context = setup({ phase: 'verify', needsBinding: false })
+    expect(await context.retry()).toBeUndefined()
+    expect(context.count('getLifeTime')).toBe(0)
+    expect(context.count('writeWalletAddress')).toBe(0)
+    expect(context.count('cosUpdate')).toBe(0)
+    expect(context.count('clearFirmwareRecovery')).toBe(1)
+  })
+
+  it.each(['apps', 'restore'] as const)(
+    'skips wallet and address writes when %s has no pending addresses',
+    async phase => {
+      const context = setup({ phase, pendingAddresses: [] })
+      context.responses.getInstalledApplets = { isSuccess: true, result: { list: [] } }
+      context.responses.getLifeTime = { isSuccess: false, result: 'imkey_applet_not_exist' }
+      expect(await context.run()).toBeUndefined()
+      expect(context.count('getLifeTime')).toBe(0)
+      expect(context.count('writeWalletAddress')).toBe(0)
+      expect(context.count('clearFirmwareRecovery')).toBe(1)
+    }
+  )
+
+  it.each([
+    'life_time_device_inited',
+    'life_time_device_activated',
+    'life_time_unset_pin',
+    'life_time_wallet_unready',
+    'life_time_wallet_creatting',
+    'life_time_wallet_recovering'
+  ])('blocks address restoration for %s and retries all apps after wallet setup', async status => {
+    const context = setup({ phase: 'restore', pendingAddresses: ['Ethereum'] })
+    context.responses.getLifeTime = { isSuccess: true, result: status }
+    expect(await context.run()).toMatchObject({
+      stage: 'wallet',
+      error: { result: status }
+    })
+    expect(context.count('writeWalletAddress')).toBe(0)
+    expect(context.count('cosUpdate')).toBe(0)
+    expect(context.count('clearFirmwareRecovery')).toBe(0)
+    const saved = context.invoke.mock.calls.filter(([method]) => method === 'saveFirmwareRecovery')
+    expect(saved.at(-1)?.[1]).toMatchObject({ phase: 'apps' })
+    expect(saved.at(-1)?.[1]).not.toHaveProperty('pendingAddresses')
+
+    delete context.responses.getLifeTime
+    expect(await context.retry()).toBeUndefined()
+    expect(
+      context.invoke.mock.calls.find(([method]) => method === 'writeWalletAddress')?.[1]
+    ).toEqual({
+      name: ['Ethereum', 'Bitcoin'],
+      filePath: '/user'
+    })
+  })
+
+  it('does not label an unknown command error as an empty wallet or discard its checkpoint', async () => {
+    const context = setup({ phase: 'restore', pendingAddresses: ['Ethereum'] })
+    context.responses.getLifeTime = { isSuccess: false, result: 'imkey_command_data_error' }
+    expect(await context.run()).toMatchObject({
+      stage: 'wallet',
+      error: { result: 'imkey_command_data_error' }
+    })
+    expect(context.recovery).toMatchObject({ phase: 'restore', pendingAddresses: ['Ethereum'] })
+    expect(context.count('writeWalletAddress')).toBe(0)
+    expect(context.count('clearFirmwareRecovery')).toBe(0)
+  })
+
+  it('reports checkpoint storage failure when the failed address subset cannot be saved', async () => {
+    const context = setup({ phase: 'restore', pendingAddresses: ['Bitcoin', 'Ethereum'] })
+    const original = context.invoke.getMockImplementation()!
+    let saves = 0
+    context.invoke.mockImplementation(async (method, params) => {
+      if (method === 'writeWalletAddress')
+        return { isSuccess: false, result: 'restore_failed', failed: ['Ethereum'] }
+      if (method === 'saveFirmwareRecovery' && ++saves === 2)
+        return { isSuccess: false, result: 'firmware_recovery_write_failed' }
+      return original(method, params)
+    })
+    expect(await context.run()).toMatchObject({
+      stage: 'store',
+      error: { result: 'firmware_recovery_write_failed' }
+    })
+    expect(context.recovery.phase).toBe('restore')
+    expect(context.count('clearFirmwareRecovery')).toBe(0)
   })
 
   it('does not run binding or address restoration for an upgrade that needs neither', async () => {
