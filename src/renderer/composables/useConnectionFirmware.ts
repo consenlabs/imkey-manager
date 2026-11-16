@@ -4,6 +4,7 @@ import { useAppStore, useDeviceStore } from '../store'
 import type { DeviceResult } from '../../shared/deviceContract'
 import { firmwareOperationError, operationError } from './operationError'
 import { isFirmwareDiagnosticStage } from '../../shared/firmwareDiagnostics'
+import { reconcileUpdateCheckpoint } from './firmwareResumeState'
 import {
   runFirmwareRecovery,
   loadFirmwareRecovery,
@@ -87,17 +88,17 @@ export function useConnectionFirmware(
       }
       const attempt = recovery
       const current = () => active() && recovery === attempt
-      // An update checkpoint is persisted before the native call. If neither
-      // bootloader nor the server confirms an unfinished transaction, it is
-      // ambiguous whether that call ever started; do not initiate an upgrade.
-      if (!nativeIncomplete && attempt.phase === 'update')
-        return report({ isSuccess: false, result: 'firmware_recovery_not_ready' }, 'check')
       if (nativeIncomplete && attempt.phase !== 'update') {
         // Server-side native recovery remains authoritative when a native call
         // has not completed its application/BLE work.
         attempt.phase = 'update'
         attempt.expectedCos = ''
         attempt.expectedBle = ''
+      }
+      if (attempt.phase === 'update') {
+        const reconciled = await reconcileUpdateCheckpoint(attempt, callDevice, current)
+        if (reconciled.failure) return report(reconciled.failure.error, reconciled.failure.stage)
+        if (!current()) return
       }
       if (attempt.phase !== 'update') {
         stage = 'check'
@@ -109,7 +110,14 @@ export function useConnectionFirmware(
           const binding = await callDevice('deviceBindCheck', app.userPath)
           if (!current()) return
           if (!binding.isSuccess) return report(binding, 'bind')
-          if (binding.result !== 'bound_this')
+          if (binding.result === 'unbound') {
+            // Reset can remove the binding after the checkpoint advanced. Return
+            // to binding on this same verified device and rebuild all addresses.
+            attempt.needsBinding = true
+            attempt.phase = 'load-code'
+            attempt.bindCode = ''
+            delete attempt.pendingAddresses
+          } else if (binding.result !== 'bound_this')
             return report({ isSuccess: false, result: 'device_bind_check_failed' }, 'bind')
         }
       }

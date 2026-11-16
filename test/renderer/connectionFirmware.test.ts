@@ -256,7 +256,7 @@ it('a restart resumes durable address recovery even when firmware now reports co
   expect(mocks.push).toHaveBeenCalledExactlyOnceWith('/home/welcomeHome')
 })
 
-it('does not start an ambiguous update checkpoint when the server reports completion', async () => {
+it('resumes an ambiguous completed update without flashing COS and completes recovery before home', async () => {
   bootloader = false
   updated = true
   binding = 'bound_this'
@@ -268,22 +268,19 @@ it('does not start an ambiguous update checkpoint when the server reports comple
     expectedCos: '',
     expectedBle: ''
   }
-  const before = structuredClone(journal)
   const flow = useConnection()
   await flow.check()
-  expect(flow.status.value).toBe(5)
-  expect(flow.errorInfo.value).toBe('firmware_recovery_not_ready')
-  expect(flow.errorStage.value).toBe('check')
-  expect(journal).toEqual(before)
-  for (const method of [
-    'cosUpdate',
-    'saveFirmwareRecovery',
-    'clearFirmwareRecovery',
-    'checkUpdate'
-  ])
-    expect(calls(method)).toHaveLength(0)
-  expect(useDeviceStore().canEnterHome).toBe(false)
-  expect(mocks.push).not.toHaveBeenCalled()
+  expect(calls('cosUpdate')).toHaveLength(0)
+  expect(calls('saveFirmwareRecovery').map(([, checkpoint]) => checkpoint)).toContainEqual(
+    expect.objectContaining({ phase: 'capture-versions', needsBinding: true })
+  )
+  expect(calls('writeWalletAddress')).toHaveLength(1)
+  expect(calls('writeWalletAddress')[0][1]).toMatchObject({ name: ['Ethereum', 'Bitcoin'] })
+  expect(calls('getBTCXpub')).not.toHaveLength(0)
+  expect(calls('clearFirmwareRecovery')).toHaveLength(1)
+  expect(journal).toBeNull()
+  expect(useDeviceStore().canEnterHome).toBe(true)
+  expect(mocks.push).toHaveBeenCalledExactlyOnceWith('/home/welcomeHome')
 })
 
 it.each(['bootloader', 'server-incomplete'] as const)(
@@ -330,7 +327,8 @@ it('a failed durable checkpoint clear keeps recovery pending and prevents home e
   failedMethod = 'clearFirmwareRecovery'
   await useConnection().check()
   expect(journal?.phase).toBe('verify')
-  expect(calls('getLifeTime')).toHaveLength(1) // Wallet readiness before address recovery only.
+  expect(calls('getLifeTime')).toHaveLength(2) // Before address recovery and before checkpoint removal.
+  expect(calls('getBTCXpub')).not.toHaveLength(0)
   expect(useDeviceStore().canEnterHome).toBe(false)
   expect(mocks.push).not.toHaveBeenCalled()
 })
@@ -441,6 +439,7 @@ it('server-confirmed native incompletion clears the old baseline before reenteri
   await flow.toCosUpdate(true)
   expect(journal?.phase).toBe('restore')
   failedMethod = ''
+  updated = false
   mocks.call.mockClear()
   mocks.call.mockImplementation(async (method, params) => {
     const result = response(method, params)

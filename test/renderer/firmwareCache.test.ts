@@ -201,7 +201,10 @@ it.each(
         binding = 'unbound'
         return { isSuccess: false, result: 'interrupted_upgrade' }
       }
-      if (method === 'cosUpdate') bootloader = false
+      if (method === 'cosUpdate') {
+        bootloader = false
+        binding = 'unbound'
+      }
       if (method === 'deviceBindAcquire') binding = 'bound_this'
       return response(method)
     })

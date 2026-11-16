@@ -30,6 +30,12 @@ export const m = {
     firmware_available: 'New firmware available',
     firmware_latest: 'Firmware is up to date',
     firmware_check_incomplete: 'Update check incomplete. Please retry.',
+    firmware_confirmation_pending:
+      'The result of a previous firmware upgrade could not be confirmed. Check the current COS and Bluetooth versions above, and confirm only if they match your expectations.',
+    firmware_confirmation_unavailable:
+      'Could not read the firmware upgrade confirmation status. Please try again later.',
+    firmware_confirmation_save_failed: 'Could not save your confirmation. Please try again later.',
+    firmware_confirmation_acknowledge: 'I checked the COS and Bluetooth versions',
     checking_firmware: 'Checking for updates…',
     upgrading: 'Upgrade in progress…',
     upgrade: 'Upgrade',
@@ -222,6 +228,8 @@ export const m = {
     upgrading_do_not_disconnect_usb_operating:
       'During the upgrade, please do not disconnect the USB connection and stop the imKey operation',
     upgrade_done: 'Update completed',
+    firmware_recovery_done: 'Device recovery completed',
+    firmware_recovery_verify_version: 'Check the current firmware version on the device page.',
     can_used_imKey_manager: 'Currently imKey Manager can be used normally',
     upgrade_fail: 'Update failed',
     firmware_upgrade_failed_instructions:
@@ -274,6 +282,8 @@ export const m = {
       'The firmware recovery record could not be read. Keep the local app data and contact support.',
     firmware_recovery_write_failed:
       'Firmware recovery progress could not be saved. Check available disk space and file permissions, then try again.',
+    firmware_confirmation_storage_failed:
+      'Unable to save the firmware upgrade confirmation status. Check local storage and retry.',
     firmware_recovery_device_mismatch:
       'The connected device does not match the firmware recovery record. Connect the original device and try again.',
     firmware_recovery_device_unavailable:

@@ -29,6 +29,11 @@ export const m = {
     firmware_available: '发现新固件版本',
     firmware_latest: '已是最新固件版本',
     firmware_check_incomplete: '检查未完成，请重试',
+    firmware_confirmation_pending:
+      '此前的固件升级结果尚无法确认。请核对上方当前 COS 固件版本和蓝牙版本，确认符合预期后再标记已核对。',
+    firmware_confirmation_unavailable: '无法读取固件升级待确认状态，请稍后重试。',
+    firmware_confirmation_save_failed: '无法保存核对结果，请稍后重试。',
+    firmware_confirmation_acknowledge: '已核对 COS 和蓝牙版本',
     checking_firmware: '正在检查更新…',
     upgrading: '升级进行中…',
     upgrade: '升级',
@@ -114,6 +119,8 @@ export const m = {
     find_firmware_update_fail_continue: '检测到固件升级尚未完成，请检查设备状态后继续升级。',
     imKey_pro_firmware_update_wait: 'imKey Pro 固件版本升级中，请耐心等待',
     firmware_recovery_no_disconnect: '操作过程中请勿断开 USB 连接或操作 imKey。',
+    firmware_recovery_done: '设备恢复完成',
+    firmware_recovery_verify_version: '请在设备页确认当前固件版本及是否需要升级。',
     wallet_status_unknown_hint:
       '无法确认钱包状态。如果设备已重置，请先在设备上创建或恢复钱包，然后重试。',
     imKey_pro_firmware_update_no_disconnect:
@@ -242,6 +249,7 @@ export const m = {
     firmware_recovery_invalid: '升级恢复记录格式无效，请重新连接设备后重试。',
     firmware_recovery_unreadable: '无法读取升级恢复记录，请保留本机数据并联系支持团队。',
     firmware_recovery_write_failed: '无法保存升级恢复进度，请检查本机可用空间和文件权限后重试。',
+    firmware_confirmation_storage_failed: '无法保存固件升级待确认状态，请检查本机存储后重试。',
     firmware_recovery_device_mismatch: '当前设备与升级恢复记录不匹配，请连接原设备后重试。',
     firmware_recovery_device_unavailable: '无法确认设备身份，请检查设备连接后重试。',
     firmware_recovery_unavailable: '升级恢复服务不可用，请重新启动 imKey Manager 后重试。',

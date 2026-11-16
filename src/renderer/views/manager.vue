@@ -38,6 +38,7 @@ defineExpose({ apps, deleteApp })
       :tip="tip"
       :support-code="supportCode"
       :phase="phase"
+      :reconciled="management.firmware.state.reconciled"
       :error-info="tip ? management.state.errorInfo : errorInfo"
       :error-stage="tip ? management.state.errorStage : errorStage"
       @ok="ok"

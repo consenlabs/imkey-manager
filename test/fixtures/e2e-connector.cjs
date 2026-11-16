@@ -31,7 +31,10 @@ module.exports = {
         return response(device, 'BindAcquireRes', 'setBindResult', 'error')
       acquired = true
     }
-    if (method === 'cos_update') upgraded = true
+    if (method === 'cos_update') {
+      upgraded = true
+      if (scenario.startsWith('cos-')) acquired = false
+    }
     if (method === 'app_download' || method === 'app_update') installed = true
     if (method === 'app_delete') installed = false
     if (method === 'register_address') registrations++
@@ -77,7 +80,10 @@ module.exports = {
       bind_check: [
         'BindCheckRes',
         'setBindStatus',
-        scenario === 'unbound' || (scenario === 'bootloader-restore-retry' && upgraded && !acquired)
+        scenario === 'unbound' ||
+        ((scenario === 'bootloader-restore-retry' || scenario.startsWith('cos-')) &&
+          upgraded &&
+          !acquired)
           ? 'unbound'
           : scenario === 'bound-other' && !acquired
             ? 'bound_other'

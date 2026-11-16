@@ -16,6 +16,7 @@ interface Control {
   failNativeApps?: boolean
   failCosCheck?: boolean
   failIncompleteResponse?: boolean
+  failAfterNativeSuccess?: boolean
   failBinding?: boolean
   failAddress?: boolean
   failBindingCheck?: boolean
@@ -32,6 +33,7 @@ interface Control {
   walletState?: string
   failBtcRead?: boolean
   injectNativeIncomplete?: boolean
+  resetBindingOnce?: boolean
   postUpdateBinding?: string
   extraApplet?: boolean
 }
@@ -244,7 +246,7 @@ async function retryDeviceUpgrade(): Promise<void> {
   await page.getByTestId('firmware-upgrade-button').click()
 }
 
-test('connection does not start an ambiguous update checkpoint when the server reports completion', async () => {
+test('a legacy ambiguous update checkpoint restores safely without reflashing', async () => {
   await launch({ mode: 'normal', initialCos: '1.9.11', latestCos: '1.9.12' })
   const recoveryDirectory = path.join(directory, 'firmware-recovery')
   await mkdir(recoveryDirectory, { recursive: true })
@@ -258,36 +260,172 @@ test('connection does not start an ambiguous update checkpoint when the server r
     expectedBle: ''
   }
   await writeFile(checkpointFile, JSON.stringify(checkpoint))
+  await configure({ failAddress: true })
   await connect(true)
   await pending()
-  await expect(page.locator('.tip3')).toContainText('not ready')
   const methods = (await calls()).map(call => call.method)
   expect(methods).toContain('cos_check_update')
   expect(methods).not.toContain('cos_update')
-  expect(methods).not.toContain('register_address')
-  expect(JSON.parse(await readFile(checkpointFile, 'utf8'))).toEqual(checkpoint)
-})
-
-test('an incomplete firmware response keeps recovery pending without claiming cancellation or a crash', async () => {
-  await startDeviceUpgrade({ failIncompleteResponse: true })
-  const failure = page.locator('.alert3')
-  await expect(failure).toContainText('Update failed')
-  await expect(failure).toContainText('The firmware upgrade response was incomplete')
-  await expect(failure).not.toContainText('missing field')
-  await expect(failure).not.toContainText('USB connection or network connection')
-  const file = path.join(directory, 'firmware-recovery/RESUMEDEVICEA.json')
-  expect(JSON.parse(await readFile(file, 'utf8')).phase).toBe('update')
-  const beforeRestart = (await calls()).length
-  await application!.close()
-  application = undefined
+  expect(methods).not.toContain('bind_acquire')
+  expect(methods).toContain('register_address')
+  expect((await state()).physicalWrites).toBe(0)
+  expect(JSON.parse(await readFile(checkpointFile, 'utf8')).phase).not.toBe('complete')
+  await configure({ failAddress: false })
+  await retry()
+  await expect(page.locator('.homeBox')).toBeVisible()
+  expect((await calls()).map(call => call.method)).not.toContain('cos_update')
+  expect((await state()).physicalWrites).toBe(0)
+  await expect.poll(() => readdir(recoveryDirectory)).toEqual([])
+  const marker = 'imkey.firmware-confirmation.v1.RESUMEDEVICEA'
+  expect(await page.evaluate(key => localStorage.getItem(key), marker)).not.toBeNull()
   await reopen()
   await connect()
-  const recovery = page.locator('.tip3')
-  await expect(recovery).toContainText('The firmware upgrade is incomplete')
-  await expect(recovery).toContainText('The device is not ready to resume the upgrade')
-  await expect(recovery).not.toContainText('application exit abnormal')
-  expect((await calls()).slice(beforeRestart).map(call => call.method)).not.toContain('cos_update')
+  await expect(page.locator('.homeBox')).toBeVisible()
+  await page.locator('.routerBar li').nth(2).click()
+  await expect(page.getByTestId('firmware-confirmation')).toContainText(
+    'The result of a previous firmware upgrade could not be confirmed'
+  )
+  await expect(page.getByTestId('firmware-confirmation')).toContainText(
+    'COS and Bluetooth versions'
+  )
+  await page.locator('.routerBar li').nth(0).click()
+  await page.locator('.routerBar li').nth(2).click()
+  await expect(page.getByTestId('firmware-confirmation')).toBeVisible()
+  await expect(page.getByTestId('firmware-confirmation-button')).toBeEnabled()
+  await page.getByTestId('firmware-confirmation-button').click()
+  await expect(page.getByTestId('firmware-confirmation')).toHaveCount(0)
+  expect(await page.evaluate(key => localStorage.getItem(key), marker)).toBeNull()
+  await reopen()
+  await connect()
+  await expect(page.locator('.homeBox')).toBeVisible()
+  await page.locator('.routerBar li').nth(2).click()
+  await expect(page.getByTestId('device-info-card')).toContainText('SN-RESUME')
+  await expect(page.getByTestId('firmware-confirmation')).toHaveCount(0)
+  expect((await calls()).map(call => call.method)).not.toContain('cos_update')
+})
+
+test('an unavailable server check preserves an ambiguous checkpoint until it can be checked', async () => {
+  await launch({ mode: 'normal', failCosCheck: true })
+  const recoveryDirectory = path.join(directory, 'firmware-recovery')
+  await mkdir(recoveryDirectory, { recursive: true })
+  const file = path.join(recoveryDirectory, 'RESUMEDEVICEA.json')
+  const checkpoint = {
+    version: 1,
+    seid: 'RESUMEDEVICEA',
+    phase: 'update',
+    needsBinding: true,
+    expectedCos: '',
+    expectedBle: ''
+  }
+  await writeFile(file, JSON.stringify(checkpoint))
+  await connect(true)
+  await expect(page.locator('.tip1')).toBeVisible()
+  expect(JSON.parse(await readFile(file, 'utf8'))).toEqual(checkpoint)
+  expect((await calls()).map(call => call.method)).not.toContain('cos_update')
+  expect((await state()).physicalWrites).toBe(0)
+  await configure({ failCosCheck: false })
+  await page.locator('.tip1 button').click()
+  await connect()
+  await expect(page.locator('.homeBox')).toBeVisible()
+  expect((await state()).physicalWrites).toBe(0)
+  expect((await calls()).map(call => call.method)).not.toContain('cos_update')
+  await expect.poll(() => readdir(recoveryDirectory)).toEqual([])
+})
+
+test('another device can connect without consuming an ambiguous checkpoint', async () => {
+  await launch({ mode: 'normal' })
+  const recoveryDirectory = path.join(directory, 'firmware-recovery')
+  await mkdir(recoveryDirectory, { recursive: true })
+  const file = path.join(recoveryDirectory, 'RESUMEDEVICEA.json')
+  const checkpoint = {
+    version: 1,
+    seid: 'RESUMEDEVICEA',
+    phase: 'update',
+    needsBinding: true,
+    expectedCos: '',
+    expectedBle: ''
+  }
+  await writeFile(file, JSON.stringify(checkpoint))
+  await configure({ seid: 'RESUMEDEVICEB' })
+  await connect(true)
+  await expect(page.locator('.homeBox')).toBeVisible()
+  expect(JSON.parse(await readFile(file, 'utf8'))).toEqual(checkpoint)
+  expect((await state('RESUMEDEVICEB')).physicalWrites).toBe(0)
+  const replacement = (await calls()).filter(call => call.seid === 'RESUMEDEVICEB')
+  expect(replacement.map(call => call.method)).not.toContain('cos_update')
+  expect(replacement.map(call => call.method)).not.toContain('register_address')
+
+  await configure({ seid: 'RESUMEDEVICEA' })
+  await reopen()
+  await connect(true)
+  await expect(page.locator('.homeBox')).toBeVisible()
+  expect((await state('RESUMEDEVICEA')).physicalWrites).toBe(0)
+  expect((await calls()).map(call => call.method)).not.toContain('cos_update')
+  await expect.poll(() => readdir(recoveryDirectory)).toEqual([])
+})
+
+for (const fault of ['beforeNativeWrite', 'afterNativeSuccess'] as const) {
+  test(`an incomplete response ${fault} resumes without another COS write`, async () => {
+    await startDeviceUpgrade(
+      fault === 'beforeNativeWrite'
+        ? { failIncompleteResponse: true }
+        : { failAfterNativeSuccess: true }
+    )
+    const failure = page.locator('.alert3')
+    await expect(failure).toContainText('Update failed')
+    await expect(failure).toContainText('The firmware upgrade response was incomplete')
+    await expect(failure).not.toContainText('missing field')
+    await expect(failure).not.toContainText('USB connection or network connection')
+    const file = path.join(directory, 'firmware-recovery/RESUMEDEVICEA.json')
+    expect(JSON.parse(await readFile(file, 'utf8')).phase).toBe('update')
+    const beforeState = await state()
+    expect(beforeState.physicalWrites).toBe(fault === 'beforeNativeWrite' ? 0 : 1)
+    expect(beforeState.serverComplete).toBe(true)
+    const beforeRestart = (await calls()).length
+    await configure({
+      failIncompleteResponse: false,
+      failAfterNativeSuccess: false,
+      failAddress: true
+    })
+    await application!.close()
+    application = undefined
+    await reopen()
+    await connect()
+    await pending()
+    const resumed = (await calls()).slice(beforeRestart).map(call => call.method)
+    expect(resumed).not.toContain('cos_update')
+    expect(resumed).toContain('register_address')
+    expect((await state()).physicalWrites).toBe(beforeState.physicalWrites)
+    expect(JSON.parse(await readFile(file, 'utf8')).phase).not.toBe('complete')
+    await configure({ failAddress: false })
+    await retry()
+    await expect(page.locator('.homeBox')).toBeVisible()
+    expect((await state()).physicalWrites).toBe(beforeState.physicalWrites)
+    expect((await state()).firmwareVersion).toBe(
+      fault === 'beforeNativeWrite' ? '1.6.03' : '1.9.11'
+    )
+    expect((await calls()).slice(beforeRestart).map(call => call.method)).not.toContain(
+      'cos_update'
+    )
+    await expect.poll(() => readdir(path.dirname(file))).toEqual([])
+  })
+}
+
+test('same-session retry after a lost native success does not repeat the COS write', async () => {
+  await startDeviceUpgrade({ failAfterNativeSuccess: true })
+  await expect(page.locator('.alert3')).toBeVisible()
+  const file = path.join(directory, 'firmware-recovery/RESUMEDEVICEA.json')
   expect(JSON.parse(await readFile(file, 'utf8')).phase).toBe('update')
+  expect((await state()).physicalWrites).toBe(1)
+  await configure({ failAfterNativeSuccess: false })
+  await retryDeviceUpgrade()
+  await expect(page.locator('.alert2')).toBeVisible()
+  await expect(page.locator('.alert2')).toContainText('Device recovery completed')
+  await expect(page.locator('.alert2')).toContainText('Check the current firmware version')
+  await expect(page.locator('.alert2')).not.toContainText('Update completed')
+  expect((await calls()).filter(call => call.method === 'cos_update')).toHaveLength(1)
+  expect((await state()).physicalWrites).toBe(1)
+  await expect.poll(() => readdir(path.dirname(file))).toEqual([])
 })
 
 test('a missing wallet prevents starting a new firmware upgrade', async () => {
@@ -629,6 +767,31 @@ test('a failed address recovery remains a recovery on reconnect without reflashi
   expect(resumed).not.toContain('cos_update')
 })
 
+test('a reset binding and missing wallet during address recovery can resume without reflashing', async () => {
+  await startDeviceUpgrade({ failAddress: true })
+  await expect(page.locator('.alert3')).toBeVisible()
+  const file = path.join(directory, 'firmware-recovery/RESUMEDEVICEA.json')
+  expect(JSON.parse(await readFile(file, 'utf8')).phase).toBe('restore')
+  const before = (await calls()).length
+  await configure({ failAddress: false, resetBindingOnce: true, walletMissing: true })
+  await reopen()
+  await connect()
+  await pending()
+  await expect(page.locator('.tip3')).toContainText('The device wallet is not ready')
+  const pendingMethods = (await calls()).slice(before).map(call => call.method)
+  expect(pendingMethods).toContain('bind_acquire')
+  expect(pendingMethods).not.toContain('cos_update')
+  expect(pendingMethods).not.toContain('register_address')
+  expect((await state()).physicalWrites).toBe(1)
+  expect(JSON.parse(await readFile(file, 'utf8')).phase).not.toBe('complete')
+  await configure({ walletMissing: false })
+  await retry()
+  await expect(page.locator('.homeBox')).toBeVisible()
+  expect((await state()).physicalWrites).toBe(1)
+  expect((await calls()).slice(before).map(call => call.method)).not.toContain('cos_update')
+  await expect.poll(() => readdir(path.dirname(file))).toEqual([])
+})
+
 test('device-page recovery no longer promises another restart', async () => {
   await startDeviceUpgrade({ failAddress: true, delayAddressMs: 1500 })
   const progress = page.locator('dialog.firmware-progress-dialog')
@@ -866,6 +1029,40 @@ for (const incomplete of [false, true]) {
       expect(methods.indexOf('cos_update')).toBeLessThan(methods.indexOf('app_download'))
   })
 }
+
+test('app installation reconciles an ambiguous checkpoint without reflashing COS', async () => {
+  await launch({ mode: 'normal', extraApplet: true, initialCos: '1.9.11', latestCos: '1.9.12' })
+  await connect(true)
+  await expect(page.locator('.homeBox')).toBeVisible()
+  await page.locator('.routerBar li').nth(1).click()
+  const applet = page.locator('.appItem').filter({ hasText: 'Polkadot' })
+  await expect(applet.getByRole('link', { name: 'Install', exact: true })).toBeVisible()
+  const recoveryDirectory = path.join(directory, 'firmware-recovery')
+  await mkdir(recoveryDirectory, { recursive: true })
+  await writeFile(
+    path.join(recoveryDirectory, 'RESUMEDEVICEA.json'),
+    JSON.stringify({
+      version: 1,
+      seid: 'RESUMEDEVICEA',
+      phase: 'update',
+      needsBinding: true,
+      expectedCos: '',
+      expectedBle: ''
+    })
+  )
+  const before = (await calls()).length
+  await applet.getByRole('link', { name: 'Install', exact: true }).click()
+  await expect(applet.locator('.col')).toBeVisible()
+  await expect
+    .poll(async () => (await calls()).slice(before).map(call => call.method))
+    .toContain('app_download')
+  const methods = (await calls()).slice(before).map(call => call.method)
+  expect(methods).not.toContain('cos_update')
+  expect(methods.indexOf('register_address')).toBeGreaterThanOrEqual(0)
+  expect(methods.indexOf('register_address')).toBeLessThan(methods.indexOf('app_download'))
+  expect((await state()).physicalWrites).toBe(0)
+  await expect.poll(() => readdir(recoveryDirectory)).toEqual([])
+})
 
 test('the recovery retry banner is hidden while firmware is updating and shown after a failure', async () => {
   await launch({ mode: 'normal', extraApplet: true, initialCos: '1.9.11', latestCos: '1.9.12' })

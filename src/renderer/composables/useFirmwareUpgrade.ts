@@ -6,6 +6,7 @@ import { firmwareOperationError, operationError } from './operationError'
 import { refreshDeviceIdentity } from './deviceIdentity'
 import { useDeviceRecovery } from './useDeviceRecovery'
 import { checkWalletReadiness } from './walletReadiness'
+import { reconcileUpdateCheckpoint } from './firmwareResumeState'
 import {
   cachedFirmware,
   firmwareAvailable,
@@ -20,6 +21,7 @@ import {
   type FirmwareRecovery
 } from './firmwareRecovery'
 import type { FirmwareCheckCache } from '../models/deviceState'
+import type { DeviceResult } from '../../shared/deviceContract'
 import { isFirmwareDiagnosticStage } from '../../shared/firmwareDiagnostics'
 
 type UpgradeData = {
@@ -33,6 +35,7 @@ interface UpgradeAttempt {
   sessionId: number
   data: UpgradeData
   recovery: FirmwareRecovery
+  reconciled?: boolean
 }
 export type FirmwareUpgradePhase =
   | 'idle'
@@ -61,6 +64,7 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
     busy: false,
     phase: 'idle' as FirmwareUpgradePhase,
     recovering: false,
+    reconciled: false,
     bindCode: '',
     cosOldVersionData: '',
     cosNewVersionData: '',
@@ -93,6 +97,7 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
     state.isCosUpdate = true
     state.cosUpdateStatus = '1'
     state.recovering = saved.recovery.phase !== 'update'
+    state.reconciled = Boolean(saved.reconciled)
     return true
   }
   function upgradeData(): UpgradeData {
@@ -114,7 +119,8 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
         cosUpdateStatus: '0',
         supportCode: 0,
         phase: 'idle',
-        recovering: false
+        recovering: false,
+        reconciled: false
       })
     },
     { flush: 'sync' }
@@ -268,12 +274,12 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
       if (attempt && attempt.recovery.seid.toUpperCase() !== device.connectedSeid.toUpperCase())
         return fail('device_session_changed', 'connect')
       const data = attempt?.data || upgradeData()
-      const phase = attempt?.recovery.phase
       const connected = await refreshDeviceIdentity(callDevice, device, operation.active, {
         hideCachedData: false,
         firmwareRecovery: Boolean(attempt),
-        requireBinding:
-          !attempt || firmwareRecoveryRequiresBinding(phase!, attempt.recovery.needsBinding),
+        // A resumed post-update checkpoint may have lost its binding after a
+        // device reset. Verify identity first, then recover that binding below.
+        requireBinding: !attempt,
         preserveOnTransportError: true
       })
       if (!connected.isSuccess) {
@@ -314,10 +320,30 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
         data.bindCode = binding.result
       }
       if (attempt) {
+        const reconciled = await reconcileUpdateCheckpoint(attempt.recovery, callDevice, current)
+        if (!current()) return
+        if (reconciled.failure) return fail(reconciled.failure.error, reconciled.failure.stage)
+        if (reconciled.promoted) attempt.reconciled = state.reconciled = true
         const failure = await validateFirmwareResume(attempt.recovery, callDevice, current)
         if (!current()) return
         if (failure) return fail(failure.error, failure.stage)
+        if (
+          firmwareRecoveryRequiresBinding(attempt.recovery.phase, attempt.recovery.needsBinding)
+        ) {
+          const binding = await callDevice('deviceBindCheck')
+          if (!current()) return
+          if (!binding.isSuccess) return fail(binding, 'bind')
+          if (binding.result === 'unbound') {
+            attempt.recovery.needsBinding = true
+            attempt.recovery.phase = 'load-code'
+            attempt.recovery.bindCode = ''
+            delete attempt.recovery.pendingAddresses
+          } else if (binding.result !== 'bound_this') {
+            return fail('device_bind_check_failed', 'bind')
+          }
+        }
       } else {
+        state.reconciled = false
         attempt = {
           sessionId,
           data,
@@ -334,10 +360,14 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
         attempts.set(device, attempt)
       }
       Object.assign(state, data)
+      const proof: { wallet?: DeviceResult<string> } = {}
       const failure = await runFirmwareRecovery(attempt.recovery, {
         call: callDevice,
         current,
         userPath: app.userPath,
+        onWalletVerified(wallet) {
+          proof.wallet = wallet
+        },
         onPhase(phase) {
           state.phase =
             phase === 'capture-versions'
@@ -356,18 +386,11 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
       })
       if (!current()) return
       if (failure) return fail(failure.error, failure.stage, attempt.recovery.phase)
-      // Returning to an already open home shell requires fresh binding+wallet
-      // proof as well. getBTCXpub enforces bound_this in the device service.
-      const wallet = await callDevice('getBTCXpub', app.userPath)
-      if (!current()) return
-      if (!wallet.isSuccess) return fail(wallet, 'wallet')
-      const confirmed = await callDevice('getUpgradeSeid')
-      if (!current()) return
-      if (!confirmed.isSuccess) return fail(confirmed, 'connect')
-      if (confirmed.result.toUpperCase() !== attempt.recovery.seid.toUpperCase())
-        return fail('device_session_changed', 'connect')
+      // Recovery verifies binding, wallet and identity before clearing its record.
+      // Use that same proof so a second read cannot fail after the record is gone.
+      if (!proof.wallet) return fail('invalid_wallet_response', 'wallet')
       device.identityReady = true
-      if (!device.authorizeHome(sessionId, attempt.recovery.seid, wallet))
+      if (!device.authorizeHome(sessionId, attempt.recovery.seid, proof.wallet))
         return fail('invalid_wallet_response', 'wallet')
       completed(attempt)
     } catch (error) {
@@ -444,12 +467,6 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
           }
         }
         attempts.set(device, attempt)
-      }
-      // A checkpoint written immediately before the native call cannot prove
-      // that an upgrade started when the server reports no pending transaction.
-      // Do not issue cosUpdate in this ambiguous case.
-      if (!nativeIncomplete && attempt.recovery.phase === 'update') {
-        throw 'firmware_recovery_not_ready'
       }
       if (nativeIncomplete && attempt.recovery.phase !== 'update') {
         attempt.recovery.phase = 'update'

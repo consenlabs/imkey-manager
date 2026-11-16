@@ -48,6 +48,10 @@ module.exports = {
       state.cosWritten = true
       state.serverComplete = false
     }
+    if (control.resetBindingOnce && !state.resetBindingOnceApplied) {
+      state.resetBindingOnceApplied = true
+      state.binding = 'unbound'
+    }
     const save = () => {
       fs.writeFileSync(process.env.IMKEY_E2E_STATE + '.tmp', JSON.stringify(states))
       fs.renameSync(process.env.IMKEY_E2E_STATE + '.tmp', process.env.IMKEY_E2E_STATE)
@@ -77,6 +81,9 @@ module.exports = {
       state.serverComplete = true
       state.bleDone = true
       save()
+      // Simulate losing the native result after the server and hardware finished.
+      if (control.failAfterNativeSuccess)
+        return fail('missing field `_ReturnData` at line 1 column 100')
     }
     if (method === 'bind_acquire') {
       state.bindingAttempts++

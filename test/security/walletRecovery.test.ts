@@ -71,6 +71,7 @@ describe('firmware address recovery preserves failure state', () => {
       await reply('getFirmwareVersion', { isSuccess: true, result: 'new' })
       await reply('getBleVersion', { isSuccess: true, result: 'ble-new' })
       await reply('cosCheckUpdate', { isSuccess: true, result: { isUpdateSuccess: true } })
+      await reply('deviceBindCheck', { isSuccess: true, result: 'unbound' })
       await reply('getUpgradeSeid', { isSuccess: true, result: 'test-device' })
       await reply('deviceBindAcquire', { isSuccess: true, result: 'success' })
       await reply('deviceBindCheck', { isSuccess: true, result: 'bound_this' })
@@ -80,6 +81,7 @@ describe('firmware address recovery preserves failure state', () => {
         result: { list: [{ name: 'Ethereum' }] }
       })
       await reply('getLifeTime', { isSuccess: true, result: 'life_time_wallet_ready' })
+      await reply('getBTCXpub', { isSuccess: true, result: 'xpub-ready' })
       await reply('getUpgradeSeid', { isSuccess: true, result: 'test-device' })
       await vi.waitFor(() =>
         expect(deviceMock.mock.calls.at(-1)?.slice(0, 2)).toEqual([
@@ -162,6 +164,7 @@ describe('firmware address recovery preserves failure state', () => {
     await reply('getFirmwareVersion', { isSuccess: true, result: 'new' })
     await reply('getBleVersion', { isSuccess: true, result: 'new' })
     await reply('cosCheckUpdate', { isSuccess: true, result: { isUpdateSuccess: true } })
+    await reply('deviceBindCheck', { isSuccess: true, result: 'unbound' })
     await reply('getUpgradeSeid', { isSuccess: true, result: 'test-device' })
     await reply('deviceBindAcquire', { isSuccess: true, result: 'success' })
     await reply('deviceBindCheck', { isSuccess: true, result: 'bound_this' })
@@ -171,6 +174,7 @@ describe('firmware address recovery preserves failure state', () => {
       result: { list: [{ name: 'Ethereum' }] }
     })
     await reply('getLifeTime', { isSuccess: true, result: 'life_time_wallet_ready' })
+    await reply('getBTCXpub', { isSuccess: true, result: 'xpub-ready' })
     await reply('getUpgradeSeid', { isSuccess: true, result: 'test-device' })
     expect(firmware.state.supportCode).toBe(1)
     await reply('writeWalletAddress', { isSuccess: false, result: 'registration failed' })
@@ -225,9 +229,10 @@ describe('firmware address recovery preserves failure state', () => {
       'getBleVersion',
       'getUpgradeSeid',
       'cosCheckUpdate',
-      'clearFirmwareRecovery',
+      'getLifeTime',
       'getBTCXpub',
-      'getUpgradeSeid'
+      'getUpgradeSeid',
+      'clearFirmwareRecovery'
     ])
     expect(firmware.state.supportCode).toBe(2)
     expect(useDeviceStore().installedBleVersion).toBe('new')
@@ -423,9 +428,13 @@ describe('firmware completion does not grant home access prematurely', () => {
     'does not grant home after acquire when binding becomes %s',
     async status => {
       let acquired = false
+      let nativeDone = false
       deviceMock.mockImplementation(async method => {
+        if (method === 'cosUpdate') nativeDone = true
         if (method === 'deviceBindAcquire') acquired = true
         if (method === 'deviceBindCheck' && acquired) return { isSuccess: true, result: status }
+        if (method === 'deviceBindCheck' && nativeDone)
+          return { isSuccess: true, result: 'unbound' }
         return {
           isSuccess: true,
           result: method in successfulResults ? successfulResults[method] : 'success'

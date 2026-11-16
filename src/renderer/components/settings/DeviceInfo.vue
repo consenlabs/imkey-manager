@@ -14,12 +14,15 @@ defineProps<{
   autoChecking?: boolean
   upgrading?: boolean
   unavailable?: boolean
+  confirmationStatus?: 'none' | 'pending' | 'unavailable'
+  confirmationError?: boolean
 }>()
 const emit = defineEmits<{
   isShowalert: []
   copyText: []
   exportBindCode: []
   checkUpdate: []
+  confirmFirmwareVersions: []
 }>()
 </script>
 
@@ -157,6 +160,38 @@ const emit = defineEmits<{
         </dl>
       </div>
     </div>
+    <div
+      v-if="confirmationStatus === 'pending' || confirmationStatus === 'unavailable'"
+      class="firmware-confirmation"
+      data-testid="firmware-confirmation"
+      role="status"
+    >
+      <p v-if="confirmationStatus === 'unavailable'">
+        {{ $t('m.devicePages.firmware_confirmation_unavailable') }}
+      </p>
+      <template v-else>
+        <p>{{ $t('m.devicePages.firmware_confirmation_pending') }}</p>
+        <p v-if="confirmationError" class="confirmation-error">
+          {{ $t('m.devicePages.firmware_confirmation_save_failed') }}
+        </p>
+        <button
+          type="button"
+          data-testid="firmware-confirmation-button"
+          :disabled="
+            initializing ||
+            autoChecking ||
+            identityChecking ||
+            upgrading ||
+            unavailable ||
+            !cosOldVersionData ||
+            !bleOldVersionData
+          "
+          @click="emit('confirmFirmwareVersions')"
+        >
+          {{ $t('m.devicePages.firmware_confirmation_acknowledge') }}
+        </button>
+      </template>
+    </div>
   </section>
 </template>
 
@@ -218,6 +253,34 @@ const emit = defineEmits<{
 }
 .firmware-status.firmware-available {
   color: #b8ac95;
+}
+.firmware-confirmation {
+  margin-top: 16px;
+  padding: 16px 20px;
+  border: 1px solid #ece4d3;
+  border-radius: 8px;
+  color: #695d46;
+  background: #fcfaf5;
+  font-size: 13px;
+  line-height: 21px;
+}
+.firmware-confirmation p {
+  margin: 0 0 10px;
+}
+.firmware-confirmation p:last-child {
+  margin-bottom: 0;
+}
+.firmware-confirmation .confirmation-error {
+  color: #b0443f;
+}
+.firmware-confirmation button {
+  border: 1px solid #695d46;
+  border-radius: 16px;
+  padding: 5px 14px;
+  color: #695d46;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
 }
 .firmware-status button {
   display: inline-flex;

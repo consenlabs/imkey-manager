@@ -26,11 +26,13 @@ function setup(overrides: Partial<FirmwareRecovery> = {}) {
     ...overrides
   }
   let active = true
+  let binding = recovery.phase === 'update' && recovery.needsBinding ? 'unbound' : 'bound_this'
   const responses: Partial<Record<DeviceMethod, DeviceResult>> = {}
   const defaults: Partial<Record<DeviceMethod, unknown>> = {
     getUpgradeSeid: 'SEID-A',
     isBLStatus: false,
     getLifeTime: 'life_time_wallet_ready',
+    getBTCXpub: 'xpub-ready',
     getFirmwareVersion: '1.1.0',
     getBleVersion: '2.1.0',
     exportBindCode: 'A2345678',
@@ -48,6 +50,9 @@ function setup(overrides: Partial<FirmwareRecovery> = {}) {
   }
   const invoke = vi.fn(async (method: DeviceMethod, _params?: unknown): Promise<DeviceResult> => {
     void _params
+    if (method === 'deviceBindCheck' && !responses[method])
+      return { isSuccess: true, result: binding }
+    if (method === 'deviceBindAcquire' && !responses[method]) binding = 'bound_this'
     return (
       responses[method] ?? {
         isSuccess: true,
@@ -77,6 +82,9 @@ function setup(overrides: Partial<FirmwareRecovery> = {}) {
     count,
     cancel: () => {
       active = false
+    },
+    resume: () => {
+      active = true
     }
   }
 }
@@ -228,20 +236,89 @@ describe('firmware recovery stages', () => {
   it('preserves the BLE-only verify checkpoint without restoring addresses', async () => {
     const context = setup({ phase: 'verify', needsBinding: false })
     expect(await context.retry()).toBeUndefined()
-    expect(context.count('getLifeTime')).toBe(0)
+    expect(context.count('getLifeTime')).toBe(1)
     expect(context.count('writeWalletAddress')).toBe(0)
     expect(context.count('cosUpdate')).toBe(0)
     expect(context.count('clearFirmwareRecovery')).toBe(1)
   })
 
+  it.each([
+    { isSuccess: false, result: 'get_life_time_error' },
+    { isSuccess: true, result: 'life_time_wallet_unready' },
+    { isSuccess: true, result: 'life_time_unknown' }
+  ] as DeviceResult[])(
+    'retains the verify checkpoint when final wallet readiness returns %j',
+    async response => {
+      const context = setup({ phase: 'verify', needsBinding: true })
+      context.responses.getLifeTime = response
+      expect(await context.run()).toMatchObject({ stage: 'wallet', error: { isSuccess: false } })
+      expect(context.recovery.phase).toBe('verify')
+      expect(context.count('getBTCXpub')).toBe(0)
+      expect(context.count('cosUpdate')).toBe(0)
+      expect(context.count('clearFirmwareRecovery')).toBe(0)
+    }
+  )
+
+  it.each([
+    { isSuccess: false, result: 'imkey_command_data_error' },
+    { isSuccess: true, result: '' },
+    { isSuccess: true, result: 'not-xpub' }
+  ] as DeviceResult[])(
+    'retains the verify checkpoint when the final wallet read returns %j',
+    async response => {
+      const context = setup({ phase: 'verify', needsBinding: true })
+      context.responses.getBTCXpub = response
+      const failure = await context.run()
+      expect(failure).toMatchObject({ stage: 'wallet', error: { isSuccess: false } })
+      expect(context.recovery.phase).toBe('verify')
+      expect(context.count('getBTCXpub')).toBe(1)
+      expect(context.count('cosUpdate')).toBe(0)
+      expect(context.count('clearFirmwareRecovery')).toBe(0)
+    }
+  )
+
+  it.each([
+    { isSuccess: false, result: 'device_not_connected' },
+    { isSuccess: true, result: 'SEID-B' }
+  ] as DeviceResult[])(
+    'retains the verify checkpoint if identity fails after the wallet read %j',
+    async response => {
+      const context = setup({ phase: 'verify', needsBinding: true })
+      let walletRead = false
+      const original = context.invoke.getMockImplementation()!
+      context.invoke.mockImplementation(async (method, params) => {
+        if (method === 'getBTCXpub') walletRead = true
+        if (method === 'getUpgradeSeid' && walletRead) return response
+        return original(method, params)
+      })
+      expect(await context.run()).toMatchObject({ stage: 'connect', error: { isSuccess: false } })
+      expect(context.recovery.phase).toBe('verify')
+      expect(context.count('cosUpdate')).toBe(0)
+      expect(context.count('clearFirmwareRecovery')).toBe(0)
+    }
+  )
+
+  it('clears the checkpoint only after the final wallet and identity reads succeed', async () => {
+    const context = setup({ phase: 'verify', needsBinding: true })
+    expect(await context.run()).toBeUndefined()
+    const calls = context.invoke.mock.calls.map(([method]) => method)
+    expect(calls.indexOf('getLifeTime')).toBeLessThan(calls.indexOf('getBTCXpub'))
+    expect(calls.lastIndexOf('getUpgradeSeid')).toBeGreaterThan(calls.indexOf('getBTCXpub'))
+    expect(calls.indexOf('clearFirmwareRecovery')).toBeGreaterThan(
+      calls.lastIndexOf('getUpgradeSeid')
+    )
+    expect(context.count('clearFirmwareRecovery')).toBe(1)
+    expect(context.count('cosUpdate')).toBe(0)
+  })
+
   it.each(['apps', 'restore'] as const)(
-    'skips wallet and address writes when %s has no pending addresses',
+    'skips address writes but verifies wallet when %s has no pending addresses',
     async phase => {
       const context = setup({ phase, pendingAddresses: [] })
       context.responses.getInstalledApplets = { isSuccess: true, result: { list: [] } }
-      context.responses.getLifeTime = { isSuccess: false, result: 'imkey_applet_not_exist' }
       expect(await context.run()).toBeUndefined()
-      expect(context.count('getLifeTime')).toBe(0)
+      expect(context.count('getLifeTime')).toBe(1)
+      expect(context.count('getBTCXpub')).toBe(1)
       expect(context.count('writeWalletAddress')).toBe(0)
       expect(context.count('clearFirmwareRecovery')).toBe(1)
     }
@@ -758,12 +835,105 @@ describe('durable firmware recovery safety', () => {
     })
     expect(context.count('cosCheckUpdate')).toBe(2)
     expect(context.count('clearFirmwareRecovery')).toBe(1)
+    expect(context.recovery.phase).toBe('verify')
     delete context.responses.clearFirmwareRecovery
+    context.responses.getBTCXpub = failed('wallet_unavailable')
+    expect(await context.retry()).toMatchObject({ stage: 'wallet' })
+    expect(context.count('clearFirmwareRecovery')).toBe(1)
+    delete context.responses.getBTCXpub
     expect(await context.retry()).toBeUndefined()
     expect(context.count('clearFirmwareRecovery')).toBe(2)
     expect(context.count('cosUpdate')).toBe(1)
     expect(context.count('deviceBindAcquire')).toBe(1)
+    expect(context.count('writeWalletAddress')).toBeGreaterThanOrEqual(1)
+  })
+
+  it('revalidates the wallet after cancellation while clearing the recovery record', async () => {
+    const context = setup()
+    const original = context.invoke.getMockImplementation()!
+    context.invoke.mockImplementation(async (method, params) => {
+      if (method === 'clearFirmwareRecovery') context.cancel()
+      return original(method, params)
+    })
+    expect(await context.run()).toMatchObject({ error: { code: 'OPERATION_CANCELLED' } })
+    expect(context.recovery.phase).toBe('verify')
+    context.resume()
+    context.invoke.mockImplementation(original)
+    context.responses.getBTCXpub = failed('wallet_unavailable')
+    expect(await context.retry()).toMatchObject({ stage: 'wallet' })
+    expect(context.count('clearFirmwareRecovery')).toBe(1)
+    delete context.responses.getBTCXpub
+    expect(await context.retry()).toBeUndefined()
+    expect(context.count('clearFirmwareRecovery')).toBe(2)
+    expect(context.count('cosUpdate')).toBe(1)
+  })
+
+  it('restores all addresses again if the wallet changes before final verification', async () => {
+    const context = setup()
+    const original = context.invoke.getMockImplementation()!
+    let walletReads = 0
+    context.invoke.mockImplementation(async (method, params) => {
+      if (method === 'getBTCXpub') {
+        walletReads++
+        return { isSuccess: true, result: walletReads === 1 ? 'xpub-old' : 'xpub-new' }
+      }
+      if (method === 'saveFirmwareRecovery') {
+        expect(JSON.stringify(params)).not.toContain('xpub-')
+      }
+      return original(method, params)
+    })
+    expect(await context.run()).toBeUndefined()
+    expect(context.count('writeWalletAddress')).toBe(2)
+    expect(context.count('getInstalledApplets')).toBe(2)
+    expect(context.count('clearFirmwareRecovery')).toBe(1)
+    expect(context.count('cosUpdate')).toBe(1)
+  })
+
+  it('restores other addresses but keeps recovery pending when the Bitcoin applet is missing', async () => {
+    const context = setup()
+    context.responses.getBTCXpub = failed('imkey_applet_not_exist')
+    expect(await context.run()).toMatchObject({
+      stage: 'wallet',
+      error: { result: 'imkey_applet_not_exist' }
+    })
     expect(context.count('writeWalletAddress')).toBe(1)
+    expect(context.count('clearFirmwareRecovery')).toBe(0)
+    delete context.responses.getBTCXpub
+    expect(await context.retry()).toBeUndefined()
+    expect(context.count('writeWalletAddress')).toBe(2)
+    expect(context.count('clearFirmwareRecovery')).toBe(1)
+    expect(context.count('cosUpdate')).toBe(1)
+  })
+
+  it('does not clear when the Bitcoin applet becomes available after address writes', async () => {
+    const context = setup()
+    const original = context.invoke.getMockImplementation()!
+    let walletReads = 0
+    context.invoke.mockImplementation(async (method, params) => {
+      if (method === 'getBTCXpub' && ++walletReads === 1) return failed('imkey_applet_not_exist')
+      return original(method, params)
+    })
+    expect(await context.run()).toMatchObject({
+      stage: 'wallet',
+      error: { result: 'imkey_applet_not_exist' }
+    })
+    expect(context.recovery.phase).toBe('apps')
+    expect(context.count('clearFirmwareRecovery')).toBe(0)
+    expect(await context.retry()).toBeUndefined()
+    expect(context.count('writeWalletAddress')).toBe(2)
+    expect(context.count('clearFirmwareRecovery')).toBe(1)
+    expect(context.count('cosUpdate')).toBe(1)
+  })
+
+  it('blocks address writes when the wallet proof fails for another reason', async () => {
+    const context = setup()
+    context.responses.getBTCXpub = failed('device_not_connected')
+    expect(await context.run()).toMatchObject({
+      stage: 'wallet',
+      error: { result: 'device_not_connected' }
+    })
+    expect(context.count('writeWalletAddress')).toBe(0)
+    expect(context.count('clearFirmwareRecovery')).toBe(0)
   })
 
   it.each([
@@ -901,16 +1071,15 @@ describe('promoting a BLE-only plan to full recovery', () => {
     expect(await context.run()).toBeUndefined()
     expect(context.recovery.needsBinding).toBe(true)
     expect(context.count('cosUpdate')).toBe(0)
-    expect(context.count('exportBindCode')).toBe(1)
-    expect(context.count('deviceBindAcquire')).toBe(1)
+    expect(context.count('exportBindCode')).toBe(0)
+    expect(context.count('deviceBindAcquire')).toBe(0)
     expect(context.invoke).toHaveBeenCalledWith('writeWalletAddress', {
       name: ['Ethereum', 'Bitcoin'],
       filePath: '/user'
     })
     const promoted = context.invoke.mock.calls.find(
       ([method, value]) =>
-        method === 'saveFirmwareRecovery' &&
-        (value as FirmwareRecoveryCheckpoint).phase === 'load-code'
+        method === 'saveFirmwareRecovery' && (value as FirmwareRecoveryCheckpoint).phase === 'apps'
     )?.[1]
     expect(promoted).toMatchObject({
       needsBinding: true,
@@ -918,6 +1087,18 @@ describe('promoting a BLE-only plan to full recovery', () => {
       expectedCos: '1.1.0'
     })
     expect(promoted).not.toHaveProperty('pendingAddresses')
+  })
+
+  it('continues address recovery without reacquiring an existing same-host binding', async () => {
+    const context = setup({ phase: 'capture-versions', needsBinding: true, bindCode: '' })
+    expect(await context.run()).toBeUndefined()
+    expect(context.count('deviceBindCheck')).toBeGreaterThan(0)
+    expect(context.count('exportBindCode')).toBe(0)
+    expect(context.count('deviceBindAcquire')).toBe(0)
+    expect(context.count('getInstalledApplets')).toBe(1)
+    expect(context.count('writeWalletAddress')).toBe(1)
+    expect(context.count('cosUpdate')).toBe(0)
+    expect(context.count('clearFirmwareRecovery')).toBe(1)
   })
 
   it.each(['capture-versions', 'verify'] as const)(

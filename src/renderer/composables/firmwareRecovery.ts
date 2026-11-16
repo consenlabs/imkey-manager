@@ -133,22 +133,36 @@ export async function runFirmwareRecovery(
     call,
     current,
     userPath,
-    onPhase
+    onPhase,
+    onWalletVerified
   }: {
     call: typeof callDevice
     current: () => boolean
     userPath: string
     onPhase: (phase: FirmwarePhase) => void
+    onWalletVerified?: (wallet: DeviceResult<string>) => void
   }
 ): Promise<FirmwareFailure | undefined> {
+  // Kept only in memory for this invocation; never persist or log wallet keys.
+  let restoredWallet: string | undefined
+  let missingWalletProof: DeviceResult<string> | undefined
   while (current()) {
     const phase = recovery.phase
     onPhase(phase)
     // Persist before executing each stage. Closing the window or losing the worker
     // cannot erase a pending native call or falsely advance it to the next stage.
     const persisted = await saveRecovery(recovery, call)
-    if (!current()) return cancelled()
-    if (!persisted.isSuccess) return { stage: 'store', error: persisted }
+    if (!current()) {
+      // A retry must obtain fresh wallet proof even if a clear completed while
+      // the operation was cancelled.
+      if (phase === 'complete') recovery.phase = 'verify'
+      return cancelled()
+    }
+    if (!persisted.isSuccess) {
+      // A failed clear must retry final verification before another clear.
+      if (phase === 'complete') recovery.phase = 'verify'
+      return { stage: 'store', error: persisted }
+    }
     if (phase === 'complete') return
     if (phase === 'update') {
       const response = await call('cosUpdate')
@@ -196,17 +210,15 @@ export async function runFirmwareRecovery(
       let needsBinding =
         recovery.needsBinding ||
         Boolean(recovery.previousCos && recovery.previousCos !== versions[0])
-      if (!recovery.needsBinding) {
-        const binding = await call('deviceBindCheck')
-        if (!current()) return cancelled()
-        if (!binding.isSuccess) return { stage: 'bind', error: binding }
-        if (!['bound_this', 'bound_other', 'unbound'].includes(binding.result))
-          return {
-            stage: 'bind',
-            error: { isSuccess: false, result: 'device_bind_check_failed' }
-          }
-        needsBinding = needsBinding || binding.result !== 'bound_this'
-      }
+      const binding = await call('deviceBindCheck')
+      if (!current()) return cancelled()
+      if (!binding.isSuccess) return { stage: 'bind', error: binding }
+      if (!['bound_this', 'bound_other', 'unbound'].includes(binding.result))
+        return {
+          stage: 'bind',
+          error: { isSuccess: false, result: 'device_bind_check_failed' }
+        }
+      needsBinding = needsBinding || binding.result !== 'bound_this'
       const identity = await call('getUpgradeSeid')
       if (!current()) return cancelled()
       if (!identity.isSuccess) return { stage: 'connect', error: identity }
@@ -215,7 +227,15 @@ export async function runFirmwareRecovery(
       ;[recovery.expectedCos, recovery.expectedBle] = versions
       if (!recovery.needsBinding && needsBinding) delete recovery.pendingAddresses
       recovery.needsBinding = needsBinding
-      recovery.phase = recovery.needsBinding ? (recovery.bindCode ? 'bind' : 'load-code') : 'verify'
+      // A still-bound device does not need another bind_acquire. Rebuild the
+      // address list when COS recovery was planned, even if no rebind is needed.
+      recovery.phase = recovery.needsBinding
+        ? binding.result === 'bound_this'
+          ? 'apps'
+          : recovery.bindCode
+            ? 'bind'
+            : 'load-code'
+        : 'verify'
     } else if (phase === 'load-code') {
       const failure = await readRecoveryCode(recovery, call, current, false)
       if (failure) return failure
@@ -284,6 +304,19 @@ export async function runFirmwareRecovery(
         }
         return { stage: 'wallet', error: wallet }
       }
+      const walletBeforeRestore = await call('getBTCXpub', userPath)
+      if (!current()) return cancelled()
+      if (!walletBeforeRestore.isSuccess) {
+        // A missing Bitcoin applet must not block recovery of other apps. We
+        // cannot complete without a before/after wallet proof, however.
+        if (walletBeforeRestore.result !== 'imkey_applet_not_exist')
+          return { stage: 'wallet', error: walletBeforeRestore }
+        missingWalletProof = walletBeforeRestore
+      } else if (
+        typeof walletBeforeRestore.result !== 'string' ||
+        !walletBeforeRestore.result.startsWith('xpub')
+      )
+        return { stage: 'wallet', error: { isSuccess: false, result: 'invalid_wallet_response' } }
       const identity = await call('getUpgradeSeid')
       if (!current()) return cancelled()
       if (!identity.isSuccess) return { stage: 'connect', error: identity }
@@ -308,6 +341,7 @@ export async function runFirmwareRecovery(
         }
         return { stage: 'restore', error: response }
       }
+      restoredWallet = walletBeforeRestore.isSuccess ? walletBeforeRestore.result : undefined
       recovery.phase = 'verify'
     } else {
       const binding = await call('deviceBindCheck')
@@ -336,7 +370,44 @@ export async function runFirmwareRecovery(
         recovery.needsBinding = true
         delete recovery.pendingAddresses
         recovery.phase = 'load-code'
-      } else recovery.phase = 'complete'
+      } else {
+        // Preserve the checkpoint until the same bound device can actually
+        // derive a wallet. Otherwise a reset or failed final read could erase
+        // the only remaining recovery record before connection succeeds.
+        const walletStatus = await checkWalletReadiness(call)
+        if (!current()) return cancelled()
+        if (!walletStatus.isSuccess) return { stage: 'wallet', error: walletStatus }
+        const wallet = await call('getBTCXpub', userPath)
+        if (!current()) return cancelled()
+        if (!wallet.isSuccess) return { stage: 'wallet', error: wallet }
+        if (typeof wallet.result !== 'string' || !wallet.result.startsWith('xpub'))
+          return { stage: 'wallet', error: { isSuccess: false, result: 'invalid_wallet_response' } }
+        if (missingWalletProof) {
+          // Even if the applet became available during address recovery, retry
+          // from the complete list to obtain a proof bracketing those writes.
+          delete recovery.pendingAddresses
+          recovery.phase = 'apps'
+          const persisted = await saveRecovery(recovery, call)
+          if (!current()) return cancelled()
+          if (!persisted.isSuccess) return { stage: 'store', error: persisted }
+          return { stage: 'wallet', error: missingWalletProof }
+        }
+        if (restoredWallet !== undefined && restoredWallet !== wallet.result) {
+          // Same SEID can have a different wallet after reset. Rebuild the full
+          // list before allowing this new wallet to complete the recovery.
+          restoredWallet = undefined
+          delete recovery.pendingAddresses
+          recovery.phase = 'apps'
+          continue
+        }
+        const identity = await call('getUpgradeSeid')
+        if (!current()) return cancelled()
+        if (!identity.isSuccess) return { stage: 'connect', error: identity }
+        if (identity.result.toUpperCase() !== recovery.seid.toUpperCase())
+          return { stage: 'connect', error: { isSuccess: false, result: 'device_session_changed' } }
+        onWalletVerified?.(wallet)
+        recovery.phase = 'complete'
+      }
     }
   }
   return cancelled()

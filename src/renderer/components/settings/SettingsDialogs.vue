@@ -9,6 +9,7 @@ withDefaults(
     supportCode: number
     bindCode: string
     phase?: FirmwareUpgradePhase
+    reconciled?: boolean
   }>(),
   { phase: 'update' }
 )
@@ -63,8 +64,20 @@ watch(
           stroke-linejoin="round"
         />
       </svg>
-      <h5>{{ $t('m.imKeyManager.upgrade_done') }}</h5>
-      <p>{{ $t('m.imKeyManager.can_used_imKey_manager') }}</p>
+      <h5>
+        {{
+          $t(reconciled ? 'm.imKeyManager.firmware_recovery_done' : 'm.imKeyManager.upgrade_done')
+        }}
+      </h5>
+      <p>
+        {{
+          $t(
+            reconciled
+              ? 'm.imKeyManager.firmware_recovery_verify_version'
+              : 'm.imKeyManager.can_used_imKey_manager'
+          )
+        }}
+      </p>
       <button @click="emit('changeCode', 0)">{{ $t('m.imKeyManager.ok') }}</button>
     </div>
   </div>

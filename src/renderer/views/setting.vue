@@ -1,13 +1,27 @@
 <script setup lang="ts">
 import ErrorDetail from '../components/ErrorDetail.vue'
-import { toRef, toRefs } from 'vue'
+import { ref, toRef, toRefs, watch } from 'vue'
 import DeviceInfo from '../components/settings/DeviceInfo.vue'
 import DeviceVerificationCard from '../components/device/DeviceVerificationCard.vue'
 import SettingsDialogs from '../components/settings/SettingsDialogs.vue'
 import UpdateStatus from '../components/settings/UpdateStatus.vue'
 import { useSettings } from '../composables/useSettings'
 import { useSoftwareUpdate } from '../composables/useSoftwareUpdate'
+import { useFirmwareConfirmation } from '../composables/useFirmwareConfirmation'
+import { useDeviceStore } from '../store'
 const settings = useSettings()
+const device = useDeviceStore()
+const firmwareConfirmation = useFirmwareConfirmation(() => device.connectedSeid)
+const confirmationError = ref(false)
+watch(
+  () => device.connectedSeid,
+  () => {
+    confirmationError.value = false
+  }
+)
+function confirmFirmwareVersions(): void {
+  confirmationError.value = !firmwareConfirmation.confirm().isSuccess
+}
 const { status, SN, copyTooltipDisabled, checkingUpdate, initializing, autoChecking } = toRefs(
   settings.state
 )
@@ -54,10 +68,13 @@ defineExpose({ checkSoftUpdate })
       :upgrading="busy"
       :identity-checking="verification.state.identityChecking"
       :unavailable="settings.state.deviceUnavailable"
+      :confirmation-status="firmwareConfirmation.status.value"
+      :confirmation-error="confirmationError"
       @is-showalert="!busy && !autoChecking && isShowalert()"
       @copy-text="copyText"
       @export-bind-code="!busy && !autoChecking && exportBindCode()"
       @check-update="!busy && !autoChecking && settings.checkUpdate()"
+      @confirm-firmware-versions="confirmFirmwareVersions"
     />
     <div
       v-if="settings.state.deviceUnavailable"
@@ -104,6 +121,7 @@ defineExpose({ checkSoftUpdate })
       v-if="!settings.state.deviceUnavailable"
       :support-code="supportCode"
       :phase="phase"
+      :reconciled="settings.firmware.state.reconciled"
       :error-info="errorInfo"
       :error-stage="errorStage"
       :bind-code="bindCode"

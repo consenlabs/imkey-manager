@@ -128,9 +128,14 @@ describe('firmware failures preserve the failing step', () => {
     ['writeWalletAddress', 'restore']
   ]) {
     it(`shows ${method} errors`, async () => {
-      mocks.call.mockImplementation(async name =>
-        name === method ? { isSuccess: false, result: `${method}_failed` } : success(name)
-      )
+      let binding = 'bound_this'
+      mocks.call.mockImplementation(async name => {
+        if (name === method) return { isSuccess: false, result: `${method}_failed` }
+        if (name === 'cosUpdate') binding = 'unbound'
+        if (name === 'deviceBindAcquire') binding = 'bound_this'
+        if (name === 'deviceBindCheck') return { isSuccess: true, result: binding }
+        return success(name)
+      })
       const firmware = useFirmwareUpgrade('manager')
       await firmware.updateFirmware()
       expect(firmware.state.errorInfo).toBe(`${method}_failed`)
@@ -260,7 +265,11 @@ describe('settings and setup do not silently stop', () => {
 
 it('connection firmware reports the actual failed update cause', async () => {
   mocks.call.mockImplementation(async method =>
-    method === 'cosUpdate' ? { isSuccess: false, result: 'cos_upgrade_failed' } : success(method)
+    method === 'cosUpdate'
+      ? { isSuccess: false, result: 'cos_upgrade_failed' }
+      : method === 'isBLStatus'
+        ? { isSuccess: true, result: true }
+        : success(method)
   )
   const fail = vi.fn()
   const firmware = useConnectionFirmware(vi.fn(), fail, async () => {})
@@ -275,7 +284,9 @@ it('connection recovery keeps the pending record when the firmware response is i
           result: 'missing field `_ReturnData` at line 1 column 100',
           operationId: 'op-789'
         }
-      : success(method)
+      : method === 'isBLStatus'
+        ? { isSuccess: true, result: true }
+        : success(method)
   )
   const fail = vi.fn()
   const firmware = useConnectionFirmware(vi.fn(), fail, async () => {})
