@@ -1,5 +1,5 @@
 // sdk version
-const sdkVersion = '2.10.3'
+const sdkVersion = '2.16.5'
 // serverurl
 const serverUrl = 'https://imkey.online:1000/imkey'
 // Terminaltype

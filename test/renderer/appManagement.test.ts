@@ -55,8 +55,8 @@ beforeEach(() => {
     result:
       method === 'downloadApplet' || method === 'updateApplet'
         ? []
-        : method === 'getLifeTime'
-          ? 'life_time_wallet_ready'
+        : method === 'getBTCXpub'
+          ? 'xpub-ready'
           : 'success'
   }))
 })
@@ -105,7 +105,7 @@ describe('canonical app identity and presentation state', () => {
         ? { isSuccess: false, result: 'device_not_connected' }
         : {
             isSuccess: true,
-            result: method === 'getLifeTime' ? 'life_time_wallet_ready' : 'success'
+            result: method === 'getBTCXpub' ? 'xpub-ready' : 'success'
           }
     )
     const manager = useAppManagement()
@@ -130,18 +130,18 @@ describe('canonical app identity and presentation state', () => {
       result:
         method === 'downloadApplet'
           ? ['Kusama']
-          : method === 'getLifeTime'
-            ? 'life_time_wallet_ready'
+          : method === 'getBTCXpub'
+            ? 'xpub-ready'
             : 'success'
     }))
     const manager = useAppManagement()
     await manager.installApp(manager.apps.value[0])
     expect(call.mock.calls.map(([method]) => method)).toEqual([
       'connectDevice',
-      'getLifeTime',
+      'getBTCXpub',
       'getSeid',
       'downloadApplet',
-      'getLifeTime',
+      'getBTCXpub',
       'getSeid',
       'writeWalletAddress'
     ])
@@ -178,8 +178,8 @@ describe('application operations and firmware recovery', () => {
           ? { list: [{ name: 'Polkadot', installedVersion: null, latestVersion: '2.0', icon: '' }] }
           : method === 'downloadApplet'
             ? ['Polkadot']
-            : method === 'getLifeTime'
-              ? 'life_time_wallet_ready'
+            : method === 'getBTCXpub'
+              ? 'xpub-ready'
               : 'success'
     }))
     const manager = useAppManagement()
@@ -187,10 +187,10 @@ describe('application operations and firmware recovery', () => {
     expect(call.mock.calls.map(([method]) => method)).toEqual([
       'checkUpdate',
       'connectDevice',
-      'getLifeTime',
+      'getBTCXpub',
       'getSeid',
       'downloadApplet',
-      'getLifeTime',
+      'getBTCXpub',
       'getSeid',
       'writeWalletAddress'
     ])
@@ -210,8 +210,8 @@ describe('application operations and firmware recovery', () => {
           ? { list: [{ name: 'Polkadot', installedVersion: null, latestVersion: '2.0', icon: '' }] }
           : method === 'downloadApplet'
             ? ['Polkadot']
-            : method === 'getLifeTime'
-              ? 'life_time_wallet_ready'
+            : method === 'getBTCXpub'
+              ? 'xpub-ready'
               : 'success'
     }))
     const manager = useAppManagement()
@@ -233,8 +233,8 @@ describe('application operations and firmware recovery', () => {
           ? {
               list: [{ name: 'Polkadot', installedVersion: '1.0', latestVersion: '1.0', icon: '' }]
             }
-          : method === 'getLifeTime'
-            ? 'life_time_wallet_ready'
+          : method === 'getBTCXpub'
+            ? 'xpub-ready'
             : 'success'
     }))
     const manager = useAppManagement()
@@ -256,8 +256,8 @@ describe('application operations and firmware recovery', () => {
           ? { list: [{ name: 'Polkadot', installedVersion: null, latestVersion: '2.0', icon: '' }] }
           : method === 'downloadApplet'
             ? ['Polkadot']
-            : method === 'getLifeTime'
-              ? 'life_time_wallet_ready'
+            : method === 'getBTCXpub'
+              ? 'xpub-ready'
               : 'success'
     }))
     const manager = useAppManagement()
@@ -289,8 +289,8 @@ describe('application operations and firmware recovery', () => {
         result:
           method === 'downloadApplet'
             ? ['Polkadot']
-            : method === 'getLifeTime'
-              ? 'life_time_wallet_ready'
+            : method === 'getBTCXpub'
+              ? 'xpub-ready'
               : 'success'
       }
     })
@@ -323,7 +323,7 @@ describe('application operations and firmware recovery', () => {
       }
       return {
         isSuccess: true,
-        result: method === 'getLifeTime' ? 'life_time_wallet_ready' : 'success'
+        result: method === 'getBTCXpub' ? 'xpub-ready' : 'success'
       }
     })
     const first = useAppManagement()

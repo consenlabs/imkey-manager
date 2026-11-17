@@ -50,7 +50,6 @@ beforeEach(() => {
     if (method === 'isBLStatus') return { isSuccess: true, result: false }
     if (method === 'cosCheckUpdate') return { isSuccess: true, result: { isUpdateSuccess: true } }
     if (method === 'getFirmwareRecovery') return { isSuccess: true, result: null }
-    if (method === 'getLifeTime') return { isSuccess: true, result: 'life_time_wallet_ready' }
     if (method === 'exportBindCode') return localCode
     // Mirror the service's binding guard before its xpub read.
     if (method === 'getBTCXpub')
@@ -170,8 +169,6 @@ it('wallet checks show busy before queuing and suppress repeated navigation unti
   expect(mocks.call.mock.calls.map(([method]) => method)).toEqual([
     'connectDevice',
     'getSeid',
-    'getLifeTime',
-    'getSeid',
     'getBTCXpub',
     'getSeid'
   ])
@@ -187,8 +184,6 @@ it('wallet checks show busy before queuing and suppress repeated navigation unti
     'isBLStatus',
     'cosCheckUpdate',
     'getFirmwareRecovery',
-    'getLifeTime',
-    'getSeid',
     'getBTCXpub',
     'getSeid'
   ])
@@ -502,8 +497,6 @@ it.each(['unbound', 'bound_other', 'unknown', ''])(
     )
     expect(mocks.call.mock.calls.map(([method]) => method)).toEqual([
       'connectDevice',
-      'getSeid',
-      'getLifeTime',
       'getSeid',
       'getBTCXpub'
     ])

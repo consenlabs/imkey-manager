@@ -346,33 +346,13 @@ export function useDeviceSetup() {
         return false
       }
     }
-    const wallet = await checkWalletReadiness(callDevice)
+    const wallet = await checkWalletReadiness(callDevice, app.userPath)
     if (!operation.active() || !sameConnection(connection)) return false
     if (!wallet.isSuccess) {
       failed(wallet, 'wallet')
       return false
     }
     state.walletStatusChecked = true
-    const identity = await callDevice('getSeid')
-    if (!operation.active() || !sameConnection(connection)) return false
-    if (!identity.isSuccess) {
-      failed(identity, 'connect')
-      return false
-    }
-    if (identity.result.toUpperCase() !== connection.seid) {
-      failed('device_session_changed', 'connect', true)
-      return false
-    }
-    const xpub = await callDevice('getBTCXpub', app.userPath)
-    if (!operation.active() || !sameConnection(connection)) return false
-    if (!xpub.isSuccess) {
-      failed(xpub, 'wallet')
-      return false
-    }
-    if (typeof xpub.result !== 'string' || !xpub.result.startsWith('xpub')) {
-      failed('invalid_wallet_response', 'wallet')
-      return false
-    }
     const confirmed = await callDevice('getSeid')
     if (!operation.active() || !sameConnection(connection)) return false
     if (!confirmed.isSuccess) {
@@ -383,7 +363,7 @@ export function useDeviceSetup() {
       failed('device_session_changed', 'connect', true)
       return false
     }
-    if (authorizeHome && !device.authorizeHome(connection.sessionId, connection.seid, xpub)) {
+    if (authorizeHome && !device.authorizeHome(connection.sessionId, connection.seid, wallet)) {
       failed('device_session_changed', 'wallet', true)
       return false
     }

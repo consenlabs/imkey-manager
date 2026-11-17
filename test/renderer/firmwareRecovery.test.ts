@@ -186,7 +186,6 @@ describe('firmware recovery stages', () => {
 
   it('restores every installed address after a restart even if the same device has a different wallet', async () => {
     const context = setup({ phase: 'restore', pendingAddresses: ['Bitcoin', 'Ethereum'] })
-    context.responses.getLifeTime = { isSuccess: true, result: 'life_time_wallet_ready' }
     context.responses.writeWalletAddress = {
       isSuccess: false,
       result: 'restore_failed',
@@ -198,7 +197,6 @@ describe('firmware recovery stages', () => {
     expect(saved).toMatchObject({ phase: 'restore', pendingAddresses: ['Ethereum'] })
 
     const restarted = setup(restoreFirmwareRecovery(saved))
-    restarted.responses.getLifeTime = { isSuccess: true, result: 'life_time_wallet_ready' }
     expect(await restarted.retry()).toBeUndefined()
     expect(
       restarted.invoke.mock.calls.find(([method]) => method === 'writeWalletAddress')?.[1]
@@ -224,7 +222,6 @@ describe('firmware recovery stages', () => {
       needsBinding: true,
       pendingAddresses: ['Ethereum']
     })
-    context.responses.getLifeTime = { isSuccess: true, result: 'life_time_wallet_ready' }
     expect(await context.retry()).toBeUndefined()
     expect(
       context.invoke.mock.calls.find(([method]) => method === 'writeWalletAddress')?.[1]
@@ -236,24 +233,26 @@ describe('firmware recovery stages', () => {
   it('preserves the BLE-only verify checkpoint without restoring addresses', async () => {
     const context = setup({ phase: 'verify', needsBinding: false })
     expect(await context.retry()).toBeUndefined()
-    expect(context.count('getLifeTime')).toBe(1)
+    expect(context.count('getLifeTime')).toBe(0)
+    expect(context.count('getBTCXpub')).toBe(1)
     expect(context.count('writeWalletAddress')).toBe(0)
     expect(context.count('cosUpdate')).toBe(0)
     expect(context.count('clearFirmwareRecovery')).toBe(1)
   })
 
   it.each([
-    { isSuccess: false, result: 'get_life_time_error' },
-    { isSuccess: true, result: 'life_time_wallet_unready' },
-    { isSuccess: true, result: 'life_time_unknown' }
+    { isSuccess: false, result: 'imkey_wallet_not_created' },
+    { isSuccess: false, result: 'device_not_connected' },
+    { isSuccess: false, result: 'device_bind_check_failed' }
   ] as DeviceResult[])(
     'retains the verify checkpoint when final wallet readiness returns %j',
     async response => {
       const context = setup({ phase: 'verify', needsBinding: true })
-      context.responses.getLifeTime = response
-      expect(await context.run()).toMatchObject({ stage: 'wallet', error: { isSuccess: false } })
+      context.responses.getBTCXpub = response
+      expect(await context.run()).toMatchObject({ stage: 'wallet', error: response })
       expect(context.recovery.phase).toBe('verify')
-      expect(context.count('getBTCXpub')).toBe(0)
+      expect(context.count('getBTCXpub')).toBe(1)
+      expect(context.count('getLifeTime')).toBe(0)
       expect(context.count('cosUpdate')).toBe(0)
       expect(context.count('clearFirmwareRecovery')).toBe(0)
     }
@@ -302,7 +301,7 @@ describe('firmware recovery stages', () => {
     const context = setup({ phase: 'verify', needsBinding: true })
     expect(await context.run()).toBeUndefined()
     const calls = context.invoke.mock.calls.map(([method]) => method)
-    expect(calls.indexOf('getLifeTime')).toBeLessThan(calls.indexOf('getBTCXpub'))
+    expect(calls).not.toContain('getLifeTime')
     expect(calls.lastIndexOf('getUpgradeSeid')).toBeGreaterThan(calls.indexOf('getBTCXpub'))
     expect(calls.indexOf('clearFirmwareRecovery')).toBeGreaterThan(
       calls.lastIndexOf('getUpgradeSeid')
@@ -317,26 +316,19 @@ describe('firmware recovery stages', () => {
       const context = setup({ phase, pendingAddresses: [] })
       context.responses.getInstalledApplets = { isSuccess: true, result: { list: [] } }
       expect(await context.run()).toBeUndefined()
-      expect(context.count('getLifeTime')).toBe(1)
+      expect(context.count('getLifeTime')).toBe(0)
       expect(context.count('getBTCXpub')).toBe(1)
       expect(context.count('writeWalletAddress')).toBe(0)
       expect(context.count('clearFirmwareRecovery')).toBe(1)
     }
   )
 
-  it.each([
-    'life_time_device_inited',
-    'life_time_device_activated',
-    'life_time_unset_pin',
-    'life_time_wallet_unready',
-    'life_time_wallet_creatting',
-    'life_time_wallet_recovering'
-  ])('blocks address restoration for %s and retries all apps after wallet setup', async status => {
+  it('blocks address restoration for an uncreated wallet and retries all apps after wallet setup', async () => {
     const context = setup({ phase: 'restore', pendingAddresses: ['Ethereum'] })
-    context.responses.getLifeTime = { isSuccess: true, result: status }
+    context.responses.getBTCXpub = { isSuccess: false, result: 'imkey_wallet_not_created' }
     expect(await context.run()).toMatchObject({
       stage: 'wallet',
-      error: { result: status }
+      error: { result: 'imkey_wallet_not_created' }
     })
     expect(context.count('writeWalletAddress')).toBe(0)
     expect(context.count('cosUpdate')).toBe(0)
@@ -345,7 +337,7 @@ describe('firmware recovery stages', () => {
     expect(saved.at(-1)?.[1]).toMatchObject({ phase: 'apps' })
     expect(saved.at(-1)?.[1]).not.toHaveProperty('pendingAddresses')
 
-    delete context.responses.getLifeTime
+    delete context.responses.getBTCXpub
     expect(await context.retry()).toBeUndefined()
     expect(
       context.invoke.mock.calls.find(([method]) => method === 'writeWalletAddress')?.[1]
@@ -357,7 +349,7 @@ describe('firmware recovery stages', () => {
 
   it('does not label an unknown command error as an empty wallet or discard its checkpoint', async () => {
     const context = setup({ phase: 'restore', pendingAddresses: ['Ethereum'] })
-    context.responses.getLifeTime = { isSuccess: false, result: 'imkey_command_data_error' }
+    context.responses.getBTCXpub = { isSuccess: false, result: 'imkey_command_data_error' }
     expect(await context.run()).toMatchObject({
       stage: 'wallet',
       error: { result: 'imkey_command_data_error' }

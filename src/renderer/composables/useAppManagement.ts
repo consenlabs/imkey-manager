@@ -115,7 +115,7 @@ export function useAppManagement() {
     retry: () => Promise<unknown>
   ): Promise<boolean> {
     const expectedSeid = device.connectedSeid
-    const result = await checkWalletReadiness(call)
+    const result = await checkWalletReadiness(call, app.userPath)
     if (!current()) return false
     if (!result.isSuccess) {
       fail(result, 'wallet', false, retry)

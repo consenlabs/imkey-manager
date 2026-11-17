@@ -104,6 +104,7 @@ module.exports = {
     if (method === 'bind_check' && control.failBindingCheck)
       return fail('imkey_tsm_bind_check_fail')
     if (method === 'get_life_time') {
+      if (control.failLifeTime) return fail('get_life_time_error')
       if (control.walletDataError) return fail('imkey_command_data_error')
       if (control.failWallet) return fail('imkey_wallet_read_failed')
       return response(
@@ -155,8 +156,16 @@ module.exports = {
       if (control.extraApplet) {
         const extra = new device.AvailableAppBean()
         extra.setAppName('Polkadot')
-        extra.setInstalledVersion(state.polkadotInstalled ? '1.0' : 'none')
-        extra.setLatestVersion('1.0')
+        extra.setInstalledVersion(
+          state.polkadotInstalled
+            ? control.extraAppletUpdate
+              ? '2.0'
+              : '1.0'
+            : control.extraAppletUpdate
+              ? '1.0'
+              : 'none'
+        )
+        extra.setLatestVersion(control.extraAppletUpdate ? '2.0' : '1.0')
         extra.setAppLogo('')
         entries.push(extra)
       }
@@ -181,6 +190,13 @@ module.exports = {
       state.polkadotInstalled = true
       save()
       const result = new device.AppDownloadRes()
+      result.setAddressRegisterListList(['Polkadot'])
+      return hex(result)
+    }
+    if (method === 'app_update') {
+      state.polkadotInstalled = true
+      save()
+      const result = new device.AppUpdateRes()
       result.setAddressRegisterListList(['Polkadot'])
       return hex(result)
     }

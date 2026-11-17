@@ -52,7 +52,7 @@ beforeEach(() => {
   mocks.offer.mockReset()
   mocks.call.mockReset().mockImplementation(async method => {
     if (method === 'getSeid') return { isSuccess: true, result: seid }
-    if (method === 'getLifeTime') return { isSuccess: true, result: 'life_time_wallet_ready' }
+    if (method === 'getBTCXpub') return { isSuccess: true, result: 'xpub-ready' }
     if (method === 'deviceBindCheck') return { isSuccess: true, result: binding }
     if (method === 'downloadApplet' || method === 'updateApplet') {
       installedVersion = '1.0'
@@ -91,13 +91,13 @@ it.each(['install', 'update'] as const)(
       'connectDevice',
       'getSeid',
       'deviceBindCheck',
-      'getLifeTime',
+      'getBTCXpub',
       'getSeid',
       'checkUpdate',
       'connectDevice',
       'getSeid',
       'deviceBindCheck',
-      'getLifeTime',
+      'getBTCXpub',
       'getSeid',
       'writeWalletAddress'
     ])
@@ -115,13 +115,13 @@ it('retries all installed addresses after observing that the wallet was reset', 
   await manager.installApp(manager.apps.value[0])
   const normal = mocks.call.getMockImplementation()!
   mocks.call.mockImplementation(async (method, params) =>
-    method === 'getLifeTime'
-      ? { isSuccess: true, result: 'life_time_wallet_unready' }
+    method === 'getBTCXpub'
+      ? { isSuccess: false, result: 'imkey_wallet_not_created' }
       : normal(method, params)
   )
   manager.ok()
   await manager.installApp(manager.apps.value[0])
-  expect(manager.state.errorInfo).toBe('life_time_wallet_unready')
+  expect(manager.state.errorInfo).toBe('imkey_wallet_not_created')
   mocks.call.mockImplementation(normal)
   mocks.call.mockClear()
   manager.ok()
@@ -134,15 +134,15 @@ it('retries all installed addresses after observing that the wallet was reset', 
 })
 
 it('restores all addresses when a wallet changes between attempts without an observed empty state', async () => {
-  let currentXpub = 'life_time_wallet_ready'
+  let currentXpub = 'xpub-wallet-a'
   const normal = mocks.call.getMockImplementation()!
   mocks.call.mockImplementation(async (method, params) =>
-    method === 'getLifeTime' ? { isSuccess: true, result: currentXpub } : normal(method, params)
+    method === 'getBTCXpub' ? { isSuccess: true, result: currentXpub } : normal(method, params)
   )
   const manager = useAppManagement()
   await manager.installApp(manager.apps.value[0])
   expect(manager.state.errorStage).toBe('restore')
-  currentXpub = 'life_time_wallet_ready'
+  currentXpub = 'xpub-wallet-b'
   mocks.call.mockClear()
   manager.ok()
   await manager.installApp(manager.apps.value[0])

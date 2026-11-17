@@ -79,15 +79,7 @@ async function reachWalletInstructions(): Promise<void> {
   expect(await calls()).toEqual(beforeInstructions)
 }
 
-const walletCheckCalls = [
-  'device_connect',
-  'get_seid',
-  'get_life_time',
-  'get_seid',
-  'bind_check',
-  'btc_get_xpub',
-  'get_seid'
-]
+const walletCheckCalls = ['device_connect', 'get_seid', 'bind_check', 'btc_get_xpub', 'get_seid']
 const completionCheckPrefix = [
   'device_connect',
   'get_seid',
@@ -97,8 +89,6 @@ const completionCheckPrefix = [
 ]
 const completionWalletCheckCalls = [
   ...completionCheckPrefix,
-  'get_life_time',
-  'get_seid',
   'bind_check',
   'btc_get_xpub',
   'get_seid'
@@ -260,8 +250,8 @@ for (const boundary of ['wallet', 'completion'] as const) {
         change === 'identity'
           ? ['device_connect', 'get_seid']
           : boundary === 'completion'
-            ? [...completionCheckPrefix, 'get_life_time', 'get_seid', 'bind_check']
-            : ['device_connect', 'get_seid', 'get_life_time', 'get_seid', 'bind_check']
+            ? [...completionCheckPrefix, 'bind_check']
+            : ['device_connect', 'get_seid', 'bind_check']
       )
     })
   }
@@ -286,32 +276,31 @@ test('wallet instructions recheck a disconnected device and resume through the r
 })
 
 for (const boundary of ['wallet', 'completion'] as const) {
-  for (const [lifeTime, message] of [
-    ['life_time_wallet_unready', 'The device wallet is not ready'],
-    ['life_time_wallet_creatting', 'The device is creating a wallet'],
-    ['life_time_wallet_recovering', 'The device is restoring a wallet'],
-    ['life_time_unknown', 'Unable to confirm the device wallet status']
+  for (const [failure, message] of [
+    ['imkey_wallet_not_created', 'No wallet has been created'],
+    ['imkey_applet_not_exist', 'applet not exist'],
+    ['imkey_command_data_error', 'command data error']
   ]) {
-    test(`${boundary} reports ${lifeTime} before xpub and allows retry`, async () => {
+    test(`${boundary} preserves xpub error ${failure} and allows retry`, async () => {
       await launch()
       if (boundary === 'wallet') await reachWalletInstructions()
       else await completeSetupSteps()
-      await control({ lifeTime })
+      await control({ failMethod: 'btc_get_xpub', failReason: failure })
       const current = boundary === 'wallet' ? '.set3' : '.set4'
       const before = await calls()
       await page.locator(`${current} .nextBtn`).click()
       await expect(page.locator('.setup-error')).toContainText(message)
       await expect(page.locator(current)).toBeVisible()
       await expect(page.locator('.homeBox')).toHaveCount(0)
-      expect((await calls()).slice(before.length)).toContain('get_life_time')
-      expect((await calls()).slice(before.length)).not.toContain('btc_get_xpub')
+      expect((await calls()).slice(before.length)).not.toContain('get_life_time')
+      expect((await calls()).slice(before.length)).toContain('btc_get_xpub')
       await control({})
       await page.locator('.device-recovery-dialog').getByRole('button', { name: /retry/i }).click()
       await expect(page.locator(boundary === 'wallet' ? '.set4' : '.homeBox')).toBeVisible()
     })
   }
 
-  test(`${boundary} reports lifecycle read failure without attempting xpub`, async () => {
+  test(`${boundary} succeeds when HID lifecycle reads are unavailable`, async () => {
     await launch()
     if (boundary === 'wallet') await reachWalletInstructions()
     else await completeSetupSteps()
@@ -319,12 +308,9 @@ for (const boundary of ['wallet', 'completion'] as const) {
     const current = boundary === 'wallet' ? '.set3' : '.set4'
     const before = await calls()
     await page.locator(`${current} .nextBtn`).click()
-    await expect(page.locator('.setup-error')).toContainText(
-      'Unable to read the device wallet status'
-    )
-    expect((await calls()).slice(before.length)).not.toContain('btc_get_xpub')
-    await expect(page.locator(current)).toBeVisible()
-    await expect(page.locator('.homeBox')).toHaveCount(0)
+    await expect(page.locator(boundary === 'wallet' ? '.set4' : '.homeBox')).toBeVisible()
+    expect((await calls()).slice(before.length)).not.toContain('get_life_time')
+    expect((await calls()).slice(before.length)).toContain('btc_get_xpub')
   })
 
   test(`${boundary} preserves a post-readiness xpub error and retries`, async () => {
@@ -336,11 +322,10 @@ for (const boundary of ['wallet', 'completion'] as const) {
     const before = await calls()
     await page.locator(`${current} .nextBtn`).click()
     await expect(page.locator('.setup-error')).toContainText('command')
-    await expect(page.locator('.setup-error')).not.toContainText('If the device was reset')
+    await expect(page.locator('.setup-error')).toContainText('If the device was reset')
     const methods = (await calls()).slice(before.length)
-    expect(methods).toContain('get_life_time')
+    expect(methods).not.toContain('get_life_time')
     expect(methods).toContain('btc_get_xpub')
-    expect(methods.indexOf('get_life_time')).toBeLessThan(methods.indexOf('btc_get_xpub'))
     await control({})
     await page.locator('.device-recovery-dialog').getByRole('button', { name: /retry/i }).click()
     await expect(page.locator(boundary === 'wallet' ? '.set4' : '.homeBox')).toBeVisible()
@@ -350,12 +335,13 @@ for (const boundary of ['wallet', 'completion'] as const) {
 test('wallet instructions show the Chinese wallet-not-ready guidance', async () => {
   await launch('unbound', '', 'zh-CN')
   await reachWalletInstructions()
-  await control({ lifeTime: 'life_time_wallet_unready' })
+  await control({ failMethod: 'btc_get_xpub', failReason: 'imkey_wallet_not_created' })
   const before = await calls()
   await page.locator('.set3 .nextBtn').click()
-  await expect(page.locator('.setup-error')).toContainText('设备钱包尚未就绪')
+  await expect(page.locator('.setup-error')).toContainText('设备尚未创建钱包')
   await expect(page.locator('.setup-error')).toContainText('创建或恢复钱包')
-  expect((await calls()).slice(before.length)).not.toContain('btc_get_xpub')
+  expect((await calls()).slice(before.length)).toContain('btc_get_xpub')
+  expect((await calls()).slice(before.length)).not.toContain('get_life_time')
 })
 
 for (const failure of ['not-ready', 'disconnected']) {

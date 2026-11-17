@@ -1,21 +1,15 @@
 import type { callDevice } from '../device'
 import type { DeviceResult } from '../../shared/deviceContract'
 
-// Device lifecycle is independent of a particular coin app or wallet address.
-export async function checkWalletReadiness(call: typeof callDevice): Promise<DeviceResult<string>> {
-  const result = await call('getLifeTime')
+// Wallet readiness on the Manager's HID connection is established using the
+// existing BTC xpub read, which checks the device binding before deriving it.
+export async function checkWalletReadiness(
+  call: typeof callDevice,
+  userPath: string
+): Promise<DeviceResult<string>> {
+  const result = await call('getBTCXpub', userPath)
   if (!result.isSuccess) return result
-  if (result.result === 'life_time_wallet_ready') return result
-  const knownNotReady = [
-    'life_time_device_inited',
-    'life_time_device_activated',
-    'life_time_unset_pin',
-    'life_time_wallet_unready',
-    'life_time_wallet_creatting',
-    'life_time_wallet_recovering'
-  ]
-  return {
-    isSuccess: false,
-    result: knownNotReady.includes(result.result) ? result.result : 'wallet_status_unknown'
-  }
+  if (typeof result.result !== 'string' || !result.result.startsWith('xpub'))
+    return { isSuccess: false, result: 'invalid_wallet_response' }
+  return result
 }

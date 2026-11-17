@@ -50,7 +50,6 @@ function success(method: string): DeviceResult {
     getUpgradeSeid: 'TESTDEVICE',
     deviceBindCheck: 'bound_this',
     getBTCXpub: 'xpub-ready',
-    getLifeTime: 'life_time_wallet_ready',
     getFirmwareVersion: '1.0.0',
     getBleVersion: '1.0.0',
     exportBindCode: 'A2345678',
@@ -358,8 +357,6 @@ it('setup completion verifies wallet readiness and confirms the same device befo
     'isBLStatus',
     'cosCheckUpdate',
     'getFirmwareRecovery',
-    'getLifeTime',
-    'getSeid',
     'getBTCXpub',
     'getSeid'
   ])
@@ -373,36 +370,35 @@ for (const entry of ['wallet instructions', 'setup completion'] as const) {
       ? { page: 4, active: 2, isNext: true }
       : { page: 0, active: 0, isNext: false }
   it.each([
-    ['life_time_wallet_unready', 'life_time_wallet_unready'],
-    ['life_time_wallet_creatting', 'life_time_wallet_creatting'],
-    ['life_time_wallet_recovering', 'life_time_wallet_recovering'],
-    ['life_time_unknown', 'wallet_status_unknown']
-  ])('%s blocks unready lifecycle %s before reading xpub', async (lifecycle, expected) => {
+    'imkey_wallet_not_created',
+    'imkey_applet_not_exist',
+    'device_not_connected',
+    'device_bind_check_failed'
+  ])('%s preserves wallet read failure %s', async error => {
     mocks.call.mockImplementation(async method =>
-      method === 'getLifeTime' ? { isSuccess: true, result: lifecycle } : success(method)
+      method === 'getBTCXpub' ? { isSuccess: false, result: error } : success(method)
     )
     const setup = useDeviceSetup()
     setup.page.value = entry === 'wallet instructions' ? 3 : 4
     setup.finish.value = true
     await setup.send(navigation)
-    expect(setup.errorInfo.value).toBe(expected)
-    expect(setup.errorStage.value).toBe('wallet')
-    expect(mocks.call.mock.calls.some(([method]) => method === 'getBTCXpub')).toBe(false)
+    expect(setup.errorInfo.value).toBe(error)
+    expect(mocks.call.mock.calls.some(([method]) => method === 'getLifeTime')).toBe(false)
     expect(mocks.push).not.toHaveBeenCalled()
   })
-  it(`${entry} preserves lifecycle read failure and never reads xpub`, async () => {
+  it(`${entry} preserves wallet read failure and operation ID`, async () => {
     mocks.call.mockImplementation(async method =>
-      method === 'getLifeTime'
-        ? { isSuccess: false, result: 'get_life_time_error', operationId: 'op-123' }
+      method === 'getBTCXpub'
+        ? { isSuccess: false, result: 'imkey_command_data_error', operationId: 'op-123' }
         : success(method)
     )
     const setup = useDeviceSetup()
     setup.page.value = entry === 'wallet instructions' ? 3 : 4
     setup.finish.value = true
     await setup.send(navigation)
-    expect(setup.errorInfo.value).toBe('get_life_time_error [op-123]')
+    expect(setup.errorInfo.value).toBe('imkey_command_data_error [op-123]')
     expect(setup.errorStage.value).toBe('wallet')
-    expect(mocks.call.mock.calls.some(([method]) => method === 'getBTCXpub')).toBe(false)
+    expect(mocks.call.mock.calls.some(([method]) => method === 'getLifeTime')).toBe(false)
     expect(mocks.push).not.toHaveBeenCalled()
   })
   it(`${entry} preserves xpub failure after readiness and retries the whole check`, async () => {
@@ -421,16 +417,16 @@ for (const entry of ['wallet instructions', 'setup completion'] as const) {
     expect(mocks.push).not.toHaveBeenCalled()
     xpubFails = false
     await setup.retry()
-    expect(mocks.call.mock.calls.filter(([method]) => method === 'getLifeTime')).toHaveLength(2)
+    expect(mocks.call.mock.calls.filter(([method]) => method === 'getLifeTime')).toHaveLength(0)
     expect(mocks.call.mock.calls.filter(([method]) => method === 'getBTCXpub')).toHaveLength(2)
     if (entry === 'wallet instructions') expect(setup.page.value).toBe(4)
     else expect(mocks.push).toHaveBeenCalledExactlyOnceWith('/home/welcomeHome')
   })
-  it(`${entry} rejects a device replaced while reading its lifecycle`, async () => {
-    let lifeTimeRead = false
+  it(`${entry} rejects a device replaced while reading its wallet`, async () => {
+    let walletRead = false
     mocks.call.mockImplementation(async method => {
-      if (method === 'getLifeTime') lifeTimeRead = true
-      return method === 'getSeid' && lifeTimeRead
+      if (method === 'getBTCXpub') walletRead = true
+      return method === 'getSeid' && walletRead
         ? { isSuccess: true, result: 'REPLACEMENT' }
         : success(method)
     })
@@ -439,7 +435,7 @@ for (const entry of ['wallet instructions', 'setup completion'] as const) {
     setup.finish.value = true
     await setup.send(navigation)
     expect(setup.errorInfo.value).toBe('device_session_changed')
-    expect(mocks.call.mock.calls.some(([method]) => method === 'getBTCXpub')).toBe(false)
+    expect(mocks.call.mock.calls.some(([method]) => method === 'getBTCXpub')).toBe(true)
     expect(mocks.push).not.toHaveBeenCalled()
   })
 }

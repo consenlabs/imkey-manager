@@ -43,7 +43,7 @@ function gate<T>(value: T) {
 function response(method: string): DeviceResult {
   const values: Record<string, unknown> = {
     getSeid: 'device-A',
-    getLifeTime: 'life_time_wallet_ready',
+    getBTCXpub: 'xpub-ready',
     deviceBindCheck: 'bound_this',
     downloadApplet: ['Nervos'],
     updateApplet: ['Nervos'],
@@ -76,8 +76,8 @@ it.each(['install', 'update', 'delete'] as const)(
   async kind => {
     if (kind !== 'install') useDeviceStore().apps[0].installedVersion = '0.9'
     mocks.call.mockImplementation(async method =>
-      method === 'getLifeTime'
-        ? { isSuccess: true, result: 'life_time_wallet_unready' }
+      method === 'getBTCXpub'
+        ? { isSuccess: false, result: 'imkey_wallet_not_created' }
         : response(method)
     )
     const manager = useAppManagement()
@@ -95,14 +95,14 @@ it.each(['install', 'update', 'delete'] as const)(
     expect(manager.state).toMatchObject({
       tip: true,
       errorStage: 'wallet',
-      errorInfo: 'life_time_wallet_unready'
+      errorInfo: 'imkey_wallet_not_created'
     })
   }
 )
 
 it('preserves an unknown wallet error without treating it as an uncreated wallet', async () => {
   mocks.call.mockImplementation(async method =>
-    method === 'getLifeTime'
+    method === 'getBTCXpub'
       ? { isSuccess: false, result: 'imkey_command_data_error' }
       : response(method)
   )
@@ -153,8 +153,8 @@ it('blocks address registration when the device is replaced after application in
 it('stops before registering addresses if the wallet disappears during installation', async () => {
   let walletReads = 0
   mocks.call.mockImplementation(async method => {
-    if (method === 'getLifeTime' && ++walletReads === 2)
-      return { isSuccess: true, result: 'life_time_wallet_unready' }
+    if (method === 'getBTCXpub' && ++walletReads === 2)
+      return { isSuccess: false, result: 'imkey_wallet_not_created' }
     return response(method)
   })
   const manager = useAppManagement()
@@ -163,7 +163,7 @@ it('stops before registering addresses if the wallet disappears during installat
   expect(mocks.call.mock.calls.map(([method]) => method)).not.toContain('writeWalletAddress')
   expect(manager.state).toMatchObject({
     errorStage: 'wallet',
-    errorInfo: 'life_time_wallet_unready'
+    errorInfo: 'imkey_wallet_not_created'
   })
   expect(manager.apps.value[0].installed).toBe(false)
 })
@@ -192,10 +192,10 @@ it.each(['install', 'update'] as const)(
       'connectDevice',
       'getSeid',
       'deviceBindCheck',
-      'getLifeTime',
+      'getBTCXpub',
       'getSeid',
       kind === 'install' ? 'downloadApplet' : 'updateApplet',
-      'getLifeTime',
+      'getBTCXpub',
       'getSeid',
       'writeWalletAddress'
     ])

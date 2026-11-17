@@ -327,8 +327,8 @@ it('a failed durable checkpoint clear keeps recovery pending and prevents home e
   failedMethod = 'clearFirmwareRecovery'
   await useConnection().check()
   expect(journal?.phase).toBe('verify')
-  expect(calls('getLifeTime')).toHaveLength(2) // Before address recovery and before checkpoint removal.
-  expect(calls('getBTCXpub')).not.toHaveLength(0)
+  expect(calls('getLifeTime')).toHaveLength(0)
+  expect(calls('getBTCXpub')).toHaveLength(2) // Before address recovery and before checkpoint removal.
   expect(useDeviceStore().canEnterHome).toBe(false)
   expect(mocks.push).not.toHaveBeenCalled()
 })

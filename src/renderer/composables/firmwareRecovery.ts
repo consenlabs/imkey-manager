@@ -280,20 +280,10 @@ export async function runFirmwareRecovery(
         recovery.phase = 'verify'
         continue
       }
-      const wallet = await checkWalletReadiness(call)
+      const walletBeforeRestore = await checkWalletReadiness(call, userPath)
       if (!current()) return cancelled()
-      if (!wallet.isSuccess) {
-        if (
-          [
-            'imkey_wallet_not_created',
-            'life_time_device_inited',
-            'life_time_device_activated',
-            'life_time_unset_pin',
-            'life_time_wallet_unready',
-            'life_time_wallet_creatting',
-            'life_time_wallet_recovering'
-          ].includes(wallet.result)
-        ) {
+      if (!walletBeforeRestore.isSuccess) {
+        if (walletBeforeRestore.result === 'imkey_wallet_not_created') {
           // A wallet recreated after reset can have different addresses despite
           // the same SEID. Refresh the whole app list before retrying.
           delete recovery.pendingAddresses
@@ -302,21 +292,12 @@ export async function runFirmwareRecovery(
           if (!current()) return cancelled()
           if (!reset.isSuccess) return { stage: 'store', error: reset }
         }
-        return { stage: 'wallet', error: wallet }
-      }
-      const walletBeforeRestore = await call('getBTCXpub', userPath)
-      if (!current()) return cancelled()
-      if (!walletBeforeRestore.isSuccess) {
         // A missing Bitcoin applet must not block recovery of other apps. We
         // cannot complete without a before/after wallet proof, however.
         if (walletBeforeRestore.result !== 'imkey_applet_not_exist')
           return { stage: 'wallet', error: walletBeforeRestore }
         missingWalletProof = walletBeforeRestore
-      } else if (
-        typeof walletBeforeRestore.result !== 'string' ||
-        !walletBeforeRestore.result.startsWith('xpub')
-      )
-        return { stage: 'wallet', error: { isSuccess: false, result: 'invalid_wallet_response' } }
+      }
       const identity = await call('getUpgradeSeid')
       if (!current()) return cancelled()
       if (!identity.isSuccess) return { stage: 'connect', error: identity }
@@ -374,14 +355,9 @@ export async function runFirmwareRecovery(
         // Preserve the checkpoint until the same bound device can actually
         // derive a wallet. Otherwise a reset or failed final read could erase
         // the only remaining recovery record before connection succeeds.
-        const walletStatus = await checkWalletReadiness(call)
-        if (!current()) return cancelled()
-        if (!walletStatus.isSuccess) return { stage: 'wallet', error: walletStatus }
-        const wallet = await call('getBTCXpub', userPath)
+        const wallet = await checkWalletReadiness(call, userPath)
         if (!current()) return cancelled()
         if (!wallet.isSuccess) return { stage: 'wallet', error: wallet }
-        if (typeof wallet.result !== 'string' || !wallet.result.startsWith('xpub'))
-          return { stage: 'wallet', error: { isSuccess: false, result: 'invalid_wallet_response' } }
         if (missingWalletProof) {
           // Even if the applet became available during address recovery, retry
           // from the complete list to obtain a proof bracketing those writes.

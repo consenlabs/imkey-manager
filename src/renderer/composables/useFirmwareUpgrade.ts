@@ -294,7 +294,7 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
       if (!attempt) {
         // A new upgrade must not start when its post-upgrade address work cannot
         // derive a wallet. An existing recovery must continue even in bootloader.
-        const wallet = await checkWalletReadiness(callDevice)
+        const wallet = await checkWalletReadiness(callDevice, app.userPath)
         if (!current()) return
         if (!wallet.isSuccess) return fail(wallet, 'wallet')
         // Do not trust a wallet read from a device that was replaced during it.

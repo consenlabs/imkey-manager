@@ -2,45 +2,33 @@ import { describe, expect, it, vi } from 'vitest'
 import type { callDevice } from '../../src/renderer/device'
 import { checkWalletReadiness } from '../../src/renderer/composables/walletReadiness'
 
-describe('device wallet lifecycle readiness', () => {
-  it('accepts only the ready lifecycle without reading an xpub', async () => {
-    const call = vi.fn().mockResolvedValue({ isSuccess: true, result: 'life_time_wallet_ready' })
-    expect(await checkWalletReadiness(call as typeof callDevice)).toEqual({
-      isSuccess: true,
-      result: 'life_time_wallet_ready'
+describe('device wallet readiness over HID', () => {
+  it('uses a valid BTC public key as the wallet proof', async () => {
+    const result = { isSuccess: true, result: 'xpub-ready' }
+    const call = vi.fn().mockResolvedValue(result)
+    expect(await checkWalletReadiness(call as typeof callDevice, '/user')).toEqual(result)
+    expect(call).toHaveBeenCalledExactlyOnceWith('getBTCXpub', '/user')
+  })
+
+  it.each(['', 'unexpected', null])('rejects an invalid public key response %s', async result => {
+    const call = vi.fn().mockResolvedValue({ isSuccess: true, result })
+    expect(await checkWalletReadiness(call as typeof callDevice, '/user')).toEqual({
+      isSuccess: false,
+      result: 'invalid_wallet_response'
     })
-    expect(call).toHaveBeenCalledExactlyOnceWith('getLifeTime')
+    expect(call).toHaveBeenCalledExactlyOnceWith('getBTCXpub', '/user')
   })
 
   it.each([
-    'life_time_device_inited',
-    'life_time_device_activated',
-    'life_time_unset_pin',
-    'life_time_wallet_unready',
-    'life_time_wallet_creatting',
-    'life_time_wallet_recovering'
-  ])('blocks and preserves the known non-ready state %s', async status => {
-    const call = vi.fn().mockResolvedValue({ isSuccess: true, result: status })
-    expect(await checkWalletReadiness(call as typeof callDevice)).toEqual({
-      isSuccess: false,
-      result: status
-    })
-  })
-
-  it.each(['life_time_unknown', '', 'unexpected', null])(
-    'blocks unknown lifecycle %s without exposing arbitrary response text',
-    async status => {
-      const call = vi.fn().mockResolvedValue({ isSuccess: true, result: status })
-      expect(await checkWalletReadiness(call as typeof callDevice)).toEqual({
-        isSuccess: false,
-        result: 'wallet_status_unknown'
-      })
-    }
-  )
-
-  it('preserves a device error without treating it as an empty wallet', async () => {
-    const failure = { isSuccess: false, result: 'get_life_time_error' }
+    'imkey_wallet_not_created',
+    'imkey_applet_not_exist',
+    'imkey_command_data_error',
+    'device_not_connected',
+    'device_bind_check_failed'
+  ])('preserves the actual wallet read failure %s', async result => {
+    const failure = { isSuccess: false, result, operationId: 'op-123' }
     const call = vi.fn().mockResolvedValue(failure)
-    expect(await checkWalletReadiness(call as typeof callDevice)).toEqual(failure)
+    expect(await checkWalletReadiness(call as typeof callDevice, '/user')).toEqual(failure)
+    expect(call).toHaveBeenCalledExactlyOnceWith('getBTCXpub', '/user')
   })
 })
