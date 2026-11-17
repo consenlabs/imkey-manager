@@ -1,0 +1,38 @@
+{
+  "sourceRepository": "imkey-core",
+  "sourceBranch": "develop",
+  "sourceBaseCommit": "80ddae20a2ece117bd443803e9bc6d5de519e575",
+  "sourcePatchSha256": "a93cc65bc531927fb591812b76976b1ad9244875904c8b96fe0adedc852b7bf0",
+  "artifactSha256": "5c71b473b2a9aeebde410f6711fe1738238aa69cbbe9a3f073229ccffb920d9d",
+  "rustToolchain": "nightly-2023-06-15-aarch64-apple-darwin",
+  "target": "i686-pc-windows-gnu",
+  "architecture": "i386",
+  "cargoLockSha256": "cfae821e5d1becc0357c0e75dbe5cc545c936c3df7d00b795ed805d379d9778a",
+  "cToolchain": "LLVM-MinGW 20230614 UCRT macOS Universal (LLVM 16.0.6)",
+  "cToolchainUrl": "https://github.com/mstorsjo/llvm-mingw/releases/download/20230614/llvm-mingw-20230614-ucrt-macos-universal.tar.xz",
+  "cToolchainSha256": "e576b9a8121dc90332874c8ef7c9973cde6695de3a43d1dfb912fe8cc878722b",
+  "buildCommand": "cargo +nightly-2023-06-15 build --locked --offline -p api --target i686-pc-windows-gnu --release",
+  "postProcessing": "llvm-strip --strip-debug",
+  "features": [
+    "ble_firmware_upgrade",
+    "init_server_url",
+    "device_sn_check",
+    "get_upgrade_seid"
+  ],
+  "validation": {
+    "crossCompilation": "passed",
+    "peArchitecture": "PE32 i386 DLL",
+    "exports": [
+      "call_imkey_api",
+      "imkey_clear_err_win",
+      "imkey_get_last_err_message_win",
+      "imkey_free_const_string"
+    ],
+    "dependencies": "Windows system and UCRT only; no libgcc/libunwind/libwinpthread/OpenSSL redistributable DLL",
+    "managerPackaging": "not rerun for this get_upgrade_seid artifact; package validation belongs to the Manager release workflow",
+    "windowsRuntime": "not run on this macOS host; user will validate on a Windows test machine",
+    "usbAndFirmwareUpdate": "not run; no hardware mutation or production server query performed"
+  },
+  "notes": "Same reviewed source patch as the macOS Universal artifact. No core business source or Cargo.lock changes for Windows. windows-linker.py substitutes LLVM-MinGW's static libunwind/compiler-rt builtins for the old Rust GNU target's libgcc_eh/libgcc names. No dependency source edits or additional runtime DLLs. See windows-build.md for reproduction.",
+  "tests": "cargo +nightly-2023-06-15 test --locked --offline -p device upgrade_identity::tests: 6 passed; device_sn_check::tests: 8 passed"
+}

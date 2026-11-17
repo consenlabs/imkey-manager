@@ -1,0 +1,2 @@
+# Preserve unified-diff context lines verbatim for the hashed connector source patch.
+vendor/imkey-core/device-sn-check/core-source.patch whitespace=-blank-at-eol

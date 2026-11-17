@@ -1,0 +1,1228 @@
+import { createPinia, setActivePinia } from 'pinia'
+import { watch } from 'vue'
+import { afterEach, beforeEach, expect, it, vi } from 'vitest'
+import type { DeviceResult } from '../../src/shared/deviceContract'
+import { createDeviceOperation } from '../../src/renderer/composables/useDeviceOperation'
+import { useFirmwareUpgrade } from '../../src/renderer/composables/useFirmwareUpgrade'
+import { useDeviceStore } from '../../src/renderer/store/device'
+import { useAppStore } from '../../src/renderer/store/app'
+
+const mocks = vi.hoisted(() => ({
+  call: vi.fn<(method: string, params?: unknown) => Promise<DeviceResult>>(),
+  offer: vi.fn()
+}))
+vi.mock('../../src/renderer/device', () => ({ callDevice: mocks.call }))
+vi.mock('../../src/renderer/composables/useDeviceRecovery', () => ({
+  useDeviceRecovery: () => ({ offer: mocks.offer })
+}))
+
+let seid: string
+let binding: string
+let actualCos: string
+let actualBle: string
+let bootloader: boolean
+let unbindOnCosUpdate: boolean
+const releases: (() => void)[] = []
+function response(method: string): DeviceResult {
+  if (method === 'cosUpdate') {
+    bootloader = false
+    if (unbindOnCosUpdate) binding = 'unbound'
+  }
+  if (method === 'deviceBindAcquire') binding = 'bound_this'
+  const values: Record<string, unknown> = {
+    getSeid: seid,
+    getUpgradeSeid: seid,
+    deviceBindCheck: binding,
+    isBLStatus: bootloader,
+    getFirmwareVersion: actualCos,
+    getBleVersion: actualBle,
+    cosCheckUpdate: {
+      isUpdateSuccess: true,
+      latestCosVersion: actualCos,
+      latestBleVersion: actualBle
+    },
+    getBTCXpub: 'xpub-ready',
+    exportBindCode: 'binding-code-A',
+    getInstalledApplets: { list: [{ name: 'Nervos' }] }
+  }
+  return { isSuccess: true, result: values[method] ?? 'success' }
+}
+function methods() {
+  return mocks.call.mock.calls.map(([method]) => method)
+}
+function deviceWrites() {
+  return methods().filter(method =>
+    ['cosUpdate', 'deviceBindAcquire', 'importBindCode', 'writeWalletAddress'].includes(method)
+  )
+}
+function setup(kind: 'manager' | 'setting' = 'setting') {
+  const operation = createDeviceOperation()
+  const firmware = useFirmwareUpgrade(kind, operation)
+  Object.assign(firmware.state, {
+    bindCode: 'binding-code-A',
+    cosOldVersionData: '1.0.0',
+    cosNewVersionData: '1.1.0',
+    bleOldVersionData: '2.0.0',
+    bleNewVersionData: '2.1.0',
+    isCosUpdate: true,
+    cosUpdateStatus: '1'
+  })
+  return { firmware, operation, device: useDeviceStore() }
+}
+function expectCleared(firmware: ReturnType<typeof useFirmwareUpgrade>) {
+  expect(useDeviceStore()).toMatchObject({
+    connectedSeid: 'SEID-A',
+    identityReady: false,
+    identityChecking: false,
+    deviceInfo: null,
+    apps: [],
+    verification: { status: 'idle', activationStatus: null, activatedAt: null },
+    isCosUpdate: false,
+    cosOldVersionData: '',
+    cosNewVersionData: '',
+    bleOldVersionData: '',
+    bleNewVersionData: '',
+    installedBleVersion: '',
+    isFirstGoToManagerPage: true
+  })
+  expect(firmware.state).toMatchObject({
+    bindCode: '',
+    cosOldVersionData: '',
+    cosNewVersionData: '',
+    bleOldVersionData: '',
+    bleNewVersionData: '',
+    isCosUpdate: false,
+    cosUpdateStatus: '0',
+    supportCode: 0,
+    busy: false
+  })
+}
+beforeEach(() => {
+  setActivePinia(createPinia())
+  seid = 'SEID-A'
+  binding = 'bound_this'
+  actualCos = '1.1.0'
+  actualBle = '2.1.0'
+  bootloader = false
+  unbindOnCosUpdate = true
+  const device = useDeviceStore()
+  Object.assign(device, {
+    connectedSeid: seid,
+    bindStatus: binding,
+    identityReady: true,
+    deviceInfo: {
+      seid,
+      sn: 'SN-A',
+      firmwareVersion: '1.0.0',
+      bleVersion: '2.0.0',
+      firmwareChecked: true,
+      latestFirmwareVersion: '1.1.0',
+      latestBleVersion: '2.1.0',
+      updateAvailable: true
+    },
+    verification: {
+      status: 'success',
+      activationStatus: true,
+      activatedAt: '2026-01-01',
+      errorInfo: ''
+    },
+    apps: [{ id: 'Nervos', name: 'Nervos', installedVersion: '1', latestVersion: '1', icon: '' }],
+    isCosUpdate: true,
+    cosOldVersionData: '1.0.0',
+    cosNewVersionData: '1.1.0',
+    bleOldVersionData: '2.0.0',
+    bleNewVersionData: '2.1.0',
+    installedBleVersion: '2.0.0',
+    isFirstGoToManagerPage: false
+  })
+  useAppStore().userPath = '/test/user'
+  mocks.call.mockReset().mockImplementation(async method => response(method))
+  mocks.offer.mockReset()
+})
+afterEach(async () => {
+  releases.splice(0).forEach(release => release())
+  await createDeviceOperation().run(async () => {})
+})
+
+it.each(['manager', 'setting'] as const)(
+  'confirms identity before the first %s upgrade and preserves the write sequence',
+  async kind => {
+    const { firmware, device } = setup(kind)
+    await firmware.updateFirmware()
+    expect(methods().slice(0, 3)).toEqual(['connectDevice', 'getSeid', 'deviceBindCheck'])
+    expect(deviceWrites()).toEqual([
+      'cosUpdate',
+      'deviceBindAcquire',
+      'importBindCode',
+      'writeWalletAddress'
+    ])
+    expect(methods().indexOf('saveFirmwareRecovery')).toBeLessThan(methods().indexOf('cosUpdate'))
+    expect(methods().indexOf('getBTCXpub')).toBeLessThan(methods().indexOf('cosUpdate'))
+    expect(methods()).not.toContain('getLifeTime')
+    expect(methods().lastIndexOf('deviceBindCheck')).toBeLessThan(
+      methods().lastIndexOf('getBTCXpub')
+    )
+    expect(device.canEnterHome).toBe(true)
+    expect(mocks.call.mock.calls.find(([method]) => method === 'deviceBindAcquire')?.[1]).toBe(
+      'binding-code-A'
+    )
+    expect(mocks.call.mock.calls.find(([method]) => method === 'importBindCode')?.[1]).toBe(
+      'binding-code-A'
+    )
+    expect(mocks.call.mock.calls.find(([method]) => method === 'writeWalletAddress')?.[1]).toEqual({
+      name: ['Nervos'],
+      filePath: '/test/user'
+    })
+    expect(firmware.state).toMatchObject({
+      supportCode: 2,
+      busy: false,
+      isCosUpdate: false,
+      cosUpdateStatus: '0',
+      cosOldVersionData: '1.1.0'
+    })
+    expect(device.isCosUpdate).toBe(false)
+    expect(device.verification.status).toBe('success')
+    expect(mocks.offer).not.toHaveBeenCalled()
+  }
+)
+
+it.each([
+  { isSuccess: false, result: 'imkey_wallet_not_created' },
+  { isSuccess: false, result: 'imkey_applet_not_exist' },
+  { isSuccess: false, result: 'device_bind_check_failed' },
+  { isSuccess: false, result: 'imkey_command_data_error' },
+  { isSuccess: false, result: 'device_not_connected' },
+  { isSuccess: true, result: 'invalid-proof' }
+] as DeviceResult[])('blocks a new upgrade when the wallet check returns %j', async wallet => {
+  const { firmware, device } = setup()
+  mocks.call.mockImplementation(async method =>
+    method === 'getBTCXpub' ? wallet : response(method)
+  )
+  await firmware.updateFirmware()
+  expect(firmware.state).toMatchObject({
+    supportCode: wallet.result === 'device_bind_check_failed' ? 0 : 3,
+    errorStage: 'wallet',
+    errorInfo:
+      wallet.isSuccess && wallet.result === 'invalid-proof'
+        ? 'invalid_wallet_response'
+        : wallet.result,
+    busy: false
+  })
+  expect(methods()).not.toContain('saveFirmwareRecovery')
+  expect(deviceWrites()).toEqual([])
+  expect(device.canEnterHome).toBe(false)
+  if (wallet.result === 'device_bind_check_failed')
+    expect(mocks.offer).toHaveBeenCalledWith(expect.anything(), expect.any(Function), {
+      reconnectOnly: true
+    })
+})
+
+it('rejects device replacement during the wallet check before an upgrade starts', async () => {
+  const { firmware, device } = setup()
+  mocks.call.mockImplementation(async method => {
+    if (method === 'getBTCXpub') seid = 'SEID-B'
+    return response(method)
+  })
+  await firmware.updateFirmware()
+  expect(methods()).not.toContain('saveFirmwareRecovery')
+  expect(deviceWrites()).toEqual([])
+  expect(device.canEnterHome).toBe(false)
+  expect(mocks.offer).toHaveBeenCalledWith(expect.anything(), expect.any(Function), {
+    reconnectOnly: true
+  })
+})
+
+it.each(['manager', 'setting'] as const)(
+  '%s completes using the installed version and keeps a different published release available',
+  async kind => {
+    const { firmware, device } = setup(kind)
+    actualCos = '1.9.11'
+    Object.assign(firmware.state, {
+      cosOldVersionData: '1.6.03',
+      cosNewVersionData: '1.9.12'
+    })
+    mocks.call.mockImplementation(async method => {
+      if (method === 'cosUpdate') {
+        expect(device.canEnterHome).toBe(false)
+        binding = 'unbound'
+      }
+      return response(method)
+    })
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      await firmware.updateFirmware()
+      expect(firmware.state).toMatchObject({
+        supportCode: 2,
+        busy: false,
+        cosOldVersionData: '1.9.11',
+        cosNewVersionData: '1.9.12',
+        isCosUpdate: true,
+        cosUpdateStatus: '1'
+      })
+      expect(device.cosOldVersionData).toBe('1.9.11')
+      expect(device.canEnterHome).toBe(true)
+      for (const method of ['cosUpdate', 'deviceBindAcquire', 'writeWalletAddress'])
+        expect(methods().filter(name => name === method)).toHaveLength(attempt)
+    }
+    const captured = mocks.call.mock.calls
+      .filter(
+        ([method, value]) =>
+          method === 'saveFirmwareRecovery' && (value as { phase?: string })?.phase === 'bind'
+      )
+      .map(([, value]) => value)
+    expect(captured).toHaveLength(2)
+    for (const checkpoint of captured)
+      expect(checkpoint).toMatchObject({ expectedCos: '1.9.11', expectedBle: '2.1.0' })
+    expect(mocks.offer).not.toHaveBeenCalled()
+  }
+)
+
+it.each(['replacement', 'unbound', 'binding-error'])(
+  'clears all stale device and local data and refuses the first upgrade on %s',
+  async reason => {
+    const { firmware } = setup()
+    if (reason === 'replacement') seid = 'SEID-B'
+    else if (reason === 'unbound') binding = 'unbound'
+    else
+      mocks.call.mockImplementation(async method =>
+        method === 'deviceBindCheck'
+          ? { isSuccess: false, result: 'device_bind_check_failed' }
+          : response(method)
+      )
+    await firmware.updateFirmware()
+    expect(methods()).not.toContain('cosUpdate')
+    expectCleared(firmware)
+    expect(mocks.offer).toHaveBeenCalledExactlyOnceWith(expect.anything(), expect.any(Function), {
+      reconnectOnly: true
+    })
+  }
+)
+
+it('loads an uncached binding code after identity confirmation and reuses it during recovery', async () => {
+  const { firmware } = setup()
+  firmware.state.bindCode = ''
+  let fail = true
+  mocks.call.mockImplementation(async method => {
+    if (method === 'cosUpdate' && fail) {
+      fail = false
+      return { isSuccess: false, result: 'interrupted-upgrade' }
+    }
+    return response(method)
+  })
+  await firmware.updateFirmware()
+  expect(methods()).toEqual([
+    'connectDevice',
+    'getSeid',
+    'deviceBindCheck',
+    'getBTCXpub',
+    'getSeid',
+    'exportBindCode',
+    'connectDevice',
+    'getSeid',
+    'deviceBindCheck',
+    'saveFirmwareRecovery',
+    'cosUpdate'
+  ])
+  expect(firmware.state.bindCode).toBe('binding-code-A')
+  binding = 'unbound'
+  mocks.call.mockClear()
+  await firmware.updateFirmware()
+  expect(methods().slice(0, 2)).toEqual(['connectDevice', 'getUpgradeSeid'])
+  expect(deviceWrites()).toEqual(['deviceBindAcquire', 'importBindCode', 'writeWalletAddress'])
+  expect(mocks.call.mock.calls.find(([method]) => method === 'deviceBindAcquire')?.[1]).toBe(
+    'binding-code-A'
+  )
+  expect(firmware.state.supportCode).toBe(2)
+})
+
+it('updates BLE alone without reading a binding code or restoring applications', async () => {
+  unbindOnCosUpdate = false
+  const { firmware, device } = setup()
+  firmware.state.bindCode = ''
+  firmware.state.cosNewVersionData = firmware.state.cosOldVersionData
+  actualCos = firmware.state.cosOldVersionData
+  await firmware.updateFirmware()
+  expect(methods().slice(0, 3)).toEqual(['connectDevice', 'getSeid', 'deviceBindCheck'])
+  expect(deviceWrites()).toEqual(['cosUpdate'])
+  expect(methods()).not.toContain('exportBindCode')
+  expect(methods()).not.toContain('getInstalledApplets')
+  expect(device.canEnterHome).toBe(true)
+  expect(firmware.state).toMatchObject({ supportCode: 2, busy: false, isCosUpdate: false })
+  expect(device.installedBleVersion).toBe('2.1.0')
+  expect(device.deviceInfo).toBeNull()
+})
+
+it('does not read an uncached binding code or write firmware before rejecting a replacement', async () => {
+  const { firmware } = setup()
+  firmware.state.bindCode = ''
+  seid = 'SEID-B'
+  await firmware.updateFirmware()
+  expect(methods()).toEqual(['connectDevice', 'getSeid'])
+  expectCleared(firmware)
+})
+
+it('stops before cosUpdate when an uncached binding code cannot be read and retries safely', async () => {
+  const { firmware } = setup()
+  firmware.state.bindCode = ''
+  mocks.call.mockImplementation(async method =>
+    method === 'exportBindCode'
+      ? { isSuccess: false, result: 'binding_file_unavailable' }
+      : response(method)
+  )
+  await firmware.updateFirmware()
+  expect(methods()).not.toContain('cosUpdate')
+  expect(firmware.state).toMatchObject({ supportCode: 3, errorStage: 'store', bindCode: '' })
+  mocks.call.mockClear().mockImplementation(async method => response(method))
+  await firmware.updateFirmware()
+  expect(methods().slice(0, 11)).toEqual([
+    'connectDevice',
+    'getSeid',
+    'deviceBindCheck',
+    'getBTCXpub',
+    'getSeid',
+    'exportBindCode',
+    'connectDevice',
+    'getSeid',
+    'deviceBindCheck',
+    'saveFirmwareRecovery',
+    'cosUpdate'
+  ])
+  expect(firmware.state.supportCode).toBe(2)
+})
+
+it('does not retain the lazily read binding code or upgrade if the device changes during its read', async () => {
+  const { firmware } = setup()
+  firmware.state.bindCode = ''
+  mocks.call.mockImplementation(async method => {
+    if (method === 'exportBindCode') seid = 'SEID-B'
+    return response(method)
+  })
+  await firmware.updateFirmware()
+  expect(methods()).toEqual([
+    'connectDevice',
+    'getSeid',
+    'deviceBindCheck',
+    'getBTCXpub',
+    'getSeid',
+    'exportBindCode',
+    'connectDevice',
+    'getSeid'
+  ])
+  expectCleared(firmware)
+  expect(mocks.offer).toHaveBeenCalledExactlyOnceWith(
+    expect.objectContaining({ result: 'device_session_changed' }),
+    expect.any(Function),
+    { reconnectOnly: true }
+  )
+})
+
+it.each(['disposed', 'obsolete'])(
+  'does not retain a binding code or start an upgrade after its pending read becomes %s',
+  async invalidation => {
+    const { firmware, operation, device } = setup()
+    firmware.state.bindCode = ''
+    let release!: () => void
+    mocks.call.mockImplementation(method =>
+      method === 'exportBindCode'
+        ? new Promise(resolve => {
+            release = () => resolve(response(method))
+            releases.push(release)
+          })
+        : Promise.resolve(response(method))
+    )
+    const pending = firmware.updateFirmware()
+    await vi.waitFor(() => expect(release).toBeTypeOf('function'))
+    if (invalidation === 'disposed') operation.dispose()
+    else device.invalidateDeviceData()
+    release()
+    await pending
+    expect(firmware.state.bindCode).toBe('')
+    expect(methods()).not.toContain('cosUpdate')
+    expect(mocks.offer).not.toHaveBeenCalled()
+  }
+)
+
+it.each([
+  ['cosUpdate', 'update'],
+  ['deviceBindAcquire', 'bind'],
+  ['importBindCode', 'store'],
+  ['getInstalledApplets', 'restore'],
+  ['writeWalletAddress', 'restore']
+])(
+  'resumes only the incomplete stages after a %s failure on the same device',
+  async (method, stage) => {
+    const { firmware, device } = setup()
+    let fail = true
+    mocks.call.mockImplementation(async requested => {
+      if (requested === method && fail) {
+        fail = false
+        return { isSuccess: false, result: 'interrupted-upgrade' }
+      }
+      return response(requested)
+    })
+    await firmware.updateFirmware()
+    expect(firmware.state).toMatchObject({
+      supportCode: 3,
+      errorStage: stage,
+      busy: false,
+      isCosUpdate: true,
+      cosUpdateStatus: '1'
+    })
+    expect(device.isCosUpdate).toBe(true)
+    binding = ['cosUpdate', 'deviceBindAcquire'].includes(method) ? 'unbound' : 'bound_this'
+    if (method === 'cosUpdate') bootloader = true // The device still requires native recovery.
+    mocks.call.mockClear()
+    await firmware.updateFirmware()
+    const verification =
+      method === 'cosUpdate'
+        ? []
+        : [
+            'isBLStatus',
+            'getFirmwareVersion',
+            'getBleVersion',
+            'getUpgradeSeid',
+            ...(method === 'deviceBindAcquire' ? [] : ['deviceBindCheck'])
+          ]
+    const writes = [
+      ...(method === 'cosUpdate' ? ['cosUpdate'] : []),
+      ...(['cosUpdate', 'deviceBindAcquire'].includes(method) ? ['deviceBindAcquire'] : []),
+      ...(['cosUpdate', 'deviceBindAcquire', 'importBindCode'].includes(method)
+        ? ['importBindCode']
+        : []),
+      'writeWalletAddress'
+    ]
+    expect(methods().slice(0, 2 + verification.length)).toEqual([
+      'connectDevice',
+      'getUpgradeSeid',
+      ...verification
+    ])
+    expect(deviceWrites()).toEqual(writes)
+    expect(methods()).toContain('getInstalledApplets')
+    expect(device.canEnterHome).toBe(true)
+    if (writes.includes('deviceBindAcquire'))
+      expect(mocks.call.mock.calls.find(([name]) => name === 'deviceBindAcquire')?.[1]).toBe(
+        'binding-code-A'
+      )
+    expect(firmware.state).toMatchObject({
+      supportCode: 2,
+      errorInfo: '',
+      busy: false,
+      isCosUpdate: false,
+      cosOldVersionData: '1.1.0'
+    })
+    expect(device.isCosUpdate).toBe(false)
+    expect(mocks.offer).not.toHaveBeenCalled()
+  }
+)
+
+it('refuses every upgrade write if a retry detects a different physical device', async () => {
+  const { firmware } = setup()
+  mocks.call.mockImplementation(async method =>
+    method === 'cosUpdate' ? { isSuccess: false, result: 'interrupted-upgrade' } : response(method)
+  )
+  await firmware.updateFirmware()
+  seid = 'SEID-B'
+  mocks.call.mockClear()
+  await firmware.updateFirmware()
+  expect(methods()).toEqual(['connectDevice', 'getUpgradeSeid'])
+  expectCleared(firmware)
+  expect(mocks.offer).toHaveBeenCalledExactlyOnceWith(
+    expect.objectContaining({ result: 'device_session_changed' }),
+    expect.any(Function),
+    { reconnectOnly: true }
+  )
+})
+
+it.each([
+  ['cosUpdate', 'device_session_changed'],
+  ['deviceBindAcquire', 'device_bind_check_failed'],
+  ['importBindCode', 'device_session_changed'],
+  ['writeWalletAddress', 'device_bind_check_failed']
+])('clears stale state when %s reports %s during an upgrade', async (method, error) => {
+  const { firmware } = setup()
+  mocks.call.mockImplementation(async requested =>
+    requested === method ? { isSuccess: false, result: error } : response(requested)
+  )
+  await firmware.updateFirmware()
+  expect(methods().at(-1)).toBe(method)
+  expectCleared(firmware)
+  expect(mocks.offer).toHaveBeenCalledExactlyOnceWith(
+    expect.objectContaining({ result: error }),
+    expect.any(Function),
+    { reconnectOnly: true }
+  )
+})
+
+it('does not write after a failed bootloader identity read and keeps same-device retry inputs', async () => {
+  const { firmware } = setup()
+  mocks.call.mockImplementation(async method =>
+    method === 'cosUpdate' ? { isSuccess: false, result: 'interrupted-upgrade' } : response(method)
+  )
+  await firmware.updateFirmware()
+  mocks.call
+    .mockClear()
+    .mockImplementation(async method =>
+      method === 'getUpgradeSeid'
+        ? { isSuccess: false, result: 'bootloader_identity_unavailable' }
+        : response(method)
+    )
+  await firmware.updateFirmware()
+  expect(methods()).toEqual(['connectDevice', 'getUpgradeSeid'])
+  expect(firmware.state).toMatchObject({
+    supportCode: 3,
+    errorStage: 'connect',
+    bindCode: 'binding-code-A',
+    cosOldVersionData: '1.0.0',
+    cosNewVersionData: '1.1.0'
+  })
+  expect(useDeviceStore().verification.status).toBe('idle')
+  binding = 'unbound'
+  bootloader = true
+  mocks.call.mockClear().mockImplementation(async method => response(method))
+  await firmware.updateFirmware()
+  expect(methods().slice(0, 4)).toEqual([
+    'connectDevice',
+    'getUpgradeSeid',
+    'isBLStatus',
+    'saveFirmwareRecovery'
+  ])
+  expect(methods()).toContain('cosUpdate')
+  expect(firmware.state).toMatchObject({ supportCode: 2, busy: false, isCosUpdate: false })
+})
+
+it('opens preparation feedback before queueing and keeps it visible while connecting', async () => {
+  let releaseQueue!: () => void
+  const blocker = createDeviceOperation().run(
+    () =>
+      new Promise<void>(resolve => {
+        releaseQueue = resolve
+        releases.push(resolve)
+      })
+  )
+  await vi.waitFor(() => expect(releaseQueue).toBeTypeOf('function'))
+  const { firmware, operation } = setup()
+  const feedback = vi.spyOn(operation, 'feedback')
+  let releaseConnection!: () => void
+  mocks.call.mockImplementation(method =>
+    method === 'connectDevice'
+      ? new Promise(resolve => {
+          releaseConnection = () => resolve(response(method))
+          releases.push(releaseConnection)
+        })
+      : Promise.resolve(response(method))
+  )
+  const pending = firmware.updateFirmware()
+  expect(firmware.state).toMatchObject({ supportCode: 1, busy: true, phase: 'preparing' })
+  firmware.changeCode(0)
+  await firmware.updateFirmware()
+  expect(firmware.state.supportCode).toBe(1)
+  expect(mocks.call).not.toHaveBeenCalled()
+  await vi.waitFor(() => expect(feedback).toHaveBeenCalledOnce())
+  releaseQueue()
+  await blocker
+  await vi.waitFor(() => expect(releaseConnection).toBeTypeOf('function'))
+  expect(methods()).toEqual(['connectDevice'])
+  expect(firmware.state).toMatchObject({ supportCode: 1, busy: true, phase: 'preparing' })
+  releaseConnection()
+  await pending
+  expect(methods().filter(method => method === 'cosUpdate')).toHaveLength(1)
+  expect(firmware.state).toMatchObject({ supportCode: 2, busy: false, phase: 'complete' })
+})
+
+it('reports reading and verifying after the native update without returning to preparation', async () => {
+  const { firmware, device } = setup()
+  const phases: [string, string][] = []
+  const checkpoints: [string, string][] = []
+  const phasesAfterNative: string[] = []
+  let nativeFinished = false
+  const stop = watch(
+    () => firmware.state.phase,
+    phase => {
+      if (nativeFinished) phasesAfterNative.push(phase)
+    },
+    { flush: 'sync' }
+  )
+  mocks.call.mockImplementation(async (method, params) => {
+    phases.push([method, firmware.state.phase])
+    if (method === 'saveFirmwareRecovery')
+      checkpoints.push([(params as { phase: string }).phase, firmware.state.phase])
+    expect(firmware.state.supportCode).toBe(1)
+    expect(firmware.state.busy).toBe(true)
+    expect(firmware.state.phase).not.toBe('complete')
+    expect(device.canEnterHome).toBe(false)
+    if (method === 'cosUpdate') nativeFinished = true
+    return response(method)
+  })
+  await firmware.updateFirmware()
+  stop()
+  expect(phases.filter(([method]) => method !== 'saveFirmwareRecovery')).toEqual([
+    ['connectDevice', 'preparing'],
+    ['getSeid', 'preparing'],
+    ['deviceBindCheck', 'preparing'],
+    ['getBTCXpub', 'preparing'],
+    ['getSeid', 'preparing'],
+    ['cosUpdate', 'update'],
+    ['isBLStatus', 'reading'],
+    ['getFirmwareVersion', 'reading'],
+    ['getBleVersion', 'reading'],
+    ['cosCheckUpdate', 'reading'],
+    ['deviceBindCheck', 'reading'],
+    ['getUpgradeSeid', 'reading'],
+    ['deviceBindAcquire', 'bind'],
+    ['deviceBindCheck', 'store'],
+    ['importBindCode', 'store'],
+    ['getInstalledApplets', 'restore'],
+    ['getBTCXpub', 'restore'],
+    ['getUpgradeSeid', 'restore'],
+    ['writeWalletAddress', 'restore'],
+    ['deviceBindCheck', 'verifying'],
+    ['isBLStatus', 'verifying'],
+    ['getFirmwareVersion', 'verifying'],
+    ['getBleVersion', 'verifying'],
+    ['getUpgradeSeid', 'verifying'],
+    ['cosCheckUpdate', 'verifying'],
+    ['getBTCXpub', 'verifying'],
+    ['getUpgradeSeid', 'verifying'],
+    ['clearFirmwareRecovery', 'verifying']
+  ])
+  expect(checkpoints).toEqual([
+    ['update', 'update'],
+    ['capture-versions', 'reading'],
+    ['bind', 'bind'],
+    ['store', 'store'],
+    ['apps', 'restore'],
+    ['restore', 'restore'],
+    ['verify', 'verifying']
+  ])
+  expect(phasesAfterNative).toEqual([
+    'reading',
+    'bind',
+    'store',
+    'restore',
+    'verifying',
+    'complete'
+  ])
+  expect(firmware.state).toMatchObject({ phase: 'complete', supportCode: 2, busy: false })
+  expect(device.canEnterHome).toBe(true)
+})
+
+it('shows binding while loading a missing in-memory recovery code after the update', async () => {
+  const { firmware } = setup()
+  firmware.state.bindCode = ''
+  let nativeFinished = false
+  const codeReadPhases: string[] = []
+  const postUpdatePhases: string[] = []
+  mocks.call.mockImplementation(async method => {
+    if (nativeFinished) postUpdatePhases.push(firmware.state.phase)
+    if (method === 'exportBindCode') {
+      codeReadPhases.push(firmware.state.phase)
+      // An empty initial read exercises the engine's load-code fallback after COS.
+      if (!nativeFinished) return { isSuccess: true, result: '' }
+    }
+    if (method === 'cosUpdate') nativeFinished = true
+    return response(method)
+  })
+  await firmware.updateFirmware()
+  expect(codeReadPhases).toEqual(['preparing', 'bind'])
+  expect(postUpdatePhases).not.toContain('preparing')
+  expect(firmware.state).toMatchObject({ phase: 'complete', supportCode: 2 })
+})
+
+it.each(['clearFirmwareRecovery', 'getBTCXpub', 'final-identity'])(
+  'keeps verifying until the pending %s proof completes',
+  async pendingProof => {
+    const { firmware, device } = setup()
+    let release!: () => void
+    let walletRead = false
+    mocks.call.mockImplementation(method => {
+      const shouldPause =
+        firmware.state.phase === 'verifying' &&
+        (pendingProof === 'final-identity'
+          ? method === 'getUpgradeSeid' && walletRead
+          : method === pendingProof)
+      if (method === 'getBTCXpub' && firmware.state.phase === 'verifying') walletRead = true
+      if (shouldPause)
+        return new Promise(resolve => {
+          release = () => resolve(response(method))
+          releases.push(release)
+        })
+      return Promise.resolve(response(method))
+    })
+    const pending = firmware.updateFirmware()
+    await vi.waitFor(() => expect(release).toBeTypeOf('function'))
+    expect(firmware.state).toMatchObject({ phase: 'verifying', supportCode: 1, busy: true })
+    expect(device.canEnterHome).toBe(false)
+    release()
+    await pending
+    expect(firmware.state).toMatchObject({ phase: 'complete', supportCode: 2, busy: false })
+    expect(device.canEnterHome).toBe(true)
+  }
+)
+
+it.each([
+  { isSuccess: false, result: 'wallet_verification_failed' },
+  { isSuccess: true, result: 'invalid-wallet-proof' }
+] as DeviceResult[])('never reports complete when the final wallet proof is %j', async wallet => {
+  const { firmware, device } = setup()
+  const phases: string[] = []
+  const stop = watch(
+    () => firmware.state.phase,
+    phase => phases.push(phase),
+    { flush: 'sync' }
+  )
+  mocks.call.mockImplementation(async method => {
+    if (method === 'clearFirmwareRecovery') expect(firmware.state.phase).toBe('verifying')
+    return method === 'getBTCXpub' && firmware.state.phase === 'verifying'
+      ? wallet
+      : response(method)
+  })
+  await firmware.updateFirmware()
+  stop()
+  expect(methods()).not.toContain('clearFirmwareRecovery')
+  expect(methods()).toContain('getBTCXpub')
+  expect(phases).not.toContain('complete')
+  expect(firmware.state).toMatchObject({
+    phase: 'verifying',
+    supportCode: 3,
+    busy: false,
+    errorStage: 'wallet'
+  })
+  expect(device.canEnterHome).toBe(false)
+})
+
+it('reports checkpoint cleanup failure after wallet proof without completing', async () => {
+  const { firmware, operation } = setup()
+  const report = vi.spyOn(operation, 'failure')
+  const failure = { isSuccess: false as const, result: 'firmware_recovery_write_failed' }
+  mocks.call.mockImplementation(async method =>
+    method === 'clearFirmwareRecovery' ? failure : response(method)
+  )
+  await firmware.updateFirmware()
+  expect(report).toHaveBeenCalledExactlyOnceWith('verify', failure)
+  expect(firmware.state).toMatchObject({ supportCode: 3, phase: 'verifying', errorStage: 'store' })
+  expect(methods().filter(method => method === 'getLifeTime')).toHaveLength(0)
+  expect(useDeviceStore().canEnterHome).toBe(false)
+  mocks.call.mockClear().mockImplementation(async method => response(method))
+  await firmware.updateFirmware()
+  expect(methods()).not.toContain('cosUpdate')
+  expect(methods().indexOf('getBTCXpub')).toBeLessThan(methods().indexOf('clearFirmwareRecovery'))
+  expect(firmware.state.supportCode).toBe(2)
+})
+
+it('retries all installed address chains without repeating firmware, binding or storage', async () => {
+  const { firmware } = setup()
+  let failed = false
+  mocks.call.mockImplementation(async method => {
+    if (method === 'getInstalledApplets')
+      return {
+        isSuccess: true,
+        result: { list: [{ name: 'Bitcoin' }, { name: 'Ethereum' }, { name: 'Bitcoin' }] }
+      }
+    if (method === 'writeWalletAddress' && !failed) {
+      failed = true
+      return { isSuccess: false, result: 'address_retry_needed', failed: ['Ethereum'] }
+    }
+    return response(method)
+  })
+  await firmware.updateFirmware()
+  expect(firmware.state).toMatchObject({ supportCode: 3, recovering: true, errorStage: 'restore' })
+  await firmware.updateFirmware()
+  for (const method of ['cosUpdate', 'deviceBindAcquire', 'importBindCode'])
+    expect(methods().filter(name => name === method)).toHaveLength(1)
+  expect(
+    mocks.call.mock.calls.filter(([method]) => method === 'writeWalletAddress').map(([, p]) => p)
+  ).toEqual([
+    { name: ['Bitcoin', 'Ethereum'], filePath: '/test/user' },
+    { name: ['Bitcoin', 'Ethereum'], filePath: '/test/user' }
+  ])
+  expect(firmware.state).toMatchObject({ supportCode: 2, recovering: false })
+})
+
+it.each(['cos-version', 'ble-version', 'bootloader'])(
+  'blocks post-update recovery on %s mismatch without repeating a completed write',
+  async mismatch => {
+    const { firmware } = setup()
+    let failed = false
+    mocks.call.mockImplementation(async method => {
+      if (method === 'importBindCode' && !failed) {
+        failed = true
+        return { isSuccess: false, result: 'storage_unavailable' }
+      }
+      return response(method)
+    })
+    await firmware.updateFirmware()
+    if (mismatch === 'cos-version') actualCos = '0.9.0'
+    else if (mismatch === 'ble-version') actualBle = '1.9.0'
+    else bootloader = true
+    mocks.call.mockClear()
+    await firmware.updateFirmware()
+    for (const method of ['cosUpdate', 'deviceBindAcquire', 'importBindCode', 'writeWalletAddress'])
+      expect(methods()).not.toContain(method)
+    expect(firmware.state).toMatchObject({
+      supportCode: 3,
+      recovering: true,
+      busy: false,
+      errorStage: 'check',
+      errorInfo:
+        mismatch === 'bootloader'
+          ? 'firmware_recovery_not_ready'
+          : 'firmware_recovery_version_mismatch'
+    })
+    actualCos = '1.1.0'
+    actualBle = '2.1.0'
+    bootloader = false
+    mocks.call.mockClear()
+    await firmware.updateFirmware()
+    expect(methods()).not.toContain('cosUpdate')
+    expect(methods()).not.toContain('deviceBindAcquire')
+    expect(methods()).toContain('importBindCode')
+    expect(firmware.state.supportCode).toBe(2)
+  }
+)
+
+it.each(
+  ['importBindCode', 'getInstalledApplets', 'writeWalletAddress'].flatMap(failedMethod =>
+    ['unbound', 'bound_other'].map(status => ({ failedMethod, status }))
+  )
+)('handles $status binding before resuming $failedMethod', async ({ failedMethod, status }) => {
+  const { firmware } = setup()
+  let failed = false
+  mocks.call.mockImplementation(async method => {
+    if (method === failedMethod && !failed) {
+      failed = true
+      return { isSuccess: false, result: 'retry_needed' }
+    }
+    return response(method)
+  })
+  await firmware.updateFirmware()
+  binding = status
+  mocks.call.mockClear()
+  await firmware.updateFirmware()
+  expect(methods()).not.toContain('cosUpdate')
+  if (status === 'unbound') {
+    expect(methods()).toContain('exportBindCode')
+    expect(methods()).toContain('deviceBindAcquire')
+    expect(methods()).toContain('writeWalletAddress')
+    expect(firmware.state.supportCode).toBe(2)
+  } else {
+    for (const method of [
+      'deviceBindAcquire',
+      'importBindCode',
+      'writeWalletAddress',
+      'clearFirmwareRecovery'
+    ])
+      expect(methods()).not.toContain(method)
+    expectCleared(firmware)
+    expect(mocks.offer).toHaveBeenCalledWith(expect.anything(), expect.any(Function), {
+      reconnectOnly: true
+    })
+  }
+})
+
+it.each(['before-resume', 'during-version-read'])(
+  'rejects a different device %s before resuming completed firmware stages',
+  async timing => {
+    const { firmware } = setup()
+    let failed = false
+    mocks.call.mockImplementation(async method => {
+      if (method === 'importBindCode' && !failed) {
+        failed = true
+        return { isSuccess: false, result: 'storage_unavailable' }
+      }
+      return response(method)
+    })
+    await firmware.updateFirmware()
+    if (timing === 'before-resume') seid = 'SEID-B'
+    else {
+      const normal = mocks.call.getMockImplementation()!
+      mocks.call.mockImplementation(async (method, params) => {
+        const result = await normal(method, params)
+        if (method === 'getBleVersion') seid = 'SEID-B'
+        return result
+      })
+    }
+    mocks.call.mockClear()
+    await firmware.updateFirmware()
+    for (const method of ['cosUpdate', 'deviceBindAcquire', 'importBindCode', 'writeWalletAddress'])
+      expect(methods()).not.toContain(method)
+    expectCleared(firmware)
+  }
+)
+
+it('resumes the saved stage after reopening another firmware page in the same device session', async () => {
+  const { firmware, operation, device } = setup()
+  let failed = false
+  mocks.call.mockImplementation(async method => {
+    if (method === 'importBindCode' && !failed) {
+      failed = true
+      return { isSuccess: false, result: 'storage_unavailable' }
+    }
+    return response(method)
+  })
+  await firmware.updateFirmware()
+  const sessionId = device.sessionId
+  operation.dispose()
+  mocks.call.mockClear()
+  const reopened = useFirmwareUpgrade('manager', createDeviceOperation())
+  expect(device.sessionId).toBe(sessionId)
+  expect(reopened.state).toMatchObject({
+    recovering: true,
+    isCosUpdate: true,
+    cosUpdateStatus: '1',
+    bindCode: 'binding-code-A',
+    cosNewVersionData: '1.1.0'
+  })
+  await reopened.ensureFirmwareVersion()
+  expect(mocks.call).not.toHaveBeenCalled()
+  await reopened.updateFirmware()
+  expect(methods()).not.toContain('cosUpdate')
+  expect(methods()).not.toContain('deviceBindAcquire')
+  expect(methods()).toContain('importBindCode')
+  expect(reopened.state).toMatchObject({ supportCode: 2, recovering: false, busy: false })
+})
+
+it.each([
+  ['disposed', 'cosUpdate', 'resolve'],
+  ['obsolete', 'cosUpdate', 'resolve'],
+  ['disposed', 'writeWalletAddress', 'resolve'],
+  ['obsolete', 'writeWalletAddress', 'resolve'],
+  ['disposed', 'cosUpdate', 'reject'],
+  ['obsolete', 'cosUpdate', 'reject']
+] as const)(
+  'does not publish a %s upgrade response delayed at %s (%s)',
+  async (invalidation, delayedMethod, settlement) => {
+    const { firmware, operation, device } = setup()
+    let release!: () => void
+    mocks.call.mockImplementation(method =>
+      method === delayedMethod
+        ? new Promise((resolve, reject) => {
+            release = () =>
+              settlement === 'reject'
+                ? reject(new Error('late transport failure'))
+                : resolve(response(method))
+            releases.push(release)
+          })
+        : Promise.resolve(response(method))
+    )
+    const pending = firmware.updateFirmware()
+    await vi.waitFor(() => expect(release).toBeTypeOf('function'))
+    if (invalidation === 'disposed') operation.dispose()
+    else device.invalidateDeviceData()
+    const before = { ...firmware.state, busy: false }
+    const beforeDevice = {
+      isCosUpdate: device.isCosUpdate,
+      cosOldVersionData: device.cosOldVersionData,
+      cosNewVersionData: device.cosNewVersionData
+    }
+    const requestCount = mocks.call.mock.calls.length
+    release()
+    await pending
+    expect(firmware.state).toEqual(before)
+    expect(device).toMatchObject(beforeDevice)
+    expect(mocks.call).toHaveBeenCalledTimes(requestCount)
+    expect(mocks.offer).not.toHaveBeenCalled()
+  }
+)
+
+it.each(['bound_this', 'unbound', 'bound_other'])(
+  'promotes an apparent BLE-only update when native changes COS and binding is %s',
+  async status => {
+    const { firmware, device } = setup()
+    firmware.state.bindCode = ''
+    firmware.state.cosNewVersionData = firmware.state.cosOldVersionData
+    actualCos = firmware.state.cosOldVersionData
+    mocks.call.mockImplementation(async method => {
+      if (method === 'cosUpdate') {
+        actualCos = '1.9.11'
+        binding = status
+      }
+      return response(method)
+    })
+    await firmware.updateFirmware()
+    const checkpoints = mocks.call.mock.calls
+      .filter(([method]) => method === 'saveFirmwareRecovery')
+      .map(([, value]) => value)
+    expect(checkpoints[0]).toMatchObject({ needsBinding: false, previousCos: '1.0.0' })
+    expect(checkpoints).toContainEqual(
+      expect.objectContaining({
+        phase: 'load-code',
+        needsBinding: true,
+        expectedCos: '1.9.11',
+        previousCos: '1.0.0'
+      })
+    )
+    expect(deviceWrites()).toEqual([
+      'cosUpdate',
+      'deviceBindAcquire',
+      'importBindCode',
+      'writeWalletAddress'
+    ])
+    expect(methods().filter(method => method === 'exportBindCode')).toHaveLength(1)
+    expect(firmware.state).toMatchObject({
+      phase: 'complete',
+      supportCode: 2,
+      cosOldVersionData: '1.9.11'
+    })
+    expect(device.canEnterHome).toBe(true)
+  }
+)
+
+it('retries a BLE-only final-check failure by promoting lost binding without reflashing', async () => {
+  unbindOnCosUpdate = false
+  const { firmware, device } = setup()
+  firmware.state.bindCode = ''
+  firmware.state.cosNewVersionData = firmware.state.cosOldVersionData
+  actualCos = firmware.state.cosOldVersionData
+  let checks = 0
+  let failFinal = true
+  mocks.call.mockImplementation(async method => {
+    if (method === 'cosCheckUpdate') {
+      checks += 1
+      if (checks === 2 && failFinal) return { isSuccess: false, result: 'server_unavailable' }
+    }
+    return response(method)
+  })
+  await firmware.updateFirmware()
+  expect(firmware.state).toMatchObject({ supportCode: 3, errorStage: 'check' })
+  expect(firmware.pendingRecoveryOptions()).toMatchObject({ requireBinding: false })
+  expect(device.canEnterHome).toBe(false)
+  binding = 'bound_other'
+  failFinal = false
+  await firmware.updateFirmware()
+  expect(deviceWrites()).toEqual([
+    'cosUpdate',
+    'deviceBindAcquire',
+    'importBindCode',
+    'writeWalletAddress'
+  ])
+  expect(firmware.state).toMatchObject({ phase: 'complete', supportCode: 2 })
+  expect(device.canEnterHome).toBe(true)
+})
+
+it('does not start an upgrade for an available release when no recovery is pending', async () => {
+  const { firmware } = setup('manager')
+  mocks.call.mockImplementation(async method => {
+    if (method === 'getFirmwareRecovery') return { isSuccess: true, result: null }
+    if (method === 'cosCheckUpdate')
+      return {
+        isSuccess: true,
+        result: { isUpdateSuccess: true, latestCosVersion: '1.9.12', latestBleVersion: '2.1.0' }
+      }
+    return response(method)
+  })
+  expect(await firmware.recoverBeforeAppOperation()).toBe('ready')
+  expect(methods()).toContain('cosCheckUpdate')
+  expect(methods()).not.toContain('cosUpdate')
+})
+
+it('resumes an incomplete native transaction before an app operation', async () => {
+  const { firmware } = setup('manager')
+  let complete = false
+  mocks.call.mockImplementation(async method => {
+    if (method === 'getFirmwareRecovery') return { isSuccess: true, result: null }
+    if (method === 'cosCheckUpdate')
+      return {
+        isSuccess: true,
+        result: { isUpdateSuccess: complete, latestCosVersion: '1.9.12', latestBleVersion: '2.1.0' }
+      }
+    if (method === 'cosUpdate') complete = true
+    return response(method)
+  })
+  expect(await firmware.recoverBeforeAppOperation()).toBe('recovered')
+  expect(methods().filter(method => method === 'cosUpdate')).toHaveLength(1)
+  expect(firmware.state.supportCode).toBe(0)
+})
+
+it('resumes an ambiguous completed checkpoint before app operations without reflashing', async () => {
+  const { firmware } = setup('manager')
+  mocks.call.mockImplementation(async method => {
+    if (method === 'getFirmwareRecovery')
+      return {
+        isSuccess: true,
+        result: {
+          version: 1,
+          seid,
+          phase: 'update',
+          needsBinding: true,
+          expectedCos: '',
+          expectedBle: ''
+        }
+      }
+    return response(method)
+  })
+  expect(await firmware.recoverBeforeAppOperation()).toBe('recovered')
+  expect(methods()).not.toContain('cosUpdate')
+  expect(methods()).toContain('writeWalletAddress')
+  expect(methods()).toContain('getBTCXpub')
+  expect(methods()).toContain('clearFirmwareRecovery')
+})
+
+it('does not resume a native update on a bound device when its local binding code is unavailable', async () => {
+  const { firmware } = setup('manager')
+  mocks.call.mockImplementation(async method => {
+    if (method === 'getFirmwareRecovery') return { isSuccess: true, result: null }
+    if (method === 'cosCheckUpdate')
+      return {
+        isSuccess: true,
+        result: { isUpdateSuccess: false, latestCosVersion: '1.9.12', latestBleVersion: '2.1.0' }
+      }
+    if (method === 'exportBindCode')
+      return { isSuccess: false, result: 'binding_code_file_missing' }
+    return response(method)
+  })
+  await expect(firmware.recoverBeforeAppOperation()).rejects.toMatchObject({
+    result: 'binding_code_file_missing'
+  })
+  expect(methods()).toContain('deviceBindCheck')
+  expect(methods()).toContain('exportBindCode')
+  expect(methods()).not.toContain('cosUpdate')
+})
+
+it('does not resume a native update if identity changes while reading the binding code', async () => {
+  const { firmware } = setup('manager')
+  mocks.call.mockImplementation(async method => {
+    if (method === 'getFirmwareRecovery') return { isSuccess: true, result: null }
+    if (method === 'cosCheckUpdate')
+      return {
+        isSuccess: true,
+        result: { isUpdateSuccess: false, latestCosVersion: '1.9.12', latestBleVersion: '2.1.0' }
+      }
+    if (method === 'exportBindCode') seid = 'SEID-B'
+    return response(method)
+  })
+  const failure = vi.fn()
+  expect(await firmware.recoverBeforeAppOperation(failure)).toBe('failed')
+  expect(failure).toHaveBeenCalledWith(
+    expect.objectContaining({ result: 'device_session_changed' })
+  )
+  expect(methods()).not.toContain('cosUpdate')
+})
+
+it.each(['bootloader', 'unbound'] as const)(
+  'continues native recovery when the device is already in %s mode',
+  async mode => {
+    const { firmware } = setup('manager')
+    bootloader = mode === 'bootloader'
+    if (mode === 'unbound') binding = 'unbound'
+    let complete = false
+    mocks.call.mockImplementation(async method => {
+      if (method === 'getFirmwareRecovery') return { isSuccess: true, result: null }
+      if (method === 'cosCheckUpdate')
+        return {
+          isSuccess: true,
+          result: {
+            isUpdateSuccess: complete,
+            latestCosVersion: '1.9.12',
+            latestBleVersion: '2.1.0'
+          }
+        }
+      if (method === 'cosUpdate') {
+        complete = true
+        bootloader = false
+      }
+      return response(method)
+    })
+    expect(await firmware.recoverBeforeAppOperation()).toBe('recovered')
+    expect(methods()).toContain('cosUpdate')
+    expect(methods().indexOf('exportBindCode')).toBeGreaterThan(methods().indexOf('cosUpdate'))
+  }
+)

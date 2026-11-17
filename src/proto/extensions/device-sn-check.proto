@@ -1,0 +1,6 @@
+// Additive Manager metadata API, mirrored by imkey-core's device.proto.
+message DeviceSnCheckRes {
+    bool sn_check_result = 1;
+    bool is_activate = 2;
+    string activate_time = 3;
+}
