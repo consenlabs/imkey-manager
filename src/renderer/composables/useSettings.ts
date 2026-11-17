@@ -28,6 +28,7 @@ export function useSettings() {
     checkingUpdate: false,
     autoChecking: false,
     firmwareChecked: false,
+    recoveryIdentityUnbound: false,
     deviceUnavailable: false,
     errorInfo: '',
     errorStage: ''
@@ -135,12 +136,9 @@ export function useSettings() {
       updateAvailable: false
     }
   }
-  const initialCache = usableCachedInfo()
-  if (initialCache) {
-    restoreCachedInfo(initialCache)
-    state.initializing = false
-    state.autoChecking = !state.firmwareChecked && failedChecks.get(device) !== device.sessionId
-  } else device.prepareIdentityCheck()
+  // A cached SEID describes the last session, not necessarily the device now
+  // attached. Hide cached data synchronously until this visit verifies it.
+  let entryCache = usableCachedInfo()
 
   async function initialize(force = false, reuseInfo = false) {
     const sessionId = device.sessionId
@@ -169,7 +167,9 @@ export function useSettings() {
     }
     try {
       const connected = await refreshDeviceIdentity(callDevice, device, operation.active, {
-        hideCachedData: !keepPage,
+        // Local initializing gates cached data. Do not invalidate the shared
+        // home authorization while an entry check waits in the operation queue.
+        hideCachedData: false,
         requireBinding: !force,
         ...firmware.pendingRecoveryOptions()
       })
@@ -183,10 +183,13 @@ export function useSettings() {
       if (firmware.pendingRecoveryOptions()) {
         // An interrupted upgrade can leave normal firmware metadata unavailable.
         // Keep its explicit recovery entry reachable; the retry validates its stage.
+        state.recoveryIdentityUnbound = !firmware.pendingRecoveryOptions()?.requireBinding
+        if (state.recoveryIdentityUnbound) device.clearVerification()
         firmware.restoreCachedCheck()
         state.firmwareChecked = true
         return
       }
+      state.recoveryIdentityUnbound = false
       const cached = device.deviceInfo
       const sameDevice = cached?.seid === device.connectedSeid
       if (!force) device.deviceInfo = null
@@ -277,20 +280,16 @@ export function useSettings() {
   }
   function runInitialization(force: boolean) {
     if (!active || !operation.active() || loading || firmware.state.busy) return
-    const cached = !force && !state.deviceUnavailable && usableCachedInfo()
-    if (cached) {
-      restoreCachedInfo(cached)
-      state.initializing = false
-      if (state.firmwareChecked) {
-        failedChecks.delete(device)
-        return
-      }
-      if (failedChecks.get(device) === device.sessionId) return
-    }
+    const cached =
+      !force &&
+      !state.deviceUnavailable &&
+      !firmware.pendingRecoveryOptions() &&
+      (entryCache || usableCachedInfo())
+    entryCache = undefined
     const sessionId = device.sessionId
     loading = true
     state.autoChecking = !force
-    if (!force && !cached) state.initializing = true
+    if (!force) state.initializing = true
     if (state.status === 2) {
       state.initializing = true
       state.status = 1
@@ -298,7 +297,27 @@ export function useSettings() {
     state.checkingUpdate = force
     return operation
       .run(async () => {
-        if (force || !cached) await initialize(force)
+        if (!force && cached) {
+          const connected = await refreshDeviceIdentity(callDevice, device, operation.active, {
+            hideCachedData: false,
+            requireBinding: true
+          })
+          if (!active || !operation.active()) return
+          if (!connected.isSuccess) {
+            if (connected.code !== 'OPERATION_CANCELLED') {
+              failed(connected, 'connect')
+              if (!isSessionRecoveryError(connected)) recovery.offer(connected, init)
+            }
+            return
+          }
+          if (device.sessionId !== sessionId) return
+          state.recoveryIdentityUnbound = false
+          // Re-read the cache inside the queue: another operation may have
+          // invalidated it while this visit was waiting for its turn.
+          const currentCache = usableCachedInfo()
+          if (currentCache) restoreCachedInfo(currentCache)
+          else await initialize(false)
+        } else await initialize(force)
         if (
           !force &&
           active &&
@@ -307,6 +326,7 @@ export function useSettings() {
           (state.status === 1 || state.status === 6) &&
           Boolean(device.deviceInfo) &&
           !state.firmwareChecked &&
+          failedChecks.get(device) !== sessionId &&
           !firmware.pendingRecoveryOptions()
         ) {
           state.initializing = false

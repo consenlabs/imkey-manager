@@ -55,9 +55,9 @@ defineExpose({ checkSoftUpdate })
     data-testid="device-page"
   >
     <DeviceInfo
-      :SN="SN"
-      :ble-old-version-data="bleOldVersionData"
-      :cos-old-version-data="cosOldVersionData"
+      :SN="settings.state.recoveryIdentityUnbound ? '' : SN"
+      :ble-old-version-data="settings.state.recoveryIdentityUnbound ? '' : bleOldVersionData"
+      :cos-old-version-data="settings.state.recoveryIdentityUnbound ? '' : cosOldVersionData"
       :is-cos-update="isCosUpdate"
       :firmware-check-failed="settings.firmware.state.cosUpdateStatus === '2'"
       :copy-tooltip-disabled="copyTooltipDisabled"
@@ -68,7 +68,14 @@ defineExpose({ checkSoftUpdate })
       :upgrading="busy"
       :identity-checking="verification.state.identityChecking"
       :unavailable="settings.state.deviceUnavailable"
-      :confirmation-status="firmwareConfirmation.status.value"
+      :confirmation-status="
+        initializing ||
+        verification.state.identityChecking ||
+        settings.state.deviceUnavailable ||
+        settings.state.recoveryIdentityUnbound
+          ? 'none'
+          : firmwareConfirmation.status.value
+      "
       :confirmation-error="confirmationError"
       @is-showalert="!busy && !autoChecking && isShowalert()"
       @copy-text="copyText"
@@ -96,7 +103,10 @@ defineExpose({ checkSoftUpdate })
     <DeviceVerificationCard
       variant="device"
       :status="
-        settings.state.deviceUnavailable || verification.state.identityChecking
+        settings.state.deviceUnavailable ||
+        settings.state.recoveryIdentityUnbound ||
+        initializing ||
+        verification.state.identityChecking
           ? 'idle'
           : verification.state.status
       "
@@ -104,6 +114,7 @@ defineExpose({ checkSoftUpdate })
       :activated-at="verification.state.activatedAt"
       :disabled="
         settings.state.deviceUnavailable ||
+        settings.state.recoveryIdentityUnbound ||
         initializing ||
         autoChecking ||
         verification.state.identityChecking ||

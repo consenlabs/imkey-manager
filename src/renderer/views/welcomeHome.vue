@@ -3,6 +3,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { useSecureCheck } from '../composables/useSecureCheck'
+import { useHomeDeviceIdentity } from '../composables/useHomeDeviceIdentity'
 import DeviceVerificationCard from '../components/device/DeviceVerificationCard.vue'
 import imkeyMark from '../assets/device-pages/imkey-mark.svg'
 import imtokenMark from '../assets/device-pages/imtoken-mark.svg'
@@ -17,6 +18,7 @@ import supportIcon from '../assets/device-pages/support.svg'
 import copyIcon from '../assets/device-pages/copy.svg'
 
 const secureCheck = useSecureCheck()
+const identity = useHomeDeviceIdentity()
 const router = useRouter()
 const { t } = useI18n()
 const shortcuts = [
@@ -73,9 +75,10 @@ async function copySupportEmail() {
     <DeviceVerificationCard
       class="home-verification"
       variant="home"
-      :status="secureCheck.state.status"
-      :activation-status="secureCheck.state.activationStatus"
-      :activated-at="secureCheck.state.activatedAt"
+      :status="identity.ready.value ? secureCheck.state.status : 'idle'"
+      :activation-status="identity.ready.value ? secureCheck.state.activationStatus : null"
+      :activated-at="identity.ready.value ? secureCheck.state.activatedAt : null"
+      :disabled="!identity.ready.value || identity.checking.value"
       @verify="secureCheck.check"
       @details="router.push('/home/setting')"
     />

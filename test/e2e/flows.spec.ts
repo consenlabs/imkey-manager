@@ -312,7 +312,7 @@ test('initialization queues the first click and duplicate connection clicks run 
   await expect(page.locator('.homeBox')).toBeVisible()
   await expect(page.getByTestId('secure-check-button')).toBeEnabled()
   const methods = await calls()
-  // Home entry is passive; duplicate clicks must still start only one connection flow.
-  expect(methods.filter(method => method === 'device_connect')).toHaveLength(1)
+  // One connection flow plus the home page's separate identity confirmation.
+  expect(methods.filter(method => method === 'device_connect')).toHaveLength(2)
   await screenshot('connection-double-click')
 })

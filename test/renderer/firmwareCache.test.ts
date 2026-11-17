@@ -103,7 +103,8 @@ it('publishes a refreshed app result to the existing device metadata snapshot', 
   expect(returned.state.firmwareChecked).toBe(true)
   expect(returned.firmware.state.isCosUpdate).toBe(true)
   expect(returned.firmware.state.cosNewVersionData).toBe('1.1.0')
-  expect(mocks.call).not.toHaveBeenCalled()
+  expect(methods()).toEqual(['connectDevice', 'getSeid', 'deviceBindCheck'])
+  expect(methods()).not.toContain('cosCheckUpdate')
 })
 
 it('uses an application check when entering the device page for the first time', async () => {

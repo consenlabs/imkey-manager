@@ -64,7 +64,7 @@ beforeEach(() => {
 })
 afterEach(() => vi.unstubAllGlobals())
 
-it('checks firmware on first entry and restores the result without calls on reentry', async () => {
+it('confirms device identity on reentry before restoring the cached firmware result', async () => {
   const first = useSettings()
   await first.init()
   expect(first.state.status).toBe(1)
@@ -79,11 +79,14 @@ it('checks firmware on first entry and restores the result without calls on reen
   expect(count('getSn')).toBe(1)
   const callsBeforeReentry = mocks.call.mock.calls.length
   const second = useSettings()
-  expect(second.state).toMatchObject({ SN: 'SN-SEID-A', initializing: false })
+  expect(second.state).toMatchObject({ SN: '', initializing: true })
   expect(useDeviceStore().identityReady).toBe(true)
-  expect(useDeviceStore().identityChecking).toBe(false)
   await second.init()
-  expect(mocks.call).toHaveBeenCalledTimes(callsBeforeReentry)
+  expect(mocks.call.mock.calls.slice(callsBeforeReentry).map(([method]) => method)).toEqual([
+    'connectDevice',
+    'getSeid',
+    'deviceBindCheck'
+  ])
   expect(second.state.SN).toBe('SN-SEID-A')
   expect(second.firmware.state.cosOldVersionData).toBe('1.0.0')
   expect(count('cosCheckUpdate')).toBe(1)
@@ -95,6 +98,48 @@ it('checks firmware on first entry and restores the result without calls on reen
   expect(count('checkDevice')).toBe(0)
   expect(count('deviceSnCheck')).toBe(0)
   expect(count('exportBindCode')).toBe(0)
+})
+
+it('keeps cached device data hidden until the binding check finishes', async () => {
+  const first = useSettings()
+  await first.init()
+  useDeviceStore().verification = {
+    status: 'success',
+    activationStatus: true,
+    activatedAt: '2024-01-01',
+    errorInfo: ''
+  }
+  const device = useDeviceStore()
+  expect(
+    device.authorizeHome(device.sessionId, device.connectedSeid, {
+      isSuccess: true,
+      result: 'xpub-ready'
+    })
+  ).toBe(true)
+  const normal = mocks.call.getMockImplementation()!
+  let release!: (value: DeviceResult) => void
+  mocks.call.mockImplementation(method =>
+    method === 'deviceBindCheck'
+      ? new Promise(resolve => {
+          release = resolve
+        })
+      : normal(method)
+  )
+  const second = useSettings()
+  const pending = second.init()
+  await vi.waitFor(() => expect(release).toBeTypeOf('function'))
+  expect(second.state).toMatchObject({ SN: '', initializing: true, firmwareChecked: false })
+  expect(useDeviceStore().identityReady).toBe(true)
+  expect(device.canEnterHome).toBe(true)
+  release({ isSuccess: true, result: 'bound_this' })
+  await pending
+  expect(second.state).toMatchObject({
+    SN: 'SN-SEID-A',
+    initializing: false,
+    firmwareChecked: true
+  })
+  expect(useDeviceStore().verification.status).toBe('success')
+  expect(count('cosCheckUpdate')).toBe(1)
 })
 
 it('reads and reuses device information while offline without contacting the update service', async () => {
@@ -251,42 +296,50 @@ it.each(['firmware', 'ble'] as const)(
   }
 )
 
-it('shows cached information on reentry and detects a replacement only on an explicit check', async () => {
-  const first = useSettings()
-  await first.init()
-  await first.checkUpdate()
-  useDeviceStore().verification = {
-    status: 'success',
-    activationStatus: true,
-    activatedAt: '2024-01-01',
-    errorInfo: ''
+it.each(['replacement', 'disconnected', 'binding changed'])(
+  'hides cached information and detects %s on reentry',
+  async problem => {
+    const first = useSettings()
+    await first.init()
+    await first.checkUpdate()
+    useDeviceStore().verification = {
+      status: 'success',
+      activationStatus: true,
+      activatedAt: '2024-01-01',
+      errorInfo: ''
+    }
+    const normal = mocks.call.getMockImplementation()!
+    if (problem === 'replacement') seid = 'SEID-B'
+    else
+      mocks.call.mockImplementation(async method => {
+        if (problem === 'disconnected' && method === 'connectDevice')
+          return { isSuccess: false, result: 'device_not_connected' }
+        if (problem === 'binding changed' && method === 'deviceBindCheck')
+          return { isSuccess: true, result: 'unbound' }
+        return normal(method)
+      })
+    const second = useSettings()
+    expect(second.state).toMatchObject({
+      SN: '',
+      status: 1,
+      initializing: true,
+      checkingUpdate: false
+    })
+    await second.init()
+    expect(second.state.status).toBe(2)
+    expect(second.state.initializing).toBe(false)
+    expect(second.state.checkingUpdate).toBe(false)
+    expect(second.state.SN).toBe('')
+    expect(useDeviceStore().deviceInfo).toBeNull()
+    expect(useDeviceStore().verification.status).toBe('idle')
+    expect(second.state.firmwareChecked).toBe(false)
+    expect(count('cosCheckUpdate')).toBe(2)
+    if (problem !== 'disconnected')
+      expect(mocks.offer).toHaveBeenLastCalledWith(expect.anything(), expect.any(Function), {
+        reconnectOnly: true
+      })
   }
-  const callsBeforeReentry = mocks.call.mock.calls.length
-  seid = 'SEID-B'
-  const second = useSettings()
-  expect(second.state).toMatchObject({
-    SN: 'SN-SEID-A',
-    status: 1,
-    initializing: false,
-    checkingUpdate: false
-  })
-  await second.init()
-  expect(mocks.call).toHaveBeenCalledTimes(callsBeforeReentry)
-  expect(useDeviceStore().identityReady).toBe(true)
-  expect(second.secureCheck.state.status).toBe('success')
-  await second.checkUpdate()
-  expect(second.state.status).toBe(2)
-  expect(second.state.initializing).toBe(false)
-  expect(second.state.checkingUpdate).toBe(false)
-  expect(second.state.SN).toBe('')
-  expect(useDeviceStore().deviceInfo).toBeNull()
-  expect(useDeviceStore().verification.status).toBe('idle')
-  expect(second.state.firmwareChecked).toBe(false)
-  expect(count('cosCheckUpdate')).toBe(2)
-  expect(mocks.offer).toHaveBeenLastCalledWith(expect.anything(), expect.any(Function), {
-    reconnectOnly: true
-  })
-})
+)
 
 it('does not cache failed update checks and allows a later successful retry to populate the cache', async () => {
   const normal = mocks.call.getMockImplementation()!
@@ -342,12 +395,16 @@ it.each(['offline', 'cosCheckUpdate', 'getFirmwareVersion'])(
     mocks.online.mockClear()
     const second = useSettings()
     expect(second.state).toMatchObject({
-      initializing: false,
-      SN: 'SN-SEID-A',
+      initializing: true,
+      SN: '',
       firmwareChecked: false
     })
     await second.init()
-    expect(mocks.call).not.toHaveBeenCalled()
+    expect(mocks.call.mock.calls.map(([method]) => method)).toEqual([
+      'connectDevice',
+      'getSeid',
+      'deviceBindCheck'
+    ])
     expect(mocks.online).not.toHaveBeenCalled()
     expect(second.firmware.state).toMatchObject({
       cosOldVersionData: '1.0.0',
@@ -679,8 +736,8 @@ it.each([false, true])(
     const requestsBeforeEntry = mocks.call.mock.calls.length
     mocks.online.mockResolvedValue(false)
     const second = useSettings()
-    expect(second.state.firmwareChecked).toBe(true)
-    expect(second.state.initializing).toBe(false)
+    expect(second.state.firmwareChecked).toBe(false)
+    expect(second.state.initializing).toBe(true)
     await second.init()
     expect(second.state.firmwareChecked).toBe(true)
     expect(second.firmware.state.isCosUpdate).toBe(updateAvailable)
@@ -688,7 +745,7 @@ it.each([false, true])(
     expect(count('cosCheckUpdate')).toBe(2)
     expect(mocks.online).toHaveBeenCalledTimes(2)
     const entryRequests = mocks.call.mock.calls.slice(requestsBeforeEntry).map(([method]) => method)
-    expect(entryRequests).toEqual([])
+    expect(entryRequests).toEqual(['connectDevice', 'getSeid', 'deviceBindCheck'])
   }
 )
 

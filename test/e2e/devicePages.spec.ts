@@ -181,20 +181,39 @@ for (const gateMethod of ['device_connect', 'get_firmware_version']) {
   })
 }
 
-test('cached manually checked firmware returns immediately without connecting or reading device data', async () => {
+test('cached firmware stays hidden until the device identity is checked on page reentry', async () => {
   await launch()
   await devicePage()
   await checkFirmware()
-  const cached = await calls()
+  await verify()
   await tab(0)
+  await expect(page.getByTestId('device-verification-card')).toHaveAttribute(
+    'data-status',
+    'success'
+  )
+  const connections = await count('device_connect')
+  const firmwareChecks = await count('cos_check_update')
+  const secureChecks = await count('device_secure_check')
   await configure({ gate: true, gateMethod: 'device_connect' })
-  await devicePage()
+  await tab(2)
+  await expect.poll(() => count('device_connect')).toBe(connections + 1)
+  await expect(page.locator('body')).not.toContainText('PAGE-SN-A')
+  await expect(page.getByTestId('device-verification-card')).not.toHaveAttribute(
+    'data-status',
+    'success'
+  )
+  await expect(page.getByTestId('secure-check-button')).toBeDisabled()
+  await configure({ gate: false })
+  await expect(page.getByTestId('device-info-card')).toContainText('PAGE-SN-A')
   await expect(page.getByTestId('firmware-check-result')).toHaveAttribute('data-status', 'latest')
   await expect(page.getByTestId('firmware-check-button')).toBeEnabled()
   await expect(page.locator('.exportBindCode')).toBeEnabled()
-  await expect(page.getByTestId('device-verification-card')).toHaveAttribute('data-status', 'idle')
-  expect(await calls()).toEqual(cached)
-  await configure({ gate: false })
+  await expect(page.getByTestId('device-verification-card')).toHaveAttribute(
+    'data-status',
+    'success'
+  )
+  expect(await count('cos_check_update')).toBe(firmwareChecks)
+  expect(await count('device_secure_check')).toBe(secureChecks)
 })
 
 test('leaving initial loading discards its late response before a fresh device page opens', async () => {
@@ -206,7 +225,8 @@ test('leaving initial loading discards its late response before a fresh device p
   await expect.poll(() => count('get_firmware_version')).toBe(readsBeforeEntry + 1)
   await expectInitialLoading()
   await tab(0)
-  await expect(page.getByTestId('secure-check-button')).toBeEnabled()
+  // The home identity check is queued behind the abandoned device read.
+  await expect(page.getByTestId('secure-check-button')).toBeDisabled()
   await configure({ gate: false, sn: 'PAGE-SN-REFRESHED', firmware: '2.0.0' })
   await tab(2)
   await expect(page.getByTestId('device-info-card')).toContainText('PAGE-SN-REFRESHED')
@@ -219,39 +239,67 @@ test('leaving initial loading discards its late response before a fresh device p
   await expect(page.getByRole('dialog')).toHaveCount(0)
 })
 
-test('home entry is passive and device visits reuse the automatic firmware check', async () => {
+test('same-device page visits recheck identity and reuse firmware and verification results', async () => {
   await launch()
-  await expect(page.getByTestId('device-verification-card')).toHaveAttribute('data-status', 'idle')
-  expect(await count('device_connect')).toBe(1)
-  expect(await count('device_secure_check')).toBe(0)
-  expect(await count('device_sn_check')).toBe(0)
-  const initialCalls = await calls()
-  expect(initialCalls.slice(-2)).toEqual(['btc_get_xpub', 'get_seid'])
-  await expect(page.getByTestId('secure-check-button')).toHaveText('Verify device')
-  await expect(page.locator('body')).not.toContainText('Identifying')
-  await page.screenshot({ path: '/private/tmp/imkey-home-unverified.png' })
+  await verify()
+  await devicePage()
+  const serialReads = await count('get_sn')
   const firmwareChecks = await count('cos_check_update')
-  await devicePage()
-  await expect(page.getByTestId('firmware-check-result')).toHaveAttribute('data-status', 'latest')
-  expect(await count('cos_check_update')).toBe(firmwareChecks + 1)
-  await expect(page.getByTestId('device-verification-card')).toHaveAttribute('data-status', 'idle')
-  const methods = ['get_sn', 'get_ble_version', 'get_firmware_version', 'cos_check_update']
-  const cached = await Promise.all(methods.map(count))
-  await page.screenshot({ path: '/private/tmp/imkey-device-unverified.png' })
-  const beforeHome = await calls()
+  const secureChecks = await count('device_secure_check')
+  const snChecks = await count('device_sn_check')
+  const connections = await count('device_connect')
   await tab(0)
-  await expect(page.getByTestId('secure-check-button')).toBeEnabled()
-  await expect(page.getByTestId('secure-check-button')).toHaveText('Verify device')
-  expect(await calls()).toEqual(beforeHome)
+  await expect(page.getByTestId('device-verification-card')).toHaveAttribute(
+    'data-status',
+    'success'
+  )
+  await expect.poll(() => count('device_connect')).toBe(connections + 1)
   await devicePage()
-  expect(await Promise.all(methods.map(count))).toEqual(cached)
-  await expect(page.getByTestId('firmware-check-result')).toHaveAttribute('data-status', 'latest')
-  expect(await calls()).toEqual(beforeHome)
-  expect(await count('device_secure_check')).toBe(0)
+  await expect(page.getByTestId('device-verification-card')).toHaveAttribute(
+    'data-status',
+    'success'
+  )
+  expect(await count('device_connect')).toBe(connections + 2)
+  expect(await count('get_sn')).toBe(serialReads)
+  expect(await count('cos_check_update')).toBe(firmwareChecks)
+  expect(await count('device_secure_check')).toBe(secureChecks)
+  expect(await count('device_sn_check')).toBe(snChecks)
   const before = await calls()
   await page.clock.install()
   await page.clock.fastForward(60000)
   expect(await calls()).toEqual(before)
+})
+
+test('fast navigation while a home identity check is pending cannot expose cached device data', async () => {
+  await launch()
+  await verify()
+  await devicePage()
+  const firmwareChecks = await count('cos_check_update')
+  const secureChecks = await count('device_secure_check')
+  const connections = await count('device_connect')
+  await configure({ gate: true, gateMethod: 'device_connect' })
+  await tab(0)
+  await expect.poll(() => count('device_connect')).toBe(connections + 1)
+  await expect(page.getByTestId('device-verification-card')).not.toHaveAttribute(
+    'data-status',
+    'success'
+  )
+  await tab(2)
+  await expect(page.locator('body')).not.toContainText('PAGE-SN-A')
+  await expect(page.getByTestId('device-verification-card')).not.toHaveAttribute(
+    'data-status',
+    'success'
+  )
+  await expect(page.getByTestId('secure-check-button')).toBeDisabled()
+  await configure({ gate: false })
+  await expect(page.getByTestId('device-info-card')).toContainText('PAGE-SN-A')
+  await expect(page.getByTestId('device-verification-card')).toHaveAttribute(
+    'data-status',
+    'success'
+  )
+  expect(await count('device_connect')).toBeGreaterThanOrEqual(connections + 2)
+  expect(await count('cos_check_update')).toBe(firmwareChecks)
+  expect(await count('device_secure_check')).toBe(secureChecks)
 })
 
 test('home verification shares activation and genuine results with the device page', async () => {
@@ -272,7 +320,7 @@ test('home verification shares activation and genuine results with the device pa
   )
   await expect(page.getByTestId('secure-check-result')).toContainText('2026-10-18')
   await page.screenshot({ path: '/private/tmp/imkey-device-verified.png' })
-  const beforeHome = await calls()
+  const firmwareChecksBeforeHome = await count('cos_check_update')
   await tab(0)
   await expect(page.getByTestId('device-verification-card')).toHaveAttribute(
     'data-status',
@@ -280,7 +328,7 @@ test('home verification shares activation and genuine results with the device pa
   )
   expect(await count('device_secure_check')).toBe(1)
   expect(await count('device_sn_check')).toBe(1)
-  expect(await calls()).toEqual(beforeHome)
+  expect(await count('cos_check_update')).toBe(firmwareChecksBeforeHome)
 })
 
 test('device-page verification is reused when returning home without checking firmware', async () => {
@@ -290,7 +338,7 @@ test('device-page verification is reused when returning home without checking fi
   await verify()
   await expect(page.getByTestId('firmware-check-result')).toHaveAttribute('data-status', 'latest')
   expect(await count('cos_check_update')).toBe(firmwareChecks)
-  const beforeHome = await calls()
+  const firmwareChecksBeforeHome = await count('cos_check_update')
   await tab(0)
   await expect(page.getByTestId('device-verification-card')).toHaveAttribute(
     'data-status',
@@ -298,7 +346,7 @@ test('device-page verification is reused when returning home without checking fi
   )
   expect(await count('device_secure_check')).toBe(1)
   expect(await count('device_sn_check')).toBe(1)
-  expect(await calls()).toEqual(beforeHome)
+  expect(await count('cos_check_update')).toBe(firmwareChecksBeforeHome)
 })
 
 test('the first automatic firmware check is pending without a result until the response arrives', async () => {
@@ -491,10 +539,10 @@ test('a failed explicit firmware refresh preserves device and verification data 
   await expect(page.getByTestId('secure-check-result')).toContainText('2026-10-18')
   await expect(page.getByTestId('firmware-check-result')).toHaveAttribute('data-status', 'failed')
   expect(await count('get_sn')).toBe(serialReads)
-  const beforeReturn = await calls()
+  const checksBeforeReturn = await count('cos_check_update')
   await tab(0)
   await devicePage()
-  expect(await calls()).toEqual(beforeReturn)
+  expect(await count('cos_check_update')).toBe(checksBeforeReturn)
   await expect(page.getByTestId('firmware-check-result')).toHaveCount(0)
   await page.getByTestId('firmware-check-button').click()
   await expect(page.getByTestId('firmware-check-result')).toHaveAttribute('data-status', 'latest')
@@ -579,16 +627,15 @@ test('explicit firmware checking caches an upgrade that reads its binding code w
   expect(await count('cos_check_update')).toBe(checked + 1)
   expect(await count('get_sn')).toBe(serialReads)
   await page.screenshot({ path: '/private/tmp/imkey-device-update-available.png' })
-  const cached = await calls()
   await tab(0)
   await devicePage()
   await expect(page.getByTestId('firmware-upgrade-button')).toBeVisible()
-  expect(await calls()).toEqual(cached)
   expect(await count('cos_check_update')).toBe(checked + 1)
   expect(await count('cos_update')).toBe(0)
+  const beforeUpgrade = (await calls()).length
   await page.getByTestId('firmware-upgrade-button').click()
   await expect(page.locator('.alert2')).toContainText('Update completed')
-  const upgradeCalls = (await calls()).slice(cached.length)
+  const upgradeCalls = (await calls()).slice(beforeUpgrade)
   const preflight = upgradeCalls.slice(0, upgradeCalls.indexOf('cos_update'))
   expect(preflight).toEqual([
     'device_connect',
@@ -651,60 +698,74 @@ test('firmware checking only reads device identity and versions without binding 
   await expect(page.getByRole('dialog')).toHaveCount(0)
 })
 
-for (const { changed, action } of [
-  { changed: 'identity', action: 'firmware' },
-  { changed: 'identity', action: 'verification' },
-  { changed: 'binding', action: 'verification' },
-  { changed: 'read-failure', action: 'firmware' },
-  { changed: 'disconnected', action: 'firmware' }
-] as const) {
-  test(`${changed} is ignored on cached page entry and detected by explicit ${action}`, async () => {
-    await launch()
-    await verify()
-    await devicePage()
-    await checkFirmware()
-    await tab(0)
-    await expect(page.getByTestId('secure-check-button')).toBeEnabled()
-    const serialReads = await count('get_sn')
-    const firmwareChecks = await count('cos_check_update')
-    const cached = await calls()
-    await configure(
-      changed === 'identity'
-        ? { seid: 'DEVICE-B', sn: 'PAGE-SN-B' }
-        : changed === 'binding'
-          ? { binding: 'unbound' }
-          : changed === 'disconnected'
-            ? {
-                fault: {
-                  id: 'disconnected',
-                  method: 'device_connect',
-                  error: 'device_not_connected'
-                }
-              }
-            : { fault: { id: 'read-failure', method: 'get_seid', error: 'identity_read_failed' } }
+for (const target of ['home', 'device'] as const) {
+  for (const changed of ['identity', 'binding', 'disconnected', 'read-failure'] as const) {
+    test(
+      changed + ' on ' + target + ' page reentry never shows the previous verification',
+      async () => {
+        await launch()
+        await verify()
+        await devicePage()
+        await expect(page.getByTestId('device-verification-card')).toHaveAttribute(
+          'data-status',
+          'success'
+        )
+        if (target === 'device') {
+          await tab(0)
+          await expect(page.getByTestId('device-verification-card')).toHaveAttribute(
+            'data-status',
+            'success'
+          )
+        }
+        const firmwareChecks = await count('cos_check_update')
+        const secureChecks = await count('device_secure_check')
+        const snChecks = await count('device_sn_check')
+        const connections = await count('device_connect')
+        await configure({
+          gate: true,
+          gateMethod: 'device_connect',
+          ...(changed === 'identity'
+            ? { seid: 'DEVICE-B', sn: 'PAGE-SN-B' }
+            : changed === 'binding'
+              ? { binding: 'unbound' as const }
+              : changed === 'disconnected'
+                ? {
+                    fault: {
+                      id: 'disconnected-reentry',
+                      method: 'device_connect',
+                      error: 'device_not_connected'
+                    }
+                  }
+                : {
+                    fault: {
+                      id: 'identity-reentry',
+                      method: 'get_seid',
+                      error: 'identity_read_failed'
+                    }
+                  })
+        })
+        await tab(target === 'home' ? 0 : 2)
+        await expect.poll(() => count('device_connect')).toBe(connections + 1)
+        await expect(page.locator('body')).not.toContainText('PAGE-SN-A')
+        await expect(
+          page.locator('[data-testid="device-verification-card"][data-status="success"]')
+        ).toHaveCount(0)
+        await expect(page.getByTestId('secure-check-result')).not.toContainText('2026-10-18')
+        await expect(page.getByTestId('secure-check-button')).toBeDisabled()
+        await configure({ gate: false })
+        await expect(page.getByRole('dialog')).toBeVisible()
+        await expect(page.locator('body')).not.toContainText('PAGE-SN-A')
+        await expect(
+          page.locator('[data-testid="device-verification-card"][data-status="success"]')
+        ).toHaveCount(0)
+        expect(await count('cos_check_update')).toBe(firmwareChecks)
+        expect(await count('device_secure_check')).toBe(secureChecks)
+        expect(await count('device_sn_check')).toBe(snChecks)
+        if (changed === 'identity' || changed === 'binding')
+          await reconnectWithClearedVerification()
+      }
     )
-    await devicePage()
-    await expect(page.getByTestId('firmware-check-result')).toHaveAttribute('data-status', 'latest')
-    await expect(page.getByTestId('device-verification-card')).toHaveAttribute(
-      'data-status',
-      'success'
-    )
-    await expect(page.getByRole('dialog')).toHaveCount(0)
-    expect(await calls()).toEqual(cached)
-    await page
-      .getByTestId(action === 'firmware' ? 'firmware-check-button' : 'secure-check-button')
-      .click()
-    await expect(page.getByRole('dialog')).toBeVisible()
-    await expect(page.locator('body')).not.toContainText('PAGE-SN-A')
-    await expect(
-      page.locator('[data-testid="device-verification-card"][data-status="success"]')
-    ).toHaveCount(0)
-    expect(await count('get_sn')).toBe(serialReads)
-    expect(await count('cos_check_update')).toBe(firmwareChecks)
-    expect(await count('device_secure_check')).toBe(1)
-    expect(await count('device_sn_check')).toBe(1)
-    if (changed === 'identity' || changed === 'binding') await reconnectWithClearedVerification()
-  })
+  }
 }
 
 async function reconnectWithClearedVerification(): Promise<void> {
@@ -853,6 +914,7 @@ for (const replaced of [false, true]) {
       await enterBindingCode()
       await expect(page.getByTestId('device-verification-card')).toBeVisible()
       await expect(page.locator('.homeBox')).toBeVisible()
+      await expect(page.getByTestId('secure-check-button')).toBeEnabled()
       expect(await count('cos_update')).toBe(1)
       expect(await count('bind_acquire')).toBe(2)
       expect(await count('register_address')).toBeGreaterThan(0)
@@ -872,7 +934,7 @@ for (const replaced of [false, true]) {
       expect(retryCalls.indexOf('cos_check_update')).toBeLessThan(
         retryCalls.indexOf('bind_acquire')
       )
-      expect(retryCalls.slice(-2)).toEqual(['btc_get_xpub', 'get_seid'])
+      expect(retryCalls.join(',')).toContain('btc_get_xpub,get_seid')
     }
   })
 }

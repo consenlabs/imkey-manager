@@ -53,7 +53,12 @@ async function launch(options: Control = {}, extraEnv: Record<string, string> = 
 }
 
 async function calls(): Promise<string[]> {
-  return (await readFile(path.join(directory, 'calls.log'), 'utf8')).trim().split('\n')
+  try {
+    return (await readFile(path.join(directory, 'calls.log'), 'utf8')).split('\n').filter(Boolean)
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return []
+    throw error
+  }
 }
 
 async function serviceReadyCount(): Promise<number> {

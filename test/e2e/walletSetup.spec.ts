@@ -123,7 +123,13 @@ test('completing setup checks wallet readiness and enters home without prefetchi
   const before = await calls()
   await page.locator('.set4 .nextBtn').click()
   await expect(page.locator('.homeBox')).toBeVisible()
-  expect((await calls()).slice(before.length)).toEqual(completionWalletCheckCalls)
+  await expect(page.getByTestId('secure-check-button')).toBeEnabled()
+  expect((await calls()).slice(before.length)).toEqual([
+    ...completionWalletCheckCalls,
+    'device_connect',
+    'get_seid',
+    'bind_check'
+  ])
   expect((await calls()).filter(method => method === 'btc_get_xpub')).toHaveLength(2)
   expect(await calls()).not.toContain('get_address')
   await page.screenshot({ path: 'test-results/wallet-setup-complete.png' })
@@ -213,7 +219,13 @@ test('wallet checks show loading, disable navigation and perform one binding che
       await confirmBackup()
     } else {
       await expect(page.locator('.homeBox')).toBeVisible()
-      expect((await calls()).slice(before.length)).toEqual(completionWalletCheckCalls)
+      await expect(page.getByTestId('secure-check-button')).toBeEnabled()
+      expect((await calls()).slice(before.length)).toEqual([
+        ...completionWalletCheckCalls,
+        'device_connect',
+        'get_seid',
+        'bind_check'
+      ])
     }
   }
 })
