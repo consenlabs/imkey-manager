@@ -246,6 +246,12 @@ export function useConnection() {
   }
   async function bindAcquireWithinOperation(code: string, isCurrent: () => boolean): Promise<void> {
     state.errorStage = 'bind'
+    const recovering = firmware.hasPendingRecovery()
+    if (recovering) {
+      const checked = await firmware.verifyRecoveryBinding()
+      if (!isCurrent()) return
+      if (!checked.isSuccess) return fail(checked)
+    }
     const acquired = await callDevice('deviceBindAcquire', code)
     if (!isCurrent()) return
     if (
@@ -262,13 +268,26 @@ export function useConnection() {
       fail(acquired)
       return
     }
+    if (recovering) {
+      const checked = await firmware.verifyRecoveryBinding()
+      if (!isCurrent()) return
+      if (!checked.isSuccess) return fail(checked)
+      if (checked.result !== constants.BIND_STATUS_STRING_BOUND_THIS)
+        return fail('device_bind_check_failed')
+    }
     const imported = await callDevice('importBindCode', code)
     if (!isCurrent()) return
     if (!imported.isSuccess) {
       fail(imported)
       return
     }
-    if (firmware.hasPendingRecovery()) {
+    if (recovering) {
+      const checked = await firmware.verifyRecoveryBinding()
+      if (!isCurrent()) return
+      if (!checked.isSuccess) return fail(checked)
+      if (checked.result !== constants.BIND_STATUS_STRING_BOUND_THIS)
+        return fail('device_bind_check_failed')
+      firmware.acceptRecoveryBinding(code)
       await firmware.toCosUpdate()
       return
     }

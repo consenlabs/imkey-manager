@@ -101,6 +101,14 @@ async function closeError(): Promise<void> {
   await expect(dialog).not.toBeVisible()
 }
 
+async function enterBindingCode(code = 'A2345678'): Promise<void> {
+  for (const [index, character] of [...code].entries()) {
+    const input = page.locator('.tip5 input').nth(index)
+    await input.fill('')
+    await input.press(character)
+  }
+}
+
 async function expectChangedNotice(): Promise<void> {
   await expect(page.locator('.connectDevice')).toHaveCount(0)
   await expect(page.locator('.homeBox')).toBeVisible()
@@ -835,6 +843,14 @@ for (const replaced of [false, true]) {
       expect(await count('bind_acquire')).toBe(1)
       await expect(page.getByTestId('firmware-upgrade-button')).toHaveCount(0)
     } else {
+      await expect(page.locator('.tip5 input')).toHaveCount(8)
+      expect(await count('bind_acquire')).toBe(1)
+      expect(await count('register_address')).toBe(0)
+      const checkpoint = JSON.parse(
+        await readFile(path.join(directory, 'firmware-recovery/E2ESEID.json'), 'utf8')
+      )
+      expect(checkpoint.phase).toBe('bind')
+      await enterBindingCode()
       await expect(page.getByTestId('device-verification-card')).toBeVisible()
       await expect(page.locator('.homeBox')).toBeVisible()
       expect(await count('cos_update')).toBe(1)
@@ -851,6 +867,8 @@ for (const replaced of [false, true]) {
         'get_seid',
         'get_upgrade_seid'
       ])
+      expect(retryCalls.indexOf('cos_check_update')).toBeGreaterThanOrEqual(0)
+      expect(retryCalls.indexOf('bind_acquire')).toBeGreaterThanOrEqual(0)
       expect(retryCalls.indexOf('cos_check_update')).toBeLessThan(
         retryCalls.indexOf('bind_acquire')
       )
@@ -978,11 +996,27 @@ test('opening Apps after a failed rebind requires connection recovery before hom
   await expect(page.locator('.connectDevice')).toBeVisible()
   await expect(page.locator('.homeBox')).toHaveCount(0)
   await page.screenshot({ path: '/private/tmp/imkey-optimized-apps-recovery-entry.png' })
+  const beforeRetry = (await calls()).length
   await page.locator('.connectDevice button').first().click()
+  await expect(page.locator('.tip5 input')).toHaveCount(8)
+  expect(await count('bind_acquire')).toBe(1)
+  expect(await count('register_address')).toBe(0)
+  const checkpoint = JSON.parse(
+    await readFile(path.join(directory, 'firmware-recovery/E2ESEID.json'), 'utf8')
+  )
+  expect(checkpoint.phase).toBe('bind')
+  await enterBindingCode()
   await expect(page.getByTestId('device-verification-card')).toBeVisible()
   expect(await count('cos_update')).toBe(1)
   expect(await count('bind_acquire')).toBe(2)
   expect(await count('register_address')).toBeGreaterThan(0)
+  const resumed = (await calls()).slice(beforeRetry)
+  expect(resumed).not.toContain('cos_update')
+  expect(resumed.indexOf('cos_check_update')).toBeGreaterThanOrEqual(0)
+  expect(resumed.indexOf('bind_acquire')).toBeGreaterThanOrEqual(0)
+  expect(resumed.indexOf('register_address')).toBeGreaterThanOrEqual(0)
+  expect(resumed.indexOf('cos_check_update')).toBeLessThan(resumed.indexOf('bind_acquire'))
+  expect(resumed.indexOf('bind_acquire')).toBeLessThan(resumed.indexOf('register_address'))
   await devicePage()
   await checkFirmware()
   expect(await count('cos_update')).toBe(1)

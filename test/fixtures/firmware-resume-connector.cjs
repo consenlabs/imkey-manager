@@ -50,7 +50,7 @@ module.exports = {
     }
     if (control.resetBindingOnce && !state.resetBindingOnceApplied) {
       state.resetBindingOnceApplied = true
-      state.binding = 'unbound'
+      state.binding = control.resetBindingStatus || 'unbound'
     }
     const save = () => {
       fs.writeFileSync(process.env.IMKEY_E2E_STATE + '.tmp', JSON.stringify(states))
@@ -89,6 +89,12 @@ module.exports = {
       state.bindingAttempts++
       save()
       if (control.failBinding) return fail('imkey_tsm_bind_acquire_fail')
+      if (control.validBindingCode) {
+        const code = device.BindAcquireReq.deserializeBinary(action.getParam().getValue_asU8())
+          .getBindCode()
+          .toUpperCase()
+        if (code !== control.validBindingCode.toUpperCase()) return fail('imkey_authcode_error')
+      }
       state.binding = 'bound_this'
       save()
     }

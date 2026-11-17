@@ -31,7 +31,8 @@ export function appletView(
   const update = present && applet.installedVersion !== applet.latestVersion
   return {
     ...applet,
-    displayName: applet.name === 'IMK' ? imkeyName : applet.name,
+    displayName:
+      applet.name === 'IMK' ? imkeyName : applet.name === 'EOS' ? 'A (Vaulta)' : applet.name,
     desc: present ? `version ${applet.installedVersion}` : '',
     lastVersion: `version ${applet.latestVersion}`,
     installed: present && !update && !operation,

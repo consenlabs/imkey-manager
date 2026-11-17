@@ -2,6 +2,9 @@
   <div class="tip5 tip" v-if="flow.status == 7" @click.self="flow.cancelBinding">
     <div class="tipBox" role="dialog" aria-modal="true" aria-labelledby="binding-dialog-title">
       <h3 id="binding-dialog-title">{{ $t('m.imKeyManager.enter_bind_code') }}</h3>
+      <p v-if="flow.recoveryBindingHint" class="recovery-binding-hint">
+        {{ $t(`m.imKeyManager.firmware_rebind_${flow.recoveryBindingHint}`) }}
+      </p>
       <div>
         <input
           type="text"

@@ -136,12 +136,46 @@ it('an interrupted version capture retries the capture without reflashing', asyn
   expect(flow.hasPendingRecovery()).toBe(false)
 })
 
+it('does not offer manual binding when its recovery checkpoint cannot be persisted', async () => {
+  bootloader = false
+  updated = true
+  binding = 'bound_other'
+  journal = {
+    version: 1,
+    seid,
+    phase: 'restore',
+    needsBinding: true,
+    expectedCos: cos,
+    expectedBle: ble,
+    pendingAddresses: ['Ethereum']
+  }
+  const original = structuredClone(journal)
+  const changeState = vi.fn()
+  const fail = vi.fn()
+  const flow = useConnectionFirmware(changeState, fail, async () => {})
+  expect((await flow.loadPendingRecovery(seid)).isSuccess).toBe(true)
+  failedMethod = 'saveFirmwareRecovery'
+  await flow.toCosUpdate()
+  expect(journal).toEqual(original)
+  expect(fail).toHaveBeenLastCalledWith('saveFirmwareRecovery_failed', 5, 'store')
+  expect(changeState).not.toHaveBeenCalledWith(7)
+  for (const method of [
+    'deviceBindDisplay',
+    'deviceBindAcquire',
+    'writeWalletAddress',
+    'clearFirmwareRecovery',
+    'cosUpdate'
+  ])
+    expect(calls(method)).toHaveLength(0)
+})
+
 it.each(['identity', 'cos', 'ble', 'bootloader', 'binding'])(
   '%s changes block phase recovery before any further writes',
   async change => {
     failedMethod = 'writeWalletAddress'
     const fail = vi.fn()
-    const flow = useConnectionFirmware(vi.fn(), fail, async () => {})
+    const changeState = vi.fn()
+    const flow = useConnectionFirmware(changeState, fail, async () => {})
     await flow.toCosUpdate(true)
     failedMethod = ''
     if (change === 'identity') seid = 'SEID-B'
@@ -156,16 +190,19 @@ it.each(['identity', 'cos', 'ble', 'bootloader', 'binding'])(
     expect(calls('deviceBindAcquire')).toHaveLength(0)
     expect(calls('importBindCode')).toHaveLength(0)
     expect(calls('writeWalletAddress')).toHaveLength(0)
+    if (change === 'binding') {
+      expect(changeState).toHaveBeenLastCalledWith(7)
+      expect(flow.recoveryBindingHint.value).toBe('existing')
+      return
+    }
     expect(fail).toHaveBeenLastCalledWith(
       change === 'identity'
         ? 'device_session_changed'
         : change === 'bootloader'
           ? 'firmware_recovery_not_ready'
-          : change === 'binding'
-            ? 'device_bind_check_failed'
-            : 'firmware_recovery_version_mismatch',
+          : 'firmware_recovery_version_mismatch',
       change === 'identity' ? 4 : 5,
-      change === 'identity' ? 'connect' : change === 'binding' ? 'bind' : 'check'
+      change === 'identity' ? 'connect' : 'check'
     )
   }
 )

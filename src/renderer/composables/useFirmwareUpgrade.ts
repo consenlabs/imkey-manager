@@ -156,6 +156,20 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
     state.supportCode = 3
     state.recovering = Boolean(savedAttempt() && savedAttempt()!.recovery.phase !== 'update')
   }
+  function offerRebinding(error: unknown, diagnosticStage: string) {
+    if (!operation.active()) return
+    operation.failure?.(
+      isFirmwareDiagnosticStage(diagnosticStage) ? diagnosticStage : 'bind',
+      error
+    )
+    // The durable checkpoint remains on disk, but cached page data and any
+    // in-memory binding code must not authorize the changed binding.
+    attempts.delete(device)
+    device.invalidateDeviceData()
+    state.supportCode = 0
+    state.errorStage = 'bind'
+    recovery.offer('firmware_rebind_required', updateFirmware, { reconnectOnly: true })
+  }
   function applyCheck(result: FirmwareCheckCache) {
     state.cosOldVersionData = result.firmwareVersion
     state.bleOldVersionData = result.bleVersion
@@ -338,6 +352,8 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
             attempt.recovery.phase = 'load-code'
             attempt.recovery.bindCode = ''
             delete attempt.recovery.pendingAddresses
+          } else if (binding.result === 'bound_other') {
+            return offerRebinding('firmware_rebind_required', attempt.recovery.phase)
           } else if (binding.result !== 'bound_this') {
             return fail('device_bind_check_failed', 'bind')
           }
@@ -385,7 +401,21 @@ export function useFirmwareUpgrade(kind: 'manager' | 'setting', scope?: DeviceOp
         }
       })
       if (!current()) return
-      if (failure) return fail(failure.error, failure.stage, attempt.recovery.phase)
+      if (failure) {
+        const result = failure.error.result
+        if (
+          (failure.stage === 'bind' &&
+            attempt.recovery.phase === 'bind' &&
+            typeof result === 'string' &&
+            ['imkey_authcode_error', 'binding_code_error', 'error'].includes(result)) ||
+          (failure.stage === 'store' &&
+            !failure.error.isSuccess &&
+            (result === 'binding_code_file_missing' ||
+              failure.error.code === 'BINDING_CODE_FILE_UNREADABLE'))
+        )
+          return offerRebinding(failure.error, attempt.recovery.phase)
+        return fail(failure.error, failure.stage, attempt.recovery.phase)
+      }
       // Recovery verifies binding, wallet and identity before clearing its record.
       // Use that same proof so a second read cannot fail after the record is gone.
       if (!proof.wallet) return fail('invalid_wallet_response', 'wallet')

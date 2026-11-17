@@ -247,7 +247,8 @@ hover {
 }
 
 .tip1 .tipBox,
-.tip3 .tipBox3 {
+.tip3 .tipBox3,
+.tip5 .tipBox {
   top: 50%;
   height: auto;
   min-height: 217px;
@@ -299,6 +300,9 @@ hover {
   font-size: 12px;
   line-height: 17px;
   color: #ec6d62;
+}
+.tip5 .recovery-binding-hint {
+  color: #555a70;
 }
 .tip5 .verification-pending {
   font-style: normal;

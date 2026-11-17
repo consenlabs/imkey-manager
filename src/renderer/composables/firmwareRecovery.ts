@@ -95,6 +95,20 @@ async function saveRecovery(recovery: FirmwareRecovery, call: typeof callDevice)
   })
 }
 
+// Persist the need for manual binding before showing a code or accepting input.
+// A crash after acquiring a new binding but before saving its code must not
+// resume directly at address restoration with an obsolete local code.
+export async function saveManualBindingCheckpoint(
+  recovery: FirmwareRecovery,
+  call: typeof callDevice
+): Promise<DeviceResult> {
+  recovery.phase = 'bind'
+  recovery.needsBinding = true
+  recovery.bindCode = ''
+  delete recovery.pendingAddresses
+  return saveRecovery(recovery, call)
+}
+
 async function readRecoveryCode(
   recovery: FirmwareRecovery,
   call: typeof callDevice,

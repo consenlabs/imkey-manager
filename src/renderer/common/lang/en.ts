@@ -130,6 +130,10 @@ export const m = {
       'The imKey Pro firmware version is being upgraded, please wait patiently',
     firmware_recovery_no_disconnect:
       'Do not disconnect the USB cable or operate imKey during this operation.',
+    firmware_rebind_new:
+      'The device binding has changed. Enter the new code displayed on the device to continue recovery.',
+    firmware_rebind_existing:
+      'The device binding has changed. Enter its current binding code to continue recovery.',
     wallet_status_unknown_hint:
       'Unable to confirm the wallet status. If the device was reset, create or restore a wallet on the device, then retry.',
     imKey_pro_firmware_update_no_disconnect:
@@ -272,6 +276,8 @@ export const m = {
       'The firmware upgrade response was incomplete, so its outcome could not be confirmed. Check the device and contact support.',
     binding_code_file_missing:
       'No saved binding code was found. Enter your binding code to continue.',
+    firmware_rebind_required:
+      'Return to the connection page and bind the device again to continue firmware recovery.',
     firmware_recovery_not_ready:
       'The device is not ready to resume the upgrade. Check the device and retry.',
     firmware_recovery_version_mismatch:

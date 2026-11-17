@@ -35,6 +35,8 @@ interface Control {
   failBtcRead?: boolean
   injectNativeIncomplete?: boolean
   resetBindingOnce?: boolean
+  resetBindingStatus?: 'unbound' | 'bound_other'
+  validBindingCode?: string
   postUpdateBinding?: string
   extraApplet?: boolean
   extraAppletUpdate?: boolean
@@ -246,6 +248,14 @@ async function startDeviceUpgrade(fault: Control = {}): Promise<void> {
 async function retryDeviceUpgrade(): Promise<void> {
   await page.locator('.alert3 button').click()
   await page.getByTestId('firmware-upgrade-button').click()
+}
+
+async function enterRecoveryBindingCode(code: string): Promise<void> {
+  for (const [index, character] of [...code].entries()) {
+    const input = page.locator('.tip5 input').nth(index)
+    await input.fill('')
+    await input.press(character)
+  }
 }
 
 test('a legacy ambiguous update checkpoint restores safely without reflashing', async () => {
@@ -611,6 +621,16 @@ for (const recoveryPath of ['direct-retry', 'reopen'] as const) {
     } else {
       await reopen()
       await connect()
+      await expect(page.locator('.tip5 input')).toHaveCount(8)
+      const awaitingCode = (await calls()).slice(beforeRetry).map(call => call.method)
+      expect(awaitingCode).not.toContain('bind_acquire')
+      expect(awaitingCode).not.toContain('cos_update')
+      expect(awaitingCode).not.toContain('register_address')
+      const pending = JSON.parse(
+        await readFile(path.join(directory, 'firmware-recovery/RESUMEDEVICEA.json'), 'utf8')
+      )
+      expect(pending.phase).toBe('bind')
+      await enterRecoveryBindingCode('A2345678')
     }
     await completed()
     expect((await calls()).filter(call => call.method === 'cos_update')).toHaveLength(1)
@@ -635,8 +655,7 @@ for (const rejection of ['missing-code', 'unknown-binding'] as const) {
     if (rejection === 'missing-code') await rm(path.join(directory, 'RESUMEDEVICEAbindCode.json'))
     const before = (await calls()).length
     await confirmBleOnlyUpgrade()
-    if (rejection === 'missing-code') await expect(page.locator('.alert3')).toBeVisible()
-    else await expect(page.locator('.device-recovery-dialog')).toBeVisible()
+    await expect(page.locator('.device-recovery-dialog')).toBeVisible()
     await expect(page.locator('.alert2')).toHaveCount(0)
     expect(await state()).toMatchObject({ physicalWrites: 1, addressWrites: 0, bindingAttempts: 0 })
     const rejected = (await calls()).slice(before).map(call => call.method)
@@ -649,8 +668,12 @@ for (const rejection of ['missing-code', 'unknown-binding'] as const) {
     expect(await readdir(path.join(directory, 'firmware-recovery'))).toEqual(['RESUMEDEVICEA.json'])
     if (rejection === 'missing-code') {
       await expectMissingCodeDiagnostic()
-      const dialog = await page.locator('.alertBox.alert3').boundingBox()
-      const button = await page.locator('.alertBox.alert3 button').boundingBox()
+      const recoveryDialog = page.locator('.device-recovery-dialog')
+      await expect(recoveryDialog).toContainText('bind the device again')
+      const dialog = await recoveryDialog.boundingBox()
+      const button = await recoveryDialog
+        .getByRole('button', { name: 'Back to connection' })
+        .boundingBox()
       expect(dialog).not.toBeNull()
       expect(button).not.toBeNull()
       expect(button!.x).toBeGreaterThanOrEqual(dialog!.x)
@@ -763,7 +786,20 @@ for (const failure of ['failNativeApps', 'failBinding', 'failAddress'] as const)
     expect(failed.physicalWrites).toBe(1)
     await configure({ [failure]: false })
     await reopen()
+    const beforeReconnect = (await calls()).length
     await connect()
+    if (failure === 'failBinding') {
+      await expect(page.locator('.tip5 input')).toHaveCount(8)
+      const pending = JSON.parse(
+        await readFile(path.join(directory, 'firmware-recovery/RESUMEDEVICEA.json'), 'utf8')
+      )
+      expect(pending.phase).toBe('bind')
+      const beforeBinding = (await calls()).slice(beforeReconnect).map(call => call.method)
+      expect(beforeBinding).not.toContain('bind_acquire')
+      expect(beforeBinding).not.toContain('cos_update')
+      expect(beforeBinding).not.toContain('register_address')
+      await enterRecoveryBindingCode('A2345678')
+    }
     await completed()
     const restored = await state()
     expect((await calls()).filter(call => call.method === 'cos_update')).toHaveLength(
@@ -822,6 +858,251 @@ test('a reset binding and missing wallet during address recovery can resume with
   await expect(page.locator('.homeBox')).toBeVisible()
   expect((await state()).physicalWrites).toBe(1)
   expect((await calls()).slice(before).map(call => call.method)).not.toContain('cos_update')
+  await expect.poll(() => readdir(path.dirname(file))).toEqual([])
+})
+
+for (const resetStatus of ['unbound', 'bound_other'] as const) {
+  test(`reset ${resetStatus} with an obsolete binding code prompts and completes recovery without reflashing`, async () => {
+    await startDeviceUpgrade({ failAddress: true })
+    await expect(page.locator('.alert3')).toBeVisible()
+    const file = path.join(directory, 'firmware-recovery/RESUMEDEVICEA.json')
+    expect(JSON.parse(await readFile(file, 'utf8')).phase).toBe('restore')
+    const beforeReset = await state()
+    expect(beforeReset.physicalWrites).toBe(1)
+
+    await configure({
+      failAddress: false,
+      resetBindingOnce: true,
+      resetBindingStatus: resetStatus,
+      validBindingCode: 'B2345678'
+    })
+    await reopen()
+    const before = (await calls()).length
+    await connect()
+    await expect(page.locator('.tip5 input')).toHaveCount(8)
+    expect((await state()).physicalWrites).toBe(1)
+    const checkpoint = await readFile(file, 'utf8')
+    expect(checkpoint).not.toContain('A2345678')
+    expect(checkpoint).not.toContain('B2345678')
+    let resumed = (await calls()).slice(before).map(call => call.method)
+    expect(resumed).not.toContain('cos_update')
+    expect(resumed).not.toContain('register_address')
+    if (resetStatus === 'unbound') {
+      expect(resumed).toContain('bind_acquire')
+      expect((await state()).bindingAttempts).toBe(beforeReset.bindingAttempts + 1)
+      expect(resumed).toContain('bind_display_code')
+    } else expect(resumed).not.toContain('bind_display_code')
+
+    await enterRecoveryBindingCode('C2345678')
+    await expect(page.locator('.bindTip p')).toBeVisible()
+    expect(JSON.parse(await readFile(file, 'utf8')).phase).not.toBe('complete')
+    expect((await state()).physicalWrites).toBe(1)
+    resumed = (await calls()).slice(before).map(call => call.method)
+    expect(resumed).not.toContain('cos_update')
+    expect(resumed).not.toContain('register_address')
+
+    await enterRecoveryBindingCode('B2345678')
+    await expect(page.locator('.homeBox')).toBeVisible()
+    resumed = (await calls()).slice(before).map(call => call.method)
+    expect(resumed).not.toContain('cos_update')
+    expect(resumed).toContain('register_address')
+    expect((await state()).physicalWrites).toBe(1)
+    expect((await state()).binding).toBe('bound_this')
+    await expect.poll(() => readdir(path.dirname(file))).toEqual([])
+  })
+}
+
+test('recovery does not bind or clear the original checkpoint when the device is switched during code entry', async () => {
+  await startDeviceUpgrade({ failAddress: true })
+  await expect(page.locator('.alert3')).toBeVisible()
+  const file = path.join(directory, 'firmware-recovery/RESUMEDEVICEA.json')
+  await configure({ failAddress: false, resetBindingOnce: true, validBindingCode: 'B2345678' })
+  await reopen()
+  await connect()
+  await expect(page.locator('.tip5 input')).toHaveCount(8)
+
+  for (const [index, character] of [...'B234567'].entries()) {
+    const input = page.locator('.tip5 input').nth(index)
+    await input.fill('')
+    await input.press(character)
+  }
+  const before = (await calls()).length
+  await configure({ seid: 'RESUMEDEVICEB' })
+  await page.locator('.tip5 input').nth(7).press('8')
+  await expect
+    .poll(async () =>
+      (await calls())
+        .slice(before)
+        .some(
+          call =>
+            call.seid === 'RESUMEDEVICEB' && ['get_seid', 'get_upgrade_seid'].includes(call.method)
+        )
+    )
+    .toBe(true)
+  await expect(page.locator('.device-recovery-dialog')).toBeVisible()
+  const replacementCalls = (await calls())
+    .slice(before)
+    .filter(call => call.seid === 'RESUMEDEVICEB')
+    .map(call => call.method)
+  expect(replacementCalls).not.toContain('bind_acquire')
+  expect(replacementCalls).not.toContain('register_address')
+  expect(replacementCalls).not.toContain('cos_update')
+  expect(JSON.parse(await readFile(file, 'utf8')).phase).not.toBe('complete')
+  await expect(page.locator('.homeBox')).toHaveCount(0)
+})
+
+test('a failure after the new binding retains recovery through restart until addresses succeed', async () => {
+  await startDeviceUpgrade({ failAddress: true })
+  await expect(page.locator('.alert3')).toBeVisible()
+  const file = path.join(directory, 'firmware-recovery/RESUMEDEVICEA.json')
+  await configure({ resetBindingOnce: true, validBindingCode: 'B2345678' })
+  await reopen()
+  const before = (await calls()).length
+  await connect()
+  await expect(page.locator('.tip5 input')).toHaveCount(8)
+  await enterRecoveryBindingCode('B2345678')
+  await expect(page.locator('.tip3')).toBeVisible()
+  expect(JSON.parse(await readFile(file, 'utf8')).phase).toBe('restore')
+  expect((await state()).physicalWrites).toBe(1)
+  expect((await calls()).slice(before).map(call => call.method)).not.toContain('cos_update')
+
+  await configure({ failAddress: false })
+  await reopen()
+  await connect()
+  await expect(page.locator('.homeBox')).toBeVisible()
+  expect((await state()).physicalWrites).toBe(1)
+  expect((await calls()).slice(before).map(call => call.method)).not.toContain('cos_update')
+  await expect.poll(() => readdir(path.dirname(file))).toEqual([])
+})
+
+test('restarting at the binding prompt never retries the rejected old code or repeats COS', async () => {
+  await startDeviceUpgrade({ failAddress: true })
+  await expect(page.locator('.alert3')).toBeVisible()
+  const file = path.join(directory, 'firmware-recovery/RESUMEDEVICEA.json')
+  await configure({ failAddress: false, resetBindingOnce: true, validBindingCode: 'B2345678' })
+  await reopen()
+  await connect()
+  await expect(page.locator('.tip5 input')).toHaveCount(8)
+  expect(JSON.parse(await readFile(file, 'utf8')).phase).toBe('bind')
+  const bindingAttempts = (await state()).bindingAttempts
+
+  await reopen()
+  const before = (await calls()).length
+  await connect()
+  await expect(page.locator('.tip5 input')).toHaveCount(8)
+  expect(JSON.parse(await readFile(file, 'utf8')).phase).toBe('bind')
+  const restarted = (await calls()).slice(before).map(call => call.method)
+  expect(restarted).not.toContain('bind_acquire')
+  expect(restarted).not.toContain('cos_update')
+  expect(restarted).not.toContain('register_address')
+  expect((await state()).bindingAttempts).toBe(bindingAttempts)
+  expect((await state()).physicalWrites).toBe(1)
+
+  await enterRecoveryBindingCode('B2345678')
+  await expect(page.locator('.homeBox')).toBeVisible()
+  expect((await state()).physicalWrites).toBe(1)
+  expect((await calls()).slice(before).map(call => call.method)).not.toContain('cos_update')
+  await expect.poll(() => readdir(path.dirname(file))).toEqual([])
+})
+
+test('a missing local binding code on an unbound recovery displays a new code and completes', async () => {
+  await startDeviceUpgrade({ failAddress: true })
+  await expect(page.locator('.alert3')).toBeVisible()
+  const file = path.join(directory, 'firmware-recovery/RESUMEDEVICEA.json')
+  const bindingFile = path.join(directory, 'RESUMEDEVICEAbindCode.json')
+  expect(JSON.parse(await readFile(file, 'utf8')).phase).toBe('restore')
+  await configure({ failAddress: false, resetBindingOnce: true, validBindingCode: 'B2345678' })
+  await rm(bindingFile)
+  await reopen()
+  const before = (await calls()).length
+  await connect()
+  await expect(page.locator('.tip5 input')).toHaveCount(8)
+  expect(JSON.parse(await readFile(file, 'utf8')).phase).not.toBe('complete')
+  const pending = (await calls()).slice(before).map(call => call.method)
+  expect(pending).toContain('bind_display_code')
+  expect(pending).not.toContain('bind_acquire')
+  expect(pending).not.toContain('cos_update')
+  expect(pending).not.toContain('register_address')
+  expect((await state()).physicalWrites).toBe(1)
+
+  await enterRecoveryBindingCode('B2345678')
+  await expect(page.locator('.homeBox')).toBeVisible()
+  const resumed = (await calls()).slice(before).map(call => call.method)
+  expect(resumed).toContain('bind_acquire')
+  expect(resumed).toContain('register_address')
+  expect(resumed).not.toContain('cos_update')
+  expect((await state()).physicalWrites).toBe(1)
+  await expect.poll(() => readdir(path.dirname(file))).toEqual([])
+})
+
+for (const resetBindingStatus of ['unbound', 'bound_other'] as const) {
+  test(`binding code import failure on ${resetBindingStatus} keeps recovery until verified`, async () => {
+    await startDeviceUpgrade({ failAddress: true })
+    await expect(page.locator('.alert3')).toBeVisible()
+    const file = path.join(directory, 'firmware-recovery/RESUMEDEVICEA.json')
+    const bindingFile = path.join(directory, 'RESUMEDEVICEAbindCode.json')
+    const backup = path.join(directory, 'bind-code-backup.json')
+    await configure({
+      failAddress: false,
+      resetBindingOnce: true,
+      resetBindingStatus,
+      validBindingCode: 'B2345678'
+    })
+    await reopen()
+    const before = (await calls()).length
+    await connect()
+    await expect(page.locator('.tip5 input')).toHaveCount(8)
+    expect(JSON.parse(await readFile(file, 'utf8')).phase).toBe('bind')
+
+    // The temporary directory at the existing file path makes the atomic rename
+    // fail without changing the old binding code or any real user files.
+    await rename(bindingFile, backup)
+    await mkdir(bindingFile)
+    await enterRecoveryBindingCode('B2345678')
+    await expect(page.locator('.tip1')).toBeVisible()
+    expect((await state()).binding).toBe('bound_this')
+    expect(JSON.parse(await readFile(file, 'utf8')).phase).toBe('bind')
+    expect((await state()).physicalWrites).toBe(1)
+    const failed = (await calls()).slice(before).map(call => call.method)
+    expect(failed).not.toContain('cos_update')
+    expect(failed).not.toContain('register_address')
+
+    await rm(bindingFile, { recursive: true })
+    await rename(backup, bindingFile)
+    await reopen()
+    await connect()
+    await expect(page.locator('.tip5 input')).toHaveCount(8)
+    expect(JSON.parse(await readFile(file, 'utf8')).phase).toBe('bind')
+    await enterRecoveryBindingCode('B2345678')
+    await expect(page.locator('.homeBox')).toBeVisible()
+    expect((await state()).physicalWrites).toBe(1)
+    expect((await calls()).slice(before).map(call => call.method)).not.toContain('cos_update')
+    await expect.poll(() => readdir(path.dirname(file))).toEqual([])
+  })
+}
+
+test('device-page recovery with an obsolete binding code guides reconnection and finishes', async () => {
+  await startDeviceUpgrade({ failAddress: true })
+  await expect(page.locator('.alert3')).toBeVisible()
+  const file = path.join(directory, 'firmware-recovery/RESUMEDEVICEA.json')
+  await configure({ failAddress: false, resetBindingOnce: true, validBindingCode: 'B2345678' })
+  const before = (await calls()).length
+  await retryDeviceUpgrade()
+  await expect(page.locator('.device-recovery-dialog')).toBeVisible()
+  expect(JSON.parse(await readFile(file, 'utf8')).phase).not.toBe('complete')
+  expect((await state()).physicalWrites).toBe(1)
+  expect((await calls()).slice(before).map(call => call.method)).not.toContain('cos_update')
+  await page
+    .locator('.device-recovery-dialog')
+    .getByRole('button', { name: /connection/i })
+    .click()
+  await connect()
+  await expect(page.locator('.tip5 input')).toHaveCount(8)
+  await enterRecoveryBindingCode('B2345678')
+  await expect(page.locator('.homeBox')).toBeVisible()
+  expect((await state()).physicalWrites).toBe(1)
+  expect((await calls()).slice(before).map(call => call.method)).not.toContain('cos_update')
+  expect((await calls()).slice(before).map(call => call.method)).toContain('register_address')
   await expect.poll(() => readdir(path.dirname(file))).toEqual([])
 })
 

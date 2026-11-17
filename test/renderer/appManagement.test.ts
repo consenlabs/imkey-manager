@@ -86,6 +86,42 @@ describe('canonical app identity and presentation state', () => {
       expect(filterApplets(entries, query).map(entry => entry.id)).toEqual(['Beta[+](x)/'])
     }
   })
+  it('displays and searches Vaulta while retaining the EOS applet identity', () => {
+    const entry = appletView(catalog('EOS', '1.0'), 'imKey Software')
+    expect(entry).toMatchObject({
+      id: 'EOS',
+      name: 'EOS',
+      displayName: 'A (Vaulta)',
+      desc: 'version 1.0'
+    })
+    for (const query of ['EOS', 'vaulta', 'A (Vaulta)']) {
+      expect(filterApplets([entry], query)).toEqual([entry])
+    }
+  })
+  it.each(['install', 'update'] as const)(
+    'uses the EOS identity for Vaulta %s and address registration',
+    async operation => {
+      const device = useDeviceStore()
+      device.apps = [catalog('EOS', operation === 'update' ? '0.9' : null)]
+      call.mockImplementation(async method => ({
+        isSuccess: true,
+        result:
+          method === 'downloadApplet' || method === 'updateApplet'
+            ? ['EOS']
+            : method === 'getBTCXpub'
+              ? 'xpub-ready'
+              : 'success'
+      }))
+      const manager = useAppManagement()
+      if (operation === 'install') await manager.installApp(manager.apps.value[0])
+      else await manager.updateApp(manager.apps.value[0])
+      expect(call).toHaveBeenCalledWith(
+        operation === 'install' ? 'downloadApplet' : 'updateApplet',
+        'EOS'
+      )
+      expect(call).toHaveBeenCalledWith('writeWalletAddress', { name: ['EOS'], filePath: '' })
+    }
+  )
   it('filtered index zero installs the selected stable identity, not the first app', async () => {
     const device = useDeviceStore()
     device.apps = [catalog('Alpha'), catalog('Beta')]

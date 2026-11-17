@@ -1,4 +1,5 @@
 import { callDevice as defaultCall } from '../device'
+import { ref } from 'vue'
 import type { DeviceOperation } from './useDeviceOperation'
 import { useAppStore, useDeviceStore } from '../store'
 import type { DeviceResult } from '../../shared/deviceContract'
@@ -10,6 +11,7 @@ import {
   loadFirmwareRecovery,
   validateFirmwareResume,
   firmwareRecoveryRequiresBinding,
+  saveManualBindingCheckpoint,
   type FirmwareFailure,
   type FirmwareRecovery
 } from './firmwareRecovery'
@@ -26,8 +28,10 @@ export function useConnectionFirmware(
   const active = () => operation?.active() ?? true
   let recovery: FirmwareRecovery | undefined
   let busy = false
+  const recoveryBindingHint = ref<'new' | 'existing' | ''>('')
   const hasPendingRecovery = () => Boolean(recovery)
   async function loadPendingRecovery(seid: string): Promise<DeviceResult<boolean>> {
+    recoveryBindingHint.value = ''
     const saved = await loadFirmwareRecovery(callDevice, seid)
     if (!active())
       return { isSuccess: false, result: 'Device operation cancelled', code: 'OPERATION_CANCELLED' }
@@ -58,6 +62,64 @@ export function useConnectionFirmware(
       missingCode ? 7 : stage === 'connect' ? 4 : 5,
       stage
     )
+  }
+  async function checkRecoveryBindingIdentity(
+    attempt: FirmwareRecovery,
+    current: () => boolean
+  ): Promise<DeviceResult<string>> {
+    const identity = await callDevice('getUpgradeSeid')
+    if (!current())
+      return { isSuccess: false, result: 'Device operation cancelled', code: 'OPERATION_CANCELLED' }
+    if (!identity.isSuccess) return identity
+    if (identity.result.toUpperCase() !== attempt.seid.toUpperCase())
+      return { isSuccess: false, result: 'device_session_changed' }
+    const binding = await callDevice('deviceBindCheck', app.userPath)
+    if (!current())
+      return { isSuccess: false, result: 'Device operation cancelled', code: 'OPERATION_CANCELLED' }
+    if (!binding.isSuccess) return binding
+    if (!['unbound', 'bound_other', 'bound_this'].includes(binding.result))
+      return { isSuccess: false, result: 'device_bind_check_failed' }
+    const confirmed = await callDevice('getUpgradeSeid')
+    if (!current())
+      return { isSuccess: false, result: 'Device operation cancelled', code: 'OPERATION_CANCELLED' }
+    if (!confirmed.isSuccess) return confirmed
+    if (confirmed.result.toUpperCase() !== attempt.seid.toUpperCase())
+      return { isSuccess: false, result: 'device_session_changed' }
+    return binding
+  }
+  async function promptRecoveryBinding(attempt: FirmwareRecovery, current: () => boolean) {
+    const binding = await checkRecoveryBindingIdentity(attempt, current)
+    if (!binding.isSuccess)
+      return report(binding, binding.result === 'device_session_changed' ? 'connect' : 'bind')
+    const saved = await saveManualBindingCheckpoint(attempt, callDevice)
+    if (!current()) return
+    if (!saved.isSuccess) return report(saved, 'store')
+    if (binding.result === 'unbound') {
+      const display = await callDevice('deviceBindDisplay')
+      if (!current()) return
+      if (!display.isSuccess) return report(display, 'bind')
+      const identity = await callDevice('getUpgradeSeid')
+      if (!current()) return
+      if (!identity.isSuccess) return report(identity, 'connect')
+      if (identity.result.toUpperCase() !== attempt.seid.toUpperCase())
+        return report({ isSuccess: false, result: 'device_session_changed' }, 'connect')
+    }
+    attempt.bindCode = ''
+    recoveryBindingHint.value = binding.result === 'unbound' ? 'new' : 'existing'
+    changeState(7)
+  }
+  async function verifyRecoveryBinding(): Promise<DeviceResult<string>> {
+    const attempt = recovery
+    if (!attempt) return { isSuccess: false, result: 'firmware_recovery_not_ready' }
+    return checkRecoveryBindingIdentity(attempt, () => active() && recovery === attempt)
+  }
+  function acceptRecoveryBinding(code: string): void {
+    if (!recovery) return
+    recovery.needsBinding = true
+    recovery.bindCode = code
+    recovery.phase = 'store'
+    delete recovery.pendingAddresses
+    recoveryBindingHint.value = ''
   }
   async function toCosUpdate(nativeIncomplete = false): Promise<void> {
     if (busy || !active()) return
@@ -104,6 +166,10 @@ export function useConnectionFirmware(
         stage = 'check'
         const validation = await validateFirmwareResume(attempt, callDevice, current)
         if (validation) return report(validation.error, validation.stage)
+        // A durable bind checkpoint contains no code and may represent a rejected
+        // old code. Never retry that code automatically after a restart.
+        if (attempt.phase === 'bind' && !attempt.bindCode)
+          return await promptRecoveryBinding(attempt, current)
         // A completed rebind must still belong to this computer before storage or
         // address restoration resumes. Earlier phases explicitly allow unbound.
         if (firmwareRecoveryRequiresBinding(attempt.phase, attempt.needsBinding)) {
@@ -117,6 +183,10 @@ export function useConnectionFirmware(
             attempt.phase = 'load-code'
             attempt.bindCode = ''
             delete attempt.pendingAddresses
+          } else if (binding.result === 'bound_other') {
+            attempt.phase = 'bind'
+            attempt.bindCode = ''
+            return await promptRecoveryBinding(attempt, current)
           } else if (binding.result !== 'bound_this')
             return report({ isSuccess: false, result: 'device_bind_check_failed' }, 'bind')
         }
@@ -140,7 +210,31 @@ export function useConnectionFirmware(
                       : 'update'
         }
       })
-      if (failure) return report(failure.error, failure.stage, attempt.phase)
+      if (failure) {
+        if (
+          failure.stage === 'store' &&
+          attempt.phase === 'load-code' &&
+          !failure.error.isSuccess &&
+          (failure.error.result === 'binding_code_file_missing' ||
+            failure.error.code === 'BINDING_CODE_FILE_UNREADABLE')
+        ) {
+          operation?.failure?.(
+            isFirmwareDiagnosticStage(attempt.phase) ? attempt.phase : 'store',
+            failure.error
+          )
+          return await promptRecoveryBinding(attempt, current)
+        }
+        if (
+          failure.stage === 'bind' &&
+          attempt.phase === 'bind' &&
+          typeof failure.error.result === 'string' &&
+          ['imkey_authcode_error', 'binding_code_error', 'error'].includes(failure.error.result)
+        ) {
+          attempt.bindCode = ''
+          return await promptRecoveryBinding(attempt, current)
+        }
+        return report(failure.error, failure.stage, attempt.phase)
+      }
       if (!current()) return
       recovery = undefined
       device.isCosUpdate = false
@@ -152,5 +246,12 @@ export function useConnectionFirmware(
     }
     if (completed && active()) await check()
   }
-  return { hasPendingRecovery, loadPendingRecovery, toCosUpdate }
+  return {
+    hasPendingRecovery,
+    loadPendingRecovery,
+    toCosUpdate,
+    recoveryBindingHint,
+    verifyRecoveryBinding,
+    acceptRecoveryBinding
+  }
 }

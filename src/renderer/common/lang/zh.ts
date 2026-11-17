@@ -119,6 +119,8 @@ export const m = {
     find_firmware_update_fail_continue: '检测到固件升级尚未完成，请检查设备状态后继续升级。',
     imKey_pro_firmware_update_wait: 'imKey Pro 固件版本升级中，请耐心等待',
     firmware_recovery_no_disconnect: '操作过程中请勿断开 USB 连接或操作 imKey。',
+    firmware_rebind_new: '设备绑定已变化，请输入设备上显示的新绑定码，完成绑定后继续恢复。',
+    firmware_rebind_existing: '设备绑定已变化，请输入设备当前有效的绑定码，完成绑定后继续恢复。',
     firmware_recovery_done: '设备恢复完成',
     firmware_recovery_verify_version: '请在设备页确认当前固件版本及是否需要升级。',
     wallet_status_unknown_hint:
@@ -244,6 +246,7 @@ export const m = {
     firmware_response_incomplete:
       '固件升级响应不完整，无法确认升级结果。请检查设备并联系支持团队。',
     binding_code_file_missing: '未找到已保存的绑定码，请输入绑定码后继续。',
+    firmware_rebind_required: '请返回连接页重新绑定设备，完成后继续固件恢复。',
     firmware_recovery_not_ready: '设备尚未准备好继续升级，请检查设备后重试。',
     firmware_recovery_version_mismatch: '设备固件版本已变化，请重新连接设备后继续。',
     firmware_recovery_invalid: '升级恢复记录格式无效，请重新连接设备后重试。',
